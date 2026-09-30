@@ -1,0 +1,74 @@
+/**
+ * Minimal styles for the standalone redirect interstitial (no full app shell).
+ * Uses Nextcloud semantic variables + TicketCheck spacing scale.
+ */
+html.redirect-interstitial,
+html.redirect-interstitial body {
+	height: 100%;
+	margin: 0;
+}
+html.redirect-interstitial body {
+	font-family: var(--font-face, system-ui, sans-serif);
+	font-size: var(--tc-fs-md, var(--default-font-size, 1rem));
+	line-height: var(--tc-line-base, 1.5);
+	color: var(--color-main-text);
+	background: var(--color-main-background);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+	padding: var(--tc-space-2, var(--default-grid-baseline, 8px));
+	box-sizing: border-box;
+}
+.redirect-interstitial__main,
+.tc-redirect {
+	max-width: min(28rem, 100%);
+	text-align: center;
+	padding-inline: var(--tc-space-4, 1rem);
+}
+.redirect-interstitial__status,
+.tc-redirect__status,
+.tc-status.tc-redirect__status {
+	margin: 0 0 var(--tc-space-4, 1rem);
+	font-size: var(--tc-fs-lg, 1.125rem);
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+.tc-redirect__fallback {
+	margin: 0;
+}
+.redirect-interstitial__link {
+	color: var(--color-primary-element);
+	word-break: break-word;
+}
+.redirect-interstitial__link:focus-visible {
+	outline: 3px solid var(--color-primary-element);
+	outline-offset: 2px;
+	border-radius: var(--tc-radius-sm, 6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html.redirect-interstitial *,
+	html.redirect-interstitial *::before,
+	html.redirect-interstitial *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
+@media (forced-colors: active) {
+	html.redirect-interstitial body {
+		background: Canvas;
+		color: CanvasText;
+	}
+
+	.redirect-interstitial__link {
+		color: LinkText;
+	}
+
+	.redirect-interstitial__link:focus-visible {
+		outline: 3px solid Highlight;
+		outline-offset: 2px;
+	}
+}

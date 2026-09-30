@@ -1,0 +1,1701 @@
+{
+  "version": 1,
+  "project_name": "NEXTICK — Prototype Fund Backlog (intern)",
+  "project_description": "Internes Planungsprojekt für die Förderphase 2026 (NEXTICK-Team). Enthält 80 NEXTICK-Arbeitspaket-Tickets — nicht für Piloten oder Produktiv-Support.",
+  "customer_name": "NEXTICK Team (intern)",
+  "issues": [
+    {
+      "n": 1,
+      "ticket_number": "NEXTICK-001",
+      "title": "Git-Repository mit Branch-Protection und CONTRIBUTING einrichten",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | ap1, devops |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nFörderphase startet; nachvollziehbare Commits und klare Beitragsregeln sind Voraussetzung für Community-Verwertung (AGPL) und ZA-Nachweise.\n\n### User Story\n**Als** Tech Lead  \n**möchte ich** ein zentrales Repo mit geschütztem main und dokumentiertem PR-Flow  \n**damit** Änderungen reviewbar sind und Fördermittelgeber-Nachweise über GitHub belegbar bleiben\n\n### Akzeptanzkriterien\n#### AC1 — Repository erreichbar\n\n```gherkin\nSzenario: Repository erreichbar\n  Gegeben Das Repo liegt unter dem Organisation-Account.\n  Wenn Ein Teammitglied klont das Repo.\n  Dann Clone und Push auf Feature-Branch funktionieren.\n```\n\n#### AC2 — Branch-Protection\n\n```gherkin\nSzenario: Branch-Protection\n  Gegeben main ist geschützt.\n  Wenn Ein direkter Push auf main wird versucht.\n  Dann Push wird abgewiesen oder Merge nur via PR.\n```\n\n#### AC3 — CONTRIBUTING\n\n```gherkin\nSzenario: CONTRIBUTING\n  Gegeben Neue Mitwirkende lesen CONTRIBUTING.\n  Wenn CONTRIBUTING wird geöffnet.\n  Dann Enthält AGPL-Hinweis, PHPUnit-Pflicht, NC-App-Struktur.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nPfad apps/ticketcheck; Branch-Protection in GitHub Settings.\n\n### QA / Test\nManuell: PR-Workflow einmal durchspielen.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Alex",
+      "labels": [
+        "ap1",
+        "devops"
+      ],
+      "lifecycle": "done",
+      "done_at": "07.06.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 2,
+      "ticket_number": "NEXTICK-002",
+      "title": "CI-Pipeline für PHPUnit, PHP-CS und ESLint konfigurieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | ap1, ci |\n| Assignee (Plan) | Alex |\n| Blockiert durch | #1, #20 |\n| Bezieht sich auf | #20 |\n\n### Problemstellung\nOhne automatische Gates steigen Regressionsrisiken vor Pilot und App-Store-Release.\n\n### User Story\n**Als** Entwicklungsteam  \n**möchte ich** bei jedem Push automatische Tests und Lint  \n**damit** Fehler vor Merge sichtbar werden\n\n### Akzeptanzkriterien\n#### AC1 — Pipeline läuft\n\n```gherkin\nSzenario: Pipeline läuft\n  Gegeben CI ist konfiguriert.\n  Wenn Push auf Feature-Branch.\n  Dann Workflow startet und meldet Status auf PR.\n```\n\n#### AC2 — PHPUnit\n\n```gherkin\nSzenario: PHPUnit\n  Gegeben Docker- oder NC-Testumgebung existiert.\n  Wenn CI-Job PHPUnit.\n  Dann Mindestens ein grüner Smoke-Test für Ticketcheck.\n```\n\n#### AC3 — Merge-Policy\n\n```gherkin\nSzenario: Merge-Policy\n  Gegeben Team-Policy ist dokumentiert.\n  Wenn CI schlägt fehl.\n  Dann Merge auf main ist blockiert.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nGitHub Actions; PHPUnit via Docker-Setup (#20).\n\n### QA / Test\nAbsichtlich roten Test auslösen → Pipeline rot.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Alex",
+      "labels": [
+        "ap1",
+        "ci"
+      ],
+      "lifecycle": "done",
+      "done_at": "08.06.2026",
+      "blocked_by": [
+        1,
+        20
+      ],
+      "relates_to": [
+        20
+      ]
+    },
+    {
+      "n": 3,
+      "ticket_number": "NEXTICK-003",
+      "title": "Roadmap und Issue-Backlog aus Vorhabenbeschreibung ableiten",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Epic / PM |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | ap1, pm |\n| Assignee (Plan) | Hauke |\n\n### Problemstellung\nAP1–7 und Meilensteine aus dem Prototype-Fund-Antrag müssen in bearbeitbare Issues übersetzt werden.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** AP und Meilensteine als Epics/Milestones im Tracker  \n**damit** Fortschrittsberichte und Stunden dem Arbeitsplan entsprechen\n\n### Akzeptanzkriterien\n#### AC1 — Vollständigkeit\n\n```gherkin\nSzenario: Vollständigkeit\n  Gegeben Antrag liegt vor.\n  Wenn Backlog wird mit AP abgeglichen.\n  Dann AP1–7 sind als Epics oder Milestones abgebildet.\n```\n\n#### AC2 — Stundenmodell\n\n```gherkin\nSzenario: Stundenmodell\n  Gegeben Personenstunden sind definiert.\n  Wenn Stundenerfassung wird geplant.\n  Dann Zuordnung Person → AP konsistent mit Antrag.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nDieses Dokument + GitHub Milestones MS2–MS7.\n\n### QA / Test\nStichprobe: 3 Issues → korrektes AP-Label.\n",
+      "type": "Epic / PM",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Hauke",
+      "labels": [
+        "ap1",
+        "pm"
+      ],
+      "lifecycle": "done",
+      "done_at": "08.06.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 4,
+      "ticket_number": "NEXTICK-004",
+      "title": "Teamrollen und Verantwortlichkeiten dokumentieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | ap1 |\n| Assignee (Plan) | Hauke |\n\n### Problemstellung\nHauke PM/QA, Lara UX, Alex Backend/DevOps — schriftlich festhalten für Issues und Mails.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** festgelegte Rollen PM/UX/Backend  \n**damit** Zuständigkeiten in Issues eindeutig sind\n\n### Akzeptanzkriterien\n#### AC1 — Rollenmatrix\n\n```gherkin\nSzenario: Rollenmatrix\n  Gegeben Rollenmatrix existiert.\n  Wenn Neues Issue wird angelegt.\n  Dann Default-Assignee ist erkennbar.\n```\n\n#### AC2 — Team-Abstimmung\n\n```gherkin\nSzenario: Team-Abstimmung\n  Gegeben Matrix liegt vor.\n  Wenn Team-Review.\n  Dann Alle stimmen Rollen zu.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Hauke",
+      "labels": [
+        "ap1"
+      ],
+      "lifecycle": "done",
+      "done_at": "08.06.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 5,
+      "ticket_number": "NEXTICK-005",
+      "title": "Pilottermin mit Mokwi abstimmen (Zugang erst nach MS2)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P2 Should |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | ap1, pilot |\n| Assignee (Plan) | Hauke |\n| Bezieht sich auf | #22, #44, #68 |\n\n### Problemstellung\nMokwi als Referenz-Pilot für gemeinnützigen Kontext; kein Zugang auf halbfertigen Builds.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** mit dem Piloten einen realistischen Einsteig vereinbaren  \n**damit** keine Tests auf halbfertigen Builds erfolgen\n\n### Akzeptanzkriterien\n#### AC1 — Zeitplan\n\n```gherkin\nSzenario: Zeitplan\n  Gegeben Abstimmung erfolgt.\n  Wenn Pilot fragt nach Zugang.\n  Dann Schriftlich: Start nach installierbarer Basis (#22).\n```\n\n#### AC2 — Ansprechpartner\n\n```gherkin\nSzenario: Ansprechpartner\n  Gegeben Ansprechpartner benannt.\n  Wenn Kickoff geplant.\n  Dann Name/Rolle auf Vereinsseite notiert.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Should",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Hauke",
+      "labels": [
+        "ap1",
+        "pilot"
+      ],
+      "lifecycle": "done",
+      "done_at": "15.06.2026",
+      "blocked_by": [],
+      "relates_to": [
+        22,
+        44,
+        68
+      ]
+    },
+    {
+      "n": 6,
+      "ticket_number": "NEXTICK-006",
+      "title": "Testplan Ticket-CRUD (manuell + PHPUnit) erstellen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | ap1, qa |\n| Assignee (Plan) | Hauke |\n| Blockiert durch | #14, #21 |\n| Bezieht sich auf | #14, #21 |\n\n### Problemstellung\nMatrix deckt Agent, falsches Projekt, leere Pflichtfelder ab — MS2 objektiv prüfbar.\n\n### User Story\n**Als** QA  \n**möchte ich** eine Abnahme-Matrix für Ticket-CRUD  \n**damit** MS2 objektiv prüfbar ist\n\n### Akzeptanzkriterien\n#### AC1 — Matrix\n\n```gherkin\nSzenario: Matrix\n  Gegeben Matrix dokumentiert.\n  Wenn MS2-Review.\n  Dann Alle P1-Szenarien mit Ergebnis pass/fail.\n```\n\n#### AC2 — PHPUnit\n\n```gherkin\nSzenario: PHPUnit\n  Gegeben CI läuft.\n  Wenn Matrix wird geprüft.\n  Dann #21 in Matrix referenziert und grün.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nMS2-Review mit Team; Ergebnisse im Issue-Kommentar.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Hauke",
+      "labels": [
+        "ap1",
+        "qa"
+      ],
+      "lifecycle": "done",
+      "done_at": "05.07.2026",
+      "blocked_by": [
+        14,
+        21
+      ],
+      "relates_to": [
+        14,
+        21
+      ]
+    },
+    {
+      "n": 7,
+      "ticket_number": "NEXTICK-007",
+      "title": "Zahlungsanforderung Juni (Stunden + Personalkosten)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | ap1, pm |\n| Assignee (Plan) | Hauke |\n\n### Problemstellung\nAbgleich mit STUNDENERFASSUNG-2026.csv; Frist profi-Online.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** ZA für Juni fristgerecht einreichen  \n**damit** Fördermittel fließen planmäßig\n\n### Akzeptanzkriterien\n#### AC1 — Stundennachweise\n\n```gherkin\nSzenario: Stundennachweise\n  Gegeben Stundennachweise unterschriftsreif.\n  Wenn ZA wird erstellt.\n  Dann Summen = gebuchte Stunden Juni.\n```\n\n#### AC2 — profi-Online\n\n```gherkin\nSzenario: profi-Online\n  Gegeben Unterlagen vollständig.\n  Wenn Upload.\n  Dann Eingang bestätigt (intern).\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSTUNDENERFASSUNG-2026.csv als Quelle.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Hauke",
+      "labels": [
+        "ap1",
+        "pm"
+      ],
+      "lifecycle": "done",
+      "done_at": "08.07.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 8,
+      "ticket_number": "NEXTICK-008",
+      "title": "Release-Checkliste für App Store und AGPL anlegen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | ap1, release |\n| Assignee (Plan) | Hauke |\n| Bezieht sich auf | #59, #62 |\n\n### Problemstellung\nVerknüpft mit #59 Freeze-Policy und #62 Store-Release.\n\n### User Story\n**Als** Release Manager  \n**möchte ich** eine Checkliste vor Oktober-Release  \n**damit** nichts Kritisches vergessen wird\n\n### Akzeptanzkriterien\n#### AC1 — Vollständigkeit\n\n```gherkin\nSzenario: Vollständigkeit\n  Gegeben Checkliste vollständig.\n  Wenn Review vor #62.\n  Dann Enthält info.xml, CHANGELOG, Screenshots, Signierung, Doku, AGPL.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Hauke",
+      "labels": [
+        "ap1",
+        "release"
+      ],
+      "lifecycle": "done",
+      "done_at": "28.09.2026",
+      "blocked_by": [],
+      "relates_to": [
+        59,
+        62
+      ]
+    },
+    {
+      "n": 9,
+      "ticket_number": "NEXTICK-009",
+      "title": "Systemarchitektur Mandant/Projekt und Service-Grenzen festlegen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Spike |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, architecture |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nADR: Controller orchestrieren, Services entscheiden, keine parallele Auth — Guest-Portal später nicht refactored.\n\n### User Story\n**Als** Architekt  \n**möchte ich** klare Schichten und Mandantentrennung  \n**damit** Guest-Portal später nicht refactored werden muss\n\n### Akzeptanzkriterien\n#### AC1 — ADR\n\n```gherkin\nSzenario: ADR\n  Gegeben ADR reviewed.\n  Wenn Team-Meeting.\n  Dann Unterschrieben/digital bestätigt.\n```\n\n#### AC2 — Datenfluss\n\n```gherkin\nSzenario: Datenfluss\n  Gegeben Diagramm liegt vor.\n  Wenn Review.\n  Dann Ticket ↔ Projekt ↔ NC-Gruppe nachvollziehbar.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Spike",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Alex",
+      "labels": [
+        "ap2",
+        "architecture"
+      ],
+      "lifecycle": "done",
+      "done_at": "20.06.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 10,
+      "ticket_number": "NEXTICK-010",
+      "title": "Datenmodell für Tickets, Kommentare und Projektmitgliedschaft",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, database |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nOhne ein mandantensicheres Datenmodell können Tickets und Kommentare nicht zuverlässig getrennt werden — Grundlage für RBAC, Guest-Portal und spätere Workflows.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** Tickets mit Kommentaren mandantensicher speichern  \n**damit** Anliegen nicht in E-Mail-Threads verloren gehen\n\n### Akzeptanzkriterien\n#### AC1 — Schema\n\n```gherkin\nSzenario: Schema\n  Gegeben Schema reviewed.\n  Wenn Migration-Entwurf.\n  Dann ER/liste Tabellen + Indizes für Liste/Filter.\n```\n\n#### AC2 — Mandantentrennung\n\n```gherkin\nSzenario: Mandantentrennung\n  Gegeben Zwei Projekte existieren.\n  Wenn Query ohne Projektfilter.\n  Dann Keine Fremddaten.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nTabellen mit FK; Status/Priorität als Enums; portable Identifier (MySQL/MariaDB/PostgreSQL).\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Alex",
+      "labels": [
+        "ap2",
+        "database"
+      ],
+      "lifecycle": "done",
+      "done_at": "22.06.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 11,
+      "ticket_number": "NEXTICK-011",
+      "title": "Doctrine Mapper und initiale Migrationen implementieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2 |\n| Assignee (Plan) | Alex |\n| Blockiert durch | #10 |\n\n### Problemstellung\nDas Schema aus #10 muss bei App-Aktivierung automatisch und wiederholbar angelegt werden — Voraussetzung für alle weiteren Features.\n\n### User Story\n**Als** Admin Markus  \n**möchte ich** die App per occ installieren  \n**damit** Schema automatisch angelegt wird\n\n### Akzeptanzkriterien\n#### AC1 — Install\n\n```gherkin\nSzenario: Install\n  Gegeben Frische NC.\n  Wenn occ app:enable ticketcheck.\n  Dann Tabellen ohne Fehler.\n```\n\n#### AC2 — Idempotenz\n\n```gherkin\nSzenario: Idempotenz\n  Gegeben Migration existiert.\n  Wenn Migration zweimal ausführen.\n  Dann Kein Duplicate-Error.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nQBMapper/Migrations in `lib/Db/`, `lib/Migration/`; `occ app:enable ticketcheck` idempotent.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Alex",
+      "labels": [
+        "ap2"
+      ],
+      "lifecycle": "done",
+      "done_at": "24.06.2026",
+      "blocked_by": [
+        10
+      ],
+      "relates_to": []
+    },
+    {
+      "n": 12,
+      "ticket_number": "NEXTICK-012",
+      "title": "RBAC über Nextcloud-Gruppen implementieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, security |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nRollen Agent/Gast/Admin aus Gruppen + App-Rollen; kein UI-only Security.\n\n### User Story\n**Als** Admin Markus  \n**möchte ich** Berechtigungen über NC-Gruppen steuern  \n**damit** kein zweites Benutzerkonto-System nötig ist\n\n### Akzeptanzkriterien\n#### AC1 — API-Enforcement\n\n```gherkin\nSzenario: API-Enforcement\n  Gegeben Nutzer ohne Berechtigung.\n  Wenn Mutierender API-Call.\n  Dann 403 Forbidden.\n```\n\n#### AC2 — UI-Hiding\n\n```gherkin\nSzenario: UI-Hiding\n  Gegeben Gast eingeloggt.\n  Wenn Staff-Navigation öffnen.\n  Dann Nicht sichtbar (ergänzt #34).\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n- [x] Eintrag in Security-Matrix #39 (falls Guest/RBAC)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nSecurity-Matrix #39; PHPUnit für API-Pfade; manuell: IDOR-URLs aus AC durchspielen.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Alex",
+      "labels": [
+        "ap2",
+        "security"
+      ],
+      "lifecycle": "done",
+      "done_at": "26.06.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 13,
+      "ticket_number": "NEXTICK-013",
+      "title": "Verständliche 403-Fehlermeldung bei fehlendem Projektrecht",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, ux |\n| Assignee (Plan) | Alex |\n| Blockiert durch | #12 |\n\n### Problemstellung\nEinheitliche Fehlertexte DE; kein Information Leak.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** verstehen, warum ein Ticket nicht zugänglich ist  \n**damit** ich nicht den Support wegen leerer Seite bemühe\n\n### Akzeptanzkriterien\n#### AC1 — Klartext\n\n```gherkin\nSzenario: Klartext\n  Gegeben Ticket in fremdem Projekt.\n  Wenn Detail öffnen.\n  Dann Meldung: kein Zugriff auf dieses Projekt (DE).\n```\n\n#### AC2 — API\n\n```gherkin\nSzenario: API\n  Gegeben REST mit falscher ID.\n  Wenn GET/PUT.\n  Dann 403 JSON + gleicher Sinntext.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Alex",
+      "labels": [
+        "ap2",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "03.07.2026",
+      "blocked_by": [
+        12
+      ],
+      "relates_to": []
+    },
+    {
+      "n": 14,
+      "ticket_number": "NEXTICK-014",
+      "title": "REST-API und Service-Layer für Ticket-CRUD",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, api |\n| Assignee (Plan) | Alex |\n| Blockiert durch | #10, #11, #12 |\n\n### Problemstellung\nKeine Business-Logik im Controller.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** Tickets anlegen, lesen, bearbeiten und schließen  \n**damit** der Helpdesk in Nextcloud stattfindet\n\n### Akzeptanzkriterien\n#### AC1 — CRUD\n\n```gherkin\nSzenario: CRUD\n  Gegeben Agent berechtigt.\n  Wenn Create/Read/Update.\n  Dann Ticket persistiert, Audit-Felder gesetzt.\n```\n\n#### AC2 — Close/Reopen\n\n```gherkin\nSzenario: Close/Reopen\n  Gegeben Workflow vorbereitet.\n  Wenn Statuswechsel.\n  Dann Vorbereitet für #23.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nlib/Controller/TicketController.php; lib/Service/*\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Alex",
+      "labels": [
+        "ap2",
+        "api"
+      ],
+      "lifecycle": "done",
+      "done_at": "04.07.2026",
+      "blocked_by": [
+        10,
+        11,
+        12
+      ],
+      "relates_to": []
+    },
+    {
+      "n": 15,
+      "ticket_number": "NEXTICK-015",
+      "title": "Nextcloud-App registrieren und Staff-Navigation",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, ux |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nNutzerbedarf (E2 / AP2): **Agent Sandra** benötigt die Fähigkeit, Ticketcheck in der NC-Sidebar öffnen — damit ich nicht eine Bookmark-URL brauche.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** Ticketcheck in der NC-Sidebar öffnen  \n**damit** ich nicht eine Bookmark-URL brauche\n\n### Akzeptanzkriterien\n#### AC1 — Navigation\n\n```gherkin\nSzenario: Navigation\n  Gegeben App enabled.\n  Wenn Sidebar prüfen.\n  Dann Eintrag sichtbar, Icon, DE/EN Name.\n```\n\n#### AC2 — Routing\n\n```gherkin\nSzenario: Routing\n  Gegeben Navigation klicken.\n  Wenn Liste laden.\n  Dann Kein 500.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nappinfo/info.xml; l10n für App-Name.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Lara",
+      "labels": [
+        "ap2",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "02.07.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 16,
+      "ticket_number": "NEXTICK-016",
+      "title": "Agent-UI: Ticket-Liste mit Kernspalten",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, ux |\n| Assignee (Plan) | Lara |\n| Blockiert durch | #14, #15 |\n\n### Problemstellung\nResponsive ab 320px; nur erlaubte Projekte.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** alle mir zugänglichen Tickets tabellarisch sehen  \n**damit** ich Prioritäten setzen kann\n\n### Akzeptanzkriterien\n#### AC1 — Spalten\n\n```gherkin\nSzenario: Spalten\n  Gegeben Liste offen.\n  Wenn Spalten prüfen.\n  Dann Titel, Status, Priorität, Datum, Zuweisung sichtbar.\n```\n\n#### AC2 — Navigation\n\n```gherkin\nSzenario: Navigation\n  Gegeben Zeile klicken.\n  Wenn Detail laden.\n  Dann Detail #17 öffnet sich.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Lara",
+      "labels": [
+        "ap2",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "04.07.2026",
+      "blocked_by": [
+        14,
+        15
+      ],
+      "relates_to": []
+    },
+    {
+      "n": 17,
+      "ticket_number": "NEXTICK-017",
+      "title": "Agent-UI: Ticket-Detail und Bearbeitungsformular",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, ux |\n| Assignee (Plan) | Lara |\n| Blockiert durch | #14 |\n\n### Problemstellung\nNutzerbedarf (E2 / AP2): **Agent Sandra** benötigt die Fähigkeit, ein Ticket an einem Ort bearbeiten — damit ich nicht zwischen Masken springe.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** ein Ticket an einem Ort bearbeiten  \n**damit** ich nicht zwischen Masken springe\n\n### Akzeptanzkriterien\n#### AC1 — Laden\n\n```gherkin\nSzenario: Laden\n  Gegeben Berechtigtes Ticket.\n  Wenn Detail öffnen.\n  Dann Alle Felder korrekt.\n```\n\n#### AC2 — Speichern\n\n```gherkin\nSzenario: Speichern\n  Gegeben Änderung + Speichern.\n  Wenn Persistenz prüfen.\n  Dann Bestätigung ohne Voll-Reload-Wirrwarr.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Lara",
+      "labels": [
+        "ap2",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "05.07.2026",
+      "blocked_by": [
+        14
+      ],
+      "relates_to": []
+    },
+    {
+      "n": 18,
+      "ticket_number": "NEXTICK-018",
+      "title": "Server- und Client-Validierung Pflichtfelder",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Bug / Qualität |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2 |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nKein prompt(); role=alert für Fehler.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** bei leeren Pflichtfeldern klare Hinweise  \n**damit** keine unvollständigen Tickets entstehen\n\n### Akzeptanzkriterien\n#### AC1 — Server\n\n```gherkin\nSzenario: Server\n  Gegeben Leere Beschreibung.\n  Wenn POST/PUT.\n  Dann 422/400, kein Insert.\n```\n\n#### AC2 — UI\n\n```gherkin\nSzenario: UI\n  Gegeben Gleicher Fall.\n  Wenn Speichern klicken.\n  Dann Feldfehler inline sichtbar.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Bug / Qualität",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Alex",
+      "labels": [
+        "ap2"
+      ],
+      "lifecycle": "done",
+      "done_at": "05.07.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 19,
+      "ticket_number": "NEXTICK-019",
+      "title": "Projekt-Zugehörigkeit bei Create/Update erzwingen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Security |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, security |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #6 |\n\n### Problemstellung\nSicherheitsanforderung im Gast-/Mandanten-Kontext (E2): _Projekt-Zugehörigkeit bei Create/Update erzwingen_. Fehler würden Datenzugriff über ID-Manipulation oder Rollenumgehung ermöglichen.\n\n### User Story\n**Als** Security  \n**möchte ich** kein Verschieben in fremde Projekte per API  \n**damit** Mandantentrennung gewahrt bleibt\n\n### Akzeptanzkriterien\n#### AC1 — Manipulation\n\n```gherkin\nSzenario: Manipulation\n  Gegeben Manipulierte project_id.\n  Wenn POST/PUT.\n  Dann 403, kein Datenbankeintrag.\n```\n\n#### AC2 — Test\n\n```gherkin\nSzenario: Test\n  Gegeben Matrix #6.\n  Wenn Szenario ausführen.\n  Dann Zeile dokumentiert pass.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n- [x] Eintrag in Security-Matrix #39 (falls Guest/RBAC)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nSecurity-Matrix #39; PHPUnit für API-Pfade; manuell: IDOR-URLs aus AC durchspielen.\n",
+      "type": "Security",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Alex",
+      "labels": [
+        "ap2",
+        "security"
+      ],
+      "lifecycle": "done",
+      "done_at": "05.07.2026",
+      "blocked_by": [],
+      "relates_to": [
+        6
+      ]
+    },
+    {
+      "n": 20,
+      "ticket_number": "NEXTICK-020",
+      "title": "Entwicklungsumgebung Docker-Nextcloud dokumentieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, docs |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nNutzerbedarf (E2 / AP2): **Entwickler** benötigt die Fähigkeit, lokal in unter 30 Minuten starten — damit Onboarding nicht am Setup scheitert.\n\n### User Story\n**Als** Entwickler  \n**möchte ich** lokal in unter 30 Minuten starten  \n**damit** Onboarding nicht am Setup scheitert\n\n### Akzeptanzkriterien\n#### AC1 — README\n\n```gherkin\nSzenario: README\n  Gegeben Neues Teammitglied.\n  Wenn README folgen.\n  Dann Schritte reproduzierbar, App mount/install beschrieben.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nnextcloud/dev-setup.sh oder Compose im Repo-Root.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Alex",
+      "labels": [
+        "ap2",
+        "docs"
+      ],
+      "lifecycle": "done",
+      "done_at": "10.06.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 21,
+      "ticket_number": "NEXTICK-021",
+      "title": "PHPUnit: Happy-Path Ticket-CRUD",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | — |\n| Epic | E2 |\n| Labels | ap2, qa |\n| Assignee (Plan) | Hauke |\n| Blockiert durch | #14 |\n\n### Problemstellung\nNutzerbedarf (E2 / AP2): **QA** benötigt die Fähigkeit, automatisierten Regressionstest für CRUD — damit Refactorings in AP3 abgesichert sind.\n\n### User Story\n**Als** QA  \n**möchte ich** automatisierten Regressionstest für CRUD  \n**damit** Refactorings in AP3 abgesichert sind\n\n### Akzeptanzkriterien\n#### AC1 — CI\n\n```gherkin\nSzenario: CI\n  Gegeben CI #2 läuft.\n  Wenn PHPUnit-Job.\n  Dann create → read → update grün.\n```\n\n#### AC2 — Lokal\n\n```gherkin\nSzenario: Lokal\n  Gegeben Docker/occ.\n  Wenn Test lokal.\n  Dann Gleiches Ergebnis wie CI.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nTestplan/Matrix referenzieren; Ergebnisse als Kommentar oder PDF-Anhang.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "",
+      "epic": "E2",
+      "assignee": "Hauke",
+      "labels": [
+        "ap2",
+        "qa"
+      ],
+      "lifecycle": "done",
+      "done_at": "04.07.2026",
+      "blocked_by": [
+        14
+      ],
+      "relates_to": []
+    },
+    {
+      "n": 22,
+      "ticket_number": "NEXTICK-022",
+      "title": "Meilenstein MS2: Installierbare Basis-App mit Ticket-CRUD",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Epic / Meilenstein |\n| Priorität | P1 Must |\n| AP | AP2 |\n| Meilenstein | MS2 |\n| Epic | E2 |\n| Labels | ap2, ms2 |\n| Assignee (Plan) | Team |\n| Blockiert durch | #13, #14, #15, #16, #17, #18, #19, #21 |\n| Bezieht sich auf | #6 |\n\n### Problemstellung\nAntrag Meilenstein 2 — installierbare Nextcloud-App ohne DB-Workarounds.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** Meilenstein 2 aus dem Antrag nachweisen  \n**damit** Pilot und Förderberichte glaubwürdig sind\n\n### Akzeptanzkriterien\n#### AC1 — Greenfield\n\n```gherkin\nSzenario: Greenfield\n  Gegeben NC + App.\n  Wenn Ticket anlegen, zuweisen, finden.\n  Dann Durchlauf ohne Hack.\n```\n\n#### AC2 — Demo\n\n```gherkin\nSzenario: Demo\n  Gegeben Interne Demo.\n  Wenn MS2 zeigen.\n  Dann Kein manueller DB-Hack.\n```\n\n#### AC3 — Matrix\n\n```gherkin\nSzenario: Matrix\n  Gegeben Testplan #6.\n  Wenn Review.\n  Dann P1-Szenarien grün.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nMS2-Demo protokollieren; Screenshot optional.\n",
+      "type": "Epic / Meilenstein",
+      "priority": "Must",
+      "ap": "AP2",
+      "milestone": "MS2",
+      "epic": "E2",
+      "assignee": "Team",
+      "labels": [
+        "ap2",
+        "ms2"
+      ],
+      "lifecycle": "done",
+      "done_at": "05.07.2026",
+      "blocked_by": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        21
+      ],
+      "relates_to": [
+        6
+      ]
+    },
+    {
+      "n": 23,
+      "ticket_number": "NEXTICK-023",
+      "title": "Status-Workflow serverseitig implementieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | ap3 |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nNutzerbedarf (E3 / AP3): **Agent Sandra** benötigt die Fähigkeit, nur erlaubte Statuswechsel wählen — damit der Vereinsprozess eingehalten wird.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** nur erlaubte Statuswechsel wählen  \n**damit** der Vereinsprozess eingehalten wird\n\n### Akzeptanzkriterien\n#### AC1 — Graph\n\n```gherkin\nSzenario: Graph\n  Gegeben Übergangsgraph dokumentiert.\n  Wenn Illegaler Wechsel.\n  Dann API lehnt ab.\n```\n\n#### AC2 — UI\n\n```gherkin\nSzenario: UI\n  Gegeben Detail offen.\n  Wenn Status-Dropdown.\n  Dann Nur erlaubte Ziel-Status sichtbar.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Alex",
+      "labels": [
+        "ap3"
+      ],
+      "lifecycle": "done",
+      "done_at": "18.07.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 24,
+      "ticket_number": "NEXTICK-024",
+      "title": "Statusübergang „wartet auf Rückmeldung“ → „offen“ ermöglichen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | ap3 |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #73 |\n\n### Problemstellung\nNutzerbedarf (E3 / AP3): **Agent Sandra** benötigt die Fähigkeit, ein Ticket wieder öffnen, wenn der Gast geantwortet hat — damit ich keinen Admin-Eingriff brauche.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** ein Ticket wieder öffnen, wenn der Gast geantwortet hat  \n**damit** ich keinen Admin-Eingriff brauche\n\n### Akzeptanzkriterien\n#### AC1 — Übergang\n\n```gherkin\nSzenario: Übergang\n  Gegeben Ticket wartet auf Rückmeldung.\n  Wenn Status auf offen setzen.\n  Dann Erlaubt + optional Audit.\n```\n\n#### AC2 — Gast-Sicht\n\n```gherkin\nSzenario: Gast-Sicht\n  Gegeben Gast eingeloggt.\n  Wenn Status prüfen.\n  Dann Aktualisierter Status sichtbar (#73 verfeinert).\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Alex",
+      "labels": [
+        "ap3"
+      ],
+      "lifecycle": "done",
+      "done_at": "19.07.2026",
+      "blocked_by": [],
+      "relates_to": [
+        73
+      ]
+    },
+    {
+      "n": 25,
+      "ticket_number": "NEXTICK-025",
+      "title": "Kommentare öffentlich vs. intern unterscheiden",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | ap3 |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nNutzerbedarf (E3 / AP3): **Agent Sandra** benötigt die Fähigkeit, interne Notizen schreiben, die Thomas nicht sieht — damit sensible Sachverhalte intern bleiben.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** interne Notizen schreiben, die Thomas nicht sieht  \n**damit** sensible Sachverhalte intern bleiben\n\n### Akzeptanzkriterien\n#### AC1 — Flag\n\n```gherkin\nSzenario: Flag\n  Gegeben Kommentar anlegen.\n  Wenn is_public setzen.\n  Dann Gast-API filtert interne Kommentare.\n```\n\n#### AC2 — UI\n\n```gherkin\nSzenario: UI\n  Gegeben Agent-Detail.\n  Wenn Thread ansehen.\n  Dann Öffentlich/intern visuell getrennt.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Lara",
+      "labels": [
+        "ap3"
+      ],
+      "lifecycle": "done",
+      "done_at": "20.07.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 26,
+      "ticket_number": "NEXTICK-026",
+      "title": "Kommentar-Thread-UI auf Ticket-Detail implementieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | ap3 |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nNutzerbedarf (E3 / AP3): **Agent Sandra** benötigt die Fähigkeit, den Verlauf chronologisch lesen und antworten — damit die Kommunikation wie in einem Thread nachvollziehbar ist.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** den Verlauf chronologisch lesen und antworten  \n**damit** die Kommunikation wie in einem Thread nachvollziehbar ist\n\n### Akzeptanzkriterien\n#### AC1 — Thread\n\n```gherkin\nSzenario: Thread\n  Gegeben Ticket mit Kommentaren.\n  Wenn Detail öffnen.\n  Dann Autor + Zeit (Locale DE) sichtbar.\n```\n\n#### AC2 — Eingabe\n\n```gherkin\nSzenario: Eingabe\n  Gegeben Neuer Kommentar.\n  Wenn Speichern.\n  Dann Ohne Voll-Reload oder mit klarer Rückmeldung.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Lara",
+      "labels": [
+        "ap3"
+      ],
+      "lifecycle": "done",
+      "done_at": "20.07.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 27,
+      "ticket_number": "NEXTICK-027",
+      "title": "Status-Labels für Ehrenamtliche verständlich gestalten",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | ap3, ux, pilot |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nMokwi-Feedback; deutsche Labels, keine internen Codes in der UI.\n\n### User Story\n**Als** Gast Thomas  \n**möchte ich** Status wie „In Bearbeitung“ verstehen  \n**damit** ich nicht PENDING_AGENT sehe\n\n### Akzeptanzkriterien\n#### AC1 — Labels\n\n```gherkin\nSzenario: Labels\n  Gegeben Standard-Status.\n  Wenn UI prüfen.\n  Dann Alle DE benannt, Badge Text+Farbe.\n```\n\n#### AC2 — l10n\n\n```gherkin\nSzenario: l10n\n  Gegeben en.json.\n  Wenn Sprache EN.\n  Dann Parallele englische Strings.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Lara",
+      "labels": [
+        "ap3",
+        "ux",
+        "pilot"
+      ],
+      "lifecycle": "done",
+      "done_at": "22.07.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 28,
+      "ticket_number": "NEXTICK-028",
+      "title": "Agent-UI: Filterleiste für Projekt, Status und Zuweisung",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | ap3, ux |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nNutzerbedarf (E3 / AP3): **Agent Sandra** benötigt die Fähigkeit, nach Projekt, Status und Zuweisung filtern — damit ich nicht die globale NC-Suche brauche.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** nach Projekt, Status und Zuweisung filtern  \n**damit** ich nicht die globale NC-Suche brauche\n\n### Akzeptanzkriterien\n#### AC1 — Kombination\n\n```gherkin\nSzenario: Kombination\n  Gegeben Mehrere Filter.\n  Wenn Anwenden.\n  Dann Ergebnisliste eingeschränkt.\n```\n\n#### AC2 — Reset\n\n```gherkin\nSzenario: Reset\n  Gegeben Filter gesetzt.\n  Wenn Alle anzeigen.\n  Dann Liste zurückgesetzt.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Lara",
+      "labels": [
+        "ap3",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "25.07.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 29,
+      "ticket_number": "NEXTICK-029",
+      "title": "Unified-Search-Provider für Tickets registrieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | ap3 |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nNutzerbedarf (E3 / AP3): **Agent Sandra** benötigt die Fähigkeit, Tickets in der globalen Nextcloud-Suche finden — damit ich schnell ein Anliegen wiederfinde.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** Tickets in der globalen Nextcloud-Suche finden  \n**damit** ich schnell ein Anliegen wiederfinde\n\n### Akzeptanzkriterien\n#### AC1 — Provider\n\n```gherkin\nSzenario: Provider\n  Gegeben App enabled.\n  Wenn NC-Suche.\n  Dann Treffer verlinken auf Ticket-Detail.\n```\n\n#### AC2 — Rechte\n\n```gherkin\nSzenario: Rechte\n  Gegeben Zwei Nutzer.\n  Wenn Suche.\n  Dann Nur berechtigte Tickets sichtbar.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Alex",
+      "labels": [
+        "ap3"
+      ],
+      "lifecycle": "done",
+      "done_at": "28.07.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 30,
+      "ticket_number": "NEXTICK-030",
+      "title": "Internes UX-Review (WCAG-orientiert) durchführen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | ap3, ux, qa |\n| Assignee (Plan) | Hauke |\n| Bezieht sich auf | #31, #32 |\n\n### Problemstellung\nNutzerbedarf (E3 / AP3): **Nutzer mit Tastatur** benötigt die Fähigkeit, alle Kernpfade ohne Maus bedienen — damit Barrierefreiheit im Prototyp mitgedacht wird.\n\n### User Story\n**Als** Nutzer mit Tastatur  \n**möchte ich** alle Kernpfade ohne Maus bedienen  \n**damit** Barrierefreiheit im Prototyp mitgedacht wird\n\n### Akzeptanzkriterien\n#### AC1 — Checkliste\n\n```gherkin\nSzenario: Checkliste\n  Gegeben Checkliste existiert.\n  Wenn Review durchführen.\n  Dann Fokus, Kontrast, Fehlertexte geprüft.\n```\n\n#### AC2 — Befunde\n\n```gherkin\nSzenario: Befunde\n  Gegeben Befunde dokumentiert.\n  Wenn Priorisierung.\n  Dann Als #31/#32 oder sofort gefixt.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nTestplan/Matrix referenzieren; Ergebnisse als Kommentar oder PDF-Anhang.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Hauke",
+      "labels": [
+        "ap3",
+        "ux",
+        "qa"
+      ],
+      "lifecycle": "done",
+      "done_at": "20.07.2026",
+      "blocked_by": [],
+      "relates_to": [
+        31,
+        32
+      ]
+    },
+    {
+      "n": 31,
+      "ticket_number": "NEXTICK-031",
+      "title": "Agent-UI: Button-Reihenfolge auf Ticket-Detail optimieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | ap3, ux |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nNutzerbedarf (E3 / AP3): **Agent Sandra** benötigt die Fähigkeit, die wichtigste Aktion (Speichern) zuerst erkennen — damit ich keine destruktiven Klicks versehentlich auslöse.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** die wichtigste Aktion (Speichern) zuerst erkennen  \n**damit** ich keine destruktiven Klicks versehentlich auslöse\n\n### Akzeptanzkriterien\n#### AC1 — Primäre CTA\n\n```gherkin\nSzenario: Primäre CTA\n  Gegeben Detail offen.\n  Wenn Kopfbereich prüfen.\n  Dann Eine primäre CTA pro Bereich.\n```\n\n#### AC2 — Destruktiv\n\n```gherkin\nSzenario: Destruktiv\n  Gegeben Schließen/Löschen.\n  Wenn Aktion auslösen.\n  Dann Sekundär oder mit Bestätigung.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Lara",
+      "labels": [
+        "ap3",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "02.08.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 32,
+      "ticket_number": "NEXTICK-032",
+      "title": "Agent-UI: Empty State „keine Tickets“ gestalten",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | ap3, ux |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nNutzerbedarf (E3 / AP3): **Agent Sandra** benötigt die Fähigkeit, bei leerer Liste Erklärung und CTA sehen — damit ich nicht vor einer weißen Fläche stehe.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** bei leerer Liste Erklärung und CTA sehen  \n**damit** ich nicht vor einer weißen Fläche stehe\n\n### Akzeptanzkriterien\n#### AC1 — Inhalt\n\n```gherkin\nSzenario: Inhalt\n  Gegeben Leere Liste.\n  Wenn Seite öffnen.\n  Dann Icon + Satz + CTA Ticket anlegen.\n```\n\n#### AC2 — a11y\n\n```gherkin\nSzenario: a11y\n  Gegeben Screenreader.\n  Wenn Leerer Zustand.\n  Dann Sinnvoller Text.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Lara",
+      "labels": [
+        "ap3",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "02.08.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 33,
+      "ticket_number": "NEXTICK-033",
+      "title": "Meilenstein MS3: Internes System ohne Excel-Workarounds",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Epic / Meilenstein |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | MS3 |\n| Epic | E3 |\n| Labels | ap3, ms3 |\n| Assignee (Plan) | Team |\n| Bezieht sich auf | #23, #24, #25, #26, #27, #28, #29, #30, #31, #32 |\n\n### Problemstellung\nAntrag Meilenstein 3 — tägliche interne Nutzung.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** Meilenstein 3 nachweisen  \n**damit** das Team Ticketcheck produktiv nutzt\n\n### Akzeptanzkriterien\n#### AC1 — Durchlauf\n\n```gherkin\nSzenario: Durchlauf\n  Gegeben Agent eingeloggt.\n  Wenn Zuweisen, filtern, kommentieren.\n  Dann Ein Durchlauf ohne Workaround.\n```\n\n#### AC2 — Security\n\n```gherkin\nSzenario: Security\n  Gegeben Mandanten-Test.\n  Wenn Zwei Projekte.\n  Dann Kein bekanntes Mandanten-Leck.\n```\n\n#### AC3 — Issues\n\n```gherkin\nSzenario: Issues\n  Gegeben Backlog.\n  Wenn Status #23–#32.\n  Dann Alle erledigt.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nTeam-Abnahme mit Checkliste aus AC; Protokoll im Issue-Kommentar.\n",
+      "type": "Epic / Meilenstein",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "MS3",
+      "epic": "E3",
+      "assignee": "Team",
+      "labels": [
+        "ap3",
+        "ms3"
+      ],
+      "lifecycle": "done",
+      "done_at": "02.08.2026",
+      "blocked_by": [],
+      "relates_to": [
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    {
+      "n": 34,
+      "ticket_number": "NEXTICK-034",
+      "title": "Guest-Routing und Middleware für Portal isolieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | — |\n| Epic | E4 |\n| Labels | ap4, security |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nSicherheitsanforderung im Gast-/Mandanten-Kontext (E4): _Guest-Routing und Middleware für Portal isolieren_. Fehler würden Datenzugriff über ID-Manipulation oder Rollenumgehung ermöglichen.\n\n### User Story\n**Als** Gast Thomas  \n**möchte ich** nur URLs meines Portals aufrufen  \n**damit** fremde Projekte nicht erratbar sind\n\n### Akzeptanzkriterien\n#### AC1 — Middleware\n\n```gherkin\nSzenario: Middleware\n  Gegeben Gast eingeloggt.\n  Wenn Staff-URL aufrufen.\n  Dann 403 oder Redirect Portal.\n```\n\n#### AC2 — Templates\n\n```gherkin\nSzenario: Templates\n  Gegeben Portal-Seite.\n  Wenn Quellcode prüfen.\n  Dann Kein OC::$server für Rechte in Templates.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n- [x] Eintrag in Security-Matrix #39 (falls Guest/RBAC)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nSecurity-Matrix #39; PHPUnit für API-Pfade; manuell: IDOR-URLs aus AC durchspielen.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "",
+      "epic": "E4",
+      "assignee": "Alex",
+      "labels": [
+        "ap4",
+        "security"
+      ],
+      "lifecycle": "done",
+      "done_at": "20.08.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 35,
+      "ticket_number": "NEXTICK-035",
+      "title": "Guest-Portal: Schlankes Layout ohne Admin-Menü",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | — |\n| Epic | E4 |\n| Labels | ap4, ux |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nGast-Portal (E4): _Guest-Portal: Schlankes Layout ohne Admin-Menü_. Ziel ist eine schlanke, sichere Erfahrung für externe Nutzer*innen ohne Zugriff auf Staff-Funktionen.\n\n### User Story\n**Als** Gast Thomas  \n**möchte ich** eine einfache Oberfläche ohne Admin-Chaos  \n**damit** ich mich auf meine Anliegen konzentrieren kann\n\n### Akzeptanzkriterien\n#### AC1 — Navigation\n\n```gherkin\nSzenario: Navigation\n  Gegeben Portal offen.\n  Wenn Menü prüfen.\n  Dann Meine Tickets, Neu, FAQ-Link.\n```\n\n#### AC2 — Responsive\n\n```gherkin\nSzenario: Responsive\n  Gegeben Viewport 320px.\n  Wenn Layout prüfen.\n  Dann Nutzbare Darstellung.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "",
+      "epic": "E4",
+      "assignee": "Lara",
+      "labels": [
+        "ap4",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "22.08.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 36,
+      "ticket_number": "NEXTICK-036",
+      "title": "Guest-UI: Ticket-Liste auf eigene Anliegen beschränken",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | — |\n| Epic | E4 |\n| Labels | ap4, security |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nSicherheitsanforderung im Gast-/Mandanten-Kontext (E4): _Guest-UI: Ticket-Liste auf eigene Anliegen beschränken_. Fehler würden Datenzugriff über ID-Manipulation oder Rollenumgehung ermöglichen.\n\n### User Story\n**Als** Gast Thomas  \n**möchte ich** nur meine Tickets in meinem Projekt sehen  \n**damit** Daten anderer Mitglieder nicht sichtbar sind\n\n### Akzeptanzkriterien\n#### AC1 — Liste\n\n```gherkin\nSzenario: Liste\n  Gegeben Gast mit Tickets.\n  Wenn Liste laden.\n  Dann Nur eigene IDs.\n```\n\n#### AC2 — API\n\n```gherkin\nSzenario: API\n  Gegeben API-Response.\n  Wenn Fremde ID prüfen.\n  Dann Keine fremden Ticket-IDs in JSON.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n- [x] Eintrag in Security-Matrix #39 (falls Guest/RBAC)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nSecurity-Matrix #39; PHPUnit für API-Pfade; manuell: IDOR-URLs aus AC durchspielen.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "",
+      "epic": "E4",
+      "assignee": "Alex",
+      "labels": [
+        "ap4",
+        "security"
+      ],
+      "lifecycle": "done",
+      "done_at": "24.08.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 37,
+      "ticket_number": "NEXTICK-037",
+      "title": "Guest-UI: Ticket anlegen (optional pro Projekt)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | — |\n| Epic | E4 |\n| Labels | ap4 |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #43 |\n\n### Problemstellung\nGast-Portal (E4): _Guest-UI: Ticket anlegen (optional pro Projekt)_. Ziel ist eine schlanke, sichere Erfahrung für externe Nutzer*innen ohne Zugriff auf Staff-Funktionen.\n\n### User Story\n**Als** Admin Markus  \n**möchte ich** Gast-Ticket-Erstellung pro Projekt erlauben oder verbieten  \n**damit** der Verein die Policy steuern kann\n\n### Akzeptanzkriterien\n#### AC1 — Einstellung\n\n```gherkin\nSzenario: Einstellung\n  Gegeben Projekt-Settings.\n  Wenn Create erlauben/verbieten.\n  Dann Formular nur wenn erlaubt.\n```\n\n#### AC2 — Policy\n\n```gherkin\nSzenario: Policy\n  Gegeben Gast-Account.\n  Wenn Passwort setzen.\n  Dann NC-Passwortrichtlinie (#43).\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "",
+      "epic": "E4",
+      "assignee": "Alex",
+      "labels": [
+        "ap4"
+      ],
+      "lifecycle": "done",
+      "done_at": "28.08.2026",
+      "blocked_by": [],
+      "relates_to": [
+        43
+      ]
+    },
+    {
+      "n": 38,
+      "ticket_number": "NEXTICK-038",
+      "title": "Bedrohungsmodell für Guest-Portal dokumentieren (STRIDE-light)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | — |\n| Epic | E4 |\n| Labels | ap4, security |\n| Assignee (Plan) | Hauke |\n| Bezieht sich auf | #34 |\n\n### Problemstellung\nSicherheitsanforderung im Gast-/Mandanten-Kontext (E4): _Bedrohungsmodell für Guest-Portal dokumentieren (STRIDE-light)_. Fehler würden Datenzugriff über ID-Manipulation oder Rollenumgehung ermöglichen.\n\n### User Story\n**Als** Auditor  \n**möchte ich** STRIDE-light für URL, Token und Mandant nachlesen  \n**damit** Security-Maßnahmen nachvollziehbar sind\n\n### Akzeptanzkriterien\n#### AC1 — Dokument\n\n```gherkin\nSzenario: Dokument\n  Gegeben Markdown liegt vor.\n  Wenn Review mit Alex.\n  Dann Angriffsflächen, Maßnahmen, Restrisiko.\n```\n\n#### AC2 — Abgleich\n\n```gherkin\nSzenario: Abgleich\n  Gegeben Middleware #34.\n  Wenn Gegenprobe.\n  Dann Maßnahmen decken Middleware ab.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] Eintrag in Security-Matrix #39 (falls Guest/RBAC)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nSecurity-Matrix #39; PHPUnit für API-Pfade; manuell: IDOR-URLs aus AC durchspielen.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "",
+      "epic": "E4",
+      "assignee": "Hauke",
+      "labels": [
+        "ap4",
+        "security"
+      ],
+      "lifecycle": "done",
+      "done_at": "18.08.2026",
+      "blocked_by": [],
+      "relates_to": [
+        34
+      ]
+    },
+    {
+      "n": 39,
+      "ticket_number": "NEXTICK-039",
+      "title": "Security-Testmatrix für Guest-Portal erstellen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | — |\n| Epic | E4 |\n| Labels | ap4, security, qa |\n| Assignee (Plan) | Hauke |\n| Bezieht sich auf | #40, #41, #42 |\n\n### Problemstellung\nSicherheitsanforderung im Gast-/Mandanten-Kontext (E4): _Security-Testmatrix für Guest-Portal erstellen_. Fehler würden Datenzugriff über ID-Manipulation oder Rollenumgehung ermöglichen.\n\n### User Story\n**Als** QA  \n**möchte ich** IDOR- und Escalation-Szenarien abarbeiten  \n**damit** Release ohne offene Blocker möglich ist\n\n### Akzeptanzkriterien\n#### AC1 — Matrix\n\n```gherkin\nSzenario: Matrix\n  Gegeben Matrix angelegt.\n  Wenn Szenarien durchspielen.\n  Dann Direkter Link, fremde ID, ohne Token, Admin-URL.\n```\n\n#### AC2 — Ergebnis\n\n```gherkin\nSzenario: Ergebnis\n  Gegeben Jede Zeile.\n  Wenn pass/fail.\n  Dann Verweis auf #40–#42 bei Fail.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] Eintrag in Security-Matrix #39 (falls Guest/RBAC)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nSecurity-Matrix #39; PHPUnit für API-Pfade; manuell: IDOR-URLs aus AC durchspielen.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "",
+      "epic": "E4",
+      "assignee": "Hauke",
+      "labels": [
+        "ap4",
+        "security",
+        "qa"
+      ],
+      "lifecycle": "done",
+      "done_at": "10.09.2026",
+      "blocked_by": [],
+      "relates_to": [
+        40,
+        41,
+        42
+      ]
+    },
+    {
+      "n": 40,
+      "ticket_number": "NEXTICK-040",
+      "title": "IDOR-Schutz: Fremde Ticket-ID per URL abweisen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Security |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | — |\n| Epic | E4 |\n| Labels | ap4, security, blocker |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #39 |\n\n### Problemstellung\nSicherheitsanforderung im Gast-/Mandanten-Kontext (E4): _IDOR-Schutz: Fremde Ticket-ID per URL abweisen_. Fehler würden Datenzugriff über ID-Manipulation oder Rollenumgehung ermöglichen.\n\n### User Story\n**Als** Security  \n**möchte ich** dass Ersetzen der ID in der URL kein fremdes Ticket liefert  \n**damit** Mandantendaten geschützt bleiben\n\n### Akzeptanzkriterien\n#### AC1 — GET/PUT\n\n```gherkin\nSzenario: GET/PUT\n  Gegeben Fremde Ticket-ID.\n  Wenn Request senden.\n  Dann 403 Forbidden.\n```\n\n#### AC2 — Matrix\n\n```gherkin\nSzenario: Matrix\n  Gegeben Test #39.\n  Wenn Zeile IDOR.\n  Dann pass dokumentiert.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n- [x] Eintrag in Security-Matrix #39 (falls Guest/RBAC)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nSecurity-Matrix #39; PHPUnit für API-Pfade; manuell: IDOR-URLs aus AC durchspielen.\n",
+      "type": "Security",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "",
+      "epic": "E4",
+      "assignee": "Alex",
+      "labels": [
+        "ap4",
+        "security",
+        "blocker"
+      ],
+      "lifecycle": "done",
+      "done_at": "05.09.2026",
+      "blocked_by": [],
+      "relates_to": [
+        39
+      ]
+    },
+    {
+      "n": 41,
+      "ticket_number": "NEXTICK-041",
+      "title": "Zugriff ohne Projektrecht für Gäste verhindern",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Security |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | — |\n| Epic | E4 |\n| Labels | ap4, security |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #13 |\n\n### Problemstellung\nSicherheitsanforderung im Gast-/Mandanten-Kontext (E4): _Zugriff ohne Projektrecht für Gäste verhindern_. Fehler würden Datenzugriff über ID-Manipulation oder Rollenumgehung ermöglichen.\n\n### User Story\n**Als** Gast Thomas  \n**möchte ich** kein fremdes Projekt sehen  \n**damit** ich nur meinen Vereinskontext nutze\n\n### Akzeptanzkriterien\n#### AC1 — Manipulation\n\n```gherkin\nSzenario: Manipulation\n  Gegeben Projekt-Switch per API.\n  Wenn Manipulierte Payload.\n  Dann Abgewiesen.\n```\n\n#### AC2 — Fehlertext\n\n```gherkin\nSzenario: Fehlertext\n  Gegeben 403.\n  Wenn Meldung lesen.\n  Dann Konsistent mit #13.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n- [x] Eintrag in Security-Matrix #39 (falls Guest/RBAC)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nSecurity-Matrix #39; PHPUnit für API-Pfade; manuell: IDOR-URLs aus AC durchspielen.\n",
+      "type": "Security",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "",
+      "epic": "E4",
+      "assignee": "Alex",
+      "labels": [
+        "ap4",
+        "security"
+      ],
+      "lifecycle": "done",
+      "done_at": "05.09.2026",
+      "blocked_by": [],
+      "relates_to": [
+        13
+      ]
+    },
+    {
+      "n": 42,
+      "ticket_number": "NEXTICK-042",
+      "title": "Staff-URLs für Gäste sperren (Admin-Link-Schutz)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Security |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | — |\n| Epic | E4 |\n| Labels | ap4, security |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #39 |\n\n### Problemstellung\nSicherheitsanforderung im Gast-/Mandanten-Kontext (E4): _Staff-URLs für Gäste sperren (Admin-Link-Schutz)_. Fehler würden Datenzugriff über ID-Manipulation oder Rollenumgehung ermöglichen.\n\n### User Story\n**Als** Gast Thomas  \n**möchte ich** dass Lesezeichen auf /settings nicht funktionieren  \n**damit** ich keine Admin-Funktionen erreiche\n\n### Akzeptanzkriterien\n#### AC1 — Routen\n\n```gherkin\nSzenario: Routen\n  Gegeben Gast eingeloggt.\n  Wenn Staff-URLs aufrufen.\n  Dann 403 oder Redirect Portal.\n```\n\n#### AC2 — Matrix\n\n```gherkin\nSzenario: Matrix\n  Gegeben Test #39.\n  Wenn Zeile Admin-URL.\n  Dann pass.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n- [x] Eintrag in Security-Matrix #39 (falls Guest/RBAC)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nSecurity-Matrix #39; PHPUnit für API-Pfade; manuell: IDOR-URLs aus AC durchspielen.\n",
+      "type": "Security",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "",
+      "epic": "E4",
+      "assignee": "Alex",
+      "labels": [
+        "ap4",
+        "security"
+      ],
+      "lifecycle": "done",
+      "done_at": "06.09.2026",
+      "blocked_by": [],
+      "relates_to": [
+        39
+      ]
+    },
+    {
+      "n": 43,
+      "ticket_number": "NEXTICK-043",
+      "title": "Gast-Passwort-Policy an Nextcloud anbinden",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | — |\n| Epic | E4 |\n| Labels | ap4 |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #65 |\n\n### Problemstellung\nGast-Portal (E4): _Gast-Passwort-Policy an Nextcloud anbinden_. Ziel ist eine schlanke, sichere Erfahrung für externe Nutzer*innen ohne Zugriff auf Staff-Funktionen.\n\n### User Story\n**Als** Admin Markus  \n**möchte ich** Gast-Accounts mit bestehender NC-Passwortrichtlinie  \n**damit** kein separates Passwort-System nötig ist\n\n### Akzeptanzkriterien\n#### AC1 — NC-Policy\n\n```gherkin\nSzenario: NC-Policy\n  Gegeben Gast anlegen.\n  Wenn Schwaches Passwort.\n  Dann NC lehnt ab.\n```\n\n#### AC2 — Doku\n\n```gherkin\nSzenario: Doku\n  Gegeben Admin-Handbuch.\n  Wenn Abschnitt lesen.\n  Dann Hinweis in #65.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n- Eigenes Passwort-Management in Ticketcheck.\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "",
+      "epic": "E4",
+      "assignee": "Alex",
+      "labels": [
+        "ap4"
+      ],
+      "lifecycle": "done",
+      "done_at": "28.08.2026",
+      "blocked_by": [],
+      "relates_to": [
+        65
+      ]
+    },
+    {
+      "n": 44,
+      "ticket_number": "NEXTICK-044",
+      "title": "Meilenstein MS4: Guest-Portal produktionsreif",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Epic / Meilenstein |\n| Priorität | P1 Must |\n| AP | AP4 |\n| Meilenstein | MS4 |\n| Epic | E4 |\n| Labels | ap4, ms4 |\n| Assignee (Plan) | Team |\n\n### Problemstellung\nPilot Mokwi kann Gäste testen — Antrag Meilenstein 4.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** Meilenstein 4 nachweisen  \n**damit** Gast-Workflow im Pilot nutzbar ist\n\n### Akzeptanzkriterien\n#### AC1 — Login-Flow\n\n```gherkin\nSzenario: Login-Flow\n  Gegeben Gast-Account.\n  Wenn Login → Liste → Detail.\n  Dann Optional Create.\n```\n\n#### AC2 — Security\n\n```gherkin\nSzenario: Security\n  Gegeben Matrix #39.\n  Wenn Review.\n  Dann Keine offenen Blocker.\n```\n\n#### AC3 — Pilot\n\n```gherkin\nSzenario: Pilot\n  Gegeben Pilotkontakt.\n  Wenn Kurztest.\n  Dann Möglich und dokumentiert.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nTeam-Abnahme mit Checkliste aus AC; Protokoll im Issue-Kommentar.\n",
+      "type": "Epic / Meilenstein",
+      "priority": "Must",
+      "ap": "AP4",
+      "milestone": "MS4",
+      "epic": "E4",
+      "assignee": "Team",
+      "labels": [
+        "ap4",
+        "ms4"
+      ],
+      "lifecycle": "done",
+      "done_at": "14.09.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 45,
+      "ticket_number": "NEXTICK-045",
+      "title": "Knowledge Base: Kategorien und Artikel-CRUD implementieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP5 |\n| Meilenstein | — |\n| Epic | E5 |\n| Labels | ap5 |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nWissensmanagement (E5): _Knowledge Base: Kategorien und Artikel-CRUD implementieren_. Reduziert Rückfragen an Ehrenamt und entlastet Agents.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** FAQ-Artikel pflegen  \n**damit** Gäste Standardfragen selbst klären\n\n### Akzeptanzkriterien\n#### AC1 — CRUD\n\n```gherkin\nSzenario: CRUD\n  Gegeben Agent/Admin.\n  Wenn Artikel anlegen/bearbeiten.\n  Dann Kategorien + Veröffentlichungsstatus.\n```\n\n#### AC2 — Gast\n\n```gherkin\nSzenario: Gast\n  Gegeben Veröffentlichter Artikel.\n  Wenn Portal FAQ.\n  Dann Lesbar für Gast.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP5",
+      "milestone": "",
+      "epic": "E5",
+      "assignee": "Alex",
+      "labels": [
+        "ap5"
+      ],
+      "lifecycle": "done",
+      "done_at": "12.09.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 46,
+      "ticket_number": "NEXTICK-046",
+      "title": "Guest-Portal: KB-Navigation nach Pilot-Feedback optimieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP5 |\n| Meilenstein | — |\n| Epic | E5 |\n| Labels | ap5, ux, pilot |\n| Assignee (Plan) | Lara |\n| Bezieht sich auf | #50 |\n\n### Problemstellung\nGast-Portal (E5): _Guest-Portal: KB-Navigation nach Pilot-Feedback optimieren_. Ziel ist eine schlanke, sichere Erfahrung für externe Nutzer*innen ohne Zugriff auf Staff-Funktionen.\n\n### User Story\n**Als** Gast Thomas  \n**möchte ich** sofort Ticket-Status und FAQ finden  \n**damit** ich nicht drei Klicks suchen muss\n\n### Akzeptanzkriterien\n#### AC1 — Einstiege\n\n```gherkin\nSzenario: Einstiege\n  Gegeben Portal offen.\n  Wenn Navigation.\n  Dann Zwei klare Einstiege: Tickets | Hilfe/FAQ.\n```\n\n#### AC2 — Mokwi\n\n```gherkin\nSzenario: Mokwi\n  Gegeben Feedback #50.\n  Wenn Review.\n  Dann Umsetzung begründet im Issue.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP5",
+      "milestone": "",
+      "epic": "E5",
+      "assignee": "Lara",
+      "labels": [
+        "ap5",
+        "ux",
+        "pilot"
+      ],
+      "lifecycle": "done",
+      "done_at": "14.09.2026",
+      "blocked_by": [],
+      "relates_to": [
+        50
+      ]
+    },
+    {
+      "n": 47,
+      "ticket_number": "NEXTICK-047",
+      "title": "Ticket-Anhänge über Nextcloud Files verknüpfen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP5 |\n| Meilenstein | — |\n| Epic | E5 |\n| Labels | ap5 |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nNutzerbedarf (E5 / AP5): **Agent Sandra** benötigt die Fähigkeit, Screenshots an Tickets hängen — damit ich kein separates Upload-Tool brauche.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** Screenshots an Tickets hängen  \n**damit** ich kein separates Upload-Tool brauche\n\n### Akzeptanzkriterien\n#### AC1 — Upload\n\n```gherkin\nSzenario: Upload\n  Gegeben Berechtigter Agent.\n  Wenn Datei anhängen.\n  Dann Verknüpfung mit NC-Datei.\n```\n\n#### AC2 — Download\n\n```gherkin\nSzenario: Download\n  Gegeben Download-Link.\n  Wenn Ohne Ticket-Recht.\n  Dann 403.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP5",
+      "milestone": "",
+      "epic": "E5",
+      "assignee": "Alex",
+      "labels": [
+        "ap5"
+      ],
+      "lifecycle": "done",
+      "done_at": "13.09.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 48,
+      "ticket_number": "NEXTICK-048",
+      "title": "Sichtbarkeit von Anhängen für Gast vs. Agent steuern",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP5 |\n| Meilenstein | — |\n| Epic | E5 |\n| Labels | ap5 |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nGast-Portal (E5): _Sichtbarkeit von Anhängen für Gast vs. Agent steuern_. Ziel ist eine schlanke, sichere Erfahrung für externe Nutzer*innen ohne Zugriff auf Staff-Funktionen.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** interne Anhänge, die Thomas nicht sieht  \n**damit** sensible Dateien intern bleiben\n\n### Akzeptanzkriterien\n#### AC1 — Flag\n\n```gherkin\nSzenario: Flag\n  Gegeben Anhang anlegen.\n  Wenn Sichtbarkeit setzen.\n  Dann Gast-API listet nur erlaubte Dateien.\n```\n\n#### AC2 — Doku\n\n```gherkin\nSzenario: Doku\n  Gegeben Konvention.\n  Wenn Team liest Doku.\n  Dann Flag oder Ordnerkonvention dokumentiert.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP5",
+      "milestone": "",
+      "epic": "E5",
+      "assignee": "Alex",
+      "labels": [
+        "ap5"
+      ],
+      "lifecycle": "done",
+      "done_at": "14.09.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 49,
+      "ticket_number": "NEXTICK-049",
+      "title": "REST-API für KB und Anhänge stabilisieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP5 |\n| Meilenstein | — |\n| Epic | E5 |\n| Labels | ap5, api |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nWissensmanagement (E5): _REST-API für KB und Anhänge stabilisieren_. Reduziert Rückfragen an Ehrenamt und entlastet Agents.\n\n### User Story\n**Als** Frontend  \n**möchte ich** stabile JSON-Contracts  \n**damit** keine Breaking Changes vor Release entstehen\n\n### Akzeptanzkriterien\n#### AC1 — Doku\n\n```gherkin\nSzenario: Doku\n  Gegeben API-Doku.\n  Wenn Endpoints prüfen.\n  Dann Aktualisiert, Fehlercodes konsistent.\n```\n\n#### AC2 — Regression\n\n```gherkin\nSzenario: Regression\n  Gegeben CI.\n  Wenn Smoke-Tests.\n  Dann KB + Attachment grün.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP5",
+      "milestone": "",
+      "epic": "E5",
+      "assignee": "Alex",
+      "labels": [
+        "ap5",
+        "api"
+      ],
+      "lifecycle": "done",
+      "done_at": "14.09.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 50,
+      "ticket_number": "NEXTICK-050",
+      "title": "Pilot-Gespräch FAQ-Platzierung protokollieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP5 |\n| Meilenstein | — |\n| Epic | E5 |\n| Labels | ap5, pilot |\n| Assignee (Plan) | Hauke |\n| Bezieht sich auf | #46 |\n\n### Problemstellung\nWissensmanagement (E5): _Pilot-Gespräch FAQ-Platzierung protokollieren_. Reduziert Rückfragen an Ehrenamt und entlastet Agents.\n\n### User Story\n**Als** PM  \n**möchte ich** Mokwi-Feedback zu Navigation schriftlich  \n**damit** #46 begründet werden kann\n\n### Akzeptanzkriterien\n#### AC1 — Protokoll\n\n```gherkin\nSzenario: Protokoll\n  Gegeben Gespräch geführt.\n  Wenn Notizen.\n  Dann 3 Kernpunkte dokumentiert.\n```\n\n#### AC2 — Verweis\n\n```gherkin\nSzenario: Verweis\n  Gegeben Issue #46.\n  Wenn Beschreibung.\n  Dann Link auf Protokoll.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP5",
+      "milestone": "",
+      "epic": "E5",
+      "assignee": "Hauke",
+      "labels": [
+        "ap5",
+        "pilot"
+      ],
+      "lifecycle": "done",
+      "done_at": "12.09.2026",
+      "blocked_by": [],
+      "relates_to": [
+        46
+      ]
+    },
+    {
+      "n": 51,
+      "ticket_number": "NEXTICK-051",
+      "title": "Meilenstein MS5: Knowledge Base und Anhänge",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Epic / Meilenstein |\n| Priorität | P1 Must |\n| AP | AP5 |\n| Meilenstein | MS5 |\n| Epic | E5 |\n| Labels | ap5, ms5 |\n| Assignee (Plan) | Team |\n\n### Problemstellung\n**MS5** ist im Prototype-Fund-Antrag als abnahmefähiger Zwischenstand definiert. Dieses Ticket bündelt die Nachweise für: _Meilenstein MS5: Knowledge Base und Anhänge_.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** Meilenstein 5 nachweisen  \n**damit** KB und Anhänge intern abgenommen sind\n\n### Akzeptanzkriterien\n#### AC1 — Agent\n\n```gherkin\nSzenario: Agent\n  Gegeben Agent.\n  Wenn Artikel + Anhang an Ticket.\n  Dann Funktioniert.\n```\n\n#### AC2 — Gast\n\n```gherkin\nSzenario: Gast\n  Gegeben Gast.\n  Wenn FAQ lesen, öffentliche Anhänge.\n  Dann Sichtbar.\n```\n\n#### AC3 — Abnahme\n\n```gherkin\nSzenario: Abnahme\n  Gegeben Vor AP6.\n  Wenn Review.\n  Dann Intern abgenommen.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nTeam-Abnahme mit Checkliste aus AC; Protokoll im Issue-Kommentar.\n",
+      "type": "Epic / Meilenstein",
+      "priority": "Must",
+      "ap": "AP5",
+      "milestone": "MS5",
+      "epic": "E5",
+      "assignee": "Team",
+      "labels": [
+        "ap5",
+        "ms5"
+      ],
+      "lifecycle": "done",
+      "done_at": "28.09.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 52,
+      "ticket_number": "NEXTICK-052",
+      "title": "KB-Inhalte: Ideensammlung für Redaktion (nach Release)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P3 Could |\n| AP | AP5 |\n| Meilenstein | — |\n| Epic | E5 |\n| Labels | ap5, docs |\n| Assignee (Plan) | Hauke |\n\n### Problemstellung\nInhalte (Texte), nicht Software — kein Release-Blocker.\n\n### User Story\n**Als** Redaktion Verein  \n**möchte ich** Ideen für FAQ-Texte sammeln  \n**damit** nach Release Inhalte einpflegen können\n\n### Akzeptanzkriterien\n#### AC1 — Backlog\n\n```gherkin\nSzenario: Backlog\n  Gegeben Liste angelegt.\n  Wenn Review.\n  Dann Ideen dokumentiert, kein Blocker.\n```\n\n### Definition of Done\n- [ ] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [ ] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [ ] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n- Software-Entwicklung; nur Inhalts-Backlog.\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Could",
+      "ap": "AP5",
+      "milestone": "",
+      "epic": "E5",
+      "assignee": "Hauke",
+      "labels": [
+        "ap5",
+        "docs"
+      ],
+      "lifecycle": "post_release",
+      "done_at": null,
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 53,
+      "ticket_number": "NEXTICK-053",
+      "title": "Nextcloud-Notifications bei Zuweisung und Gast-Kommentar",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP6 |\n| Meilenstein | — |\n| Epic | E6 |\n| Labels | ap6 |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #74 |\n\n### Problemstellung\nGast-Portal (E6): _Nextcloud-Notifications bei Zuweisung und Gast-Kommentar_. Ziel ist eine schlanke, sichere Erfahrung für externe Nutzer*innen ohne Zugriff auf Staff-Funktionen.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** NC-Benachrichtigung bei neuer Zuweisung oder Gast-Kommentar  \n**damit** ich zeitnah reagieren kann\n\n### Akzeptanzkriterien\n#### AC1 — Provider\n\n```gherkin\nSzenario: Provider\n  Gegeben Event auslösen.\n  Wenn NC-Benachrichtigungen.\n  Dann Eintrag erscheint.\n```\n\n#### AC2 — Doku\n\n```gherkin\nSzenario: Doku\n  Gegeben Admin-Doku.\n  Wenn Aktivierung.\n  Dann Erklärt in #74.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP6",
+      "milestone": "",
+      "epic": "E6",
+      "assignee": "Alex",
+      "labels": [
+        "ap6"
+      ],
+      "lifecycle": "done",
+      "done_at": "02.10.2026",
+      "blocked_by": [],
+      "relates_to": [
+        74
+      ]
+    },
+    {
+      "n": 54,
+      "ticket_number": "NEXTICK-054",
+      "title": "SLA: Warnung bei ablaufender Reaktionsfrist implementieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP6 |\n| Meilenstein | — |\n| Epic | E6 |\n| Labels | ap6 |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #55 |\n\n### Problemstellung\nSteuerung und Transparenz (E6): _SLA: Warnung bei ablaufender Reaktionsfrist implementieren_. Koordinator*innen und Vorstände brauchen nachvollziehbare Kennzahlen ohne externes BI-Tool.\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** sehen, wenn eine Reaktionsfrist bald abläuft  \n**damit** überfällige Tickets nicht übersehe\n\n### Akzeptanzkriterien\n#### AC1 — Frist\n\n```gherkin\nSzenario: Frist\n  Gegeben Ticket mit SLA.\n  Wenn Frist nahe.\n  Dann Warnung im Dashboard #55.\n```\n\n#### AC2 — Scope\n\n```gherkin\nSzenario: Scope\n  Gegeben Prototyp.\n  Wenn E-Mail prüfen.\n  Dann Kein E-Mail-Zwang im Prototyp.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP6",
+      "milestone": "",
+      "epic": "E6",
+      "assignee": "Alex",
+      "labels": [
+        "ap6"
+      ],
+      "lifecycle": "done",
+      "done_at": "05.10.2026",
+      "blocked_by": [],
+      "relates_to": [
+        55
+      ]
+    },
+    {
+      "n": 55,
+      "ticket_number": "NEXTICK-055",
+      "title": "Dashboard: KPI-Karten für offene und überfällige Tickets",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP6 |\n| Meilenstein | — |\n| Epic | E6 |\n| Labels | ap6, ux |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nSteuerung und Transparenz (E6): _Dashboard: KPI-Karten für offene und überfällige Tickets_. Koordinator*innen und Vorstände brauchen nachvollziehbare Kennzahlen ohne externes BI-Tool.\n\n### User Story\n**Als** Koordinatorin Elena  \n**möchte ich** auf einen Blick offene und überfällige Tickets sehen  \n**damit** ich das Gremium vorbereiten kann\n\n### Akzeptanzkriterien\n#### AC1 — KPI\n\n```gherkin\nSzenario: KPI\n  Gegeben Dashboard öffnen.\n  Wenn Karten lesen.\n  Dann Anzahl offen/überfällig Text+Zahl.\n```\n\n#### AC2 — Drill-down\n\n```gherkin\nSzenario: Drill-down\n  Gegeben Karte klicken.\n  Wenn Liste.\n  Dann Filter aus KPI übernommen.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP6",
+      "milestone": "",
+      "epic": "E6",
+      "assignee": "Lara",
+      "labels": [
+        "ap6",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "08.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 56,
+      "ticket_number": "NEXTICK-056",
+      "title": "CSV-Export für Ticketübersicht implementieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP6 |\n| Meilenstein | — |\n| Epic | E6 |\n| Labels | ap6 |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nSteuerung und Transparenz (E6): _CSV-Export für Ticketübersicht implementieren_. Koordinator*innen und Vorstände brauchen nachvollziehbare Kennzahlen ohne externes BI-Tool.\n\n### User Story\n**Als** Vorstand  \n**möchte ich** Ticketübersicht in Excel weiterverarbeiten  \n**damit** Berichte ohne manuelles Copy-Paste entstehen\n\n### Akzeptanzkriterien\n#### AC1 — Format\n\n```gherkin\nSzenario: Format\n  Gegeben Export auslösen.\n  Wenn CSV öffnen.\n  Dann UTF-8, DE-Trennzeichen.\n```\n\n#### AC2 — Rechte\n\n```gherkin\nSzenario: Rechte\n  Gegeben Ohne Berechtigung.\n  Wenn Export.\n  Dann 403; keine internen Kommentare ohne Flag.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP6",
+      "milestone": "",
+      "epic": "E6",
+      "assignee": "Alex",
+      "labels": [
+        "ap6"
+      ],
+      "lifecycle": "done",
+      "done_at": "08.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 57,
+      "ticket_number": "NEXTICK-057",
+      "title": "UAT Gast-Portal und SLA vor Release dokumentieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP6 |\n| Meilenstein | — |\n| Epic | E6 |\n| Labels | ap6, qa |\n| Assignee (Plan) | Hauke |\n| Bezieht sich auf | #39, #54 |\n\n### Problemstellung\nGast-Portal (E6): _UAT Gast-Portal und SLA vor Release dokumentieren_. Ziel ist eine schlanke, sichere Erfahrung für externe Nutzer*innen ohne Zugriff auf Staff-Funktionen.\n\n### User Story\n**Als** QA  \n**möchte ich** Stichproben UAT dokumentieren  \n**damit** Release-Kandidat begründet freigegeben wird\n\n### Akzeptanzkriterien\n#### AC1 — Matrix\n\n```gherkin\nSzenario: Matrix\n  Gegeben UAT-Matrix.\n  Wenn Durchlauf.\n  Dann Abgehakt, publishable für Prototyp.\n```\n\n#### AC2 — Verweise\n\n```gherkin\nSzenario: Verweise\n  Gegeben Security #39.\n  Wenn SLA-Szenarien.\n  Dann Referenziert und grün.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nTestplan/Matrix referenzieren; Ergebnisse als Kommentar oder PDF-Anhang.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP6",
+      "milestone": "",
+      "epic": "E6",
+      "assignee": "Hauke",
+      "labels": [
+        "ap6",
+        "qa"
+      ],
+      "lifecycle": "done",
+      "done_at": "12.10.2026",
+      "blocked_by": [],
+      "relates_to": [
+        39,
+        54
+      ]
+    },
+    {
+      "n": 58,
+      "ticket_number": "NEXTICK-058",
+      "title": "Meilenstein MS6: Reporting-Basis stabil",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Epic / Meilenstein |\n| Priorität | P1 Must |\n| AP | AP6 |\n| Meilenstein | MS6 |\n| Epic | E6 |\n| Labels | ap6, ms6 |\n| Assignee (Plan) | Team |\n| Bezieht sich auf | #59 |\n\n### Problemstellung\n**MS6** ist im Prototype-Fund-Antrag als abnahmefähiger Zwischenstand definiert. Dieses Ticket bündelt die Nachweise für: _Meilenstein MS6: Reporting-Basis stabil_.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** Meilenstein 6 nachweisen  \n**damit** Dashboard, Export und Notifications stabil sind\n\n### Akzeptanzkriterien\n#### AC1 — Instanz\n\n```gherkin\nSzenario: Instanz\n  Gegeben Testinstanz.\n  Wenn Features prüfen.\n  Dann Dashboard + Export + Notifications stabil.\n```\n\n#### AC2 — RC\n\n```gherkin\nSzenario: RC\n  Gegeben Policy #59.\n  Wenn Freigabe.\n  Dann Release-Kandidat freigegeben.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nTeam-Abnahme mit Checkliste aus AC; Protokoll im Issue-Kommentar.\n",
+      "type": "Epic / Meilenstein",
+      "priority": "Must",
+      "ap": "AP6",
+      "milestone": "MS6",
+      "epic": "E6",
+      "assignee": "Team",
+      "labels": [
+        "ap6",
+        "ms6"
+      ],
+      "lifecycle": "done",
+      "done_at": "12.10.2026",
+      "blocked_by": [],
+      "relates_to": [
+        59
+      ]
+    },
+    {
+      "n": 59,
+      "ticket_number": "NEXTICK-059",
+      "title": "Release-Policy: Keine Großfeatures nach MS6",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP6 |\n| Meilenstein | — |\n| Epic | E6 |\n| Labels | ap6, blocker |\n| Assignee (Plan) | Hauke |\n| Bezieht sich auf | #68 |\n\n### Problemstellung\nNutzerbedarf (E6 / AP6): **PM** benötigt die Fähigkeit, den Scope nach MS6 einfrieren — damit November für Nutzerfeedback bleibt.\n\n### User Story\n**Als** PM  \n**möchte ich** den Scope nach MS6 einfrieren  \n**damit** November für Nutzerfeedback bleibt\n\n### Akzeptanzkriterien\n#### AC1 — Labels\n\n```gherkin\nSzenario: Labels\n  Gegeben Nach MS6.\n  Wenn Neues Issue.\n  Dann Nur blocker und pilot-feedback bis #68.\n```\n\n#### AC2 — Team\n\n```gherkin\nSzenario: Team\n  Gegeben Policy kommuniziert.\n  Wenn Sprint.\n  Dann Team informiert.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP6",
+      "milestone": "",
+      "epic": "E6",
+      "assignee": "Hauke",
+      "labels": [
+        "ap6",
+        "blocker"
+      ],
+      "lifecycle": "done",
+      "done_at": "26.10.2026",
+      "blocked_by": [],
+      "relates_to": [
+        68
+      ]
+    },
+    {
+      "n": 60,
+      "ticket_number": "NEXTICK-060",
+      "title": "Zahlungsanforderung Q3 (Juli–September)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | ap1, pm |\n| Assignee (Plan) | Hauke |\n\n### Problemstellung\nNutzerbedarf (E1 / AP1): **Projektleitung** benötigt die Fähigkeit, Stunden Juli–September einreichen — damit Förderabrechnung Q3 vollständig ist.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** Stunden Juli–September einreichen  \n**damit** Förderabrechnung Q3 vollständig ist\n\n### Akzeptanzkriterien\n#### AC1 — Stunden\n\n```gherkin\nSzenario: Stunden\n  Gegeben CSV/MD.\n  Wenn ZA erstellen.\n  Dann Juli–September eingereicht.\n```\n\n#### AC2 — AP-Abgleich\n\n```gherkin\nSzenario: AP-Abgleich\n  Gegeben Intensität AP4–AP6.\n  Wenn Summen prüfen.\n  Dann Plausibel zu Security/Release.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Hauke",
+      "labels": [
+        "ap1",
+        "pm"
+      ],
+      "lifecycle": "done",
+      "done_at": "15.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 61,
+      "ticket_number": "NEXTICK-061",
+      "title": "Version und CHANGELOG für Release 1.0.0 setzen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP7 |\n| Meilenstein | — |\n| Epic | E7 |\n| Labels | ap7, release |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nNutzerbedarf (E7 / AP7): **Release Manager** benötigt die Fähigkeit, SemVer und CHANGELOG aktuell — damit Store und GitHub konsistent sind.\n\n### User Story\n**Als** Release Manager  \n**möchte ich** SemVer und CHANGELOG aktuell  \n**damit** Store und GitHub konsistent sind\n\n### Akzeptanzkriterien\n#### AC1 — info.xml\n\n```gherkin\nSzenario: info.xml\n  Gegeben Release-Branch.\n  Wenn Version prüfen.\n  Dann SemVer 1.0.0 (o.ä.).\n```\n\n#### AC2 — CHANGELOG\n\n```gherkin\nSzenario: CHANGELOG\n  Gegeben CHANGELOG.md.\n  Wenn Inhalt.\n  Dann Förder-Umfang beschrieben.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP7",
+      "milestone": "",
+      "epic": "E7",
+      "assignee": "Alex",
+      "labels": [
+        "ap7",
+        "release"
+      ],
+      "lifecycle": "done",
+      "done_at": "20.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 62,
+      "ticket_number": "NEXTICK-062",
+      "title": "App-Signierung und Upload in Nextcloud App Store",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP7 |\n| Meilenstein | — |\n| Epic | E7 |\n| Labels | ap7, release |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #68 |\n\n### Problemstellung\nNutzerbedarf (E7 / AP7): **Admin Markus** benötigt die Fähigkeit, Ticketcheck aus dem offiziellen App Store installieren — damit Vertrauenswürdige Distribution nutzbar ist.\n\n### User Story\n**Als** Admin Markus  \n**möchte ich** Ticketcheck aus dem offiziellen App Store installieren  \n**damit** Vertrauenswürdige Distribution nutzbar ist\n\n### Akzeptanzkriterien\n#### AC1 — Paket\n\n```gherkin\nSzenario: Paket\n  Gegeben Build.\n  Wenn Upload.\n  Dann Signiertes Paket hochgeladen.\n```\n\n#### AC2 — Listing\n\n```gherkin\nSzenario: Listing\n  Gegeben Store.\n  Wenn Status prüfen.\n  Dann approved/live für #68.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP7",
+      "milestone": "",
+      "epic": "E7",
+      "assignee": "Alex",
+      "labels": [
+        "ap7",
+        "release"
+      ],
+      "lifecycle": "done",
+      "done_at": "24.10.2026",
+      "blocked_by": [],
+      "relates_to": [
+        68
+      ]
+    },
+    {
+      "n": 63,
+      "ticket_number": "NEXTICK-063",
+      "title": "App-Store-Screenshots und Listing-Text erstellen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP7 |\n| Meilenstein | — |\n| Epic | E7 |\n| Labels | ap7, ux |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nStore-Listing ist erste Anlaufstelle für Admins; Screenshots und Text müssen Antrags-Umfang widerspiegeln.\n\n### User Story\n**Als** PM  \n**möchte ich** überzeugendes Store-Listing mit Screenshots DE  \n**damit** Installierende wissen, welche Funktionen im Prototyp enthalten sind\n\n### Akzeptanzkriterien\n#### AC1 — Screenshots\n\n```gherkin\nSzenario: Screenshots\n  Gegeben UI-Stand Release.\n  Wenn Screenshots erstellen.\n  Dann DE, antragkonform.\n```\n\n#### AC2 — Text\n\n```gherkin\nSzenario: Text\n  Gegeben Listing.\n  Wenn Feature-Liste prüfen.\n  Dann Keine Coming-soon-Features.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nStore-Preview mit Team abgleichen.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP7",
+      "milestone": "",
+      "epic": "E7",
+      "assignee": "Lara",
+      "labels": [
+        "ap7",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "22.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 64,
+      "ticket_number": "NEXTICK-064",
+      "title": "Nutzerdokumentation DE (Installation und Erste Schritte)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP7 |\n| Meilenstein | — |\n| Epic | E7 |\n| Labels | ap7, docs |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nNutzerbedarf (E7 / AP7): **Ehrenamtlicher** benötigt die Fähigkeit, Schritt-für-Schritt-Anleitung — damit die App ohne Expertenhilfe installierbar ist.\n\n### User Story\n**Als** Ehrenamtlicher  \n**möchte ich** Schritt-für-Schritt-Anleitung  \n**damit** die App ohne Expertenhilfe installierbar ist\n\n### Akzeptanzkriterien\n#### AC1 — Inhalt\n\n```gherkin\nSzenario: Inhalt\n  Gegeben Doku gelesen.\n  Wenn Installation.\n  Dann Gruppe, Gast-Portal-Kurzweg.\n```\n\n#### AC2 — Link\n\n```gherkin\nSzenario: Link\n  Gegeben README.\n  Wenn Verweis.\n  Dann Doku verlinkt.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP7",
+      "milestone": "",
+      "epic": "E7",
+      "assignee": "Lara",
+      "labels": [
+        "ap7",
+        "docs"
+      ],
+      "lifecycle": "done",
+      "done_at": "26.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 65,
+      "ticket_number": "NEXTICK-065",
+      "title": "Admin-Dokumentation DE (Rollen, Gast-Freigaben, Notifications)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP7 |\n| Meilenstein | — |\n| Epic | E7 |\n| Labels | ap7, docs |\n| Assignee (Plan) | Lara |\n| Bezieht sich auf | #53, #74 |\n\n### Problemstellung\nGast-Portal (E7): _Admin-Dokumentation DE (Rollen, Gast-Freigaben, Notifications)_. Ziel ist eine schlanke, sichere Erfahrung für externe Nutzer*innen ohne Zugriff auf Staff-Funktionen.\n\n### User Story\n**Als** Admin Markus  \n**möchte ich** Rollen und Gast-Freigaben verstehen  \n**damit** ich E-Mail-Benachrichtigungen korrekt aktiviere\n\n### Akzeptanzkriterien\n#### AC1 — Rollen\n\n```gherkin\nSzenario: Rollen\n  Gegeben Doku.\n  Wenn Admin liest.\n  Dann Projekt-Freigaben erklärt.\n```\n\n#### AC2 — Notifications\n\n```gherkin\nSzenario: Notifications\n  Gegeben Abschnitt.\n  Wenn NC-Einstellungen.\n  Dann Verweis auf #53/#74.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP7",
+      "milestone": "",
+      "epic": "E7",
+      "assignee": "Lara",
+      "labels": [
+        "ap7",
+        "docs"
+      ],
+      "lifecycle": "done",
+      "done_at": "09.11.2026",
+      "blocked_by": [],
+      "relates_to": [
+        53,
+        74
+      ]
+    },
+    {
+      "n": 66,
+      "ticket_number": "NEXTICK-066",
+      "title": "AGPL-Release auf GitHub (Tag und Artefakt)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP7 |\n| Meilenstein | — |\n| Epic | E7 |\n| Labels | ap7, release |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nNutzerbedarf (E7 / AP7): **Community** benötigt die Fähigkeit, Quellcode und Release-Artefakt — damit AGPL-Verwertung möglich ist.\n\n### User Story\n**Als** Community  \n**möchte ich** Quellcode und Release-Artefakt  \n**damit** AGPL-Verwertung möglich ist\n\n### Akzeptanzkriterien\n#### AC1 — Tag\n\n```gherkin\nSzenario: Tag\n  Gegeben Release.\n  Wenn GitHub Tag.\n  Dann Artefakt veröffentlicht.\n```\n\n#### AC2 — LICENSE\n\n```gherkin\nSzenario: LICENSE\n  Gegeben Repo.\n  Wenn LICENSE prüfen.\n  Dann AGPL sichtbar.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP7",
+      "milestone": "",
+      "epic": "E7",
+      "assignee": "Alex",
+      "labels": [
+        "ap7",
+        "release"
+      ],
+      "lifecycle": "done",
+      "done_at": "26.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 67,
+      "ticket_number": "NEXTICK-067",
+      "title": "Beta-Anleitung für Pilot Mokwi vor Store-Release senden",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP7 |\n| Meilenstein | — |\n| Epic | E7 |\n| Labels | ap7, pilot |\n| Assignee (Plan) | Hauke |\n\n### Problemstellung\nNutzerbedarf (E7 / AP7): **Pilot-Admin** benötigt die Fähigkeit, Beta-Anleitung vor Store — damit der Pilot vorbereitet testen kann.\n\n### User Story\n**Als** Pilot-Admin  \n**möchte ich** Beta-Anleitung vor Store  \n**damit** der Pilot vorbereitet testen kann\n\n### Akzeptanzkriterien\n#### AC1 — Versand\n\n```gherkin\nSzenario: Versand\n  Gegeben PDF/MD fertig.\n  Wenn An Pilot senden.\n  Dann Vor öffentlichem Store.\n```\n\n#### AC2 — Inhalt\n\n```gherkin\nSzenario: Inhalt\n  Gegeben Anleitung.\n  Wenn Lesbarkeit.\n  Dann Install, Gast, FAQ, Dashboard kurz.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP7",
+      "milestone": "",
+      "epic": "E7",
+      "assignee": "Hauke",
+      "labels": [
+        "ap7",
+        "pilot"
+      ],
+      "lifecycle": "done",
+      "done_at": "12.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 68,
+      "ticket_number": "NEXTICK-068",
+      "title": "Meilenstein MS7: Öffentlicher App-Store-Release",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Epic / Meilenstein |\n| Priorität | P1 Must |\n| AP | AP7 |\n| Meilenstein | MS7 |\n| Epic | E7 |\n| Labels | ap7, ms7 |\n| Assignee (Plan) | Team |\n| Bezieht sich auf | #62 |\n\n### Problemstellung\n**MS7** ist im Prototype-Fund-Antrag als abnahmefähiger Zwischenstand definiert. Dieses Ticket bündelt die Nachweise für: _Meilenstein MS7: Öffentlicher App-Store-Release_.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** Meilenstein 7 nachweisen  \n**damit** öffentliche Installation aus Store möglich ist\n\n### Akzeptanzkriterien\n#### AC1 — Install\n\n```gherkin\nSzenario: Install\n  Gegeben Frische NC.\n  Wenn App Store.\n  Dann Öffentlich installierbar.\n```\n\n#### AC2 — Notes\n\n```gherkin\nSzenario: Notes\n  Gegeben Release-Notes.\n  Wenn Umfang.\n  Dann Entspricht Antrags-Prototyp.\n```\n\n#### AC3 — AGPL\n\n```gherkin\nSzenario: AGPL\n  Gegeben GitHub.\n  Wenn Tag #66.\n  Dann Synchron mit Store-Version.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nTeam-Abnahme mit Checkliste aus AC; Protokoll im Issue-Kommentar.\n",
+      "type": "Epic / Meilenstein",
+      "priority": "Must",
+      "ap": "AP7",
+      "milestone": "MS7",
+      "epic": "E7",
+      "assignee": "Team",
+      "labels": [
+        "ap7",
+        "ms7"
+      ],
+      "lifecycle": "done",
+      "done_at": "26.10.2026",
+      "blocked_by": [],
+      "relates_to": [
+        62
+      ]
+    },
+    {
+      "n": 69,
+      "ticket_number": "NEXTICK-069",
+      "title": "WCAG-Stichprobe (320px, Tastatur, Kontrast) dokumentieren",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP7 |\n| Meilenstein | — |\n| Epic | E7 |\n| Labels | ap7, ux |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nNutzerbedarf (E7 / AP7): **UX** benötigt die Fähigkeit, a11y-Stichprobe vor Release — damit keine gravierenden Barrieren live gehen.\n\n### User Story\n**Als** UX  \n**möchte ich** a11y-Stichprobe vor Release  \n**damit** keine gravierenden Barrieren live gehen\n\n### Akzeptanzkriterien\n#### AC1 — Stichprobe\n\n```gherkin\nSzenario: Stichprobe\n  Gegeben Kernseiten.\n  Wenn Checkliste.\n  Dann 320px, Tastatur, Kontrast dokumentiert.\n```\n\n#### AC2 — Blocker\n\n```gherkin\nSzenario: Blocker\n  Gegeben Befunde.\n  Wenn Priorisierung.\n  Dann Keine Release-Blocker offen.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP7",
+      "milestone": "",
+      "epic": "E7",
+      "assignee": "Lara",
+      "labels": [
+        "ap7",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "10.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 70,
+      "ticket_number": "NEXTICK-070",
+      "title": "i18n DE/EN für alle UI-Strings vervollständigen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP7 |\n| Meilenstein | — |\n| Epic | E7 |\n| Labels | ap7 |\n| Assignee (Plan) | Lara |\n\n### Problemstellung\nNutzerbedarf (E7 / AP7): **Nutzer** benötigt die Fähigkeit, DE und EN Oberfläche — damit internationale Instanzen nutzbar sind.\n\n### User Story\n**Als** Nutzer  \n**möchte ich** DE und EN Oberfläche  \n**damit** internationale Instanzen nutzbar sind\n\n### Akzeptanzkriterien\n#### AC1 — l10n\n\n```gherkin\nSzenario: l10n\n  Gegeben Neue Strings.\n  Wenn de.json + en.json.\n  Dann Vollständig.\n```\n\n#### AC2 — Code\n\n```gherkin\nSzenario: Code\n  Gegeben Release-Zweig.\n  Wenn grep hardcoded.\n  Dann Keine hardcodierten UI-Strings.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP7",
+      "milestone": "",
+      "epic": "E7",
+      "assignee": "Lara",
+      "labels": [
+        "ap7"
+      ],
+      "lifecycle": "done",
+      "done_at": "20.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 71,
+      "ticket_number": "NEXTICK-071",
+      "title": "Pilot-Installation bei Mokwi begleiten",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | Pilot |\n| Meilenstein | — |\n| Epic | E8 |\n| Labels | pilot |\n| Assignee (Plan) | Hauke |\n\n### Problemstellung\nNutzerbedarf (E8 / Pilot): **Pilot-Admin** benötigt die Fähigkeit, Hilfe bei Gruppen, App-Rollen und erstem Projekt — damit der Pilot produktiv starten kann.\n\n### User Story\n**Als** Pilot-Admin  \n**möchte ich** Hilfe bei Gruppen, App-Rollen und erstem Projekt  \n**damit** der Pilot produktiv starten kann\n\n### Akzeptanzkriterien\n#### AC1 — Protokoll\n\n```gherkin\nSzenario: Protokoll\n  Gegeben Installation.\n  Wenn Datum + NC-Version.\n  Dann Protokoll vorhanden.\n```\n\n#### AC2 — Gast-Ticket\n\n```gherkin\nSzenario: Gast-Ticket\n  Gegeben Gast-Account.\n  Wenn Ticket anlegen.\n  Dann Mindestens ein Test-Ticket.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "Pilot",
+      "milestone": "",
+      "epic": "E8",
+      "assignee": "Hauke",
+      "labels": [
+        "pilot"
+      ],
+      "lifecycle": "done",
+      "done_at": "02.11.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 72,
+      "ticket_number": "NEXTICK-072",
+      "title": "Feedback-Formular und GitHub-Label pilot-feedback anlegen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | pilot |\n| Assignee (Plan) | Hauke |\n\n### Problemstellung\nNutzerbedarf (E1 / AP1): **PM** benötigt die Fähigkeit, strukturiertes Pilot-Feedback — damit Feedback in Issues landet.\n\n### User Story\n**Als** PM  \n**möchte ich** strukturiertes Pilot-Feedback  \n**damit** Feedback in Issues landet\n\n### Akzeptanzkriterien\n#### AC1 — Formular\n\n```gherkin\nSzenario: Formular\n  Gegeben 3 Fragen.\n  Wenn Pilot nutzt Formular.\n  Dann Kurzformular existiert.\n```\n\n#### AC2 — Label\n\n```gherkin\nSzenario: Label\n  Gegeben GitHub.\n  Wenn Label angelegt.\n  Dann Team: Feedback → Issue mit Label.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Hauke",
+      "labels": [
+        "pilot"
+      ],
+      "lifecycle": "done",
+      "done_at": "27.10.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 73,
+      "ticket_number": "NEXTICK-073",
+      "title": "Guest-UI: Status-Anzeige mit Hilfetext verständlich machen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | pilot-feedback, ux |\n| Assignee (Plan) | Lara |\n| Bezieht sich auf | #27 |\n\n### Problemstellung\nGast-Portal (E3): _Guest-UI: Status-Anzeige mit Hilfetext verständlich machen_. Ziel ist eine schlanke, sichere Erfahrung für externe Nutzer*innen ohne Zugriff auf Staff-Funktionen.\n\n### User Story\n**Als** Gast Thomas  \n**möchte ich** auf der Detailseite verstehen, was „In Bearbeitung“ bedeutet  \n**damit** ich nicht beim Verein nachfragen muss\n\n### Akzeptanzkriterien\n#### AC1 — Hilfetext\n\n```gherkin\nSzenario: Hilfetext\n  Gegeben Gast-Detail.\n  Wenn Status lesen.\n  Dann Kurzer Hilfetext oder Tooltip sichtbar.\n```\n\n#### AC2 — Mokwi\n\n```gherkin\nSzenario: Mokwi\n  Gegeben Pilot testet.\n  Wenn Bestätigung.\n  Dann Mokwi bestätigt oder Issue geschlossen.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Lara",
+      "labels": [
+        "pilot-feedback",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "08.11.2026",
+      "blocked_by": [],
+      "relates_to": [
+        27
+      ]
+    },
+    {
+      "n": 74,
+      "ticket_number": "NEXTICK-074",
+      "title": "Doku: E-Mail-/NC-Benachrichtigungen für Ticket-Events ergänzen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | pilot-feedback, docs |\n| Assignee (Plan) | Lara |\n| Bezieht sich auf | #53, #65 |\n\n### Problemstellung\nFeldtest-Feedback nach Store-Release: _Doku: E-Mail-/NC-Benachrichtigungen für Ticket-Events ergänzen_. Scope bewusst klein (Bugfix/Doku), kein neuer Prototyp-Umfang (#59).\n\n### User Story\n**Als** Admin Markus  \n**möchte ich** in der Doku NC-Notifications für Ticket-Events finden  \n**damit** ich Benachrichtigungen korrekt aktiviere\n\n### Akzeptanzkriterien\n#### AC1 — Abschnitt\n\n```gherkin\nSzenario: Abschnitt\n  Gegeben Doku #64/#65.\n  Wenn Abschnitt lesen.\n  Dann Aktivierung beschrieben.\n```\n\n#### AC2 — NC\n\n```gherkin\nSzenario: NC\n  Gegeben Einstellungen.\n  Wenn Pfad.\n  Dann Verweis auf NC-Benachrichtigungen.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Lara",
+      "labels": [
+        "pilot-feedback",
+        "docs"
+      ],
+      "lifecycle": "done",
+      "done_at": "09.11.2026",
+      "blocked_by": [],
+      "relates_to": [
+        53,
+        65
+      ]
+    },
+    {
+      "n": 75,
+      "ticket_number": "NEXTICK-075",
+      "title": "Agent-UI: Mobile Filterleiste ohne horizontales Scrollen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | User Story |\n| Priorität | P1 Must |\n| AP | AP3 |\n| Meilenstein | — |\n| Epic | E3 |\n| Labels | pilot-feedback, ux |\n| Assignee (Plan) | Lara |\n| Bezieht sich auf | #77 |\n\n### Problemstellung\nFeldtest-Feedback nach Store-Release: _Agent-UI: Mobile Filterleiste ohne horizontales Scrollen_. Scope bewusst klein (Bugfix/Doku), kein neuer Prototyp-Umfang (#59).\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** Filter auf dem Smartphone nutzen  \n**damit** ich nicht horizontal scrollen muss\n\n### Akzeptanzkriterien\n#### AC1 — Layout\n\n```gherkin\nSzenario: Layout\n  Gegeben Viewport unter 400px.\n  Wenn Filter öffnen.\n  Dann Umbrechen oder Drawer.\n```\n\n#### AC2 — Patch\n\n```gherkin\nSzenario: Patch\n  Gegeben Release 1.0.2.\n  Wenn Live prüfen.\n  Dann Fix in #77 verifiziert.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n- [x] UI-Strings in `l10n/de.json` und `l10n/en.json` (falls UI)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "User Story",
+      "priority": "Must",
+      "ap": "AP3",
+      "milestone": "",
+      "epic": "E3",
+      "assignee": "Lara",
+      "labels": [
+        "pilot-feedback",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "10.11.2026",
+      "blocked_by": [],
+      "relates_to": [
+        77
+      ]
+    },
+    {
+      "n": 76,
+      "ticket_number": "NEXTICK-076",
+      "title": "Patch 1.0.1: Kleine Bugs aus User-Tests",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | Pilot |\n| Meilenstein | — |\n| Epic | E8 |\n| Labels | pilot |\n| Assignee (Plan) | Alex |\n\n### Problemstellung\nKleine Bugs, kein Feature-Umfang.\n\n### User Story\n**Als** Entwicklung  \n**möchte ich** kritische Pilot-Bugs fixen  \n**damit** Live-Version stabil bleibt\n\n### Akzeptanzkriterien\n#### AC1 — CHANGELOG\n\n```gherkin\nSzenario: CHANGELOG\n  Gegeben Fixes merged.\n  Wenn CHANGELOG.\n  Dann Eintrag 1.0.1.\n```\n\n#### AC2 — Store\n\n```gherkin\nSzenario: Store\n  Gegeben Paket.\n  Wenn Update.\n  Dann Store-Update oder Patch-Anleitung.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n- Neue Features; nur Bugfixes.\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "Pilot",
+      "milestone": "",
+      "epic": "E8",
+      "assignee": "Alex",
+      "labels": [
+        "pilot"
+      ],
+      "lifecycle": "done",
+      "done_at": "12.11.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 77,
+      "ticket_number": "NEXTICK-077",
+      "title": "Patch 1.0.2: Mobile-Filter (#75) ausrollen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | Pilot |\n| Meilenstein | — |\n| Epic | E8 |\n| Labels | pilot, ux |\n| Assignee (Plan) | Lara |\n| Bezieht sich auf | #75 |\n\n### Problemstellung\nFeldtest-Feedback nach Store-Release: _Patch 1.0.2: Mobile-Filter (#75) ausrollen_. Scope bewusst klein (Bugfix/Doku), kein neuer Prototyp-Umfang (#59).\n\n### User Story\n**Als** Agent Sandra  \n**möchte ich** Mobile-Filter auf Live-Version  \n**damit** Pilot-Feedback umgesetzt ist\n\n### Akzeptanzkriterien\n#### AC1 — Verifikation\n\n```gherkin\nSzenario: Verifikation\n  Gegeben Live-Instanz.\n  Wenn Filter unter 400px.\n  Dann #75 grün.\n```\n\n#### AC2 — CHANGELOG\n\n```gherkin\nSzenario: CHANGELOG\n  Gegeben Release.\n  Wenn Version.\n  Dann 1.0.2 dokumentiert.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "Pilot",
+      "milestone": "",
+      "epic": "E8",
+      "assignee": "Lara",
+      "labels": [
+        "pilot",
+        "ux"
+      ],
+      "lifecycle": "done",
+      "done_at": "14.11.2026",
+      "blocked_by": [],
+      "relates_to": [
+        75
+      ]
+    },
+    {
+      "n": 78,
+      "ticket_number": "NEXTICK-078",
+      "title": "Export offener Issues für Schlussbericht erstellen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | pm |\n| Assignee (Plan) | Hauke |\n\n### Problemstellung\nSteuerung und Transparenz (E1): _Export offener Issues für Schlussbericht erstellen_. Koordinator*innen und Vorstände brauchen nachvollziehbare Kennzahlen ohne externes BI-Tool.\n\n### User Story\n**Als** Projektleitung  \n**möchte ich** vollständigen Issue-Stand für Schlussbericht  \n**damit** Fördernachweis vollständig ist\n\n### Akzeptanzkriterien\n#### AC1 — Liste\n\n```gherkin\nSzenario: Liste\n  Gegeben Tracker exportiert.\n  Wenn Kategorien.\n  Dann erledigt / nach Release / bewusst offen mit Begründung.\n```\n\n#### AC2 — Anhang\n\n```gherkin\nSzenario: Anhang\n  Gegeben Schlussbericht.\n  Wenn Anhang.\n  Dann Liste angehängt.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Hauke",
+      "labels": [
+        "pm"
+      ],
+      "lifecycle": "done",
+      "done_at": "22.11.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 79,
+      "ticket_number": "NEXTICK-079",
+      "title": "Demo Berlin (27.11.) vorbereiten und durchführen",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | AP1 |\n| Meilenstein | — |\n| Epic | E1 |\n| Labels | pm |\n| Assignee (Plan) | Hauke |\n\n### Problemstellung\nHauke + Lara vor Ort; Alex krank 25.–27.11.; Fallback ohne Alex.\n\n### User Story\n**Als** PM  \n**möchte ich** 15–20-min-Demo vorbereiten  \n**damit** Fördergeber den Prototyp sieht\n\n### Akzeptanzkriterien\n#### AC1 — Ablauf\n\n```gherkin\nSzenario: Ablauf\n  Gegeben Skript.\n  Wenn Demo.\n  Dann Intern, Gast, KB, Dashboard in 15–20 min.\n```\n\n#### AC2 — Fallback\n\n```gherkin\nSzenario: Fallback\n  Gegeben Alex abwesend.\n  Wenn Demo.\n  Dann Hauke/Lara führen ohne Alex durch.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "AP1",
+      "milestone": "",
+      "epic": "E1",
+      "assignee": "Hauke",
+      "labels": [
+        "pm"
+      ],
+      "lifecycle": "done",
+      "done_at": "27.11.2026",
+      "blocked_by": [],
+      "relates_to": []
+    },
+    {
+      "n": 80,
+      "ticket_number": "NEXTICK-080",
+      "title": "Technische Nacharbeit nach Krankheit (Demo-Notizen)",
+      "description": "> **Intern — Prototype Fund 2026.** Nur für Nachweise/Planung in Ticketcheck, nicht für Produktiv-Support.\n\n| Feld | Wert |\n|------|------|\n| Typ | Technische Aufgabe |\n| Priorität | P1 Must |\n| AP | Pilot |\n| Meilenstein | — |\n| Epic | E8 |\n| Labels | pilot |\n| Assignee (Plan) | Alex |\n| Bezieht sich auf | #79 |\n\n### Problemstellung\nProjekt- bzw. Fördernachweis (Pilot): _Technische Nacharbeit nach Krankheit (Demo-Notizen)_.\n\n### User Story\n**Als** Tech Lead  \n**möchte ich** offene technische Punkte aus Demo schließen  \n**damit** Patches/Doku mit Live-Version konsistent sind\n\n### Akzeptanzkriterien\n#### AC1 — Notizen\n\n```gherkin\nSzenario: Notizen\n  Gegeben Demo-Notizen.\n  Wenn Punkte abarbeiten.\n  Dann Technisch erledigt oder Issue.\n```\n\n#### AC2 — Konsistenz\n\n```gherkin\nSzenario: Konsistenz\n  Gegeben Live vs. Repo.\n  Wenn Abgleich.\n  Dann Patches und Doku konsistent.\n```\n\n### Definition of Done\n- [x] Alle Akzeptanzkriterien nachgewiesen (Kommentar/PR-Link)\n- [x] Globales DoD (Merge, CI, Review) — siehe [Ticket-Schreibstandard](#definition-of-done-dod--issue-ebene)\n\n### Außerhalb des Scopes\n—\n\n### Implementierungshinweise\nSiehe `apps/ticketcheck`.\n\n### QA / Test\nManuelle Abnahme jedes AC; bei UI: 320px + Tastatur-Stichprobe; Screenshot optional in PR.\n",
+      "type": "Technische Aufgabe",
+      "priority": "Must",
+      "ap": "Pilot",
+      "milestone": "",
+      "epic": "E8",
+      "assignee": "Alex",
+      "labels": [
+        "pilot"
+      ],
+      "lifecycle": "done",
+      "done_at": "05.12.2026",
+      "blocked_by": [],
+      "relates_to": [
+        79
+      ]
+    }
+  ]
+}

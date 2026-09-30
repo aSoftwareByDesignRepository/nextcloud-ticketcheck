@@ -1,0 +1,21 @@
+/**
+ * Guest portal — instant-feel navigation polish.
+ *
+ * The portal is a server-rendered multi-page app. Cross-document view
+ * transitions (Chromium 126+, Safari 18.2+) let supported engines cross-fade
+ * same-origin page swaps so navigation reads like an SPA instead of a hard
+ * reload. Browsers without support ignore these rules entirely.
+ *
+ * Motion is opt-out safe: users with reduced-motion keep instant cuts.
+ */
+@media (prefers-reduced-motion: no-preference) {
+	@view-transition {
+		navigation: auto;
+	}
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 160ms;
+	animation-timing-function: ease-out;
+}

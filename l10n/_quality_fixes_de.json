@@ -1,0 +1,10 @@
+{
+	"agent": "Support-Mitarbeiter",
+	"agent_role": "Support-Mitarbeiter",
+	"category_feature": "Funktion",
+	"desklet_nav_board": "Pinnwand",
+	"desklet_recent_sub": "Zuletzt",
+	"optional": "Freiwillig",
+	"scope_role_agent": "Support-Mitarbeiter",
+	"tickets": "Support-Tickets"
+}

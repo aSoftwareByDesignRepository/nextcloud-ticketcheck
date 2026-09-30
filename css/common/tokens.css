@@ -1,0 +1,195 @@
+/*
+ * TicketCheck design tokens (tc-*).
+ * Spacing/type/breakpoints on :root; theme colours on body so NC
+ * body[data-theme-*] --color-* rebinds correctly on every theme switch.
+ *
+ * Spec: planning/design-system/DESIGN-SYSTEM.md (AZC contract, tc- prefix).
+ */
+:root {
+	--tc-breakpoint-sm: 480px;
+	--tc-breakpoint-md: 768px;
+	--tc-breakpoint-lg: 1024px;
+
+	--tc-space-1: 4px;
+	--tc-space-2: 8px;
+	--tc-space-3: 12px;
+	--tc-space-4: 16px;
+	--tc-space-5: 24px;
+	--tc-space-6: 32px;
+	--tc-space-7: 48px;
+	--tc-space-8: 64px;
+
+	--tc-radius-sm: 6px;
+	--tc-radius-md: 12px;
+	--tc-radius-lg: 16px;
+	--tc-radius-pill: 999px;
+
+	--tc-fs-xs: 0.75rem;
+	--tc-fs-sm: 0.875rem;
+	--tc-fs-md: 1rem;
+	--tc-fs-lg: 1.125rem;
+	--tc-fs-xl: 1.5rem;
+	--tc-fs-2xl: 1.875rem;
+	--tc-line-tight: 1.2;
+	--tc-line-base: 1.45;
+
+	--tc-icon-sm: 1rem;
+	--tc-icon-md: 1.125rem;
+	--tc-icon-lg: 1.375rem;
+	--tc-icon-well: 2.25rem;
+	--tc-icon-stroke: 2;
+
+	--tc-touch-min: 44px;
+	--tc-touch-lg: 48px;
+	--tc-tab-num: tabular-nums;
+
+	/* Shell: full width by default; constrained reading column = 72rem (AZC) */
+	--tc-shell-max: 72rem;
+	--tc-shell-minimal: 40rem;
+	--tc-prose-max: 65ch;
+
+	/* Sidebar width (staff + guest portal) */
+	--tc-nav-width: 280px;
+	--tc-nav-width-mobile: min(88vw, 320px);
+
+	/* Legacy / alias tokens consumed by older feature CSS */
+	--tc-radius-full: var(--tc-radius-pill);
+	--tc-fs-base: var(--tc-fs-md);
+	--tc-line-normal: var(--tc-line-base);
+	--helpdesk-text-md: var(--tc-fs-md);
+	--helpdesk-radius-sm: var(--tc-radius-sm);
+	--helpdesk-radius-md: var(--tc-radius-md);
+	--helpdesk-radius-lg: var(--tc-radius-lg);
+}
+
+/*
+ * Theme-bound tokens — declared on body so they resolve against NC
+ * --color-* on body[data-theme-*] (not a frozen :root system theme).
+ * Also rebind on guest portal / dialog surfaces that may escape #app-content.
+ */
+body,
+#app-content.tc-app,
+.helpdesk-modal,
+dialog.helpdesk-dialog,
+.tc-modal,
+.tc-dialog {
+	--tc-overlay-top: var(--header-height, 50px);
+	--tc-overlay-height: calc(100dvh - var(--header-height, 50px));
+
+	--tc-bg: var(--color-main-background, #fff);
+	--tc-bg-soft: color-mix(in srgb, var(--color-main-background, #fff) 96%, var(--color-main-text, #1d1d1d) 4%);
+	--tc-bg-card: var(--color-main-background, #fff);
+	--tc-bg-stripe: color-mix(in srgb, var(--color-main-background, #fff) 92%, var(--color-main-text, #1d1d1d) 8%);
+	--tc-border: color-mix(in srgb, var(--color-main-text, #1d1d1d) 12%, transparent);
+	--tc-border-strong: color-mix(in srgb, var(--color-main-text, #1d1d1d) 24%, transparent);
+	--tc-muted: var(--color-text-maxcontrast, #6b6b6b);
+	--tc-text: var(--color-main-text, #1d1d1d);
+	--tc-primary: var(--color-primary-element, #0082c9);
+
+	--helpdesk-border-color: var(--tc-border);
+	--helpdesk-bg-secondary: var(--tc-bg-soft);
+	--helpdesk-text-secondary: var(--tc-muted);
+
+	/* Scope / entity tint wells (customers = household, projects = folder) */
+	--tc-tint-household: color-mix(in srgb, var(--color-primary-element, #0082c9) 14%, var(--color-main-background, #fff));
+	--tc-tint-project: color-mix(in srgb, var(--tc-success-element, #2d7b41) 14%, var(--color-main-background, #fff));
+
+	/*
+	 * Semantic status colors.
+	 * NC ≥ 32: --color-error/-warning/-success are pale *background* tints;
+	 * readable ink is --color-*-text; strong accent is --color-element-*.
+	 */
+	--tc-error-text: var(--color-error-text, var(--color-text-error, #b3231a));
+	--tc-error-element: var(--color-element-error, var(--color-error, #db0606));
+	--tc-error-element-hover: color-mix(in srgb, var(--tc-error-element) 82%, var(--color-main-text, #1d1d1d));
+	--tc-warning-text: var(--color-warning-text, var(--color-text-warning, #7f5900));
+	--tc-warning-element: var(--color-element-warning, var(--color-warning, #a37200));
+	--tc-warning-element-hover: color-mix(in srgb, var(--tc-warning-element) 82%, var(--color-main-text, #1d1d1d));
+	--tc-success-text: var(--color-success-text, var(--color-text-success, var(--color-success, #2d7b41)));
+	--tc-success-element: var(--color-element-success, var(--color-success, #2d7b41));
+
+	/* Mix INTO main-background (not transparent) so tints stay visible on every theme */
+	--tc-tint-info: color-mix(in srgb, var(--color-primary-element, #0082c9) 16%, var(--color-main-background, #fff));
+	--tc-tint-success: color-mix(in srgb, var(--tc-success-element, #46ba61) 18%, var(--color-main-background, #fff));
+	--tc-tint-warning: color-mix(in srgb, var(--tc-warning-element, #c98600) 22%, var(--color-main-background, #fff));
+	--tc-tint-critical: color-mix(in srgb, var(--tc-error-element, #cc4646) 18%, var(--color-main-background, #fff));
+	--tc-tint-danger: var(--tc-tint-critical);
+
+	--tc-shadow-sm: 0 1px 2px color-mix(in srgb, var(--color-main-text, #1d1d1d) 8%, transparent);
+	--tc-shadow-md: 0 8px 24px color-mix(in srgb, var(--color-main-text, #1d1d1d) 12%, transparent);
+	--tc-shadow-lg: 0 16px 40px color-mix(in srgb, var(--color-main-text, #1d1d1d) 18%, transparent);
+	--tc-shadow-focus: 0 0 0 3px color-mix(in srgb, var(--color-primary-element, #0082c9) 50%, transparent);
+
+	/* Modal / drawer scrims — theme ink, never raw black */
+	--tc-scrim: color-mix(in srgb, var(--color-main-text, #1d1d1d) 45%, transparent);
+	--tc-scrim-strong: color-mix(in srgb, var(--color-main-text, #1d1d1d) 55%, transparent);
+
+	/* On-primary / on-fill overlays (hero wells, pill counts on solid fills) */
+	--tc-on-fill-soft: color-mix(in srgb, var(--color-primary-element-text, #fff) 20%, transparent);
+	--tc-on-fill-mid: color-mix(in srgb, var(--color-primary-element-text, #fff) 30%, transparent);
+	--tc-on-fill-ink: color-mix(in srgb, var(--color-main-text, #1d1d1d) 20%, transparent);
+
+	/* Legacy helpdesk-* aliases → design-system scale (4px grid) */
+	--helpdesk-spacing-xs: var(--tc-space-2);
+	--helpdesk-spacing-sm: var(--tc-space-4);
+	--helpdesk-spacing-md: var(--tc-space-5);
+	--helpdesk-spacing-lg: var(--tc-space-6);
+	--helpdesk-spacing-xl: var(--tc-space-7);
+	--helpdesk-touch-target: var(--tc-touch-min);
+	--helpdesk-touch-target-lg: var(--tc-touch-lg);
+	--helpdesk-border-radius-sm: var(--tc-radius-sm);
+	--helpdesk-border-radius-md: var(--tc-radius-md);
+	--helpdesk-border-radius-lg: var(--tc-radius-lg);
+	--helpdesk-shadow-sm: var(--tc-shadow-sm);
+	--helpdesk-shadow-md: var(--tc-shadow-md);
+	--helpdesk-shadow-lg: var(--tc-shadow-lg);
+	--helpdesk-text-xs: var(--tc-fs-xs);
+	--helpdesk-text-sm: var(--tc-fs-sm);
+	--helpdesk-text-base: var(--tc-fs-md);
+	--helpdesk-text-lg: var(--tc-fs-lg);
+	--helpdesk-text-xl: var(--tc-fs-xl);
+	--helpdesk-text-2xl: var(--tc-fs-2xl);
+	--helpdesk-text-3xl: var(--tc-fs-2xl);
+	--helpdesk-icon-sm: var(--tc-icon-sm);
+	--helpdesk-icon-md: var(--tc-icon-md);
+	--helpdesk-icon-lg: var(--tc-icon-lg);
+	--helpdesk-icon-xl: var(--tc-icon-well);
+	--helpdesk-nav-width: var(--tc-nav-width);
+
+	/* Status/priority badges — solid semantic fills + on-fill text (≥4.5:1) */
+	--hd-badge-new-bg: var(--color-primary-element);
+	--hd-badge-waiting-bg: var(--tc-warning-element);
+	--hd-badge-urgent-bg: var(--tc-error-element);
+	--hd-badge-high-bg: var(--tc-warning-element);
+	--hd-badge-normal-bg: var(--color-primary-element);
+	--hd-badge-low-bg: var(--color-text-maxcontrast);
+	--hd-badge-text-on-dark: var(--color-primary-element-text, var(--color-primary-text));
+}
+
+@media (prefers-contrast: more) {
+	body,
+	#app-content.tc-app {
+		--tc-border: color-mix(in srgb, var(--color-main-text, #1d1d1d) 28%, transparent);
+		--tc-border-strong: color-mix(in srgb, var(--color-main-text, #1d1d1d) 42%, transparent);
+		--tc-shadow-sm: 0 0 0 1px var(--tc-border-strong);
+		--tc-shadow-md: 0 0 0 1px var(--tc-border-strong);
+		--tc-shadow-lg: 0 0 0 2px var(--tc-border-strong);
+		--tc-icon-stroke: 2.25;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tc-app *,
+	.tc-app *::before,
+	.tc-app *::after,
+	body.guest-user *,
+	body.guest-user *::before,
+	body.guest-user *::after,
+	body#body-login:has([data-tc-nav-mode="guest"]) *,
+	body#body-login:has([data-tc-nav-mode="guest"]) *::before,
+	body#body-login:has([data-tc-nav-mode="guest"]) *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

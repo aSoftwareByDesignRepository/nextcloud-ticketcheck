@@ -1,0 +1,41 @@
+# Internal docs belong in the parent workspace (documentation/ / planning/), not this repo
+docs/
+
+# Dependencies
+vendor/
+node_modules/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Build / cache
+dist/
+build/
+.cache/
+
+# Logs
+*.log
+
+# E2E local env (use e2e/.env.example)
+e2e/.env
+
+# Playwright HTML report (generated)
+playwright-report/
+# Playwright failure artifacts + stored login state (contains session cookies)
+test-results/
+.auth/
+
+# PHP / JS tooling
+.phpunit.result.cache
+.phpunit.cache/
+.eslintcache
+
+# Release tarballs / signatures (docs + CHECKSUMS may be committed)
+release/*.tar.gz
+release/*.tar.gz.asc
+release/SIGNATURE-*.txt
+release/APPSTORE-SIGNATURE*.txt
+release/*.b64

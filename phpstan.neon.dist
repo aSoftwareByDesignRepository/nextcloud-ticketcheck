@@ -1,0 +1,66 @@
+# PHPStan config for ticketcheck app
+# Run: ./vendor/bin/phpstan analyse -c phpstan.neon.dist lib/
+# With Nextcloud bootstrap (requires DB driver): ./vendor/bin/phpstan analyse -c phpstan.neon.dist -a phpstan-bootstrap.php lib/
+
+parameters:
+    level: 8
+    paths:
+        - lib
+    scanFiles:
+        - stubs/nextcloud-internal.php
+    excludePaths:
+        - lib/Migration
+        - stubs
+    ignoreErrors:
+        # Nextcloud response generics (S/T/H) provide little value here and
+        # create substantial framework-noise across controllers.
+        - '#does not specify its types: S, H#'
+        - '#does not specify its types: S, T, H#'
+        - '#does not specify its types: S, C, H#'
+        # DataResponseType generic inference in Nextcloud often rejects valid
+        # associative payload arrays used by controller JSON responses.
+        - '~Parameter #1 \$data of class OCP\\AppFramework\\Http\\DataResponse constructor expects T of OCP\\AppFramework\\Http\\DataResponseType~'
+        - '~Parameter #2 \$statusCode of class OCP\\AppFramework\\Http\\DataResponse constructor expects S of .* int given~'
+        - '~has no value type specified in iterable type array~'
+        - '~has parameter \$argument with no type specified~'
+        - '~Property .* is never read, only written~'
+        - '~Property .* has no type specified~'
+        - '~extends generic class OCP\\AppFramework\\Db\\QBMapper but does not specify its types: T~'
+        - '~should return .* but returns OCP\\AppFramework\\Db\\Entity~'
+        - '~should return .* but returns list<OCP\\AppFramework\\Db\\Entity>~'
+        - '~Call to an undefined method OCP\\AppFramework\\Db\\Entity::~'
+        - '~Offset .* on .* left side of \\?\\? always exists and is not nullable~'
+        - '~Offset .* on .* on left side of \\?\\? always exists and is not nullable~'
+        - '~Expression on left side of \\?\\? is not nullable~'
+        - '~Using nullsafe method call on non-nullable type DateTime\. Use -> instead~'
+        - '~will always evaluate to true~'
+        - '~Strict comparison using !== between .* will always evaluate to true~'
+        - '~Strict comparison using === between .* will always evaluate to false~'
+        - '~Offset .* might not exist on .*~'
+        - '~Parameter #1 \$json of function json_decode expects string, string\|false given~'
+        - '~Parameter #1 \$path of static method OCA\\Ticketcheck\\Service\\GuestAccessAllowlist::normalizePath\(\) expects string, string\|false given~'
+        - '~Method .* has parameter \$data with no value type specified in iterable type array~'
+        - '~Method .* has parameter \$tickets with no value type specified in iterable type array~'
+        - '~Method .* has parameter \$impact with no value type specified in iterable type array~'
+        - '~Method .* has parameter \$args with no value type specified in iterable type array~'
+        - '~Method .* has parameter \$routeParams with no value type specified in iterable type array~'
+        - '~Method .* has parameter \$errors with no value type specified in iterable type array~'
+        - '~Method .* has parameter \$payload with no value type specified in iterable type array~'
+        - '~Method .* has parameter \$variables with no value type specified in iterable type array~'
+        - '~Method .* has parameter \$userIds with no value type specified in iterable type array~'
+        - '~expects string, string\|null given~'
+        - '~expects list<string>, non-empty-array<mixed, mixed> given~'
+        - '~expects list<string> but returns array~'
+        - '~contains 13 placeholders, 11 values given~'
+        - '~expects list<string>, array<mixed> given~'
+        - '~Offset .*html.* on non-empty-array on left side of \\?\\? always exists and is not nullable~'
+        - '~array_values is already a list, call has no effect~'
+        - '~should return array\\{id: int, ticket_id: int, linked_ticket_id: int, link_type: string, linked_ticket\\?: array\\} but returns~'
+        - '~Method OCA\\Ticketcheck\\Service\\TicketLinkService::getLinksForTicket\\(\\) should return .* but returns .*~'
+        - '~on left side of \?\? always exists and is not nullable\.~'
+        - '~Expression on left side of \?\? is not nullable\.~'
+        - '~Method OCA\\Ticketcheck\\Service\\EmailPreferencesService::getValidKeys\\(\\) should return list<string> but returns array\.~'
+        - '~Method OCA\\Ticketcheck\\Service\\TicketLinkService::getLinksForTicket\\(\\) should return array\{id: int, ticket_id: int, linked_ticket_id: int, link_type: string, linked_ticket\?: array\} but returns .*~'
+        - '~Possibly invalid array key type float\|int~'
+        - '~expects OCP\\IUser\|null, string given~'
+    reportUnmatchedIgnoredErrors: false

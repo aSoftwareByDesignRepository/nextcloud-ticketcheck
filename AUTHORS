@@ -1,0 +1,49 @@
+# Authors
+
+TicketCheck (grant project **NEXTICK**) is developed by:
+
+- **Lara Raffel**
+- **Alexander Mäule**
+- **Hauke Klünder**
+
+Funded by the German Federal Ministry of Research, Technology and Space
+(BMFTR) through the [Prototype Fund](https://www.prototypefund.de/) programme —
+funding measure "Software Sprint" (BAnz 15.11.2024), round 2, June to
+November 2026.
+
+## Acknowledgments
+
+- **Nextcloud GmbH and Nextcloud contributors** — the platform and framework
+  this app builds on
+- **Nextcloud community** — feedback, testing, and translations
+- **Prototype Fund / Open Knowledge Foundation Deutschland e. V.** — coaching
+  and programme support
+
+## Copyright
+
+Copyright (C) 2025-2026 Lara Raffel, Alexander Mäule and Hauke Klünder
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+## Contact
+
+- **Issues**: https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues
+- **Repository**: https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck
+
+## Contributing
+
+We welcome contributions: fork the repository, create a feature branch,
+test thoroughly, and open a pull request. Please be respectful and inclusive,
+match the existing code style, write clear commit messages, and document
+new features.

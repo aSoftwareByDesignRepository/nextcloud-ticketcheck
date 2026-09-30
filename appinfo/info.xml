@@ -1,0 +1,363 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2025-2026 Lara Raffel, Alexander Mäule and Hauke Klünder
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>ticketcheck</id>
+	<name>TicketCheck</name>
+	<summary>Customer support ticketing system with guest access and email integration</summary>
+	<description><![CDATA[
+		A complete standalone helpdesk and customer support system for Nextcloud.
+		Works out of the box with no dependencies.
+
+		Features:
+		- Multi-tenant project-based access control
+		- Built-in projects and customers management
+		- Secure guest portal (restricted to helpdesk only)
+		- Automated email notifications and background jobs
+		- Rich text editor for knowledge base
+		- File attachments with image previews
+		- Visual charts and reporting
+		- CSV export
+		- SLA monitoring and breach alerts
+		- Daily digest emails for agents
+		- Translations (English, German)
+
+## Feedback welcome
+
+We improve this app with real-world use. Bug reports, rough edges, and ideas help — open a GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Your feedback directly shapes what we build next.
+
+## Funding
+
+TicketCheck (grant project NEXTICK) is funded by the German Federal Ministry of Research, Technology and Space (BMFTR) through the Prototype Fund programme (https://www.prototypefund.de/) — funding measure "Software Sprint" (round 2), June to November 2026. The complete source code is published as free and open-source software under the AGPL-3.0-or-later license.
+]]></description>
+
+	<description lang="de"><![CDATA[
+Komplettes, eigenständiges Helpdesk- und Kundensupportsystem für Nextcloud.
+Funktioniert direkt ohne Abhängigkeiten.
+
+Funktionen:
+- Multi-tenant projektbasierte Zugriffskontrolle
+- Integrierte Verwaltung von Projekten und Kunden
+- Sicheres Gäste-Portal (nur für den Helpdesk, eingeschränkt)
+- Automatisierte E-Mail-Benachrichtigungen und Hintergrundjobs
+- Editor für Rich Text zur Wissensdatenbank
+- Dateianhänge mit Bildvorschau
+- Visuelle Diagramme und Auswertungen
+- CSV-Export
+- SLA-Überwachung und Warnmeldungen bei Verstößen
+- Tägliche Zusammenfassungs-E-Mails für Agenten
+- Übersetzungen (Englisch, Deutsch)
+
+## Feedback willkommen
+
+Wir verbessern diese App mit Rückmeldungen aus der Praxis. Fehlerberichte, Stolpersteine und Ideen helfen — öffnen Sie ein GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Ihr Feedback prägt direkt, was wir als Nächstes bauen.
+
+## Förderung
+
+TicketCheck (Förderprojekt NEXTICK) wird vom Bundesministerium für Forschung, Technologie und Raumfahrt (BMFTR) im Förderprogramm Prototype Fund (https://www.prototypefund.de/) gefördert — Fördermaßnahme „Software Sprint – Förderung von Open Source Entwicklerinnen und Entwicklern“ (2. Jahrgang), Juni bis November 2026. Der vollständige Quellcode wird als freie Open-Source-Software unter der AGPL-3.0-or-later-Lizenz veröffentlicht.
+]]></description>
+	<description lang="fr"><![CDATA[
+Un système complet, autonome de helpdesk et de support client pour Nextcloud.
+Fonctionne dès la mise en service, sans dépendances.
+
+Fonctions :
+- Contrôle d’accès basé sur des projets et multi-tenant
+- Gestion intégrée des projets et des clients
+- Portail invité sécurisé (limité au helpdesk uniquement)
+- Notifications par e-mail automatisées et tâches d’arrière-plan
+- Éditeur de texte enrichi pour la base de connaissances
+- Pièces jointes avec aperçu des images
+- Graphiques visuels et reporting
+- Export CSV
+- Suivi des SLA et alertes en cas de non-respect
+- E-mails récapitulatifs quotidiens pour les agents
+- Traductions (anglais, allemand)
+
+## Retours bienvenus
+
+Nous améliorons cette app grâce à votre usage réel. Bugs, frottements et idées aident — ouvrez une GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Vos retours façonnent directement la suite.
+
+## Financement
+
+TicketCheck (projet subventionné NEXTICK) est financé par le ministère fédéral allemand de la Recherche, de la Technologie et de l'Espace (BMFTR) via le programme Prototype Fund (https://www.prototypefund.de/) — mesure « Software Sprint » (2e promotion), juin à novembre 2026. Le code source complet est publié en logiciel libre et open source sous licence AGPL-3.0-or-later.
+]]></description>
+	<description lang="es"><![CDATA[
+Un sistema completo de mesa de ayuda y atención al cliente, autónomo, para Nextcloud.
+Funciona de forma inmediata y sin dependencias.
+
+Funciones:
+- Control de acceso basado en proyectos y multi-tenant
+- Gestión integrada de proyectos y clientes
+- Portal de invitados seguro (restringido solo al helpdesk)
+- Notificaciones por correo automatizadas y trabajos en segundo plano
+- Editor de texto enriquecido para la base de conocimiento
+- Adjuntos de archivos con vista previa de imágenes
+- Gráficos y reportes visuales
+- Exportación CSV
+- Supervisión de SLA y alertas de incumplimiento
+- Correos electrónicos de resumen diarios para los agentes
+- Traducciones (inglés, alemán)
+
+## Comentarios bienvenidos
+
+Mejoramos esta app con el uso real. Informes de errores, fricciones e ideas ayudan — abra un GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Su feedback da forma directa a lo que construimos después.
+
+## Financiación
+
+TicketCheck (proyecto subvencionado NEXTICK) está financiado por el Ministerio Federal Alemán de Investigación, Tecnología y Espacio (BMFTR) a través del programa Prototype Fund (https://www.prototypefund.de/) — medida «Software Sprint» (2.ª promoción), junio a noviembre de 2026. El código fuente completo se publica como software libre y de código abierto bajo la licencia AGPL-3.0-or-later.
+]]></description>
+	<description lang="da"><![CDATA[
+Et komplet, selvstændigt helpdesk- og kundesupportsystem til Nextcloud.
+Fungerer lige fra starten uden afhængigheder.
+
+Funktioner:
+- Multi-tenant projektbaseret adgangskontrol
+- Indbygget administration af projekter og kunder
+- Sikret gæsteportal (kun adgang til helpdesk, begrænset)
+- Automatiserede e-mail-notifikationer og baggrundsjob
+- Rigt tekstredigeringsværktøj til vidensbase
+- Filvedhæftninger med billedforhåndsvisning
+- Visuelle diagrammer og rapportering
+- CSV-export
+- SLA-overvågning og alarmer ved brud
+- Daglige opsummerings-e-mails til agenter
+- Oversættelser (engelsk, tysk)
+
+## Feedback er velkommen
+
+Vi forbedrer denne app med brug i praksis. Fejlrapporter, friktioner og idéer hjælper — åbn et GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Jeres feedback former direkte det, vi bygger næste gang.
+
+## Finansiering
+
+TicketCheck (støtteprojektet NEXTICK) finansieres af det tyske forbundsministerium for forskning, teknologi og rumfart (BMFTR) gennem Prototype Fund-programmet (https://www.prototypefund.de/) — støtteprogrammet "Software Sprint" (årgang 2), juni til november 2026. Den komplette kildekode udgives som fri open source-software under AGPL-3.0-or-later-licensen.
+]]></description>
+	<description lang="nl"><![CDATA[
+Een volledig standalone helpdesk- en klantenservicesysteem voor Nextcloud.
+Werkt direct zonder afhankelijkheden.
+
+Functies:
+- Multi-tenant, projectgebaseerde toegangscontrole
+- Beheer van projecten en klanten ingebouwd
+- Beveiligd gastenportaal (alleen beperkt tot de helpdesk)
+- Geautomatiseerde e-mailmeldingen en achtergrondjobs
+- Rijke teksteditor voor de kennisbank
+- Bestandsbijlagen met voorbeeld van afbeeldingen
+- Visuele grafieken en rapportage
+- Exporteren naar CSV
+- SLA-monitoring en meldingen bij overtredingen
+- Dagelijkse samenvattende e-mails voor agenten
+- Vertalingen (Engels, Duits)
+
+## Feedback welkom
+
+We verbeteren deze app met gebruik in de praktijk. Bugmeldingen, struikelblokken en ideeën helpen — open een GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Uw feedback bepaalt mede wat we als volgende bouwen.
+
+## Financiering
+
+TicketCheck (subsidieproject NEXTICK) wordt gefinancierd door het Duitse federale ministerie van Onderzoek, Technologie en Ruimtevaart (BMFTR) via het Prototype Fund-programma (https://www.prototypefund.de/) — financieringsmaatregel "Software Sprint" (lichting 2), juni tot november 2026. De volledige broncode wordt gepubliceerd als vrije open-sourcesoftware onder de AGPL-3.0-or-later-licentie.
+]]></description>
+	<description lang="it"><![CDATA[
+Un sistema completo e autonomo di helpdesk e assistenza clienti per Nextcloud.
+Funziona out of the box senza dipendenze.
+
+Funzionalità:
+- Controllo dell’accesso basato su progetti e multi-tenant
+- Gestione integrata di progetti e clienti
+- Portale ospiti sicuro (limitato solo all’helpdesk)
+- Notifiche email automatizzate e processi in background
+- Editor di testo arricchito per la knowledge base
+- Allegati dei file con anteprima delle immagini
+- Grafici e reportistica visivi
+- Esportazione CSV
+- Monitoraggio SLA e avvisi in caso di violazioni
+- E-mail riepilogative giornaliere per gli agenti
+- Traduzioni (inglese, tedesco)
+
+## Feedback benvenuto
+
+Miglioriamo questa app con l’uso reale. Segnalazioni di bug, punti deboli e idee aiutano — aprite una GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Il vostro feedback guida direttamente ciò che costruiamo dopo.
+
+## Finanziamento
+
+TicketCheck (progetto finanziato NEXTICK) è finanziato dal Ministero Federale tedesco della Ricerca, della Tecnologia e dello Spazio (BMFTR) tramite il programma Prototype Fund (https://www.prototypefund.de/) — misura «Software Sprint» (2ª edizione), da giugno a novembre 2026. Il codice sorgente completo è pubblicato come software libero e open source con licenza AGPL-3.0-or-later.
+]]></description>
+	<description lang="pl"><![CDATA[
+Kompletny, samodzielny system helpdesku i obsługi klienta dla Nextcloud.
+Działa od razu po wdrożeniu, bez zależności.
+
+Funkcje:
+- Wielodostępna (multi-tenant) kontrola dostępu oparta na projektach
+- Wbudowane zarządzanie projektami i klientami
+- Bezpieczny portal dla gości (ograniczony wyłącznie do helpdesku)
+- Automatyczne powiadomienia e-mail oraz zadania w tle
+- Edytor tekstu sformatowanego dla bazy wiedzy
+- Załączniki plików z podglądem obrazów
+- Przejrzyste wykresy i raportowanie
+- Eksport CSV
+- Monitorowanie SLA i alerty o naruszeniach
+- Codzienne wiadomości e-mail podsumowujące dla agentów
+- Tłumaczenia (angielski, niemiecki)
+
+## Feedback mile widziany
+
+Ulepszamy tę aplikację dzięki realnemu użyciu. Zgłoszenia błędów, tarcia i pomysły pomagają — otwórz GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Wasza opinia bezpośrednio kształtuje to, co budujemy dalej.
+
+## Finansowanie
+
+TicketCheck (projekt grantowy NEXTICK) jest finansowany przez Federalne Ministerstwo Badań, Technologii i Przestrzeni Kosmicznej (BMFTR) w ramach programu Prototype Fund (https://www.prototypefund.de/) — działanie „Software Sprint” (edycja 2), czerwiec–listopad 2026. Pełny kod źródłowy jest publikowany jako wolne i otwarte oprogramowanie na licencji AGPL-3.0-or-later.
+]]></description>
+	<description lang="sv"><![CDATA[
+Ett komplett, fristående helpdesk- och kundsupportsystem för Nextcloud.
+Fungerar direkt utan beroenden.
+
+Funktioner:
+- Multi-tenant projektbaserad åtkomstkontroll
+- Inbyggd hantering av projekt och kunder
+- Säker gästportal (endast begränsad till helpdesk)
+- Automatiska e-postaviseringar och bakgrundsjobb
+- Kunskapsbas med redigering av rik text
+- Filbilagor med bildförhandsvisning
+- Visuella diagram och rapportering
+- Export till CSV
+- SLA-övervakning och varningsmeddelanden vid överträdelser
+- Dagliga sammanfattningsmejl för agenter
+- Översättningar (engelska, tyska)
+
+## Feedback välkomnas
+
+Vi förbättrar den här appen med verklig användning. Felrapporter, friktioner och idéer hjälper — öppna en GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Er feedback formar direkt det vi bygger härnäst.
+
+## Finansiering
+
+TicketCheck (bidragsprojektet NEXTICK) finansieras av det tyska federala ministeriet för forskning, teknik och rymd (BMFTR) via Prototype Fund-programmet (https://www.prototypefund.de/) — stödåtgärden "Software Sprint" (omgång 2), juni till november 2026. Hela källkoden publiceras som fri och öppen programvara under licensen AGPL-3.0-or-later.
+]]></description>
+	<description lang="nb"><![CDATA[
+Et komplett, frittstående helpdesk- og kundesupportsystem for Nextcloud.
+Fungerer ut av esken uten avhengigheter.
+
+Funksjoner:
+- Multi-tenant prosjektbasert tilgangskontroll
+- Innebygd håndtering av prosjekter og kunder
+- Sikret gjesteportal (begrenset til bare helpdesk)
+- Automatiserte e-postvarsler og bakgrunnsjobber
+- Redigeringsverktøy med rik tekst for kunnskapsbase
+- Filvedlegg med bilde-forhåndsvisning
+- Visuelle diagrammer og rapportering
+- CSV-eksport
+- SLA-overvåking og varsler ved brudd
+- Daglige sammendrags-e-poster for agenter
+- Oversettelser (engelsk, tysk)
+
+## Feedback er velkommen
+
+Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer hjelper — åpne en GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Tilbakemeldingen deres former direkte det vi bygger videre.
+
+## Finansiering
+
+TicketCheck (tilskuddsprosjektet NEXTICK) finansieres av det tyske forsknings-, teknologi- og romfartsdepartementet (BMFTR) gjennom Prototype Fund-programmet (https://www.prototypefund.de/) — støttetiltaket "Software Sprint" (kull 2), juni til november 2026. Hele kildekoden publiseres som fri og åpen programvare under AGPL-3.0-or-later-lisensen.
+]]></description>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-01.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-01.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-02.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-02.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-03.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-03.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-04.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-04.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-05.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-05.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-06.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/refs/heads/main/screenshots/ticketcheck-screenshot-06.png
+	</screenshot>
+
+	<version>2.3.8</version>
+	<licence>agpl</licence>
+	<author>Lara Raffel</author>
+	<author>Alexander Mäule</author>
+	<author>Hauke Klünder</author>
+
+	<namespace>Ticketcheck</namespace>
+
+	<category>organization</category>
+
+	<bugs>https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues</bugs>
+	<repository>https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck.git</repository>
+
+	<dependencies>
+		<!-- NC 33.0.3: major 33; includes all 33.x patches. Same through max-version 37. -->
+		<nextcloud min-version="32" max-version="35"/>
+		<!-- Must live under <dependencies>: MigrationService only reads these for migration naming checks -->
+		<database>mysql</database>
+		<database>pgsql</database>
+	</dependencies>
+
+	<background-jobs>
+		<job>OCA\Ticketcheck\BackgroundJob\NotificationJob</job>
+		<job>OCA\Ticketcheck\BackgroundJob\SLAMonitorJob</job>
+		<job>OCA\Ticketcheck\BackgroundJob\WeeklyDigestJob</job>
+		<job>OCA\Ticketcheck\BackgroundJob\EscalationJob</job>
+	</background-jobs>
+
+	<keywords>
+		<keyword>helpdesk</keyword>
+		<keyword>support</keyword>
+		<keyword>ticketing</keyword>
+		<keyword>customer service</keyword>
+		<keyword>ticket system</keyword>
+		<keyword>issue tracking</keyword>
+		<keyword>guest access</keyword>
+		
+		<keyword>knowledge base</keyword>
+		<keyword>SLA</keyword>
+	</keywords>
+
+	<settings>
+		<personal>OCA\Ticketcheck\Settings\PersonalSettings</personal>
+	</settings>
+
+	<activity>
+		<providers>
+			<provider>OCA\Ticketcheck\Activity\Provider</provider>
+		</providers>
+	</activity>
+
+	<release>
+		<databases>
+			<database>mysql</database>
+			<database>pgsql</database>
+		</databases>
+		<php min-version="8.2" max-version="8.5"/>
+		<platforms>
+			<platform>linux</platform>
+			<platform>mac</platform>
+			<platform>windows</platform>
+		</platforms>
+	</release>	<commands>
+		<command>OCA\Ticketcheck\Command\UpgradeBackupCommand</command>
+	</commands>
+
+	<repair-steps>
+		<install>
+			<step>OCA\Ticketcheck\Repair\EnsureTicketcheckSchema</step>
+		</install>
+		<post-migration>
+			<step>OCA\Ticketcheck\Repair\EnsureTicketcheckSchema</step>
+			<step>OCA\Ticketcheck\Repair\CleanupDanglingMergeShells</step>
+		</post-migration>
+		<uninstall>
+			<step>OCA\Ticketcheck\Repair\UninstallDropTables</step>
+		</uninstall>
+		<pre-migration>
+			<step>OCA\Ticketcheck\Repair\BackupBeforeUpdate</step>
+		</pre-migration>
+</repair-steps>
+</info>
+
+

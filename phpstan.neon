@@ -1,0 +1,6 @@
+# PHPStan config for ticketcheck (local + CI)
+# Run: ./vendor/bin/phpstan analyse -c phpstan.neon
+# Optional NC bootstrap: ./vendor/bin/phpstan analyse -c phpstan.neon -a phpstan-bootstrap.php
+
+includes:
+    - phpstan.neon.dist

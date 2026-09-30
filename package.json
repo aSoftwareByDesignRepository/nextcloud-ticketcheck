@@ -1,0 +1,58 @@
+{
+  "name": "ticketcheck",
+  "version": "2.3.8",
+  "description": "Customer support ticketing system for Nextcloud with guest access and email integration",
+  "main": "js/ticketcheck.js",
+  "scripts": {
+    "build": "webpack --mode=production",
+    "build:dev": "webpack --mode=development",
+    "dev": "webpack --mode=development --watch",
+    "lint": "eslint js/",
+    "lint:fix": "eslint js/ --fix",
+    "e2e": "playwright test",
+    "e2e:smoke": "playwright test e2e",
+    "e2e:install": "playwright install --with-deps chromium",
+    "e2e:smoke:safe": "bash ./e2e/run-safe.sh",
+    "e2e:auth": "node ./e2e/save-storage-state.js",
+    "e2e:theme": "playwright test e2e/theme-responsive-a11y.spec.js --project=chromium-1280",
+    "test:theme": "node --test --test-concurrency=1 tests/js/css-theme-guard.test.mjs",
+    "test:kanban": "node --test --test-concurrency=1 tests/js/kanban-card-layout.test.mjs",
+    "lint:grep": "node ./scripts/lint-grep-gates.js",
+    "lint:templates": "php ./scripts/validate-templates.php",
+    "l10n:check": "node ./scripts/l10n-parity.js && php ./scripts/check-l10n-parity.php && php ./scripts/check-l10n-placeholders.php",
+    "lint:css-imports": "node ./scripts/lint-css-imports.js",
+    "lint:e2e-i18n": "node ./scripts/lint-e2e-i18n.js",
+    "verify:js-assets": "node ./scripts/verify-js-assets.js",
+    "icons:generate": "php ./scripts/generate-icons-js.php",
+    "verify:ui": "npm run icons:generate && npm run lint:grep && npm run lint:css-imports && npm run lint:templates && npm run l10n:check && npm run lint:e2e-i18n && npm run verify:js-assets && npm run test:theme && npm run test:kanban"
+  },
+  "keywords": [
+    "nextcloud",
+    "ticketcheck",
+    "ticketing",
+    "support",
+    "customer-service"
+  ],
+  "author": "Lara Raffel, Alexander M\u00e4ule, Hauke Kl\u00fcnder",
+  "license": "AGPL-3.0-or-later",
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@babel/core": "^7.22.0",
+    "@babel/preset-env": "^7.22.0",
+    "@playwright/test": "^1.56.1",
+    "autoprefixer": "^10.4.14",
+    "babel-loader": "^9.1.0",
+    "css-loader": "^6.8.0",
+    "eslint": "^8.42.0",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.0"
+  },
+  "dependencies": {
+    "date-fns": "^2.30.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
