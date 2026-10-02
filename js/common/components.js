@@ -71,6 +71,32 @@
 
 	let openInstance = null;
 
+	/**
+	 * modal_restore_contract: resolve the restore target lazily at close time.
+	 * A trigger that was rebuilt/removed while the dialog was open still counts —
+	 * fall back to #tc-page-actions first focusable, then the view heading
+	 * (#tc-page-title, tabindex=-1). Never strand focus on body.
+	 */
+	function resolveModalRestoreTarget(previousFocus) {
+		if (previousFocus
+			&& previousFocus instanceof HTMLElement
+			&& document.contains(previousFocus)) {
+			return previousFocus;
+		}
+		const actions = document.getElementById('tc-page-actions');
+		if (actions) {
+			const actionTarget = focusables(actions)[0];
+			if (actionTarget) {
+				return actionTarget;
+			}
+		}
+		const heading = document.getElementById('tc-page-title');
+		if (heading && document.contains(heading)) {
+			return heading;
+		}
+		return null;
+	}
+
 	function openModal(options) {
 		const opts = Object.assign({
 			title: '',
@@ -213,8 +239,9 @@
 				if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
 				document.body.classList.remove('tc-modal-open');
 				openInstance = null;
-				if (previousFocus && typeof previousFocus.focus === 'function') {
-					try { previousFocus.focus(); } catch (_) { /* element may be gone */ }
+				const restoreTarget = resolveModalRestoreTarget(previousFocus);
+				if (restoreTarget && typeof restoreTarget.focus === 'function') {
+					try { restoreTarget.focus(); } catch (_) { /* element may be gone */ }
 				}
 				if (typeof opts.resolve === 'function') opts.resolve(result);
 				if (result === false && typeof opts.onCancel === 'function') opts.onCancel();

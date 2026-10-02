@@ -49,7 +49,7 @@ release: clean
 	@tar -czf $(release_dir)/$(app_name).tar.gz \
 		$(release_exclude) \
 		--exclude='Makefile' \
-		--transform 's,^,$(app_name)/,' \
+		--transform 's,^\.,$(app_name),' \
 		.
 	@echo "Created $(release_dir)/$(app_name).tar.gz"
 	@echo "Add appinfo/signature.json with: make sign"

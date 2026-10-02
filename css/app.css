@@ -1220,14 +1220,6 @@ body.tc-attachment-lightbox-open {
     margin-top: var(--helpdesk-spacing-md);
 }
 
-.ticket-detail-dialog-actions .helpdesk-btn--primary {
-    order: 2;
-}
-
-.ticket-detail-dialog-actions .helpdesk-btn--secondary {
-    order: 1;
-}
-
 .ticket-detail-comment-item {
     padding: var(--helpdesk-spacing-md);
 }
@@ -5457,76 +5449,9 @@ div.tc-field--checkbox > .helpdesk-form-help,
    PART 21b: KB INDEX - HERO, CARDS, HELP FOOTER
    ============================================== */
 
-/* Hero block */
-.kb-hero {
-    background: linear-gradient(135deg, var(--color-primary-element) 0%, var(--color-primary-element-hover, var(--color-primary-element)) 100%);
-    color: var(--color-primary-element-text, var(--color-primary-text));
-    padding: var(--helpdesk-spacing-xl) var(--helpdesk-spacing-lg);
-    border-radius: var(--helpdesk-border-radius-lg);
-    margin-bottom: var(--helpdesk-spacing-lg);
-    text-align: center;
-    box-shadow: var(--helpdesk-shadow-md);
-}
-
-.kb-hero__inner {
-    max-width: min(100%, var(--tc-shell-minimal));
-    margin: 0 auto;
-}
-
-.kb-hero__icon {
-    width: 80px;
-    height: 80px;
-    background: var(--tc-on-fill-soft);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto var(--helpdesk-spacing-md);
-}
-
-.kb-hero__icon svg {
-    width: 40px;
-    height: 40px;
-}
-
-.kb-hero__title {
-    font-size: var(--helpdesk-text-3xl);
-    font-weight: 700;
-    margin: 0 0 var(--helpdesk-spacing-sm) 0;
-}
-
-.kb-hero__subtitle {
-    font-size: var(--helpdesk-text-lg);
-    margin: 0 0 var(--helpdesk-spacing-lg) 0;
-    opacity: 0.95;
-}
-
-.kb-hero__search {
-    display: flex;
-    gap: var(--helpdesk-spacing-sm);
-}
-
-.kb-hero__search .helpdesk-form-control {
-    flex: 1;
-    background: var(--color-main-background);
-    color: var(--color-main-text);
-    border: none;
-    font-size: var(--helpdesk-text-lg);
-    min-height: var(--helpdesk-touch-target-lg);
-}
-
-.kb-hero__search-btn {
-    min-height: var(--helpdesk-touch-target-lg);
-    background: var(--tc-on-fill-ink);
-    color: var(--color-primary-element-text, var(--color-primary-text));
-    border: none;
-    padding: 0 var(--helpdesk-spacing-lg);
-}
-
-.kb-hero__search-btn:focus-visible {
-    outline: 2px solid var(--color-primary-text);
-    outline-offset: 2px;
-}
+/* NOTE: the old `.kb-hero` gradient block was dead (no template emits
+   .kb-hero — only .tc-kb-hero / .portal-kb-hero) and violated the
+   Check-family chrome contract (no decorative gradient stage fills). */
 
 .kb-search-form__group {
     margin: 0;
@@ -7085,11 +7010,12 @@ div.tc-field--checkbox > .helpdesk-form-help,
         z-index: 2;
         margin-top: var(--helpdesk-spacing-sm);
         padding-top: var(--helpdesk-spacing-sm);
-        background: linear-gradient(
-            to top,
-            color-mix(in srgb, var(--helpdesk-bg-secondary) 96%, white 4%) 75%,
-            transparent
-        );
+        padding-bottom: var(--helpdesk-spacing-xs);
+        /* Solid surface + hairline — no translucent fade: text must never
+           bleed through under the sticky action row (contrast). */
+        background: var(--helpdesk-bg-secondary, var(--tc-bg-soft));
+        border-top: 1px solid var(--helpdesk-border-color, var(--tc-border));
+        box-shadow: var(--tc-shadow-sm, 0 -1px 2px rgba(0, 0, 0, 0.04));
     }
 }
 /* =============================================================================
@@ -8861,10 +8787,12 @@ body.guest-user .portal-create-ticket__status--success , body#body-login:has([da
     border-color: var(--hd-color-success-border);
 }
 
-/* Portal KB hero */
+/* Portal KB hero — Check-family tint well + border + regular ink
+   (no decorative gradient stage fill). */
 body.guest-user .portal-kb-hero , body#body-login:has([data-tc-nav-mode="guest"]) .portal-kb-hero {
-    background: linear-gradient(135deg, var(--color-primary-element) 0%, var(--color-primary-element-hover, var(--color-primary-element)) 100%);
-    color: var(--color-primary-element-text, var(--color-primary-text));
+    background: var(--tc-tint-info, color-mix(in srgb, var(--color-primary-element, #0082c9) 16%, var(--color-main-background, #fff)));
+    border: 1px solid var(--tc-border, var(--color-border));
+    color: var(--tc-text, var(--color-main-text));
     padding: var(--tc-space-6, 2rem) var(--tc-space-5, 1.5rem);
     border-radius: var(--tc-radius-lg, 16px);
     margin: 0;
@@ -8879,7 +8807,9 @@ body.guest-user .portal-kb-hero__inner , body#body-login:has([data-tc-nav-mode="
 body.guest-user .portal-kb-hero__icon-wrap , body#body-login:has([data-tc-nav-mode="guest"]) .portal-kb-hero__icon-wrap {
     width: 80px;
     height: 80px;
-    background: var(--tc-on-fill-soft);
+    background: var(--color-main-background);
+    border: 1px solid var(--tc-border, var(--color-border));
+    color: var(--color-primary-element, #0082c9);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -8901,7 +8831,7 @@ body.guest-user .portal-kb-hero__title , body#body-login:has([data-tc-nav-mode="
 body.guest-user .portal-kb-hero__subtitle , body#body-login:has([data-tc-nav-mode="guest"]) .portal-kb-hero__subtitle {
     font-size: var(--helpdesk-text-lg);
     margin: 0 0 var(--helpdesk-spacing-lg) 0;
-    opacity: 0.95;
+    color: var(--tc-muted, var(--color-text-maxcontrast));
 }
 
 body.guest-user .portal-kb-hero__search-row , body#body-login:has([data-tc-nav-mode="guest"]) .portal-kb-hero__search-row {
@@ -8926,9 +8856,6 @@ body.guest-user .portal-kb-hero__search-input , body#body-login:has([data-tc-nav
 
 body.guest-user .portal-kb-hero__search-btn , body#body-login:has([data-tc-nav-mode="guest"]) .portal-kb-hero__search-btn {
     min-height: var(--helpdesk-touch-target-lg);
-    background: var(--tc-on-fill-soft);
-    color: var(--color-primary-element-text, var(--color-primary-text));
-    border: 1px solid var(--tc-on-fill-mid);
     padding: 0 var(--helpdesk-spacing-lg);
     white-space: nowrap;
     flex-shrink: 0;
@@ -9564,8 +9491,7 @@ body.guest-user .portal-kb__filter-clear-icon , body#body-login:has([data-tc-nav
 	max-width: 36rem;
 	margin: var(--tc-space-2) auto 0;
 	text-align: start;
-	color: inherit;
-	opacity: 0.95;
+	color: var(--tc-muted, var(--color-text-maxcontrast));
 }
 #app-content.tc-app--portal-kb .portal-kb-hero__search-btn {
 	display: inline-flex;
@@ -12493,17 +12419,15 @@ button.tc-nav-toggle {
 		align-items: stretch;
 		gap: var(--tc-space-3);
 	}
-	/* Lift toggle + main out of the row wrapper into the header column */
+	/* Lift main out of the row wrapper into the header column. The nav toggle
+	   is a direct header child BEFORE the breadcrumb in DOM order, so visual
+	   order matches focus order — no `order` re-sequencing (WCAG 2.4.3). */
 	.tc-page-header__row {
 		display: contents;
 	}
 	.tc-nav-toggle,
 	button.tc-nav-toggle {
-		order: -2;
 		align-self: flex-start;
-	}
-	.tc-breadcrumb {
-		order: -1;
 	}
 	.tc-page-header__main {
 		grid-template-columns: auto minmax(0, 1fr);
@@ -12812,6 +12736,11 @@ button.tc-nav-toggle {
 	/* Keep dialogs above Nextcloud app/navigation chrome. */
 	z-index: 10000;
 }
+/* Page scroll lock while a tc-modal is open (paired add/remove in
+   components.js openModal — per-dialog flag, not a counter). */
+body.tc-modal-open {
+	overflow: hidden;
+}
 .tc-modal__dialog {
 	background: var(--tc-bg-card);
 	border-radius: var(--tc-radius-md);
@@ -12912,6 +12841,29 @@ button.tc-nav-toggle {
 .tc-toast--success { border-left-color: var(--tc-success-element, #46ba61); }
 .tc-toast--error { border-left-color: var(--tc-error-element, #cc4646); }
 .tc-toast--warning { border-left-color: var(--tc-warning-element, #c98600); }
+.tc-toast__text {
+	min-width: 0;
+}
+/* “Report this problem” mailto self-attached by common/messaging.js on
+   error toasts (app-feedback wrapper hook is a dead path for tc-* toasts). */
+.tc-toast__report {
+	flex-shrink: 0;
+	align-self: center;
+	font-size: var(--tc-fs-sm);
+	font-weight: 600;
+	color: var(--color-primary-element, #0082c9);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	white-space: nowrap;
+}
+.tc-toast__report:hover {
+	color: var(--color-primary-element-hover, var(--color-primary-element, #0082c9));
+}
+.tc-toast__report:focus-visible {
+	outline: 3px solid var(--color-primary-element);
+	outline-offset: 2px;
+	border-radius: var(--tc-radius-sm);
+}
 .tc-toast__close {
 	margin-left: auto;
 	display: inline-flex;
@@ -15181,14 +15133,12 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	margin: 0;
 }
 
-/* Knowledge base index (README §5.15) */
+/* Knowledge base index (README §5.15) — Check-family hero: soft tint well +
+   border + regular ink, no decorative gradient stage fill. */
 #app-content.tc-app--kb .tc-hero.tc-kb-hero {
-	background: linear-gradient(
-		135deg,
-		var(--color-primary-element) 0%,
-		var(--color-primary-element-hover, var(--color-primary-element)) 100%
-	);
-	color: var(--color-primary-element-text, var(--color-primary-text));
+	background: var(--tc-tint-info);
+	border: 1px solid var(--tc-border);
+	color: var(--tc-text);
 	padding: var(--tc-space-6) var(--tc-space-5);
 	border-radius: var(--tc-radius-md);
 	text-align: center;
@@ -15206,7 +15156,9 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	width: 4rem;
 	height: 4rem;
 	border-radius: 50%;
-	background: var(--tc-on-fill-soft);
+	background: var(--color-main-background);
+	border: 1px solid var(--tc-border);
+	color: var(--color-primary-element, #0082c9);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -15224,9 +15176,8 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 #app-content.tc-app--kb .tc-kb-hero .tc-hero__lead {
 	margin: 0;
 	font-size: var(--tc-fs-base);
-	opacity: 0.95;
 	max-width: 36rem;
-	color: inherit;
+	color: var(--tc-muted);
 }
 #app-content.tc-app--kb .tc-kb-search {
 	width: 100%;
@@ -17410,14 +17361,11 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 		justify-content: space-between;
 		align-items: center;
 	}
+	/* DOM order is already [cancel, submit] — `margin-inline-start:auto` pushes
+	   the submit right; no `order` re-sequencing (WCAG 2.4.3). */
 	#app-content.tc-app--ticket-form .ticket-form-actions__submit,
 	#app-content.tc-app--portal-create .ticket-form-actions__submit {
 		margin-inline-start: auto;
-		order: 2;
-	}
-	#app-content.tc-app--ticket-form .ticket-form-actions__cancel,
-	#app-content.tc-app--portal-create .ticket-form-actions__cancel {
-		order: 1;
 	}
 }
 

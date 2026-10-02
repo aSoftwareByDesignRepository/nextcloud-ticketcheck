@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.9 - 2026-10-02
+
+### Added
+- **Companion idempotency:** companion mutations accept an optional `X-TC-Idempotency-Key` header (or `idempotencyKey` body field) — a replayed key returns the original result instead of creating a duplicate row (lost-200 / offline-queue double-submit protection, 24 h TTL, scoped per user + route). New `tc_idempotency` table via migration `Version4215Date202610020000`, cleanup via `IdempotencyPurgeJob`.
+- Shared field-level error rendering (`js/common/field-errors.js`, `css/common/field-errors.css`): server `fields` error maps now render inline per named control with `aria-invalid`.
+
+### Fixed
+- **Companion auth precedence:** a stale session cookie could shadow a valid `Authorization: Basic` credential on `/companion/api/v1/*` (core resolves the cookie session before Basic). `ClientLicenseMiddleware` now treats the explicit credential as authoritative — on identity mismatch the session is re-authenticated (throttled) with it; invalid Basic + foreign cookie returns 401. Web/session auth unchanged.
+
 ## 2.3.8 - 2026-09-28
 
 ### Added

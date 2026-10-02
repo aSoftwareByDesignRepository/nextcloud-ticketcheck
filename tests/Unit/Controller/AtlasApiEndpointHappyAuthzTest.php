@@ -28,6 +28,7 @@ use OCA\Ticketcheck\Exception\LicenseException;
 use OCA\Ticketcheck\Exception\RoleDeniedException;
 use OCA\Ticketcheck\Middleware\ClientLicenseMiddleware;
 use OCA\Ticketcheck\Service\CompanionGateService;
+use OCA\Ticketcheck\Service\IdempotencyService;
 use OCA\Ticketcheck\Service\LicenseService;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Service\NavigationContextService;
@@ -370,7 +371,20 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 		$license = $this->createStub(LicenseService::class);
 		$gate = $this->createStub(CompanionGateService::class);
 		$gate->method('canAccessCompanion')->willReturn(false);
-		$mw = new ClientLicenseMiddleware($request, $session, $ncSession, $license, $gate, new NullLogger());
+		$tokenProvider = $this->createStub(\OCP\Authentication\Token\IProvider::class);
+		$tokenProvider->method('getToken')
+			->willThrowException(new \OCP\Authentication\Exceptions\InvalidTokenException());
+		$mw = new ClientLicenseMiddleware(
+			$request,
+			$session,
+			$ncSession,
+			$license,
+			$gate,
+			new NullLogger(),
+			$tokenProvider,
+			$this->createStub(\OCP\IUserManager::class),
+			$this->createStub(\OCP\Security\Bruteforce\IThrottler::class),
+		);
 		try {
 			$mw->beforeController(new \stdClass(), $action);
 			self::fail('expected RoleDeniedException for ' . $action);
@@ -722,6 +736,19 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 				try {
 					$mock->method($name)->willReturnCallback(
 						static fn (string $userId, callable $callback) => $callback()
+					);
+				} catch (\Throwable) {
+				}
+				continue;
+			}
+			if ($name === 'run' && $typeName === IdempotencyService::class) {
+				// Pass-through double: the idempotency wrapper must invoke the
+				// mutation so happy-path actions reach the service underneath.
+				// Dedup/locking itself is covered by IdempotencyServiceTest and
+				// CompanionControllerIdempotencyTest.
+				try {
+					$mock->method($name)->willReturnCallback(
+						static fn (string $userId, string $scope, ?string $key, callable $op) => $op()
 					);
 				} catch (\Throwable) {
 				}

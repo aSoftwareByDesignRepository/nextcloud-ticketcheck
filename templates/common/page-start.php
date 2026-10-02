@@ -132,7 +132,13 @@ if ($navMode === 'guest' && is_array($_['portalSpeculationRules'] ?? null) && $_
 	<div id="tc-live-region" class="tc-sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 	<div id="tc-alert-region" class="tc-sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
 	<div id="app-content-wrapper" class="tc-shell helpdesk-wrapper<?php p($shellWidthClass); ?>">
-		<header class="tc-page-header" aria-labelledby="tc-page-title">
+		<?php /* role="group": an unscoped <header> here would emit a second
+		         `banner` landmark (NC chrome already owns one; landmark_uniqueness
+		         lesson). The nav toggle precedes the breadcrumb in DOM order so
+		         focus order matches the stacked visual order on phones
+		         (WCAG 2.4.3 — no flex `order` re-sequencing). */ ?>
+		<header class="tc-page-header" role="group" aria-labelledby="tc-page-title">
+			<?php include __DIR__ . '/nav-toggle.php'; ?>
 			<nav class="tc-breadcrumb" aria-label="<?php p($l->t('breadcrumb')); ?>">
 				<ol>
 					<li>
@@ -159,13 +165,14 @@ if ($navMode === 'guest' && is_array($_['portalSpeculationRules'] ?? null) && $_
 				</ol>
 			</nav>
 			<div class="tc-page-header__row">
-				<?php include __DIR__ . '/nav-toggle.php'; ?>
 				<div class="tc-page-header__main">
 				<div class="tc-page-header__icon" aria-hidden="true">
 					<?php print_unescaped(IconCatalog::render($headerIconName, 'tc-page-header__icon-svg')); ?>
 				</div>
 				<div class="tc-page-header__text">
-					<h1 id="tc-page-title"><?php p($pageTitle); ?></h1>
+					<?php /* tabindex=-1: focus-restore fallback target for dialogs whose
+					       trigger was removed while open (modal_restore_contract). */ ?>
+					<h1 id="tc-page-title" tabindex="-1"><?php p($pageTitle); ?></h1>
 					<?php if ($pageHelp !== ''): ?>
 						<p class="tc-page-lead"><?php p($pageHelp); ?></p>
 					<?php endif; ?>

@@ -63,6 +63,7 @@ final class UninstallDropTables implements IRepairStep
 		'helpdesk_ticket_watchers',
 		'helpdesk_tickets',
 		'helpdesk_whitelist',
+		'tc_idempotency',
 		'tc_license_state',
 		'tc_mobile_seats',
 	];

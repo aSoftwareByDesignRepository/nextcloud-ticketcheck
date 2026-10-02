@@ -11,6 +11,31 @@
 
 	const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
+	/**
+	 * WCAG 3.3.1/3.3.3: VALIDATION responses carry a localized `fields` map
+	 * ({fieldKey: message}). Mark the matching inputs — name, id, or
+	 * data-field attribute — with aria-invalid + an inline error linked via
+	 * aria-describedby, and focus the first offender. Runs centrally so every
+	 * form gets it without per-callsite wiring. Implementation is the shared
+	 * canonical module — apps/_shared/field-errors/field-errors.js, synced
+	 * verbatim to js/common/field-errors.js (install() is idempotent).
+	 */
+	function renderServerFieldErrors(payload) {
+		if (!payload || typeof payload !== 'object' || !payload.fields
+			|| typeof payload.fields !== 'object' || typeof document === 'undefined') {
+			return;
+		}
+		const m = window.CheckFieldErrors;
+		if (!m || typeof m.markValidationFields !== 'function') {
+			return;
+		}
+		try {
+			m.install({ prefix: 'tc' });
+			m.wireFieldClearOnEdit();
+			m.markValidationFields(payload.fields);
+		} catch (_e) { /* never break the error path */ }
+	}
+
 	function csrfToken() {
 		if (window.OC && OC.requestToken) {
 			return OC.requestToken;
@@ -103,6 +128,7 @@
 			err.code = (data && typeof data === 'object' && data.error && typeof data.error === 'object' && data.error.code)
 				? data.error.code
 				: null;
+			renderServerFieldErrors(data);
 			throw err;
 		}
 		return data;
@@ -163,6 +189,7 @@
 			const err = new Error(message);
 			err.status = response.status;
 			err.payload = data;
+			renderServerFieldErrors(data);
 			throw err;
 		}
 		return data;
@@ -222,5 +249,13 @@
 		request,
 		requestUrl: (url, options) => requestUrl(url, options),
 		postFormUrl: (url, formData, options) => requestUrl(url, Object.assign({}, options || {}, { method: 'POST', formData })),
+		markFields: (fields) => {
+			const m = window.CheckFieldErrors;
+			if (m && typeof m.markValidationFields === 'function') {
+				m.install({ prefix: 'tc' });
+				m.wireFieldClearOnEdit();
+				m.markValidationFields(fields);
+			}
+		},
 	};
 })();

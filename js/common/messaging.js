@@ -2,6 +2,10 @@
 	'use strict';
 
 	let toastContainer = null;
+	/** Active toasts keyed by kind+text — identical announcements reset the
+	    visible timer instead of stacking duplicates (toast-dedup contract). */
+	const activeToasts = new Map();
+	const TOAST_TTL = { error: 7000, warning: 4000, success: 4000 };
 
 	function ensureToastContainer() {
 		if (toastContainer && document.body && document.body.contains(toastContainer)) {
@@ -47,25 +51,53 @@
 			if (!container) {
 				return;
 			}
+			const dedupKey = k + '::' + text;
+			const existing = activeToasts.get(dedupKey);
+			if (existing && existing.toast.parentNode) {
+				window.clearTimeout(existing.timer);
+				existing.timer = window.setTimeout(existing.remove, TOAST_TTL[k]);
+				return;
+			}
 			const toast = document.createElement('div');
 			toast.className = 'tc-toast tc-toast--' + k;
 			toast.setAttribute('role', k === 'error' ? 'alert' : 'status');
 			const span = document.createElement('span');
+			span.className = 'tc-toast__text';
 			span.textContent = text;
 			const close = document.createElement('button');
 			close.type = 'button';
 			close.className = 'tc-toast__close';
 			close.setAttribute('aria-label', dismissLabel());
 			close.textContent = '\u00D7';
-			close.addEventListener('click', function () { toast.remove(); });
 			toast.appendChild(span);
 			toast.appendChild(close);
+			// Report-this-problem self-attach: the app-feedback wrapper hook only
+			// covers *CheckComponents.showToast/showError, which this app never
+			// calls (dead-hook class) — error toasts get the mailto inline here.
+			if (k === 'error' && window.SbdAppFeedback && typeof window.SbdAppFeedback.buildMailto === 'function') {
+				try {
+					const report = document.createElement('a');
+					report.className = 'tc-toast__report';
+					report.href = window.SbdAppFeedback.buildMailto('problem');
+					report.textContent = (typeof window.t === 'function' ? window.t('ticketcheck', 'Report this problem') : 'Report this problem');
+					toast.insertBefore(report, close);
+				} catch (_) { /* mailto is best-effort */ }
+			}
+			const entry = {
+				toast: toast,
+				timer: 0,
+				remove: function () {
+					window.clearTimeout(entry.timer);
+					activeToasts.delete(dedupKey);
+					if (toast.parentNode) {
+						toast.parentNode.removeChild(toast);
+					}
+				},
+			};
+			close.addEventListener('click', function () { entry.remove(); });
 			container.appendChild(toast);
-			window.setTimeout(function () {
-				if (toast.parentNode) {
-					toast.parentNode.removeChild(toast);
-				}
-			}, k === 'error' ? 7000 : 4000);
+			activeToasts.set(dedupKey, entry);
+			entry.timer = window.setTimeout(entry.remove, TOAST_TTL[k]);
 		} catch (err) {
 			if (window.console && typeof window.console.error === 'function') {
 				window.console.error('[ticketcheck] announce failed:', err, text);

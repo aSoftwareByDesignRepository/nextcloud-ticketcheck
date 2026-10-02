@@ -266,11 +266,25 @@
 		}
 		items = [];
 		currentIndex = 0;
-		if (previousFocus && typeof previousFocus.focus === 'function') {
+		// modal_restore_contract: restore to the trigger while it is live;
+		// rebuilt/removed triggers fall back to #tc-page-actions first focusable,
+		// then the view heading — never strand focus on body.
+		let restoreTarget = null;
+		if (previousFocus && typeof previousFocus.focus === 'function' && document.contains(previousFocus)) {
+			restoreTarget = previousFocus;
+		} else {
+			const actions = document.getElementById('tc-page-actions');
+			const actionTarget = actions
+				? actions.querySelector('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')
+				: null;
+			const heading = document.getElementById('tc-page-title');
+			restoreTarget = actionTarget || (heading && document.contains(heading) ? heading : null);
+		}
+		if (restoreTarget && typeof restoreTarget.focus === 'function') {
 			try {
-				previousFocus.focus();
+				restoreTarget.focus();
 			} catch (_) {
-				/* trigger removed from DOM */
+				/* element may be gone */
 			}
 		}
 		previousFocus = null;

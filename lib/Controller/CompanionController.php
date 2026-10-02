@@ -13,6 +13,7 @@ use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\CompanionGateService;
 use OCA\Ticketcheck\Service\CompanionTicketService;
+use OCA\Ticketcheck\Service\IdempotencyService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -37,6 +38,7 @@ class CompanionController extends Controller
 		private readonly IConfig $config,
 		private readonly AttachmentUploadService $attachmentUpload,
 		private readonly AttachmentDeliveryService $attachmentDelivery,
+		private readonly IdempotencyService $idempotency,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -111,8 +113,19 @@ class CompanionController extends Controller
 			$title = (string)$this->request->getParam('title', '');
 			$description = (string)$this->request->getParam('description', '');
 			$priority = (string)$this->request->getParam('priority', \OCA\Ticketcheck\Db\Ticket::PRIORITY_NORMAL);
-			$result = $this->tickets->create($uid, $projectId, $title, $description, $priority);
+			// Optional idempotency: offline-queue flush / lost-200 retry with the
+			// same key (body idempotencyKey or X-TC-Idempotency-Key) returns the
+			// original ticket instead of a duplicate row. Scope includes project
+			// so keys cannot collide across projects (mobilitycheck convention).
+			$result = $this->idempotency->run(
+				$uid,
+				'companion.ticket.create.' . ($projectId !== null && $projectId > 0 ? (string)$projectId : 'noproject'),
+				$this->idempotencyKey(),
+				fn (): array => $this->tickets->create($uid, $projectId, $title, $description, $priority),
+			);
 			return new JSONResponse(['ok' => true] + $result, Http::STATUS_CREATED);
+		} catch (CompanionConflictException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_CONFLICT, $e->getMessage());
 		} catch (CompanionValidationException $e) {
 			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
 		}
@@ -340,6 +353,22 @@ class CompanionController extends Controller
 		$this->config->deleteUserValue($uid, Application::APP_ID, 'companion_push_device');
 		$this->config->deleteUserValue($uid, Application::APP_ID, 'companion_push_at');
 		return new JSONResponse(['ok' => true, 'registered' => false]);
+	}
+
+	/**
+	 * Optional companion idempotency key (body `idempotencyKey`/`idempotency_key`
+	 * or X-TC-Idempotency-Key header). Null → mutation runs uncached.
+	 */
+	private function idempotencyKey(): ?string
+	{
+		foreach (['idempotencyKey', 'idempotency_key'] as $param) {
+			$raw = $this->request->getParam($param);
+			if (is_scalar($raw) && trim((string)$raw) !== '') {
+				return trim((string)$raw);
+			}
+		}
+		$header = trim($this->request->getHeader(IdempotencyService::HEADER));
+		return $header === '' ? null : $header;
 	}
 
 	private function requireUid(): string

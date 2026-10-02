@@ -37,6 +37,11 @@ class FrontEndAssetService
 
 		Util::addScript(Application::APP_ID, 'common/select-combobox');
 		Util::addScript(Application::APP_ID, 'common/form-validation');
+		// Canonical field-error renderer (WCAG 3.3.1/3.3.3): verbatim sync of
+		// apps/_shared/field-errors — api.js calls CheckFieldErrors.markValidationFields
+		// when a !ok response carries a `fields` map.
+		Util::addScript(Application::APP_ID, 'common/field-errors');
+		Util::addStyle(Application::APP_ID, 'common/field-errors');
 		Util::addScript(Application::APP_ID, 'common/api');
 		Util::addScript(Application::APP_ID, 'common/nav');
 

@@ -14,9 +14,13 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Middleware;
+use OCP\Authentication\Exceptions\InvalidTokenException;
+use OCP\Authentication\Token\IProvider as ITokenProvider;
 use OCP\IRequest;
 use OCP\ISession;
+use OCP\IUserManager;
 use OCP\IUserSession;
+use OCP\Security\Bruteforce\IThrottler;
 use OCP\Security\Bruteforce\MaxDelayReached;
 use Psr\Log\LoggerInterface;
 
@@ -40,6 +44,9 @@ class ClientLicenseMiddleware extends Middleware
 		private readonly LicenseService $licenseService,
 		private readonly CompanionGateService $companionGate,
 		private readonly LoggerInterface $logger,
+		private readonly ITokenProvider $tokenProvider,
+		private readonly IUserManager $userManager,
+		private readonly IThrottler $throttler,
 	) {
 	}
 
@@ -49,6 +56,8 @@ class ClientLicenseMiddleware extends Middleware
 		if (!$this->isCompanionPath($path)) {
 			return;
 		}
+
+		$this->enforceExplicitBasicIdentity();
 
 		if (!$this->usesAppPasswordAuth()) {
 			// Cookie session alone (or forged Authorization without token login) must not hit companion.
@@ -195,21 +204,124 @@ class ClientLicenseMiddleware extends Middleware
 		}
 		$lower = strtolower($auth);
 		if (str_starts_with($lower, 'basic ')) {
-			$encoded = trim(substr($auth, 6));
-			if ($encoded === '') {
-				return false;
-			}
-			$decoded = base64_decode($encoded, true);
-			if (!is_string($decoded) || !str_contains($decoded, ':')) {
-				return false;
-			}
-			[$user, $password] = explode(':', $decoded, 2);
-			return $user !== '' && $password !== '';
+			return $this->basicCredentials() !== null;
 		}
 		if (str_starts_with($lower, 'bearer ')) {
 			return trim(substr($auth, 7)) !== '';
 		}
 		return false;
+	}
+
+	/**
+	 * Stale session cookies shadow `Authorization: Basic`: core
+	 * `OC::handleLogin()` runs `tryTokenLogin()` (session cookie) before
+	 * `tryBasicAuthLogin()`, so a companion request carrying a foreign session
+	 * cookie is resolved as the cookie user even though a valid app-password
+	 * credential is presented (tkc-avd-cookie-session-shadows-basic-auth).
+	 *
+	 * On the companion API the explicit credential is authoritative: when it
+	 * resolves to a different user than the ambient session, the session is
+	 * re-authenticated with the presented credential, mirroring
+	 * `tryBasicAuthLogin()`/`logClientIn()` (throttled, `app_password` marker
+	 * re-pinned for token passwords). Bearer is untouched — core already
+	 * evaluates it before the cookie.
+	 */
+	private function enforceExplicitBasicIdentity(): void
+	{
+		$credentials = $this->basicCredentials();
+		if ($credentials === null) {
+			return;
+		}
+		[$loginName, $password] = $credentials;
+
+		$sessionUser = $this->userSession->getUser();
+		if ($sessionUser !== null
+			&& mb_strtolower($sessionUser->getUID()) === mb_strtolower(
+				$this->resolveCredentialUid($loginName, $password))) {
+			return;
+		}
+
+		$remoteAddress = $this->request->getRemoteAddress();
+		$this->throttler->sleepDelayOrThrowOnMax($remoteAddress, 'login');
+
+		$ok = false;
+		try {
+			$ok = $this->userSession->login($loginName, $password);
+			if (!$ok && filter_var($loginName, FILTER_VALIDATE_EMAIL)) {
+				// Mirror logClientIn(): email login names fall back to the single
+				// matching account before failing.
+				$users = $this->userManager->getByEmail($loginName);
+				if (count($users) === 1) {
+					$ok = $this->userSession->login($users[0]->getUID(), $password);
+				}
+			}
+		} catch (\Exception $e) {
+			$this->logger->debug('TicketCheck companion explicit credential login failed', [
+				'exception' => $e,
+			]);
+			$ok = false;
+		}
+		if (!$ok || $this->userSession->getUser() === null) {
+			$this->throttler->registerAttempt('login', $remoteAddress, ['user' => $loginName]);
+			throw new CompanionUnauthorizedException('NOT_AUTHENTICATED');
+		}
+
+		if ($this->lookupToken($password) !== null) {
+			// Mirror logClientIn(): pin the session to the app password so
+			// validateSession() re-checks the presented credential, not the
+			// shadowed cookie session.
+			$this->session->set('app_password', $password);
+		}
+	}
+
+	/**
+	 * Authoritative uid for the presented credential. An app-password token
+	 * resolves to its owning user regardless of the claimed login name; a plain
+	 * password resolves via the login name (falls back to the login name itself
+	 * when unresolvable, so a bogus identity always forces re-auth).
+	 */
+	private function resolveCredentialUid(string $loginName, string $password): string
+	{
+		$token = $this->lookupToken($password);
+		if ($token !== null) {
+			return $token->getUID();
+		}
+		$user = $this->userManager->get($loginName);
+		return $user !== null ? $user->getUID() : $loginName;
+	}
+
+	private function lookupToken(string $password): ?\OCP\Authentication\Token\IToken
+	{
+		try {
+			return $this->tokenProvider->getToken($password);
+		} catch (InvalidTokenException) {
+			return null;
+		}
+	}
+
+	/**
+	 * @return array{0: string, 1: string}|null [loginName, password] for a
+	 *         well-formed `Authorization: Basic` header, null otherwise.
+	 */
+	private function basicCredentials(): ?array
+	{
+		$auth = trim((string)$this->request->getHeader('Authorization'));
+		if (!str_starts_with(strtolower($auth), 'basic ')) {
+			return null;
+		}
+		$encoded = trim(substr($auth, 6));
+		if ($encoded === '') {
+			return null;
+		}
+		$decoded = base64_decode($encoded, true);
+		if (!is_string($decoded) || !str_contains($decoded, ':')) {
+			return null;
+		}
+		[$user, $password] = explode(':', $decoded, 2);
+		if ($user === '' || $password === '') {
+			return null;
+		}
+		return [$user, $password];
 	}
 
 	/**

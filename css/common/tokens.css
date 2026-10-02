@@ -100,6 +100,8 @@ dialog.helpdesk-dialog,
 	 * readable ink is --color-*-text; strong accent is --color-element-*.
 	 */
 	--tc-error-text: var(--color-error-text, var(--color-text-error, #b3231a));
+	/* Canonical field-errors.css ({p}-danger-ink) — invalid-field border/ink */
+	--tc-danger-ink: var(--tc-error-text);
 	--tc-error-element: var(--color-element-error, var(--color-error, #db0606));
 	--tc-error-element-hover: color-mix(in srgb, var(--tc-error-element) 82%, var(--color-main-text, #1d1d1d));
 	--tc-warning-text: var(--color-warning-text, var(--color-text-warning, #7f5900));

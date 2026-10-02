@@ -135,6 +135,14 @@ $restoreAll = static function () use ($restore, $mwTarget, $mwOriginal): void {
 };
 
 $mutations[] = [
+	'label' => 'Stale session cookie shadows Basic identity (explicit credential not enforced)',
+	'file' => $mwTarget,
+	'original' => $mwOriginal,
+	'search' => "\t\t\$this->enforceExplicitBasicIdentity();\n",
+	'replace' => '',
+];
+
+$mutations[] = [
 	'label' => 'Cookie companion auth allowed (seat CSRF bypass)',
 	'file' => $mwTarget,
 	'original' => $mwOriginal,

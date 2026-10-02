@@ -27,17 +27,42 @@ document.addEventListener('DOMContentLoaded', function () {
             : null;
         if (originalShowModal) {
             dialogEl.showModal = function tcShowModal() {
+                // Idempotent: a second showModal() on an open dialog throws
+                // InvalidStateError — treat it as a no-op.
+                if (dialogEl.open) {
+                    return;
+                }
                 const active = document.activeElement;
                 lastTrigger = (active instanceof HTMLElement) ? active : null;
                 return originalShowModal();
             };
         }
-        dialogEl.addEventListener('close', function () {
+        // modal_restore_contract: resolve the restore target lazily at close
+        // time — a rebuilt trigger still counts; fall back to #tc-page-actions
+        // first focusable, then the view heading. Never strand focus on body.
+        function resolveRestoreTarget() {
             const el = lastTrigger;
             lastTrigger = null;
             if (el && typeof el.focus === 'function' && document.contains(el)) {
+                return el;
+            }
+            const actions = document.getElementById('tc-page-actions');
+            if (actions) {
+                const actionTarget = actions.querySelector(
+                    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                );
+                if (actionTarget) {
+                    return actionTarget;
+                }
+            }
+            const heading = document.getElementById('tc-page-title');
+            return heading && document.contains(heading) ? heading : null;
+        }
+        dialogEl.addEventListener('close', function () {
+            const restoreTarget = resolveRestoreTarget();
+            if (restoreTarget && typeof restoreTarget.focus === 'function') {
                 window.setTimeout(function () {
-                    try { el.focus(); } catch (_) { /* element may be gone */ }
+                    try { restoreTarget.focus(); } catch (_) { /* element may be gone */ }
                 }, 0);
             }
         });

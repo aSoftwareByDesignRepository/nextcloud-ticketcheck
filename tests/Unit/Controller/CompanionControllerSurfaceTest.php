@@ -12,6 +12,7 @@ use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\CompanionGateService;
 use OCA\Ticketcheck\Service\CompanionTicketService;
+use OCA\Ticketcheck\Service\IdempotencyService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
@@ -31,6 +32,8 @@ final class CompanionControllerSurfaceTest extends TestCase
 	private AttachmentUploadService $upload;
 	/** @var AttachmentDeliveryService&MockObject */
 	private AttachmentDeliveryService $delivery;
+	/** @var IdempotencyService&MockObject */
+	private IdempotencyService $idempotency;
 	/** @var IConfig&MockObject */
 	private IConfig $config;
 
@@ -55,6 +58,12 @@ final class CompanionControllerSurfaceTest extends TestCase
 		$this->upload = $this->createMock(AttachmentUploadService::class);
 		$this->delivery = $this->createMock(AttachmentDeliveryService::class);
 		$this->config = $this->createMock(IConfig::class);
+		// Pass-through stub: persistence/locking is IdempotencyServiceTest's job;
+		// the surface suite only needs the operation to run.
+		$this->idempotency = $this->createMock(IdempotencyService::class);
+		$this->idempotency->method('run')->willReturnCallback(
+			static fn (string $u, string $s, ?string $k, callable $op) => $op()
+		);
 
 		$this->controller = new CompanionController(
 			'ticketcheck',
@@ -65,6 +74,7 @@ final class CompanionControllerSurfaceTest extends TestCase
 			$this->config,
 			$this->upload,
 			$this->delivery,
+			$this->idempotency,
 		);
 	}
 
