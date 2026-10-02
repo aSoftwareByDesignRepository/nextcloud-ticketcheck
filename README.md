@@ -338,11 +338,11 @@ TicketCheck uses **two presentation paths** for guests. Both enforce the same pe
 
 | Dashboard | Kanban board | Create ticket |
 | --- | --- | --- |
-| ![Dashboard](screenshots/ticketcheck-screenshot-01.png) | ![Kanban board](screenshots/ticketcheck-screenshot-02.png) | ![Create ticket](screenshots/ticketcheck-screenshot-03.png) |
+| ![Dashboard](screenshots/appstore/01.png) | ![Kanban board](screenshots/appstore/02.png) | ![Create ticket](screenshots/appstore/03.png) |
 
 | Projects | Knowledge base | Guest portal |
 | --- | --- | --- |
-| ![Projects](screenshots/ticketcheck-screenshot-04.png) | ![Knowledge base](screenshots/ticketcheck-screenshot-05.png) | ![Guest portal](screenshots/ticketcheck-screenshot-06.png) |
+| ![Projects](screenshots/appstore/04.png) | ![Knowledge base](screenshots/appstore/05.png) | ![Guest portal](screenshots/appstore/06.png) |
 
 ## Roadmap
 

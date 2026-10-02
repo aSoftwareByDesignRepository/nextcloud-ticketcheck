@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.12 - 2026-10-02
+
+### Fixed
+- App Store screenshots now point to GitHub-hosted assets in `screenshots/appstore/`. The previous `nextcloud.software-by-design.de` URLs were reachable from browsers but not successfully fetched by the App Store's image-cache worker, so the listing showed `[Screenshot]` placeholders. Using the public GitHub `raw.githubusercontent.com` origin and a new `appstore/` path provides fresh cache keys and a host known to work with `usercontent.apps.nextcloud.com`.
+
 ## 2.3.11 - 2026-10-02
 
 ### Fixed

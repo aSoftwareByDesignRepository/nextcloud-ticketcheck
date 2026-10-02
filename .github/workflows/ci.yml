@@ -26,3 +26,4 @@ jobs:
           tools: composer:v2
       - run: composer validate --no-check-publish
       - run: find lib tests templates -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+      - run: php scripts/verify-store-screenshots.php --skip-http

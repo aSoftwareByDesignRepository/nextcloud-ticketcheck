@@ -258,14 +258,14 @@ Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer h
 
 TicketCheck (tilskuddsprosjektet NEXTICK) finansieres av det tyske forsknings-, teknologi- og romfartsdepartementet (BMFTR) gjennom Prototype Fund-programmet (https://www.prototypefund.de/) — støttetiltaket "Software Sprint" (kull 2), juni til november 2026. Hele kildekoden publiseres som fri og åpen programvare under AGPL-3.0-or-later-lisensen.
 ]]></description>
-	<screenshot small-thumbnail="https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/01.png">https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/01.png</screenshot>
-	<screenshot small-thumbnail="https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/02.png">https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/02.png</screenshot>
-	<screenshot small-thumbnail="https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/03.png">https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/03.png</screenshot>
-	<screenshot small-thumbnail="https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/04.png">https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/04.png</screenshot>
-	<screenshot small-thumbnail="https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/05.png">https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/05.png</screenshot>
-	<screenshot small-thumbnail="https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/06.png">https://nextcloud.software-by-design.de/assets/screenshots/ticketcheck/06.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/01.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/01.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/02.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/02.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/03.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/03.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/04.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/04.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png</screenshot>
 
-	<version>2.3.11</version>
+	<version>2.3.12</version>
 	<licence>agpl</licence>
 	<author>Lara Raffel</author>
 	<author>Alexander Mäule</author>
