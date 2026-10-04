@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.3.13 - 2026-10-04
+
+### Fixed
+
+- Merge dialog now closes on Escape in every state — it previously stayed open while the merge-target picker was visible, and the native cancel event can be suppressed by other Nextcloud apps.
+- API hardening: stricter request validation and error paths.
+- Localization fixes.
+
+### Changed
+
+- Atlas v3.5.14 verification pass: expanded contract coverage; store screenshot origins stabilized.
+
 ## 2.3.12 - 2026-10-02
 
 ### Fixed
