@@ -12,7 +12,7 @@ declare(strict_types=1);
  * - No user/request input is interpolated into hrefs.
  * - This surface never gates AGPL features; it is informational CTAs only.
  *
- * @copyright Copyright (c) 2026, Lara Raffel, Alexander Mäule and Hauke Klünder
+ * @copyright Copyright (c) 2026, Software by Design GbR
  * @license AGPL-3.0-or-later
  */
 

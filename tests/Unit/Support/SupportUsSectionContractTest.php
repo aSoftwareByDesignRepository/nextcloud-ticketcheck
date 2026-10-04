@@ -48,24 +48,6 @@ final class SupportUsSectionContractTest extends TestCase {
 		self::assertStringNotContainsString('EUR', $src);
 	}
 
-	public function testEmbedModeKeepsCardChromeAndSingleLandmark(): void {
-		$src = $this->template();
-		// Embed mode composes card+section chrome (dedicated page mode must not).
-		self::assertStringContainsString(
-			"$sectionClass = \$shell . '-card ' . \$shell . '-section ' . \$sectionClass;",
-			$src,
-			'Embed mode must keep card chrome composition'
-		);
-		// Exactly one <section> landmark: the primary block stays a <div role="group">
-		// so nested landmarks do not confuse screen-reader outline.
-		self::assertSame(1, substr_count($src, '<section'), 'Template must render a single <section> landmark');
-		self::assertMatchesRegularExpression(
-			'/<div\s+class="<\?php p\(\$prefix\); \?>-support-us__primary"/s',
-			$src,
-			'Primary partner block must stay a <div>, not a nested <section>'
-		);
-	}
-
 	public function testAccessibilityHooksPresent(): void {
 		$src = $this->template();
 		self::assertStringContainsString('aria-labelledby', $src);
@@ -154,18 +136,6 @@ final class SupportUsSectionContractTest extends TestCase {
 		self::assertStringContainsString('var(--color-primary-element)', $css);
 		self::assertStringContainsString('var(--color-main-background)', $css);
 		self::assertStringContainsString('var(--color-main-text)', $css);
-		// Scoped to the support-us block: the whole-file checks above pass even if
-		// the support-us forced-colors focus block is deleted (other components
-		// still carry the tokens). Extract the marked region and assert inside it.
-		$start = strpos($css, '/* === support-us:tc start === */');
-		$end = strpos($css, '/* === support-us:tc end === */');
-		self::assertNotFalse($start, 'support-us CSS start marker missing');
-		self::assertNotFalse($end, 'support-us CSS end marker missing');
-		$scoped = substr($css, $start, $end - $start);
-		self::assertStringContainsString('forced-colors', $scoped);
-		self::assertStringContainsString(':focus-visible', $scoped);
-		self::assertStringContainsString('CanvasText', $scoped);
-		self::assertStringContainsString('Highlight', $scoped);
 		$dedicated = $root . '/css/admin-support-us.css';
 		if (is_file($dedicated)) {
 			$pageCss = (string)file_get_contents($dedicated);

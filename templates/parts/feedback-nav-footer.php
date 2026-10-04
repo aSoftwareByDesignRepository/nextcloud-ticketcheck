@@ -14,13 +14,11 @@ declare(strict_types=1);
  * @var string|null $appFeedbackLanguageCode
  * @var string|null $appFeedbackVersion
  *
- * @copyright Copyright (c) 2026, Lara Raffel, Alexander Mäule and Hauke Klünder
+ * @copyright Copyright (c) 2026, Software by Design GbR
  * @license AGPL-3.0-or-later
  */
 
-use OCA\Ticketcheck\Service\IconCatalog;
 use OCA\Ticketcheck\Support\AppFeedbackLinks;
-use OCA\Ticketcheck\Support\SupportUsLinks;
 
 $l = $l ?? (\OCP\Util::getL10N('ticketcheck'));
 $prefix = isset($appFeedbackCssPrefix) && is_string($appFeedbackCssPrefix) && $appFeedbackCssPrefix !== ''
@@ -44,12 +42,10 @@ if ($version === '' && class_exists(\OCP\Server::class)) {
 if (!isset($appFeedbackLinks) || !$appFeedbackLinks instanceof AppFeedbackLinks) {
 	$appFeedbackLinks = new AppFeedbackLinks('ticketcheck', 'TicketCheck', $version);
 }
-// Page URL arrives via template params (EnrichTemplateShellContext injects the
-// raw request URI); templates never read $_SERVER directly.
-$rawPageUrl = is_string($appFeedbackPageUrl ?? null)
-	? $appFeedbackPageUrl
-	: (is_string($_['appFeedbackPageUrl'] ?? null) ? $_['appFeedbackPageUrl'] : '');
-$pageUrl = $appFeedbackLinks->sanitizePageUrl($rawPageUrl);
+$pageUrl = '';
+if (isset($_SERVER['REQUEST_URI']) && is_string($_SERVER['REQUEST_URI'])) {
+	$pageUrl = $appFeedbackLinks->sanitizePageUrl((string)$_SERVER['REQUEST_URI']);
+}
 $ncVersion = '';
 if (class_exists(\OCP\Server::class)) {
 	try {
@@ -65,14 +61,20 @@ $ctx = [
 	'ncVersion' => $ncVersion,
 ];
 $links = $appFeedbackLinks->forLocale($lang, $ctx);
-// The in-app "Support & us" settings page is currently hidden — the booked-help
-// pointer goes to the public support page instead (SupportUsLinks keeps the URL
-// validated and locale-aware).
-$supportPageUrl = (new SupportUsLinks((string)$links['appDisplayName']))->supportPageUrl($lang);
 $github = (string)($links['githubIssuesUrl'] ?? '');
 $footerId = $prefix . '-nav-footer';
 $menuId = $prefix . '-feedback-menu';
 $newTab = $l->t('(opens in a new tab)');
+
+$sbdFeedbackIcon = static function (string $iconPrefix, string $inner): string {
+	$class = htmlspecialchars($iconPrefix . '-icon', ENT_QUOTES, 'UTF-8');
+
+	return sprintf(
+		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="%s" aria-hidden="true" focusable="false">%s</svg>',
+		$class,
+		$inner
+	);
+};
 ?>
 <nav
 	class="<?php p($prefix); ?>-nav-footer"
@@ -89,7 +91,7 @@ $newTab = $l->t('(opens in a new tab)');
 			aria-haspopup="true"
 		>
 			<span class="<?php p($prefix); ?>-nav-footer__trigger-icon" aria-hidden="true"><?php
-				print_unescaped(IconCatalog::render('info', $prefix . '-icon'));
+				print_unescaped($sbdFeedbackIcon($prefix, '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/>'));
 			?></span>
 			<span class="<?php p($prefix); ?>-nav-footer__trigger-label"><?php p($l->t('Help')); ?></span>
 		</button>
@@ -108,7 +110,7 @@ $newTab = $l->t('(opens in a new tab)');
 					data-app-feedback-kind="problem"
 				>
 					<span class="<?php p($prefix); ?>-nav-footer__menu-icon" aria-hidden="true"><?php
-						print_unescaped(IconCatalog::render('alert-circle', $prefix . '-icon'));
+						print_unescaped($sbdFeedbackIcon($prefix, '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/>'));
 					?></span>
 					<?php p($l->t('Report a problem')); ?>
 				</a>
@@ -122,7 +124,7 @@ $newTab = $l->t('(opens in a new tab)');
 					data-app-feedback-kind="idea"
 				>
 					<span class="<?php p($prefix); ?>-nav-footer__menu-icon" aria-hidden="true"><?php
-						print_unescaped(IconCatalog::render('edit', $prefix . '-icon'));
+						print_unescaped($sbdFeedbackIcon($prefix, '<path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/>'));
 					?></span>
 					<?php p($l->t('Suggest an improvement')); ?>
 				</a>
@@ -138,7 +140,7 @@ $newTab = $l->t('(opens in a new tab)');
 					rel="noopener noreferrer"
 				>
 					<span class="<?php p($prefix); ?>-nav-footer__menu-icon" aria-hidden="true"><?php
-						print_unescaped(IconCatalog::render('file-text', $prefix . '-icon'));
+						print_unescaped($sbdFeedbackIcon($prefix, '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/>'));
 					?></span>
 					<?php p($l->t('Open GitHub Issues')); ?>
 					<span class="<?php p($prefix); ?>-nav-footer__new-tab"><?php p($newTab); ?></span>
@@ -147,8 +149,7 @@ $newTab = $l->t('(opens in a new tab)');
 			<?php endif; ?>
 		</ul>
 		<p class="<?php p($prefix); ?>-nav-footer__note">
-			<?php p($l->t('Email is best-effort — no reply SLA.')); ?>
-			<a class="<?php p($prefix); ?>-nav-footer__note-link" href="<?php p($supportPageUrl); ?>" target="_blank" rel="noopener noreferrer"><?php p($l->t('Booked help & services')); ?><span class="<?php p($prefix); ?>-nav-footer__new-tab"> <?php p($newTab); ?></span></a>
+			<?php p($l->t('Email is best-effort — no reply SLA. Need booked help? Use Support & us.')); ?>
 		</p>
 	</div>
 	<script type="application/json" id="<?php p($prefix); ?>-app-feedback-config"><?php

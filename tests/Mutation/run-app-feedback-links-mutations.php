@@ -8,7 +8,7 @@ declare(strict_types=1);
  * Usage (host, from repo nextcloud/):
  *   php tests/Mutation/run-app-feedback-links-mutations.php
  *
- * @copyright Copyright (c) 2026, Lara Raffel, Alexander Mäule and Hauke Klünder
+ * @copyright Copyright (c) 2026, Software by Design GbR
  * @license AGPL-3.0-or-later
  */
 

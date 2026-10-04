@@ -15,7 +15,7 @@ declare(strict_types=1);
  * @var string|null $supportUsLanguageCode optional override; defaults to $l->getLanguageCode()
  * @var string|null $supportUsPresentation 'page' for dedicated Support & us screens
  *
- * @copyright Copyright (c) 2026, Lara Raffel, Alexander Mäule and Hauke Klünder
+ * @copyright Copyright (c) 2026, Software by Design GbR
  * @license AGPL-3.0-or-later
  */
 

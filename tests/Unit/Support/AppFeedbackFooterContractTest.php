@@ -39,11 +39,7 @@ final class AppFeedbackFooterContractTest extends TestCase
 		self::assertStringContainsString('rel="noopener noreferrer"', $src);
 		self::assertStringContainsString('no reply SLA', $src);
 		self::assertStringContainsString("\$l->t('Help')", $src);
-		// The in-app "Support & us" page is hidden — booked help must link to the
-		// public support page (SupportUsLinks), never to the hidden section.
-		self::assertStringNotContainsString('Use Support & us.', $src);
-		self::assertStringContainsString('supportPageUrl', $src);
-		self::assertStringContainsString('Booked help & services', $src);
+		self::assertStringContainsString('Use Support & us.', $src);
 		self::assertStringNotContainsString("\$l->t('Support & us')", $src);
 		self::assertSame('dev@software-by-design.de', AppFeedbackLinks::FEEDBACK_EMAIL);
 	}

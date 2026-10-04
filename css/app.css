@@ -18722,12 +18722,6 @@ body.guest-user footer.guest-box , body#body-login:has([data-tc-nav-mode="guest"
 	color: var(--color-text-maxcontrast);
 }
 
-/* Primary card uses a tinted primary mix background — maxcontrast grey fails WCAG AA (~4.42). */
-.tc-support-us__primary .tc-support-us__coverage,
-.tc-support-us__primary .tc-support-us__hint {
-	color: var(--color-main-text);
-}
-
 .tc-support-us__hint a {
 	color: var(--color-main-text);
 	text-decoration: underline;
@@ -19119,7 +19113,10 @@ textarea {
 	gap: var(--tc-space-2, 0.5rem);
 }
 
-.tc-nav-footer__trigger {
+/* Scoped under #content: bare .{p}-nav-footer__trigger loses to NC core
+ * `#app-content button` / `#app-navigation button` min-height rules
+ * (var(--default-clickable-area) → 34px) — Atlas touch-target defect. */
+#content .tc-nav-footer__trigger {
 	display: inline-flex;
 	gap: var(--tc-space-3, 0.75rem);
 	min-height: 44px;
@@ -19181,7 +19178,7 @@ textarea {
 	display: none;
 }
 
-.tc-nav-footer__menu-item {
+#content .tc-nav-footer__menu-item {
 	display: flex;
 	align-items: center;
 	gap: var(--tc-space-3, 0.75rem);
@@ -19246,7 +19243,7 @@ textarea {
 	border: 0;
 }
 
-.tc-nav-footer__toast-link {
+#content .tc-nav-footer__toast-link {
 	display: inline-flex;
 	align-items: center;
 	min-height: 44px;
