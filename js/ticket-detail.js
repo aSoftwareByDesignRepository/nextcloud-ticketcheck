@@ -832,7 +832,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         mergeDialog.addEventListener('close', resetMergeDialog);
         mergeDialog.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && mergeTargetResults && mergeTargetResults.hidden) {
+            // Host apps (e.g. core notifications) preventDefault() the Escape
+            // keydown globally, suppressing the native `cancel` event — close
+            // explicitly in every dialog state, not only when results are hidden.
+            if (e.key === 'Escape') {
                 mergeDialog.close();
             }
         });
