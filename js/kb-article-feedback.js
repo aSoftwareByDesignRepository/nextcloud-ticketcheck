@@ -56,7 +56,7 @@
                 return;
             }
             if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-                OC.Notification.showTemporary(text);
+                OC.Notification.showTemporary(text, { type: type });
             }
         }
 
@@ -162,25 +162,25 @@
                 if (!api || typeof api.requestUrl !== 'function') {
                     deleteBtn.disabled = false;
                     deleteBtn.textContent = t('ticketcheck', 'delete');
-                    OC.Notification.showTemporary(t('ticketcheck', 'an_error_occurred'));
+                    OC.Notification.showTemporary(t('ticketcheck', 'an_error_occurred'), { type: 'error' });
                     return;
                 }
 
                 api.requestUrl(deleteUrl, { method: 'DELETE' })
                     .then(function (data) {
                         if (data.success) {
-                            OC.Notification.showTemporary(t('ticketcheck', 'article_deleted_successfully'));
+                            OC.Notification.showTemporary(t('ticketcheck', 'article_deleted_successfully'), { type: 'success' });
                             window.location.href = OC.generateUrl('/apps/ticketcheck/kp');
                         } else {
                             deleteBtn.disabled = false;
                             deleteBtn.textContent = t('ticketcheck', 'delete');
-                            OC.Notification.showTemporary(t('ticketcheck', 'error') + ': ' + (data.error || t('ticketcheck', 'failed_to_delete_article')));
+                            OC.Notification.showTemporary(t('ticketcheck', 'error') + ': ' + (data.error || t('ticketcheck', 'failed_to_delete_article')), { type: 'error' });
                         }
                     })
                     .catch(error => {
                         deleteBtn.disabled = false;
                         deleteBtn.textContent = t('ticketcheck', 'delete');
-                        OC.Notification.showTemporary(t('ticketcheck', 'error') + ': ' + error.message);
+                        OC.Notification.showTemporary(t('ticketcheck', 'error') + ': ' + error.message, { type: 'error' });
                     });
             });
         }

@@ -5,7 +5,7 @@
 	/** Active toasts keyed by kind+text — identical announcements reset the
 	    visible timer instead of stacking duplicates (toast-dedup contract). */
 	const activeToasts = new Map();
-	const TOAST_TTL = { error: 7000, warning: 4000, success: 4000 };
+	const TOAST_TTL = { error: 7000, warning: 4000, success: 4000, info: 4000 };
 
 	function ensureToastContainer() {
 		if (toastContainer && document.body && document.body.contains(toastContainer)) {
@@ -37,7 +37,7 @@
 	 */
 	function announce(message, kind) {
 		const text = String(message == null ? '' : message);
-		const k = kind === 'error' ? 'error' : (kind === 'warning' ? 'warning' : 'success');
+		const k = (kind === 'error' || kind === 'warning' || kind === 'success') ? kind : 'info';
 		try {
 			const root = document.getElementById('app-content') || document;
 			const polite = root.querySelector('#tc-live-region');
@@ -150,9 +150,14 @@
 				OC.Notification = {};
 			}
 			if (typeof OC.Notification.showTemporary !== 'function') {
+				// Untyped legacy calls must never render as a green "success"
+				// toast — an untyped "Error: …" message otherwise lies to the
+				// user. Unknown/absent types fall back to neutral 'info';
+				// callers that know the severity pass { type: 'error' |
+				// 'warning' | 'success' | 'info' }.
 				OC.Notification.showTemporary = function showTemporary(message, options) {
-					const type = options && options.type ? String(options.type) : 'success';
-					const kind = (type === 'error' || type === 'warning') ? type : 'success';
+					const type = options && options.type ? String(options.type) : '';
+					const kind = (type === 'error' || type === 'warning' || type === 'success') ? type : 'info';
 					announce(String(message == null ? '' : message), kind);
 				};
 			}
@@ -179,6 +184,6 @@
 	};
 
 	window.tcToast = function tcToast(message, kind) {
-		announce(String(message == null ? '' : message), kind || 'success');
+		announce(String(message == null ? '' : message), kind || 'info');
 	};
 })();

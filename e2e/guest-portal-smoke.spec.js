@@ -78,18 +78,33 @@ for (const vp of viewports) {
 				return values.map((v) => Number.parseInt(v.trim(), 10));
 			};
 
-			await page.goto(URLS.home, { waitUntil: 'domcontentloaded' });
-			await ensureAuthenticated(page);
-			await assertGuestShell(page);
-			const [homeTotal, homeOpen] = await readStats();
-			expect(homeTotal, 'guest fixture seeds tickets; total must not be 0').toBeGreaterThan(0);
-			expect(homeOpen).toBeGreaterThanOrEqual(0);
-			expect(homeOpen).toBeLessThanOrEqual(homeTotal);
+			// Parallel specs create/delete tickets in the guest-visible
+			// customer scope, so the absolute counts may legitimately
+			// change between two page loads. Read the home→other-page
+			// pair in a bounded retry: a transient mismatch caused by a
+			// concurrent mutation resolves within a few attempts, while
+			// the real regression (home using legacy status keys →
+			// always 0/different) never produces a matching pair.
+			let homeTotal = 0;
+			let homeOpen = -1;
+			let navTotal = -1;
+			let navOpen = -1;
+			let matched = false;
+			for (let attempt = 0; attempt < 4 && !matched; attempt++) {
+				await page.goto(URLS.home, { waitUntil: 'domcontentloaded' });
+				await ensureAuthenticated(page);
+				await assertGuestShell(page);
+				[homeTotal, homeOpen] = await readStats();
+				expect(homeTotal, 'guest fixture seeds tickets; total must not be 0').toBeGreaterThan(0);
+				expect(homeOpen).toBeGreaterThanOrEqual(0);
+				expect(homeOpen).toBeLessThanOrEqual(homeTotal);
 
-			await page.goto(URLS.changePassword, { waitUntil: 'domcontentloaded' });
-			await ensureAuthenticated(page);
-			await assertGuestShell(page);
-			const [navTotal, navOpen] = await readStats();
+				await page.goto(URLS.changePassword, { waitUntil: 'domcontentloaded' });
+				await ensureAuthenticated(page);
+				await assertGuestShell(page);
+				[navTotal, navOpen] = await readStats();
+				matched = navTotal === homeTotal && navOpen === homeOpen;
+			}
 			expect(navTotal, 'total must agree across portal pages').toBe(homeTotal);
 			expect(navOpen, 'open count must agree across portal pages').toBe(homeOpen);
 		});

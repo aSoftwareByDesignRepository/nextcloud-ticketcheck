@@ -17,7 +17,7 @@
                     const kind = flash.type === 'error' || flash.type === 'warning' ? flash.type : 'success';
                     TicketCheckMessaging.announce(flash.message, kind);
                 } else if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-                    OC.Notification.showTemporary(flash.message);
+                    OC.Notification.showTemporary(flash.message, { type: (flash && flash.type) || 'info' });
                 }
             }
         }
@@ -38,7 +38,7 @@
 
     function notify(message) {
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(message);
+            OC.Notification.showTemporary(message, { type: 'error' });
             return;
         }
         const host = document.getElementById('app-content') || document.querySelector('.portal-dashboard-wrapper, .portal-container') || document.body;
@@ -124,7 +124,7 @@
             .then(function (data) {
                 if (data.success) {
                     try { sessionStorage.setItem(FOCUS_RESTORE_KEY, 'main-content'); } catch (e) {}
-                    OC.Notification.showTemporary(t('ticketcheck', 'guest_user_deleted_successfully'));
+                    OC.Notification.showTemporary(t('ticketcheck', 'guest_user_deleted_successfully'), { type: 'success' });
                     location.reload();
                 } else {
                     notify(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'an_error_occurred') }));

@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(String(message || ''));
+            OC.Notification.showTemporary(String(message || ''), { type: 'error' });
             return;
         }
         const host = document.getElementById('app-content') || document.body;
@@ -435,11 +435,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (fileCountText) {
             fileCountText.classList.remove('helpdesk-upload-dropzone__subtitle--has-files');
             fileCountText.textContent = message;
-            fileCountText.style.color = 'var(--color-error)';
+            fileCountText.style.color = 'var(--color-error-text, var(--tc-danger-ink, var(--color-error)))';
             fileCountText.style.fontWeight = '600';
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(message);
+            OC.Notification.showTemporary(message, { type: 'error' });
             return;
         }
         tcAlert(message);
@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (lastError && fileCountText) {
             fileCountText.classList.remove('helpdesk-upload-dropzone__subtitle--has-files');
             fileCountText.textContent = lastError;
-            fileCountText.style.color = 'var(--color-error)';
+            fileCountText.style.color = 'var(--color-error-text, var(--tc-danger-ink, var(--color-error)))';
             fileCountText.style.fontWeight = '600';
         }
     }
@@ -801,14 +801,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (selectedFiles.some((file) => file.size > maxPerFileSize)) {
             submitInFlight = false;
             resetSubmitUi(submitBtn, submitLabelEl, originalText);
-            OC.Notification.showTemporary(tSafe('max_file_size', 'Maximum file size is 10MB'));
+            OC.Notification.showTemporary(tSafe('max_file_size', 'Maximum file size is 10MB'), { type: 'warning' });
             return;
         }
         const totalUploadSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
         if (selectedFiles.length > maxTotalFiles || totalUploadSize > maxTotalSize) {
             submitInFlight = false;
             resetSubmitUi(submitBtn, submitLabelEl, originalText);
-            OC.Notification.showTemporary(tSafe('upload_limit_exceeded', 'Upload limits exceeded'));
+            OC.Notification.showTemporary(tSafe('upload_limit_exceeded', 'Upload limits exceeded'), { type: 'warning' });
             return;
         }
 
@@ -838,7 +838,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!api || typeof api.postForm !== 'function' || typeof api.postFormUrl !== 'function') {
             submitInFlight = false;
             resetSubmitUi(submitBtn, submitLabelEl, originalText);
-            OC.Notification.showTemporary(tSafe('an_error_occurred', 'An error occurred'));
+            OC.Notification.showTemporary(tSafe('an_error_occurred', 'An error occurred'), { type: 'error' });
             return;
         }
 
@@ -854,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearDraft();
                 hideValidationSummary();
                 const ticketIdValue = data.ticket_id || (data.ticket && data.ticket.id) || form.getAttribute('data-ticket-id');
-                OC.Notification.showTemporary(isEdit ? tSafe('ticket_updated', 'Ticket updated successfully') : tSafe('ticket_created', 'Ticket created successfully'));
+                OC.Notification.showTemporary(isEdit ? tSafe('ticket_updated', 'Ticket updated successfully') : tSafe('ticket_created', 'Ticket created successfully'), { type: 'success' });
                 if (ticketIdValue) {
                     setTimeout(() => {
                         window.location.href = OC.generateUrl('/apps/ticketcheck/tickets/' + ticketIdValue);
@@ -865,7 +865,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch((error) => {
                 submitInFlight = false;
-                OC.Notification.showTemporary(`${tSafe('error', 'Error')}: ${error.message}`);
+                OC.Notification.showTemporary(`${tSafe('error', 'Error')}: ${error.message}`, { type: 'error' });
                 resetSubmitUi(submitBtn, submitLabelEl, originalText);
             });
     }

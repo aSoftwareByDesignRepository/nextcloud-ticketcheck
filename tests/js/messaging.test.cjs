@@ -93,6 +93,8 @@ function boot(withFeedback) {
 			: undefined,
 	};
 	win.window = win;
+	win.OC = {}; // let installNotificationShim attach its showTemporary shim
+	sandbox.OC = win.OC; // bare `OC` resolves on the vm global, not via window
 	sandbox.window = win;
 	sandbox.setTimeout = win.setTimeout;
 	sandbox.clearTimeout = win.clearTimeout;
@@ -157,4 +159,52 @@ test('non-error toasts never carry the report link; missing helper is safe', () 
 	noHook.win.TicketCheckMessaging.announce('kaput', 'error');
 	const c2 = noHook.body.children.find((c) => c.className === 'tc-toasts');
 	assert.equal(toastNodes(c2).length, 1, 'error toast still renders without SbdAppFeedback');
+});
+
+test('untyped OC.Notification.showTemporary renders neutral info, not success', () => {
+	const { win, body } = boot(false);
+	win.OC.Notification.showTemporary('Error: Request failed.');
+	const container = body.children.find((c) => c.className === 'tc-toasts');
+	const toast = toastNodes(container)[0];
+	assert.ok(toast, 'toast rendered');
+	assert.match(toast.className, /tc-toast--info/, 'untyped toast must not claim success');
+	assert.doesNotMatch(toast.className, /tc-toast--success/);
+	assert.equal(toast.attrs.role, 'status');
+});
+
+test('shim honours explicit error/warning/success types', () => {
+	const { win, body } = boot(true);
+	win.OC.Notification.showTemporary('bad', { type: 'error' });
+	win.OC.Notification.showTemporary('careful', { type: 'warning' });
+	win.OC.Notification.showTemporary('yay', { type: 'success' });
+	const container = body.children.find((c) => c.className === 'tc-toasts');
+	const classes = toastNodes(container).map((t) => t.className);
+	assert.deepEqual(classes, [
+		'tc-toast tc-toast--error',
+		'tc-toast tc-toast--warning',
+		'tc-toast tc-toast--success',
+	]);
+	assert.equal(toastNodes(container)[0].attrs.role, 'alert', 'error toast is assertive');
+	const link = toastNodes(container)[0].children.find((c) => c.className === 'tc-toast__report');
+	assert.ok(link, 'shimmed error toast carries the report link');
+});
+
+test('shim dedups by resolved kind+text and resets the timer', () => {
+	const { win, body, timeouts } = boot(false);
+	win.OC.Notification.showTemporary('same', { type: 'error' });
+	win.OC.Notification.showTemporary('same', { type: 'error' });
+	win.OC.Notification.showTemporary('same'); // different kind → separate toast
+	const container = body.children.find((c) => c.className === 'tc-toasts');
+	assert.equal(toastNodes(container).length, 2, 'error + info variants do not collapse');
+	const errorTimers = timeouts.filter((t) => t.ms === 7000);
+	assert.ok(errorTimers.length >= 2, 'dedup re-armed the error timer');
+});
+
+test('announce info kind renders info toast in the polite region', () => {
+	const { win, body } = boot(false);
+	win.TicketCheckMessaging.announce('fyi', 'info');
+	win.TicketCheckMessaging.announce('bare'); // unknown/absent kind → info, never success
+	const container = body.children.find((c) => c.className === 'tc-toasts');
+	const classes = toastNodes(container).map((t) => t.className);
+	assert.deepEqual(classes, ['tc-toast tc-toast--info', 'tc-toast tc-toast--info']);
 });

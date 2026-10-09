@@ -305,6 +305,8 @@ class CompanionController extends Controller
 			return $this->error($e->getErrorCode(), Http::STATUS_NOT_FOUND);
 		} catch (CompanionConflictException $e) {
 			return $this->error($e->getErrorCode(), Http::STATUS_CONFLICT, $e->getMessage());
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
 		} catch (\Exception $e) {
 			if (str_contains(strtolower($e->getMessage()), 'assign')) {
 				return $this->error('invalid_assignee', Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());

@@ -352,6 +352,31 @@ final class CompanionControllerSurfaceTest extends TestCase
 		self::assertSame('bob', $data['ticket']['assignedTo']);
 	}
 
+	public function testAssignRequiresVersion(): void
+	{
+		// Missing version → clean 422 (never uncaught → 500)
+		$this->params = ['assignedTo' => 'bob'];
+		$this->tickets->expects(self::never())->method('assign');
+
+		$response = $this->controller->assign(5);
+		$data = self::envelope($response);
+
+		self::assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+		self::assertSame('version_required', $data['error']['code']);
+	}
+
+	public function testAssignRejectsNonNumericVersion(): void
+	{
+		$this->params = ['assignedTo' => 'bob', 'version' => 'abc'];
+		$this->tickets->expects(self::never())->method('assign');
+
+		$response = $this->controller->assign(5);
+		$data = self::envelope($response);
+
+		self::assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+		self::assertSame('version_required', $data['error']['code']);
+	}
+
 	public function testOptionalVersionHelperRemovedRequireVersionIsSoleCasGate(): void
 	{
 		$ref = new \ReflectionClass(CompanionController::class);

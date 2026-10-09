@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(text);
+            OC.Notification.showTemporary(text, { type: k });
             return;
         }
         const host = document.getElementById('app-content') || document.body;
@@ -858,7 +858,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.success) {
                         mergeDialog.close();
                         showQuickActionSuccess(tSafe('ticket_merged_successfully', 'Ticket merged successfully'));
-                        window.location.href = appUrl('/apps/ticketcheck/tickets/' + data.target_id);
+                        let targetUrl = appUrl('/apps/ticketcheck/tickets/' + data.target_id);
+                        const dropped = Number(data.relations_dropped) || 0;
+                        if (dropped > 0) {
+                            targetUrl += '?merge_dropped=' + encodeURIComponent(dropped);
+                        }
+                        window.location.href = targetUrl;
                         return;
                     }
                     const errMsg = data.message || data.error || tSafe('merge_failed', 'Merge failed');

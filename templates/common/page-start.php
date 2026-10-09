@@ -95,11 +95,11 @@ if ($navMode === 'guest') {
 }
 ?>
 <?php if ($navMode === 'guest' && !empty($_['helpdesk_translations']) && is_array($_['helpdesk_translations'])): ?>
-<script>
+<script nonce="<?php p((string)($_['csp_nonce'] ?? $_['cspNonce'] ?? '')); ?>">
 window.helpdeskTranslations = <?php print_unescaped(json_encode([
 	'translations' => $_['helpdesk_translations'],
 	'pluralForm' => (string)($_['plural_form'] ?? 'nplurals=2; plural=(n != 1);'),
-], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)); ?>;
+], JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE)); ?>;
 </script>
 <?php endif; ?>
 <?php

@@ -85,7 +85,7 @@ $emailSettings = $_['emailSettings'] ?? [];
 						<span class="helpdesk-form-help tc-field__hint-block"><?php p($l->t('inbound_email_enabled_help')); ?></span>
 					</div>
 
-					<div class="helpdesk-alert helpdesk-alert--info tc-field tc-field--full-width" role="note">
+					<div class="helpdesk-alert helpdesk-alert--info tc-field tc-field--full-width" role="status">
 						<p class="helpdesk-alert__text"><?php p($l->t('inbound_email_webhook_security_help')); ?></p>
 					</div>
 				</div>

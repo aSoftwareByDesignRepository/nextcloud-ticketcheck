@@ -134,7 +134,7 @@
             return;
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(message);
+            OC.Notification.showTemporary(message, { type: 'error' });
             return;
         }
         const host = document.getElementById('app-content') || document.querySelector('.portal-dashboard-wrapper, .portal-container') || document.body;
@@ -156,7 +156,7 @@
             return;
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(message);
+            OC.Notification.showTemporary(message, { type: 'success' });
             return;
         }
         const host = document.getElementById('app-content') || document.querySelector('.portal-dashboard-wrapper, .portal-container') || document.body;

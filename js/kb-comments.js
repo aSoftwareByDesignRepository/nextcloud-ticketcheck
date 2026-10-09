@@ -245,7 +245,7 @@
     function showNotification(message, type = 'info') {
         // Use OC.Notification if available (authenticated users)
         if (typeof OC !== 'undefined' && OC.Notification) {
-            OC.Notification.showTemporary(message);
+            OC.Notification.showTemporary(message, { type: type });
         } else {
             // Fallback for guests - create a simple notification
             const notification = document.createElement('div');

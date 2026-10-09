@@ -319,7 +319,7 @@
                     if (file.type.startsWith('image/')) {
                         this.uploadImage(file);
                     } else {
-                        OC.Notification.showTemporary(t('ticketcheck', 'please_drop_image_file'));
+                        OC.Notification.showTemporary(t('ticketcheck', 'please_drop_image_file'), { type: 'warning' });
                     }
                 }
             });
@@ -344,14 +344,14 @@
             // Validate file size (5MB limit)
             const maxSize = 5 * 1024 * 1024; // 5MB
             if (file.size > maxSize) {
-                OC.Notification.showTemporary(t('ticketcheck', 'image_too_large_maximum_size_5mb'));
+                OC.Notification.showTemporary(t('ticketcheck', 'image_too_large_maximum_size_5mb'), { type: 'warning' });
                 return;
             }
 
             // Validate file type
             const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             if (!allowedTypes.includes(file.type)) {
-                OC.Notification.showTemporary(t('ticketcheck', 'invalid_image_format_use_jpg_png_gif_webp'));
+                OC.Notification.showTemporary(t('ticketcheck', 'invalid_image_format_use_jpg_png_gif_webp'), { type: 'warning' });
                 return;
             }
 
@@ -364,7 +364,7 @@
             const api = window.TicketCheckApi;
             if (!api || typeof api.postForm !== 'function') {
                 this.hideUploadProgress();
-                OC.Notification.showTemporary(t('ticketcheck', 'an_error_occurred'));
+                OC.Notification.showTemporary(t('ticketcheck', 'an_error_occurred'), { type: 'error' });
                 return;
             }
 
@@ -373,14 +373,14 @@
                     this.hideUploadProgress();
                     if (data.success) {
                         this.insertImageIntoEditor(data.imageUrl);
-                        OC.Notification.showTemporary(t('ticketcheck', 'image_uploaded_successfully'));
+                        OC.Notification.showTemporary(t('ticketcheck', 'image_uploaded_successfully'), { type: 'success' });
                     } else {
-                        OC.Notification.showTemporary(t('ticketcheck', 'upload_failed_with_reason', [data.message || t('ticketcheck', 'unknown_error')]));
+                        OC.Notification.showTemporary(t('ticketcheck', 'upload_failed_with_reason', [data.message || t('ticketcheck', 'unknown_error')]), { type: 'error' });
                     }
                 })
                 .catch(error => {
                     this.hideUploadProgress();
-                    OC.Notification.showTemporary(t('ticketcheck', 'upload_failed_with_reason', [error.message]));
+                    OC.Notification.showTemporary(t('ticketcheck', 'upload_failed_with_reason', [error.message]), { type: 'error' });
                 });
         }
 
@@ -662,7 +662,7 @@
                         const event = new Event('input', { bubbles: true });
                         this.textarea.dispatchEvent(event);
                         
-                        OC.Notification.showTemporary(t('ticketcheck', 'image_removed'));
+                        OC.Notification.showTemporary(t('ticketcheck', 'image_removed'), { type: 'success' });
                     }
                 }
 
@@ -742,7 +742,7 @@
                 const api = window.TicketCheckApi;
                 if (!api || typeof api.post !== 'function' || typeof api.put !== 'function') {
                     isSubmitting = false;
-                    OC.Notification.showTemporary(t('ticketcheck', 'an_error_occurred'));
+                    OC.Notification.showTemporary(t('ticketcheck', 'an_error_occurred'), { type: 'error' });
                     return;
                 }
 
@@ -761,7 +761,7 @@
                 savePromise
                     .then(function (data) {
                         if (data.success || data.article) {
-                            OC.Notification.showTemporary(t('ticketcheck', 'article_saved_successfully'));
+                            OC.Notification.showTemporary(t('ticketcheck', 'article_saved_successfully'), { type: 'success' });
                             window.location.href = OC.generateUrl('/apps/ticketcheck/kp');
                         } else {
                             isSubmitting = false;
@@ -769,7 +769,7 @@
                                 submitBtn.disabled = false;
                                 submitBtn.textContent = originalSubmitText;
                             }
-                            OC.Notification.showTemporary(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'failed_to_save_article') }));
+                            OC.Notification.showTemporary(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'failed_to_save_article') }), { type: 'error' });
                         }
                     })
                     .catch(error => {
@@ -778,7 +778,7 @@
                             submitBtn.disabled = false;
                             submitBtn.textContent = originalSubmitText;
                         }
-                        OC.Notification.showTemporary(t('ticketcheck', 'error_with_recovery', { message: error.message }));
+                        OC.Notification.showTemporary(t('ticketcheck', 'error_with_recovery', { message: error.message }), { type: 'error' });
                     });
             });
         }

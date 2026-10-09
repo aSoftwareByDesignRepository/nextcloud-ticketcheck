@@ -46,17 +46,17 @@
         try {
             api = requireApi();
         } catch (err) {
-            OC.Notification.showTemporary(err.message);
+            OC.Notification.showTemporary(err.message, { type: 'error' });
             return;
         }
         api.post('/apps/ticketcheck/api/settings/kb-categories', { name }).then(function (data) {
             if (data.success) {
                 window.location.reload();
             } else {
-                OC.Notification.showTemporary(t('ticketcheck', 'error') + ': ' + (data.error || t('ticketcheck', 'failed_to_add_category')));
+                OC.Notification.showTemporary(t('ticketcheck', 'error') + ': ' + (data.error || t('ticketcheck', 'failed_to_add_category')), { type: 'error' });
             }
         }).catch((err) => {
-            OC.Notification.showTemporary(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'failed_to_add_category') }));
+            OC.Notification.showTemporary(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'failed_to_add_category') }), { type: 'error' });
         });
     }
 
@@ -84,17 +84,17 @@
         try {
             api = requireApi();
         } catch (err) {
-            OC.Notification.showTemporary(err.message);
+            OC.Notification.showTemporary(err.message, { type: 'error' });
             return;
         }
         api.del('/apps/ticketcheck/api/settings/kb-categories/' + id).then(function (data) {
             if (data.success) {
                 window.location.reload();
             } else {
-                OC.Notification.showTemporary(t('ticketcheck', 'error') + ': ' + (data.error || t('ticketcheck', 'failed_to_delete_category')));
+                OC.Notification.showTemporary(t('ticketcheck', 'error') + ': ' + (data.error || t('ticketcheck', 'failed_to_delete_category')), { type: 'error' });
             }
         }).catch((err) => {
-            OC.Notification.showTemporary(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'failed_to_delete_category') }));
+            OC.Notification.showTemporary(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'failed_to_delete_category') }), { type: 'error' });
         });
     }
 

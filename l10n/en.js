@@ -1197,6 +1197,8 @@ OC.L10N.register(
 	"merge_dialog_description" : "Search for the ticket you want to keep. All comments and attachments will be moved to that ticket, and this ticket will be marked as done.",
 	"merge_failed" : "Merge failed",
 	"merge_into_another_ticket" : "Merge into another ticket",
+	"merge_relations_dropped_text" : "%s related records were skipped because they are duplicates or conflict with existing data on this ticket.",
+	"merge_relations_dropped_title" : "Some related records were not transferred",
 	"merge_same_ticket_error" : "You cannot merge a ticket into itself. Choose a different ticket.",
 	"merge_search_failed" : "Could not search tickets. Try again.",
 	"merge_search_loading" : "Searching tickets...",

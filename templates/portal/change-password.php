@@ -61,7 +61,7 @@ $requirementItems = [
 
                     <div class="portal-password__card helpdesk-card helpdesk-card--static">
                         <div class="helpdesk-card__body portal-password__card-body">
-                            <div class="helpdesk-alert helpdesk-alert--info portal-password__notice" role="note">
+                            <div class="helpdesk-alert helpdesk-alert--info portal-password__notice" role="status">
                                 <div class="helpdesk-alert__content">
                                     <p class="helpdesk-alert__text"><?php p($l->t('portal_password_security_note')); ?></p>
                                 </div>

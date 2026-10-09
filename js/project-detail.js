@@ -11,7 +11,7 @@
             return;
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(String(message || ''));
+            OC.Notification.showTemporary(String(message || ''), { type: 'error' });
             return;
         }
         const host = document.getElementById('app-content') || document.body;
@@ -144,7 +144,7 @@
         tcApiPost('/apps/ticketcheck/api/projects/' + projectId + '/members', { user_id: userId, role: role })
             .then(function (data) {
                 if (data.success) {
-                    OC.Notification.showTemporary(tSafe('team_member_added_successfully', 'Team member added successfully'));
+                    OC.Notification.showTemporary(tSafe('team_member_added_successfully', 'Team member added successfully'), { type: 'success' });
                     location.reload();
                 } else {
                     (typeof window.tcAlert === "function" ? window.tcAlert : window.alert)(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'failed_to_add_member') }));
@@ -166,7 +166,7 @@
         tcApiPut('/apps/ticketcheck/api/projects/' + currentProjectId + '/members/' + currentUserId, { role: newRole })
             .then(function (data) {
                 if (data.success) {
-                    OC.Notification.showTemporary(tSafe('role_updated', 'Role updated successfully'));
+                    OC.Notification.showTemporary(tSafe('role_updated', 'Role updated successfully'), { type: 'success' });
                     location.reload();
                 } else {
                     (typeof window.tcAlert === "function" ? window.tcAlert : window.alert)(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'failed_to_update_role') }));
@@ -194,7 +194,7 @@
         tcApiDel('/apps/ticketcheck/api/projects/' + projectId + '/members/' + userId)
             .then(function (data) {
                 if (data.success) {
-                    OC.Notification.showTemporary(tSafe('team_member_removed', 'Team member removed'));
+                    OC.Notification.showTemporary(tSafe('team_member_removed', 'Team member removed'), { type: 'success' });
                     location.reload();
                 } else {
                     (typeof window.tcAlert === "function" ? window.tcAlert : window.alert)(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'failed_to_remove_member') }));
@@ -218,7 +218,7 @@
                 const flash = JSON.parse(flashRaw);
                 if (flash && typeof flash.message === 'string' && flash.message.trim() !== '') {
                     if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-                        OC.Notification.showTemporary(flash.message);
+                        OC.Notification.showTemporary(flash.message, { type: (flash && flash.type) || 'info' });
                     } else {
                         showAlert(flash.message);
                     }
@@ -256,7 +256,7 @@
                     const data = await tcApiDel('/apps/ticketcheck/api/projects/' + id);
                     if (data.success) {
                         try { sessionStorage.setItem(FOCUS_RESTORE_KEY, 'main-content'); } catch (err) {}
-                        OC.Notification.showTemporary(t('ticketcheck', 'project_deleted'));
+                        OC.Notification.showTemporary(t('ticketcheck', 'project_deleted'), { type: 'success' });
                         window.location.href = OC.generateUrl('/apps/ticketcheck/projects');
                     } else {
                         (typeof window.tcAlert === "function" ? window.tcAlert : window.alert)(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'failed_to_delete_project') }));
@@ -295,7 +295,7 @@
                 tcApiPost('/apps/ticketcheck/api/projects/' + projectId + '/members', { user_id: userId, role })
                     .then(function (data) {
                         if (data.success) {
-                            OC.Notification.showTemporary(t('ticketcheck', 'team_member_added_successfully') + ' ' + tSafe('team_role_access_sync_short', 'Project role updated without changing global access groups.'));
+                            OC.Notification.showTemporary(t('ticketcheck', 'team_member_added_successfully') + ' ' + tSafe('team_role_access_sync_short', 'Project role updated without changing global access groups.'), { type: 'success' });
                             location.reload();
                         } else {
                             (typeof window.tcAlert === "function" ? window.tcAlert : window.alert)(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'failed_to_add_member') }));
@@ -374,7 +374,7 @@
                         if (data.success) {
                             const badge = document.querySelector('[data-role-badge][data-user-id="' + userId + '"]');
                             if (badge) badge.textContent = newRole;
-                            OC.Notification.showTemporary(t('ticketcheck', 'role_updated') + ' ' + tSafe('team_role_access_sync_short', 'Project role updated without changing global access groups.'));
+                            OC.Notification.showTemporary(t('ticketcheck', 'role_updated') + ' ' + tSafe('team_role_access_sync_short', 'Project role updated without changing global access groups.'), { type: 'success' });
                             closeAllPopovers();
                         } else {
                             (typeof window.tcAlert === "function" ? window.tcAlert : window.alert)(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'failed_to_update_role') }));
@@ -509,7 +509,7 @@
         tcApiPost('/apps/ticketcheck/api/guests/' + guestUserId + '/projects/' + projectId, {})
             .then(function (data) {
                 if (data.success) {
-                    OC.Notification.showTemporary(t('ticketcheck', 'guest_access_granted_successfully'));
+                    OC.Notification.showTemporary(t('ticketcheck', 'guest_access_granted_successfully'), { type: 'success' });
                     location.reload();
                 } else {
                     (typeof window.tcAlert === "function" ? window.tcAlert : window.alert)(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'failed_to_grant_access') }));
@@ -547,7 +547,7 @@
         tcApiDel('/apps/ticketcheck/api/guests/' + guestUserId + '/projects/' + projectId)
             .then(function (data) {
                 if (data.success) {
-                    OC.Notification.showTemporary(t('ticketcheck', 'guest_access_revoked_successfully'));
+                    OC.Notification.showTemporary(t('ticketcheck', 'guest_access_revoked_successfully'), { type: 'success' });
                     location.reload();
                 } else {
                     (typeof window.tcAlert === "function" ? window.tcAlert : window.alert)(t('ticketcheck', 'error_with_recovery', { message: data.error || t('ticketcheck', 'failed_to_revoke_access') }));

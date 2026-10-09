@@ -1325,7 +1325,8 @@ body.tc-attachment-lightbox-open {
     gap: 0.5rem;
     min-height: 100px;
     padding: 1.5rem;
-    border: 2px dashed var(--color-border);
+    /* role="button" drop target — boundary must be identifiable (1.4.11). */
+    border: 2px dashed var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     cursor: pointer;
     background: var(--color-main-background);
@@ -1459,7 +1460,9 @@ dialog.helpdesk-dialog.ticket-detail-dialog[open]::backdrop {
     display: flex;
     align-items: stretch;
     min-height: var(--helpdesk-touch-target, 44px);
-    border: 1px solid var(--color-border);
+    /* Composite control boundary — WCAG 1.4.11 >=3:1 (escapes the input
+       baseline because the painted border lives on this div shell). */
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     background: var(--color-main-background);
     overflow: hidden;
@@ -1660,7 +1663,7 @@ button.ticket-detail-merge-option,
     min-height: var(--helpdesk-touch-target);
     margin: 0;
     padding: var(--helpdesk-spacing-sm);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     background: var(--color-main-background);
     color: inherit;
@@ -2238,11 +2241,16 @@ body.helpdesk-nav-open {
     border-color: inherit !important;
 }
 
-.helpdesk-card--interactive {
+/* Compound selector (0,2,0) so the guest `body.guest-user .helpdesk-card`
+   border shorthand (0,1,1) cannot re-fade the interactive boundary. */
+.helpdesk-card.helpdesk-card--interactive {
     cursor: pointer;
     text-decoration: none;
     color: inherit;
     display: block;
+    /* Clickable card = UI component; its boundary must identify it (1.4.11).
+       Static .helpdesk-card keeps the subtler surface border. */
+    border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     transition: all 0.2s ease;
 }
 
@@ -2504,7 +2512,7 @@ body.helpdesk-nav-open {
 	text-decoration: none;
 	color: var(--color-main-text);
 	background: var(--color-main-background);
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: var(--helpdesk-border-radius-lg, 12px);
 	box-shadow: none;
 	transition:
@@ -2827,7 +2835,7 @@ button.tc-btn--secondary,
 a.tc-btn--secondary {
     background: var(--color-background-hover);
     color: var(--color-main-text);
-    border-color: var(--color-border);
+    border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 .helpdesk-btn--secondary:hover,
@@ -2837,7 +2845,7 @@ a.helpdesk-btn--secondary:hover,
 button.tc-btn--secondary:hover,
 a.tc-btn--secondary:hover {
     background: var(--color-background-dark, var(--color-background-hover));
-    border-color: var(--color-border-dark, var(--color-border));
+    border-color: var(--tc-form-border);
 }
 
 .helpdesk-btn--danger,
@@ -3000,7 +3008,7 @@ select.helpdesk-form-control {
     line-height: 1.5;
     color: var(--color-main-text);
     background: var(--color-main-background);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     transition: border-color var(--helpdesk-transition-fast), box-shadow var(--helpdesk-transition-fast);
 }
@@ -3018,7 +3026,7 @@ input[type="file"].helpdesk-form-control::file-selector-button {
     height: calc(var(--helpdesk-touch-target) - (var(--helpdesk-spacing-sm) * 2));
     padding: 0 var(--helpdesk-spacing-md);
     margin-right: var(--helpdesk-spacing-sm);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     background: var(--color-background-hover);
     color: var(--color-main-text);
@@ -3183,7 +3191,8 @@ select.helpdesk-form-control:focus-visible {
     gap: var(--helpdesk-spacing-xs);
     min-height: 120px;
     padding: 1.5rem;
-    border: 2px dashed var(--color-border);
+    /* role="button" drop target — boundary must be identifiable (1.4.11). */
+    border: 2px dashed var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     cursor: pointer;
     background: var(--color-main-background);
@@ -3249,7 +3258,7 @@ textarea.helpdesk-form-control {
     min-height: var(--tc-touch-min, 44px);
     min-width: var(--tc-touch-min, 44px);
     padding: 0 var(--helpdesk-spacing-sm);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     background: var(--color-background-hover);
     border-radius: var(--helpdesk-border-radius-sm);
     cursor: pointer;
@@ -3571,7 +3580,7 @@ label.helpdesk-form-checkbox {
     box-sizing: border-box;
     accent-color: var(--color-primary-element, #0082c9);
     background-color: var(--color-main-background, #fff);
-    border: 1px solid var(--color-border-dark, var(--color-border, #999));
+    border: 1px solid var(--tc-form-border, #999);
     border-radius: 3px;
     color-scheme: inherit;
     appearance: auto;
@@ -3612,7 +3621,7 @@ div.tc-field--checkbox:not(:has(.helpdesk-form-checkbox)):not(:has(.helpdesk-che
     box-sizing: border-box;
     accent-color: var(--color-primary-element, #0082c9);
     background-color: var(--color-main-background, #fff);
-    border: 1px solid var(--color-border-dark, var(--color-border, #999));
+    border: 1px solid var(--tc-form-border, #999);
     border-radius: 3px;
     color-scheme: inherit;
     appearance: auto;
@@ -4082,7 +4091,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     font-size: var(--helpdesk-text-sm);
     color: var(--color-main-text);
     background: var(--color-main-background);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     cursor: pointer;
     transition: all var(--helpdesk-transition-fast);
@@ -5295,6 +5304,8 @@ div.tc-field--checkbox > .helpdesk-form-help,
     cursor: pointer;
     text-decoration: none;
     color: inherit;
+    /* Clickable surface — boundary identifies the component (1.4.11). */
+    border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 .helpdesk-metric-card--clickable:hover {
@@ -6027,7 +6038,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     font-weight: 500;
     color: var(--color-main-text);
     background: var(--color-background-hover);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: 50px;
     cursor: pointer;
     transition: all var(--helpdesk-transition-fast);
@@ -6450,7 +6461,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     min-height: var(--tc-touch-min, 44px);
     min-width: var(--tc-touch-min, 44px);
     padding: var(--tc-space-1) var(--tc-space-2);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-sm);
     background: var(--color-main-background);
     color: var(--color-main-text);
@@ -7364,7 +7375,7 @@ body.guest-user .kb-filter-clear:hover , body#body-login:has([data-tc-nav-mode="
 body.guest-user #app-content.tc-app form .helpdesk-form-control , body#body-login:has([data-tc-nav-mode="guest"]) #app-content.tc-app form .helpdesk-form-control {
     color: var(--color-main-text);
     background: var(--color-main-background);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     box-shadow: var(--color-box-shadow, none);
 }
 
@@ -7398,7 +7409,7 @@ html[data-theme="dark"] body.guest-user #app-content.tc-app form .helpdesk-form-
 html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app form .helpdesk-form-control , html[data-theme="dark-highcontrast"] body#body-login:has([data-tc-nav-mode="guest"]) #app-content.tc-app form .helpdesk-form-control {
     color: var(--color-main-text);
     background: var(--color-main-background);
-    border-color: var(--color-border);
+    border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 /* Navigation footer */
@@ -7556,7 +7567,7 @@ body.guest-user .helpdesk-btn--primary:hover , body#body-login:has([data-tc-nav-
 body.guest-user .helpdesk-btn--secondary , body#body-login:has([data-tc-nav-mode="guest"]) .helpdesk-btn--secondary {
     background: var(--color-main-background, #fff);
     color: var(--color-main-text, #222);
-    border-color: var(--color-border);
+    border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 body.guest-user .helpdesk-btn--secondary:hover , body#body-login:has([data-tc-nav-mode="guest"]) .helpdesk-btn--secondary:hover {
@@ -7678,7 +7689,7 @@ body.guest-user .helpdesk-form-control , body#body-login:has([data-tc-nav-mode="
     line-height: 1.5;
     color: var(--color-main-text, #222);
     background: var(--color-main-background, #fff);
-    border: 2px solid var(--color-border);
+    border: 2px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     transition: all var(--helpdesk-transition-base);
     min-height: var(--helpdesk-touch-target);
@@ -8328,10 +8339,12 @@ body.guest-user .helpdesk-filter-bar select , body#body-login:has([data-tc-nav-m
 /* Portal home page - reusable semantic utility classes */
 body.guest-user .portal-card-clickable , body#body-login:has([data-tc-nav-mode="guest"]) .portal-card-clickable {
     cursor: pointer;
+    /* Clickable card = UI component — identifiable boundary (1.4.11). */
+    border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 body.guest-user .portal-card-clickable[role="button"] , body#body-login:has([data-tc-nav-mode="guest"]) .portal-card-clickable[role="button"] {
-    border: 2px solid var(--color-border);
+    border: 2px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 body.guest-user .portal-card-clickable[role="button"]:focus-visible , body#body-login:has([data-tc-nav-mode="guest"]) .portal-card-clickable[role="button"]:focus-visible {
@@ -8699,7 +8712,8 @@ body.guest-user .portal-upload-dropzone , body#body-login:has([data-tc-nav-mode=
     gap: var(--helpdesk-spacing-xs);
     min-height: 140px;
     padding: var(--helpdesk-spacing-lg);
-    border: 2px dashed var(--color-border);
+    /* role="button" drop target — boundary must be identifiable (1.4.11). */
+    border: 2px dashed var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-lg);
     background: var(--color-main-background);
     color: var(--color-main-text);
@@ -8847,7 +8861,7 @@ body.guest-user .portal-kb-hero__search-input , body#body-login:has([data-tc-nav
     width: 100%;
     background: var(--color-main-background);
     color: var(--color-main-text);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     font-size: var(--helpdesk-text-lg);
     min-height: var(--helpdesk-touch-target-lg);
     padding: var(--helpdesk-spacing-sm) var(--helpdesk-spacing-md);
@@ -9268,7 +9282,7 @@ body.guest-user .portal-kb__filter-pill , body#body-login:has([data-tc-nav-mode=
     color: var(--color-main-text, #222);
     text-decoration: none;
     border-radius: var(--helpdesk-border-radius-md);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     font-size: var(--helpdesk-text-sm);
     font-weight: 500;
     transition: all var(--helpdesk-transition-base);
@@ -9839,7 +9853,7 @@ body#body-login:has([data-tc-nav-mode="guest"]) #app-content.tc-app--portal-pass
 	min-height: var(--tc-touch-min, 44px);
 	margin: 0;
 	padding: 0 var(--tc-space-3, 0.75rem);
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-left: 0;
 	border-radius: 0 var(--helpdesk-border-radius-md, var(--tc-radius-md, 12px)) var(--helpdesk-border-radius-md, var(--tc-radius-md, 12px)) 0;
 	background: var(--color-main-background);
@@ -9849,7 +9863,7 @@ body#body-login:has([data-tc-nav-mode="guest"]) #app-content.tc-app--portal-pass
 body.guest-user #app-content.tc-app--portal-password form .tc-password-field__control .tc-password-field__toggle:hover,
 body#body-login:has([data-tc-nav-mode="guest"]) #app-content.tc-app--portal-password form .tc-password-field__control .tc-password-field__toggle:hover {
 	background: var(--color-background-hover);
-	border-color: var(--color-border);
+	border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 #app-content.tc-app--portal-password .tc-password-field__toggle:focus-visible {
 	outline: 2px solid var(--color-primary-element);
@@ -10317,7 +10331,9 @@ body.guest-user .helpdesk-survey-star, body#body-login:has([data-tc-nav-mode="gu
     min-width: var(--tc-touch-min, 44px);
     min-height: var(--tc-touch-min, 44px);
     font-size: 1.75rem;
-    color: var(--color-border, #dbdbdb);
+    /* Empty-star glyph is the whole control boundary for a rating radio —
+       --color-border (~1.4:1) hides it; maxcontrast keeps >=3:1 (1.4.11). */
+    color: var(--color-border-maxcontrast, var(--color-text-maxcontrast, #767676));
     background: none;
     border: none;
     cursor: pointer;
@@ -10337,7 +10353,7 @@ body.guest-user .helpdesk-survey-star:focus-visible, body#body-login:has([data-t
     outline-offset: 2px;
 }
 body.guest-user .helpdesk-survey-star--empty , body#body-login:has([data-tc-nav-mode="guest"]) .helpdesk-survey-star--empty {
-    color: var(--color-border, #dbdbdb);
+    color: var(--color-border-maxcontrast, var(--color-text-maxcontrast, #767676));
 }
 body.guest-user .helpdesk-survey-star--filled , body#body-login:has([data-tc-nav-mode="guest"]) .helpdesk-survey-star--filled {
     color: var(--tc-warning-text, var(--color-primary-element, #0082c9));
@@ -10510,11 +10526,16 @@ aside.portal-help-tip {
 	background: var(--tc-error-element, #c0392b);
 	vertical-align: -0.1em;
 }
-.tc-danger-zone .helpdesk-btn--secondary {
-	border-color: color-mix(in srgb, var(--tc-error-element, #e9322d) 45%, var(--color-border));
+/* #app-content scoped so the control-border baseline guard at (1,1,1) cannot
+   flatten the semantic error edge back to plain --tc-form-border. */
+#app-content .tc-danger-zone .helpdesk-btn--secondary,
+:is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) .tc-danger-zone .helpdesk-btn--secondary {
+	border-color: color-mix(in srgb, var(--tc-error-element, #e9322d) 45%, var(--tc-form-border));
 }
-.tc-danger-zone .helpdesk-btn--secondary:hover,
-.tc-danger-zone .helpdesk-btn--secondary:focus-visible {
+#app-content .tc-danger-zone .helpdesk-btn--secondary:hover,
+#app-content .tc-danger-zone .helpdesk-btn--secondary:focus-visible,
+:is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) .tc-danger-zone .helpdesk-btn--secondary:hover,
+:is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) .tc-danger-zone .helpdesk-btn--secondary:focus-visible {
 	border-color: var(--tc-error-element, #e9322d);
 	background: color-mix(in srgb, var(--tc-error-element, #e9322d) 8%, var(--color-main-background));
 }
@@ -10564,7 +10585,7 @@ aside.portal-help-tip {
 #app-content.tc-app .button.secondary {
 	background: transparent;
 	color: var(--color-main-text);
-	border-color: var(--color-border);
+	border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 #app-content.tc-app .button.danger {
 	background: var(--tc-error-element);
@@ -10819,7 +10840,7 @@ aside.portal-help-tip {
 .tc-view-toggle {
 	display: inline-flex;
 	flex-shrink: 0;
-	border: 1px solid var(--color-border, var(--tc-border));
+	border: 1px solid var(--tc-form-border, var(--tc-border));
 	border-radius: var(--tc-radius-md, 8px);
 	overflow: hidden;
 	background: var(--color-main-background, #fff);
@@ -11307,7 +11328,7 @@ aside.portal-help-tip {
 	box-sizing: border-box;
 	min-height: 44px;
 	padding: 0.5rem 0.65rem;
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: var(--border-radius-element);
 	background: var(--color-main-background);
 	color: var(--color-main-text);
@@ -11640,7 +11661,7 @@ aside.portal-help-tip {
 	box-sizing: border-box;
 	accent-color: var(--color-primary-element, #0082c9);
 	background-color: var(--color-main-background, #fff);
-	border: 1px solid var(--color-border-dark, var(--color-border, #999));
+	border: 1px solid var(--tc-form-border, #999);
 	border-radius: 3px;
 	color-scheme: inherit;
 	appearance: auto;
@@ -12210,7 +12231,7 @@ body.guest-user .tc-nav__logout-btn , body#body-login:has([data-tc-nav-mode="gue
 	width: 100%;
 	min-height: var(--tc-touch-min, 44px);
 	padding: var(--tc-space-2, 0.5rem) var(--tc-space-3, 0.75rem);
-	border: 1px solid color-mix(in srgb, var(--tc-error-element) 35%, var(--color-border));
+	border: 1px solid color-mix(in srgb, var(--tc-error-element) 35%, var(--tc-form-border));
 	border-radius: var(--tc-radius-md, 8px);
 	background: color-mix(in srgb, var(--tc-error-element) 8%, var(--color-main-background));
 	color: var(--color-main-text);
@@ -12260,7 +12281,7 @@ button.tc-nav-toggle {
 	min-width: var(--tc-touch-min, 44px);
 	padding: 0 var(--tc-space-3);
 	margin: 0;
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: var(--tc-radius-md, 8px);
 	background: var(--color-main-background);
 	color: var(--color-main-text);
@@ -12504,7 +12525,7 @@ button.tc-nav-toggle {
 	justify-content: center;
 	gap: var(--tc-space-2);
 	padding: var(--tc-space-2) var(--tc-space-3);
-	border: 1px solid var(--tc-border);
+	border: 1px solid var(--tc-form-border);
 	border-radius: var(--tc-radius-sm);
 	background: transparent;
 	color: var(--color-main-text, #1d1d1d);
@@ -12841,6 +12862,9 @@ body.tc-modal-open {
 .tc-toast--success { border-left-color: var(--tc-success-element, #46ba61); }
 .tc-toast--error { border-left-color: var(--tc-error-element, #cc4646); }
 .tc-toast--warning { border-left-color: var(--tc-warning-element, #c98600); }
+/* Untyped/neutral announcements: primary accent, never the success green —
+   an untyped "Error: …" must not render as a success toast. */
+.tc-toast--info { border-left-color: var(--color-primary-element, #0082c9); }
 .tc-toast__text {
 	min-width: 0;
 }
@@ -13008,7 +13032,7 @@ body.tc-modal-open {
 	box-sizing: border-box;
 	min-height: 44px;
 	padding: 0.5rem 0.65rem;
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: var(--border-radius-element);
 	background: var(--color-main-background);
 	color: var(--color-main-text);
@@ -13349,6 +13373,11 @@ body:has(#app-content.tc-app) {
 		background-color 160ms ease,
 		box-shadow 160ms ease;
 }
+#app-content.tc-app--dashboard .tc-dashboard-kpi.helpdesk-card--interactive,
+#app-content.tc-app--portal-home .tc-dashboard-kpi.helpdesk-card--interactive,
+#app-content.tc-app--portal-home .tc-dashboard-kpi.portal-card-clickable {
+	border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
+}
 #app-content.tc-app--dashboard .tc-dashboard-kpi__icon,
 #app-content.tc-app--portal-home .tc-dashboard-kpi__icon {
 	width: 2.5rem;
@@ -13523,7 +13552,7 @@ body:has(#app-content.tc-app) {
 #app-content.tc-app .tc-stat-grid > .helpdesk-card.portal-stat-card--attention {
 	border-width: 1px;
 	border-style: solid;
-	border-color: var(--color-border);
+	border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 @media (max-width: 480px) {
 	#app-content.tc-app .tc-stat-grid {
@@ -14583,6 +14612,20 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	outline-offset: 2px;
 	border-radius: 2px;
 }
+
+/* WCAG 2.5.8 target size (AA): ticket title links measured 20–23px tall,
+   below the 24px minimum. The row click-proxy does not enlarge the anchor's
+   own hit box, so the link itself must reach 24px. Applies on staff list,
+   portal list, and portal dashboard cards (same classes, different scopes). */
+.tc-tickets-table__title-link,
+.helpdesk-ticket-card__title-link {
+	/* Some surfaces render the link inside a non-flex .title-line (portal-home):
+	   inline anchors ignore line-height/min-height for their border box —
+	   inline-block makes the 24px hit height apply everywhere. */
+	display: inline-block;
+	line-height: 24px;
+	min-height: 24px;
+}
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal .tc-tickets-table__meta-line {
 	margin-top: var(--tc-space-1);
 	max-width: 100%;
@@ -15222,7 +15265,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	gap: var(--tc-space-2);
 	padding: var(--tc-space-2) var(--tc-space-3);
 	min-height: var(--tc-touch-min, 44px);
-	border: 1px solid var(--tc-border);
+	border: 1px solid var(--tc-form-border);
 	border-radius: var(--tc-radius-pill, 999px);
 	background: var(--tc-bg-card);
 	color: var(--tc-text);
@@ -15787,7 +15830,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 #app-content.tc-app .tc-kanban__drag-handle:hover,
 #app-content.tc-app .tc-kanban__drag-handle:focus-visible {
 	color: var(--tc-text, var(--color-main-text));
-	border-color: var(--color-border, #ddd);
+	border-color: var(--tc-form-border, var(--color-border-maxcontrast, #ddd));
 	background: var(--color-background-hover, transparent);
 }
 #app-content.tc-app .tc-kanban__drag-handle:focus-visible {
@@ -15939,7 +15982,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	min-height: var(--tc-touch-min);
 	padding: var(--tc-space-2) var(--tc-space-4);
 	border-radius: var(--tc-radius-pill);
-	border: 1px solid var(--tc-border);
+	border: 1px solid var(--tc-form-border);
 	background: var(--tc-bg-card);
 	color: var(--tc-text);
 	text-decoration: none;
@@ -16091,7 +16134,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	gap: var(--tc-space-3);
 	margin: 0;
 	padding: var(--tc-space-3) var(--tc-space-4);
-	border: 1px solid var(--color-border, var(--tc-border));
+	border: 1px solid var(--tc-form-border, var(--tc-border));
 	border-radius: var(--tc-radius-md, 8px);
 	background: var(--color-background-hover, var(--tc-tint-info));
 	cursor: pointer;
@@ -16116,7 +16159,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	box-sizing: border-box;
 	accent-color: var(--color-primary-element, #0082c9);
 	background-color: var(--color-main-background, #fff);
-	border: 1px solid var(--color-border-dark, var(--color-border, #999));
+	border: 1px solid var(--tc-form-border, #999);
 	border-radius: 3px;
 	color-scheme: inherit;
 	appearance: auto;
@@ -17190,7 +17233,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 #app-content.tc-app--ticket-form #ticket-form-errors.helpdesk-form-error-summary {
 	margin: 0 0 var(--tc-space-4);
 	background: var(--hd-color-error-bg, color-mix(in srgb, var(--tc-error-element, #db0606) 8%, var(--color-main-background)));
-	border: 1px solid var(--hd-color-error-border, color-mix(in srgb, var(--tc-error-element, #db0606) 45%, var(--color-border)));
+	border: 1px solid var(--hd-color-error-border, color-mix(in srgb, var(--tc-error-element, #db0606) 45%, var(--tc-form-border)));
 	border-left: 4px solid var(--hd-color-error-accent, var(--tc-error-element, #c0392b));
 	color: var(--hd-color-error-text, var(--color-main-text));
 }
@@ -17946,7 +17989,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
     gap: var(--helpdesk-spacing-sm);
     min-height: var(--helpdesk-touch-target);
     padding: var(--helpdesk-spacing-sm) var(--helpdesk-spacing-md);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     background: var(--color-main-background);
     color: var(--color-main-text);
@@ -18332,7 +18375,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
     gap: var(--tc-space-3, 0.75rem);
     min-height: var(--helpdesk-touch-target, 44px);
     padding: var(--tc-space-3, 0.75rem) var(--tc-space-4, 1rem);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     background: var(--color-background-hover);
     cursor: pointer;
@@ -18357,7 +18400,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
     box-sizing: border-box;
     accent-color: var(--color-primary-element);
     background-color: var(--color-main-background, #fff);
-    border: 1px solid var(--color-border-dark, var(--color-border, #999));
+    border: 1px solid var(--tc-form-border, #999);
     border-radius: 3px;
     color-scheme: inherit;
     appearance: auto;
@@ -18472,13 +18515,14 @@ label.helpdesk-form-label--required::after {
 	font-weight: 700;
 }
 
-/* Filter search inputs: beat NC core 2px maxcontrast border so they match selects */
-#app-content.tc-app .helpdesk-filter-bar input.helpdesk-form-control,
-#app-content.tc-app .helpdesk-filter-bar input.helpdesk-search-input,
-#app-content.tc-app .helpdesk-filter-bar .helpdesk-input-with-icon input,
-#app-content.tc-app .helpdesk-projects-search-input,
-#app-content.tc-app .helpdesk-customers-search-input {
-	border: 1px solid var(--color-border);
+/* Filter search inputs: beat NC core 2px maxcontrast border so they match selects.
+   :not() guard keeps field-errors.css [aria-invalid] painted borders alive. */
+#app-content.tc-app .helpdesk-filter-bar input.helpdesk-form-control:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app .helpdesk-filter-bar input.helpdesk-search-input:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app .helpdesk-filter-bar .helpdesk-input-with-icon input:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app .helpdesk-projects-search-input:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app .helpdesk-customers-search-input:not(.helpdesk-form-control--error, [aria-invalid='true']) {
+	border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	box-shadow: none;
 	background: var(--color-main-background);
 }
@@ -18577,7 +18621,7 @@ body.guest-user footer.guest-box , body#body-login:has([data-tc-nav-mode="guest"
 /* KB feedback: selected / message contrast in light mode */
 #app-content.tc-app--kb-article .tc-kb-feedback__buttons .helpdesk-btn--secondary {
 	color: var(--color-main-text);
-	border-color: var(--color-border-dark, var(--color-border));
+	border-color: var(--tc-form-border);
 	font-weight: 600;
 }
 #app-content.tc-app--kb-article .tc-kb-feedback__buttons .helpdesk-btn.is-selected,
@@ -18603,17 +18647,21 @@ body.guest-user footer.guest-box , body#body-login:has([data-tc-nav-mode="guest"
 	margin-top: var(--tc-space-2);
 }
 
-/* Ticket / project forms: quiet 1px borders on native selects + combobox search */
-#app-content.tc-app--ticket-form select.helpdesk-form-control,
-#app-content.tc-app--ticket-form input.helpdesk-form-control,
-#app-content.tc-app--ticket-form .tc-select-combobox input.helpdesk-form-control,
-#app-content.tc-app--project-form select.helpdesk-form-control,
-#app-content.tc-app--project-form input.helpdesk-form-control,
-#app-content.tc-app--customer-form select.helpdesk-form-control,
-#app-content.tc-app--customer-form input.helpdesk-form-control,
-#app-content.tc-app--guest-form select.helpdesk-form-control,
-#app-content.tc-app--guest-form input.helpdesk-form-control {
-	border: 1px solid var(--color-border);
+/* Ticket / project forms: quiet 1px borders on native selects + combobox search.
+   The :not() guard is load-bearing: this rule ties field-errors.css
+   `[aria-invalid]` at (1,2,1) and wins on file order — without the guard
+   invalid fields lost their painted error border (learned defect class:
+   aria-invalid without a painted error border). */
+#app-content.tc-app--ticket-form select.helpdesk-form-control:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app--ticket-form input.helpdesk-form-control:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app--ticket-form .tc-select-combobox input.helpdesk-form-control:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app--project-form select.helpdesk-form-control:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app--project-form input.helpdesk-form-control:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app--customer-form select.helpdesk-form-control:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app--customer-form input.helpdesk-form-control:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app--guest-form select.helpdesk-form-control:not(.helpdesk-form-control--error, [aria-invalid='true']),
+#app-content.tc-app--guest-form input.helpdesk-form-control:not(.helpdesk-form-control--error, [aria-invalid='true']) {
+	border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	box-shadow: none;
 }
 
@@ -19308,3 +19356,30 @@ textarea {
 	}
 }
 /* === app-feedback:tc end === */
+
+/*
+ * Control-border baseline (WCAG 1.4.11 >= 3:1 vs background) — DESIGN-SYSTEM §3.6.0.
+ * NC core styles every button/input with the faint `--color-border-dark`, and its
+ * `button:disabled` rule (0,2,1) outranks page-level `.button.secondary` (0,2,0),
+ * so disabled controls silently lose their frame. This rule only re-colours
+ * borders that are already drawn — borderless icon buttons are unaffected —
+ * and state classes keep their semantic borders.
+ */
+#app-content input:not([type='range'], [type='hidden'], [type='color'], [type='file'], [type='image'], [type='submit'], [type='button'], [type='reset'], .form-input--error, .form-input--success, .form-input--warning, .has-error, [aria-invalid='true'], .has-error *),
+#app-content select:not(.form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
+#app-content textarea:not(.form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
+/* Cascade guard must name every app variant that owns its border:
+   semantic fills keep their semantic edge; ghost/text/icon stay frameless.
+   (#app-content button:not() at (1,1,1) would otherwise beat the variant
+   rules at (0,1,1)/(0,1,0) — learned class: cascade-guard :not() drift.) */
+#app-content button:not(.primary, .error, .warning, .success, .danger, .button-vue, .helpdesk-btn--primary, .helpdesk-btn--danger, .helpdesk-btn--success, .helpdesk-btn--warning, .helpdesk-btn--ghost, .helpdesk-btn--text, .helpdesk-btn--icon, .tc-btn--primary, .tc-btn--danger),
+#app-content .button:not(.primary, .error, .warning, .success, .danger),
+/* App dialogs (dialog.helpdesk-dialog / .tc-modal / .tc-dialog) are appended
+   to document.body — outside #app-content — so they need the same baseline. */
+:is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) input:not([type='range'], [type='hidden'], [type='color'], [type='file'], [type='image'], [type='submit'], [type='button'], [type='reset'], .form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
+:is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) select:not(.form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
+:is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) textarea:not(.form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
+:is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) button:not(.primary, .error, .warning, .success, .danger, .button-vue, .helpdesk-btn--primary, .helpdesk-btn--danger, .helpdesk-btn--success, .helpdesk-btn--warning, .helpdesk-btn--ghost, .helpdesk-btn--text, .helpdesk-btn--icon, .tc-btn--primary, .tc-btn--danger),
+:is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) .button:not(.primary, .error, .warning, .success, .danger) {
+	border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
+}

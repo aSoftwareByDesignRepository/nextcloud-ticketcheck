@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(String(message || ''));
+            OC.Notification.showTemporary(String(message || ''), { type: 'error' });
             return;
         }
         const host = document.getElementById('app-content') || document.body;
@@ -159,11 +159,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (fileCountText) {
             fileCountText.classList.remove('helpdesk-upload-dropzone__subtitle--has-files');
             fileCountText.textContent = message;
-            fileCountText.style.color = 'var(--color-error)';
+            fileCountText.style.color = 'var(--color-error-text, var(--tc-danger-ink, var(--color-error)))';
             fileCountText.style.fontWeight = '600';
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(message);
+            OC.Notification.showTemporary(message, { type: 'error' });
             return;
         }
         tcAlert(message);
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (lastError && fileCountText) {
             fileCountText.classList.remove('helpdesk-upload-dropzone__subtitle--has-files');
             fileCountText.textContent = lastError;
-            fileCountText.style.color = 'var(--color-error)';
+            fileCountText.style.color = 'var(--color-error-text, var(--tc-danger-ink, var(--color-error)))';
             fileCountText.style.fontWeight = '600';
         }
     }
@@ -393,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }, 300);
 
-                    OC.Notification.showTemporary(t('ticketcheck', 'attachment_deleted_successfully'));
+                    OC.Notification.showTemporary(t('ticketcheck', 'attachment_deleted_successfully'), { type: 'success' });
                 })
                 .catch(err => {
                     tcAlert(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'failed_to_delete_attachment') }));
@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(function (res) {
                 if (!res.success) throw new Error(res.message || 'Failed to update ticket');
 
-                OC.Notification.showTemporary(t('ticketcheck', 'ticket_updated_successfully'));
+                OC.Notification.showTemporary(t('ticketcheck', 'ticket_updated_successfully'), { type: 'success' });
 
                 // Redirect after a short delay to show the notification
                 setTimeout(() => {

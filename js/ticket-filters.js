@@ -160,7 +160,7 @@
             if (window.TicketCheckMessaging && typeof TicketCheckMessaging.announce === 'function') {
                 TicketCheckMessaging.announce(requiredMsg, 'error');
             } else if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-                OC.Notification.showTemporary(requiredMsg);
+                OC.Notification.showTemporary(requiredMsg, { type: 'error' });
             }
             if (nameInput) {
                 nameInput.focus();
@@ -176,7 +176,7 @@
         if (window.TicketCheckMessaging && typeof TicketCheckMessaging.announce === 'function') {
             TicketCheckMessaging.announce(savedMessage, 'success');
         } else if (typeof OC !== 'undefined' && OC.Notification) {
-            OC.Notification.showTemporary(savedMessage);
+            OC.Notification.showTemporary(savedMessage, { type: 'success' });
         }
         if (nameInput) {
             nameInput.value = '';
@@ -290,7 +290,7 @@
         if (window.TicketCheckMessaging && typeof TicketCheckMessaging.announce === 'function') {
             TicketCheckMessaging.announce(deletedMessage, 'success');
         } else if (typeof OC !== 'undefined' && OC.Notification) {
-            OC.Notification.showTemporary(deletedMessage);
+            OC.Notification.showTemporary(deletedMessage, { type: 'success' });
         }
         renderSavedViews();
     }

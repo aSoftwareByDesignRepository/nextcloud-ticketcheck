@@ -21,7 +21,16 @@ $localeFormat = $_['localeFormat'] ?? null;
 
 <?php include __DIR__ . '/common/page-start.php'; ?>
 
-            
+            <?php if (!empty($_['mergeDropped']) && (int)$_['mergeDropped'] > 0): ?>
+            <div class="helpdesk-alert helpdesk-alert--warning helpdesk-mb-md" role="status" aria-live="polite">
+                <span class="helpdesk-alert__icon" aria-hidden="true"><?php print_unescaped(IconCatalog::render('alert-triangle')); ?></span>
+                <div class="helpdesk-alert__content">
+                    <p class="helpdesk-alert__title"><?php p($l->t('merge_relations_dropped_title')); ?></p>
+                    <p class="helpdesk-alert__text"><?php p($l->t('merge_relations_dropped_text', [(int)$_['mergeDropped']])); ?></p>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Status + actions (title is in tc-page-header from shell) -->
             <div class="ticket-detail-header helpdesk-mb-md">
                 <div class="ticket-detail-header__row">

@@ -156,8 +156,8 @@ $categoryLabelKeys = [
 
                             <!-- Customer Info Display -->
                             <div id="customer-info-display" class="tc-customer-preview" hidden>
-                                <div class="helpdesk-alert helpdesk-alert--info">
-                                    <div class="helpdesk-alert__icon">
+                                <div class="helpdesk-alert helpdesk-alert--info" role="status" aria-live="polite">
+                                    <div class="helpdesk-alert__icon" aria-hidden="true">
                                         <?php print_unescaped(IconCatalog::render('user')); ?>
                                     </div>
                                     <div class="helpdesk-alert__content">

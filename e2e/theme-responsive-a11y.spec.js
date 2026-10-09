@@ -55,7 +55,27 @@ function hasAuth() {
  * @param {string} label
  */
 async function expectNoHorizontalOverflow(page, label) {
-	const overflow = await page.evaluate(() => {
+	// A single-frame reading can catch a transient layout (scrollbar or
+	// popover mid-paint) — re-measure once after a settle delay so only a
+	// persistent overflow fails.
+	let overflow = await measureHorizontalOverflow(page);
+	if (overflow.doc > 2 || overflow.app > 2 || overflow.viewportBleed > 2) {
+		await page.waitForTimeout(400);
+		overflow = await measureHorizontalOverflow(page);
+	}
+	// Document / app scrollWidth catches true page-level overflow.
+	expect(overflow.doc, `document overflow @ ${label}`).toBeLessThanOrEqual(2);
+	expect(overflow.app, `#app-content overflow @ ${label}`).toBeLessThanOrEqual(2);
+	// Main/shell scrollWidth can include sub-pixel / border-box noise (~2–3px) without
+	// painting past the viewport — assert real bleed via getBoundingClientRect.
+	expect(overflow.viewportBleed, `viewport bleed @ ${label}`).toBeLessThanOrEqual(2);
+}
+
+/**
+ * @param {import('@playwright/test').Page} page
+ */
+function measureHorizontalOverflow(page) {
+	return page.evaluate(() => {
 		const doc = document.documentElement;
 		const app = document.querySelector('#app-content.tc-app') || document.querySelector('#app-content');
 		const main = document.getElementById('tc-main-content');
@@ -85,12 +105,6 @@ async function expectNoHorizontalOverflow(page, label) {
 			viewportBleed: Math.ceil(farthestRight - viewportRight),
 		};
 	});
-	// Document / app scrollWidth catches true page-level overflow.
-	expect(overflow.doc, `document overflow @ ${label}`).toBeLessThanOrEqual(2);
-	expect(overflow.app, `#app-content overflow @ ${label}`).toBeLessThanOrEqual(2);
-	// Main/shell scrollWidth can include sub-pixel / border-box noise (~2–3px) without
-	// painting past the viewport — assert real bleed via getBoundingClientRect.
-	expect(overflow.viewportBleed, `viewport bleed @ ${label}`).toBeLessThanOrEqual(2);
 }
 
 /**

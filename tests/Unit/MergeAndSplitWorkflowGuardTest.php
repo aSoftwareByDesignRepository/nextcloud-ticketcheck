@@ -413,5 +413,70 @@ class MergeAndSplitWorkflowGuardTest extends TestCase
 		$result = $service->mergeTickets(10, 20);
 		self::assertSame(20, $result['target_id']);
 		self::assertSame(1, $result['comments_moved']);
+		self::assertSame(3, $result['relations_moved']);
+		self::assertSame(0, $result['relations_dropped']);
+	}
+
+	/**
+	 * Merge dedup drops (watchers already on the target, self-loop links,
+	 * source survey when the target keeps its own) must reach the caller —
+	 * the API surface turns them into a user-visible notice. Silent drops are
+	 * the dutycheck-class bug this counters.
+	 */
+	public function testMergeReportsDroppedRelations(): void
+	{
+		$source = new Ticket();
+		$source->setId(10);
+		$source->setMergedIntoId(null);
+
+		$target = new Ticket();
+		$target->setId(20);
+		$target->setMergedIntoId(null);
+
+		$ticketMapper = $this->createMock(TicketMapper::class);
+		$ticketMapper->method('find')
+			->willReturnCallback(static function (int $id) use ($source, $target): Ticket {
+				return $id === 10 ? $source : $target;
+			});
+		$ticketMapper->method('markMergedIfUnmerged')->willReturn(true);
+
+		$permissionService = $this->createMock(PermissionService::class);
+		$permissionService->method('canEditTicket')->willReturn(true);
+
+		$commentMapper = $this->createMock(CommentMapper::class);
+		$commentMapper->method('moveToTicket')->willReturn(0);
+		$attachmentMapper = $this->createMock(AttachmentMapper::class);
+		$attachmentMapper->method('moveToTicket')->willReturn(0);
+
+		$relationService = $this->createMock(\OCA\Ticketcheck\Service\TicketRelationService::class);
+		$relationService->method('transferOnMerge')->willReturn([
+			'links_moved' => 2,
+			'links_dropped' => 1,
+			'watchers_moved' => 3,
+			'watchers_dropped' => 2,
+			'surveys_moved' => 0,
+			'surveys_dropped' => 1,
+		]);
+
+		$db = $this->createMock(IDBConnection::class);
+		$db->method('inTransaction')->willReturn(false);
+		$config = $this->createMock(IConfig::class);
+		$config->method('getSystemValue')->with('datadirectory', '')->willReturn('/tmp');
+
+		$service = new MergeService(
+			$ticketMapper,
+			$commentMapper,
+			$attachmentMapper,
+			$permissionService,
+			$relationService,
+			$config,
+			$this->createMock(LoggerInterface::class),
+			$db,
+			$this->workflowLockAllowing()
+		);
+
+		$result = $service->mergeTickets(10, 20);
+		self::assertSame(5, $result['relations_moved']);
+		self::assertSame(4, $result['relations_dropped']);
 	}
 }

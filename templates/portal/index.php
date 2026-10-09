@@ -238,7 +238,7 @@ $todayHuman = $localeFormat !== null
             </section>
 
             <!-- Help Tip -->
-            <aside class="helpdesk-alert helpdesk-alert--info portal-help-tip" aria-labelledby="portal-help-tip-title">
+            <aside class="helpdesk-alert helpdesk-alert--info portal-help-tip" aria-live="polite" aria-labelledby="portal-help-tip-title">
                 <div class="helpdesk-alert__icon" aria-hidden="true">
                     <?php print_unescaped(IconCatalog::render('info')); ?>
                 </div>

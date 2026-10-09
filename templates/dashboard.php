@@ -110,7 +110,7 @@ if ($currentUserId !== null && $currentUserId !== '') {
             <?php if ($urgentCount > 0 || $newUnassignedCount > 0 || $unassignedInProgressCount > 0): ?>
                 <section class="tc-section helpdesk-dashboard-section helpdesk-mb-md" role="region" aria-labelledby="helpdesk-alerts-heading">
                     <h2 id="helpdesk-alerts-heading" class="helpdesk-dashboard-section__heading tc-section__title"><?php p($l->t('dashboard_section_alerts')); ?></h2>
-                <div class="helpdesk-alert-stack">
+                <div class="helpdesk-alert-stack" role="status" aria-live="polite">
                     <?php if ($urgentCount > 0): ?>
                         <a href="<?php p($_['urlGenerator']->linkToRoute('ticketcheck.ticket.index')); ?>?priority=urgent"
                             class="helpdesk-alert helpdesk-alert--error helpdesk-alert--link"

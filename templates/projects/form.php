@@ -157,7 +157,7 @@ if ($showMemberPicker) {
                                     </label>
                                 </div>
                             </fieldset>
-                            <div class="helpdesk-alert tc-project-status-info" role="note">
+                            <div class="helpdesk-alert tc-project-status-info" role="status">
                                 <div class="helpdesk-alert__content">
                                     <p class="helpdesk-alert__title"><?php p($l->t('what_happens')); ?></p>
                                     <ul class="helpdesk-project-form__hint-list">

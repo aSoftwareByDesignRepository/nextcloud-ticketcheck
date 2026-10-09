@@ -255,7 +255,7 @@ if ($activeProjectCount === 1) {
                                 <h2 id="portal-form-details-heading" class="helpdesk-card__title"><?php p($l->t('ticket_details_section')); ?></h2>
                             </div>
                             <div class="helpdesk-card__body">
-                                <div class="helpdesk-alert helpdesk-alert--info portal-create__intro" role="note">
+                                <div class="helpdesk-alert helpdesk-alert--info portal-create__intro" role="status">
                                     <div class="helpdesk-alert__content">
                                         <p class="helpdesk-alert__text"><?php p($l->t('portal_create_intro')); ?></p>
                                     </div>
@@ -310,7 +310,7 @@ if ($activeProjectCount === 1) {
                                     </div>
                                 </div>
 
-                                <div class="helpdesk-alert helpdesk-alert--info portal-create__tips" role="note" aria-labelledby="portal-create-checklist-title">
+                                <div class="helpdesk-alert helpdesk-alert--info portal-create__tips" role="status" aria-labelledby="portal-create-checklist-title">
                                     <div class="helpdesk-alert__content">
                                         <h3 id="portal-create-checklist-title" class="helpdesk-alert__title portal-create__checklist-title"><?php p($l->t('before_you_submit')); ?></h3>
                                         <ul class="portal-create__checklist-list">

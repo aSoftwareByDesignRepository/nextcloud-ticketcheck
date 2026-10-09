@@ -11,7 +11,7 @@
             return;
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(text);
+            OC.Notification.showTemporary(text, { type: 'error' });
             return;
         }
         if (typeof window.tcAlert === 'function') {
@@ -668,7 +668,7 @@
                         TicketCheckMessaging.announce(updatedMessage, 'success');
                         window.setTimeout(() => location.reload(), 450);
                     } else if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-                        OC.Notification.showTemporary(updatedMessage);
+                        OC.Notification.showTemporary(updatedMessage, { type: 'success' });
                         location.reload();
                     } else {
                         location.reload();

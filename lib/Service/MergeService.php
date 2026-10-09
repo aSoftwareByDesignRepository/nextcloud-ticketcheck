@@ -90,7 +90,7 @@ class MergeService
 	}
 
 	/**
-	 * @return array{target_id: int, comments_moved: int, attachments_moved: int}
+	 * @return array{target_id: int, comments_moved: int, attachments_moved: int, relations_moved: int, relations_dropped: int}
 	 */
 	private function mergeTicketsLocked(int $sourceId, int $targetId): array
 	{
@@ -115,6 +115,11 @@ class MergeService
 		$copiedFiles = $this->copyAttachmentFiles($sourceId, $targetId);
 		$attachmentsMoved = 0;
 		$commentsMoved = 0;
+		$relationStats = [
+			'links_moved' => 0, 'links_dropped' => 0,
+			'watchers_moved' => 0, 'watchers_dropped' => 0,
+			'surveys_moved' => 0, 'surveys_dropped' => 0,
+		];
 
 		$this->db->beginTransaction();
 		try {
@@ -129,7 +134,7 @@ class MergeService
 
 			$attachmentsMoved = $this->attachmentMapper->moveToTicket($sourceId, $targetId);
 			$commentsMoved = $this->commentMapper->moveToTicket($sourceId, $targetId);
-			$this->ticketRelationService->transferOnMerge($sourceId, $targetId);
+			$relationStats = $this->ticketRelationService->transferOnMerge($sourceId, $targetId);
 
 			if (!$this->ticketMapper->markMergedIfUnmerged($sourceId, $targetId)) {
 				throw new \InvalidArgumentException('Source ticket is already merged');
@@ -165,12 +170,21 @@ class MergeService
 			'target_id' => $targetId,
 			'comments_moved' => $commentsMoved,
 			'attachments_moved' => $attachmentsMoved,
+			'relations_dropped' => $relationStats['links_dropped']
+				+ $relationStats['watchers_dropped']
+				+ $relationStats['surveys_dropped'],
 		]);
 
 		return [
 			'target_id' => $targetId,
 			'comments_moved' => $commentsMoved,
 			'attachments_moved' => $attachmentsMoved,
+			'relations_moved' => $relationStats['links_moved']
+				+ $relationStats['watchers_moved']
+				+ $relationStats['surveys_moved'],
+			'relations_dropped' => $relationStats['links_dropped']
+				+ $relationStats['watchers_dropped']
+				+ $relationStats['surveys_dropped'],
 		];
 	}
 

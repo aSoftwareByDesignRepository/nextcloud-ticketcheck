@@ -412,7 +412,7 @@
 					if (window.TicketCheckMessaging && typeof TicketCheckMessaging.announce === 'function') {
 						TicketCheckMessaging.announce(t('ticketcheck', 'deleted_successfully'), 'success');
 					} else if (typeof OC !== 'undefined' && OC.Notification) {
-						OC.Notification.showTemporary(t('ticketcheck', 'deleted_successfully'));
+						OC.Notification.showTemporary(t('ticketcheck', 'deleted_successfully'), { type: 'success' });
 					}
 				} else {
 					throw new Error(data.message || t('ticketcheck', 'deletion_failed'));
@@ -428,7 +428,7 @@
 				if (window.TicketCheckMessaging && typeof TicketCheckMessaging.announce === 'function') {
 					TicketCheckMessaging.announce(msg, 'error');
 				} else if (typeof OC !== 'undefined' && OC.Notification) {
-					OC.Notification.showTemporary(msg);
+					OC.Notification.showTemporary(msg, { type: 'error' });
 				}
 			});
 	}

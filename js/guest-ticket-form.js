@@ -132,7 +132,7 @@
                 return;
             }
             if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-                OC.Notification.showTemporary(message);
+                OC.Notification.showTemporary(message, { type: 'error' });
                 return;
             }
             const host = document.getElementById('app-content') || document.body;
@@ -150,7 +150,7 @@
 
         function notifySuccess(message) {
             if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-                OC.Notification.showTemporary(message);
+                OC.Notification.showTemporary(message, { type: 'success' });
                 return;
             }
             const host = document.getElementById('app-content') || document.body;
@@ -621,7 +621,7 @@
             if (fileCountText) {
                 fileCountText.classList.remove('helpdesk-upload-dropzone__subtitle--has-files');
                 fileCountText.textContent = message;
-                fileCountText.style.color = 'var(--color-error)';
+                fileCountText.style.color = 'var(--color-error-text, var(--tc-danger-ink, var(--color-error)))';
                 fileCountText.style.fontWeight = '600';
             }
             notifyError(message);

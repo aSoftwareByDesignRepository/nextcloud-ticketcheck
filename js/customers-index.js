@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(String(message || ''));
+            OC.Notification.showTemporary(String(message || ''), { type: 'error' });
             return;
         }
         const host = document.getElementById('app-content') || document.body;
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const flash = JSON.parse(flashRaw);
             if (flash && typeof flash.message === 'string' && flash.message.trim() !== '') {
                 if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-                    OC.Notification.showTemporary(flash.message);
+                    OC.Notification.showTemporary(flash.message, { type: (flash && flash.type) || 'info' });
                 } else {
                     showAlert(flash.message);
                 }
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             sessionStorage.setItem(FOCUS_RESTORE_KEY, 'customer-search');
                         } catch (e) {}
                         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-                            OC.Notification.showTemporary(t('ticketcheck', 'customer_deleted_successfully'));
+                            OC.Notification.showTemporary(t('ticketcheck', 'customer_deleted_successfully'), { type: 'success' });
                         } else {
                             showAlert(t('ticketcheck', 'customer_deleted_successfully'));
                         }

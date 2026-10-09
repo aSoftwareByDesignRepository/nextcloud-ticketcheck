@@ -82,6 +82,9 @@ dialog.helpdesk-dialog,
 	--tc-bg-stripe: color-mix(in srgb, var(--color-main-background, #fff) 92%, var(--color-main-text, #1d1d1d) 8%);
 	--tc-border: color-mix(in srgb, var(--color-main-text, #1d1d1d) 12%, transparent);
 	--tc-border-strong: color-mix(in srgb, var(--color-main-text, #1d1d1d) 24%, transparent);
+	/* Interactive controls need >=3:1 (WCAG 1.4.11): maxcontrast is NC's own
+	   input border; --color-border / --tc-border stay surface-only. */
+	--tc-form-border: var(--color-border-maxcontrast, var(--tc-border-strong));
 	--tc-muted: var(--color-text-maxcontrast, #6b6b6b);
 	--tc-text: var(--color-main-text, #1d1d1d);
 	--tc-primary: var(--color-primary-element, #0082c9);
@@ -158,11 +161,16 @@ dialog.helpdesk-dialog,
 	--helpdesk-icon-xl: var(--tc-icon-well);
 	--helpdesk-nav-width: var(--tc-nav-width);
 
-	/* Status/priority badges — solid semantic fills + on-fill text (≥4.5:1) */
+	/* Status/priority badges — solid semantic fills + on-fill text (≥4.5:1).
+	   Warning fills use the *-text tone: --tc-warning-element is bright amber
+	   (#BF7900 light / #FFCC00 dark) where the theme-aware on-dark ink only
+	   reaches ~3.5:1 in light themes; the -text tone keeps white-ink >=4.5
+	   (light) and black-ink >=13 (dark) — measured live by
+	   e2e/helpers/atlas-contrast-probe.mjs. */
 	--hd-badge-new-bg: var(--color-primary-element);
-	--hd-badge-waiting-bg: var(--tc-warning-element);
+	--hd-badge-waiting-bg: var(--tc-warning-text);
 	--hd-badge-urgent-bg: var(--tc-error-element);
-	--hd-badge-high-bg: var(--tc-warning-element);
+	--hd-badge-high-bg: var(--tc-warning-text);
 	--hd-badge-normal-bg: var(--color-primary-element);
 	--hd-badge-low-bg: var(--color-text-maxcontrast);
 	--hd-badge-text-on-dark: var(--color-primary-element-text, var(--color-primary-text));
@@ -194,4 +202,9 @@ dialog.helpdesk-dialog,
 		animation-iteration-count: 1 !important;
 		transition-duration: 0.01ms !important;
 	}
+}
+
+/* Alias for dead-name ref (literal fallback masked it). */
+body {
+	--tc-accent: var(--color-primary-element);
 }

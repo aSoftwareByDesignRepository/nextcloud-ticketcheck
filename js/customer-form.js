@@ -11,7 +11,7 @@
             return;
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(String(message || ''));
+            OC.Notification.showTemporary(String(message || ''), { type: 'error' });
             return;
         }
         const host = document.getElementById('app-content') || document.body;

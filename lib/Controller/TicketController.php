@@ -640,6 +640,13 @@ class TicketController extends Controller
                     'canCreateInternal' => $this->permissionService->canCreateInternalNotes(),
                     'currentUser' => $this->userSession->getUser(),
                     'invoicingCheckReceivablesUrl' => $invoicingCheckReceivablesUrl,
+                    // Merge redirect flash: count of related records (watchers,
+                    // links, surveys) that could not be transferred to this
+                    // survivor ticket. Strict digit-parse — anything else is 0.
+                    'mergeDropped' => (function (): int {
+                        $raw = (string) $this->request->getParam('merge_dropped', '');
+                        return ($raw !== '' && ctype_digit($raw)) ? (int) $raw : 0;
+                    })(),
                 ],
                 'ticket-detail',
                 (string)($ticket->getTitle() ?? ''),
@@ -1696,6 +1703,8 @@ class TicketController extends Controller
                 'target_id' => $result['target_id'],
                 'comments_moved' => $result['comments_moved'],
                 'attachments_moved' => $result['attachments_moved'],
+                'relations_moved' => $result['relations_moved'],
+                'relations_dropped' => $result['relations_dropped'],
             ]);
         } catch (\InvalidArgumentException $e) {
             $l = $this->l10nFactory->get('ticketcheck');
