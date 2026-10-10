@@ -1,6 +1,6 @@
 {
     "name": "ticketcheck",
-    "version": "2.3.13",
+    "version": "2.3.14",
     "description": "Customer support ticketing system for Nextcloud with guest access and email integration",
     "main": "js/ticketcheck.js",
     "scripts": {
