@@ -116,7 +116,7 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 							: '#';
 						?>
 						<div class="helpdesk-form-actions helpdesk-form-actions--compact">
-							<a id="tc-imap-oauth-connect" class="helpdesk-btn" href="<?php p($tcImapOauthHref); ?>"
+							<a id="tc-imap-oauth-connect" class="helpdesk-btn helpdesk-btn--secondary" href="<?php p($tcImapOauthHref); ?>"
 								data-begin-url="<?php p($tcImapOauthBeginUrl); ?>">
 								<?php p($l->t('inbound_oauth_connect')); ?>
 							</a>
@@ -210,8 +210,8 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 							<div class="helpdesk-form-group tc-field">
 								<label for="tc-imap-smtp-port" class="helpdesk-form-label"><?php p($l->t('inbound_smtp_port_label')); ?></label>
 								<input type="number" id="tc-imap-smtp-port" name="smtp_port" min="1" max="65535"
-									value="<?php p((string)(int)($tcImapSmtp['port'] ?? 587)); ?>"
-									class="helpdesk-form-control">
+									value="<?php $tcSmtpPort = (int)($tcImapSmtp['port'] ?? 0); p($tcSmtpPort > 0 ? (string)$tcSmtpPort : ''); ?>"
+									placeholder="587" class="helpdesk-form-control">
 							</div>
 							<div class="helpdesk-form-group tc-field">
 								<label for="tc-imap-smtp-enc" class="helpdesk-form-label"><?php p($l->t('inbound_smtp_enc_label')); ?></label>
@@ -252,7 +252,8 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 			<div class="helpdesk-card__body">
 				<h3 class="helpdesk-card__title"><?php p($l->t('inbound_step3_heading')); ?></h3>
 				<p class="helpdesk-form-help"><?php p($l->t('inbound_routing_help')); ?></p>
-				<table class="helpdesk-table tc-imap-routing-table" id="tc-imap-routing-table">
+				<table class="helpdesk-table tc-imap-routing-table" id="tc-imap-routing-table"
+					data-field="routing" tabindex="-1">
 					<thead>
 						<tr>
 							<th scope="col"><?php p($l->t('inbound_routing_key_label')); ?></th>
@@ -342,8 +343,8 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 					<div class="helpdesk-form-group tc-field">
 						<label for="tc-imap-port" class="helpdesk-form-label"><?php p($l->t('inbound_port_label')); ?></label>
 						<input type="number" id="tc-imap-port" name="port" min="1" max="65535"
-							value="<?php p((string)(int)($tcImapStatus['port'] ?? 993)); ?>"
-							class="helpdesk-form-control">
+							value="<?php $tcImapPort = (int)($tcImapStatus['port'] ?? 0); p($tcImapPort > 0 ? (string)$tcImapPort : ''); ?>"
+							placeholder="993" class="helpdesk-form-control">
 					</div>
 					<div class="helpdesk-form-group tc-field">
 						<label for="tc-imap-enc" class="helpdesk-form-label"><?php p($l->t('inbound_enc_label')); ?></label>

@@ -87,6 +87,69 @@ test.describe('TicketCheck inbound-mail settings', () => {
     await expect(page.locator('.tc-field-error').first()).toBeVisible();
   });
 
+  test('numeric routing key pins fields.routing error on the routing table', async ({ page }) => {
+    await openSection(page);
+
+    // Structurally valid form; server must reject the numeric map key.
+    await page.locator('#tc-imap-address').fill('e2e@example.com');
+    const dsgvo = page.locator('#tc-imap-dsgvo');
+    if (!(await dsgvo.isChecked())) {
+      await dsgvo.check();
+    }
+    // SMTP override off keeps its inputs out of the submitted payload.
+    const smtpToggle = page.locator('#tc-imap-send-smtp');
+    if (await smtpToggle.isChecked()) {
+      await smtpToggle.uncheck();
+    }
+    await page.locator('#tc-imap-routing-add').click();
+    await page.locator('input[name="route_key"]').last().fill('123');
+
+    const responsePromise = page.waitForResponse(
+      (r) => r.url().includes('/api/settings/inbound-imap') && r.request().method() === 'POST',
+    );
+    await page.locator('#tc-imap-save-btn').click();
+    const response = await responsePromise;
+    expect(response.status()).toBe(422);
+
+    // The map-level field error pins to the table (data-field="routing").
+    await expect(page.locator('#tc-imap-routing-table')).toHaveAttribute('aria-invalid', 'true');
+    const err = page.locator('.tc-field-error').first();
+    await expect(err).toBeVisible();
+    await expect(err).toContainText(/routing/i);
+
+    // Result line surfaces the server message in error styling, not muted help.
+    const result = page.locator('#tc-imap-result');
+    await expect(result).toHaveClass(/helpdesk-form-error/);
+    await expect(result).toHaveAttribute('role', 'alert');
+  });
+
+  test('hidden SMTP block cannot block save via native validation', async ({ page }) => {
+    await openSection(page);
+
+    await page.locator('#tc-imap-address').fill('e2e@example.com');
+    const dsgvo = page.locator('#tc-imap-dsgvo');
+    if (!(await dsgvo.isChecked())) {
+      await dsgvo.check();
+    }
+
+    // Poison the hidden SMTP port, then hide the block: a disabled control is
+    // exempt from constraint validation, so save must still reach the server.
+    const smtpToggle = page.locator('#tc-imap-send-smtp');
+    if (!(await smtpToggle.isChecked())) {
+      await smtpToggle.check();
+    }
+    await page.locator('#tc-imap-smtp-port').fill('0');
+    await smtpToggle.uncheck();
+    await expect(page.locator('#tc-imap-smtp-port')).toBeDisabled();
+
+    const responsePromise = page.waitForResponse(
+      (r) => r.url().includes('/api/settings/inbound-imap') && r.request().method() === 'POST',
+    );
+    await page.locator('#tc-imap-save-btn').click();
+    const response = await responsePromise;
+    expect([200, 422]).toContain(response.status());
+  });
+
   test('routing table add-row creates an editable row', async ({ page }) => {
     await openSection(page);
 

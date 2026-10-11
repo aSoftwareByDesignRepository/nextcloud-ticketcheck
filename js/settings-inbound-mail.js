@@ -44,7 +44,8 @@
 			return;
 		}
 		els.result.textContent = text;
-		els.result.classList.toggle('helpdesk-form-help--error', !!isError);
+		els.result.className = isError ? 'helpdesk-form-error' : 'helpdesk-form-help';
+		els.result.setAttribute('role', isError ? 'alert' : 'status');
 	}
 
 	function busy(btn, isBusy, label) {
@@ -77,7 +78,13 @@
 	syncAuthMode();
 
 	if (els.smtpToggle && els.smtpBlock) {
-		const syncSmtp = () => { els.smtpBlock.hidden = !els.smtpToggle.checked; };
+		const syncSmtp = () => {
+			const on = els.smtpToggle.checked;
+			els.smtpBlock.hidden = !on;
+			// Disabled controls are exempt from constraint validation and
+			// FormData — a hidden stale port must not block save.
+			els.smtpBlock.querySelectorAll('input, select').forEach((el) => { el.disabled = !on; });
+		};
 		els.smtpToggle.addEventListener('change', syncSmtp);
 		syncSmtp();
 	}
@@ -235,10 +242,10 @@
 					say(t('settings_saved'), false);
 					applyStatus(data.status);
 				} else {
-					say(t('error_saving_settings'), true);
+					say((data && data.error) ? data.error : t('error_saving_settings'), true);
 				}
 			})
-			.catch(() => say(t('error_saving_settings'), true))
+			.catch((e) => say((e && e.message) ? e.message : t('error_saving_settings'), true))
 			.finally(() => busy(els.save, false, t('save_settings')));
 	});
 
@@ -274,7 +281,7 @@
 						applyStatus(data.status);
 					}
 				})
-				.catch(() => say(t('inbound_test_failed', { reason: 'network' }), true))
+				.catch((e) => say((e && e.message) ? e.message : t('inbound_test_failed', { reason: 'network' }), true))
 				.finally(() => busy(els.test, false, t('inbound_test_button')));
 		});
 	}
@@ -292,10 +299,10 @@
 						say(t('inbound_enabled_ok'), false);
 						applyStatus(data.status);
 					} else {
-						say(t('inbound_enable_failed'), true);
+						say((data && data.error) ? data.error : t('inbound_enable_failed'), true);
 					}
 				})
-				.catch(() => say(t('inbound_enable_failed'), true))
+				.catch((e) => say((e && e.message) ? e.message : t('inbound_enable_failed'), true))
 				.finally(() => busy(els.enable, false, t('inbound_enable_button')));
 		});
 	}
@@ -313,10 +320,10 @@
 						say(t('inbound_disabled_ok'), false);
 						applyStatus(data.status);
 					} else {
-						say(t('inbound_disable_failed'), true);
+						say((data && data.error) ? data.error : t('inbound_disable_failed'), true);
 					}
 				})
-				.catch(() => say(t('inbound_disable_failed'), true))
+				.catch((e) => say((e && e.message) ? e.message : t('inbound_disable_failed'), true))
 				.finally(() => busy(els.disable, false, t('inbound_disable_button')));
 		});
 	}
