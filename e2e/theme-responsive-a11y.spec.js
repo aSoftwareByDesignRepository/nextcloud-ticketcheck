@@ -20,6 +20,7 @@ const routes = [
 	{ id: 'dashboard', path: '/apps/ticketcheck/', ready: '#tc-main-content' },
 	{ id: 'tickets', path: '/apps/ticketcheck/tickets', ready: '#tc-main-content' },
 	{ id: 'settings', path: '/apps/ticketcheck/settings', ready: '#tc-main-content' },
+	{ id: 'settings-inbound-mail', path: '/apps/ticketcheck/settings/inbound-mail', ready: '#settings-inbound-mail-heading' },
 	{ id: 'kb', path: '/apps/ticketcheck/kb', ready: '#tc-main-content' },
 ];
 

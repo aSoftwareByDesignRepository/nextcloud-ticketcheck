@@ -252,6 +252,7 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 			<div class="helpdesk-card__body">
 				<h3 class="helpdesk-card__title"><?php p($l->t('inbound_step3_heading')); ?></h3>
 				<p class="helpdesk-form-help"><?php p($l->t('inbound_routing_help')); ?></p>
+				<div class="tc-table-wrap">
 				<table class="helpdesk-table tc-imap-routing-table" id="tc-imap-routing-table"
 					data-field="routing" tabindex="-1">
 					<thead>
@@ -295,6 +296,7 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 						<?php } ?>
 					</tbody>
 				</table>
+				</div>
 				<button type="button" class="helpdesk-btn" id="tc-imap-routing-add">
 					<?php p($l->t('inbound_routing_add')); ?>
 				</button>
