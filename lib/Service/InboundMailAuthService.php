@@ -131,6 +131,8 @@ final class InboundMailAuthService
 	/**
 	 * Access token for the mailbox — returns a still-valid token, or refreshes
 	 * via the stored refresh token and persists the rotation.
+	 *
+	 * @param array<string, mixed> $cfg
 	 */
 	private function accessToken(array $cfg): string
 	{

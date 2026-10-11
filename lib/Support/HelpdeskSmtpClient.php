@@ -46,15 +46,9 @@ final class HelpdeskSmtpClient
 	 * Spec MH-19: always multipart/alternative when HTML is present (never HTML-only).
 	 * With attachments: multipart/mixed wrapping alternative + parts.
 	 *
-	 * @param array{
-	 *   from: string,
-	 *   fromName?: string,
-	 *   to: string,
-	 *   subject: string,
-	 *   body: string,
-	 *   bodyHtml?: string,
-	 *   attachments?: list<array{filename: string, mime: string, data: string}>
-	 * } $cfg
+	 * @param array<string, mixed> $cfg caller-supplied config — keys are
+	 *   cast/normalized defensively below (from, to, subject, body required;
+	 *   fromName, bodyHtml, messageId, replyTo, cc, attachments optional).
 	 */
 	public static function buildDataPayload(array $cfg): string
 	{
@@ -265,6 +259,11 @@ final class HelpdeskSmtpClient
 		if ($fp === false) {
 			throw new ValidationException(['smtp' => 'SMTP connect failed: ' . $errstr]);
 		}
+		// DNS-rebinding TOCTOU: verify the address actually dialed.
+		if (ImapConnection::dialedPeerIpOrNull($fp, !empty($cfg['allowPrivateHost'])) === null) {
+			fclose($fp);
+			throw new ValidationException(['smtp' => 'Use a public mail host — localhost and private network addresses are not allowed.']);
+		}
 		stream_set_timeout($fp, 20);
 
 		try {
@@ -297,14 +296,20 @@ final class HelpdeskSmtpClient
 		return $fp;
 	}
 
-	/** @param resource $fp @param list<int> $ok */
+	/**
+	 * @param resource $fp
+	 * @param list<int> $ok
+	 */
 	private static function cmd($fp, string $line, array $ok): void
 	{
 		fwrite($fp, $line . "\r\n");
 		self::expect($fp, $ok);
 	}
 
-	/** @param resource $fp @param list<int> $ok */
+	/**
+	 * @param resource $fp
+	 * @param list<int> $ok
+	 */
 	private static function expect($fp, array $ok): void
 	{
 		$resp = '';

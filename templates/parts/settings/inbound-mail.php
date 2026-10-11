@@ -386,15 +386,21 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 					<span class="helpdesk-form-help tc-field__hint-block"><?php p($l->t('inbound_dsgvo_help')); ?></span>
 				</div>
 
+				<div class="helpdesk-form-group tc-field tc-field--checkbox tc-field--full-width">
+					<input type="checkbox" name="enable_after_test" id="tc-imap-enable-after-test" value="1" checked>
+					<label for="tc-imap-enable-after-test"><?php p($l->t('inbound_enable_after_test')); ?></label>
+					<span class="helpdesk-form-help tc-field__hint-block"><?php p($l->t('inbound_enable_after_test_help')); ?></span>
+				</div>
+
 				<div class="helpdesk-form-actions helpdesk-form-actions--compact" role="group"
 					aria-label="<?php p($l->t('inbound_actions_label')); ?>">
-					<button type="submit" class="helpdesk-btn" id="tc-imap-save-btn">
-						<?php p($l->t('save_settings')); ?>
+					<button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="tc-imap-save-btn">
+						<?php p($l->t('inbound_save_test_button')); ?>
 					</button>
 					<button type="button" class="helpdesk-btn" id="tc-imap-test-btn">
 						<?php p($l->t('inbound_test_button')); ?>
 					</button>
-					<button type="button" class="helpdesk-btn helpdesk-btn--primary" id="tc-imap-enable-btn"
+					<button type="button" class="helpdesk-btn" id="tc-imap-enable-btn"
 						<?php if (empty($tcImapStatus['test_passed']) || !empty($tcImapStatus['enabled'])) { p('disabled'); } ?>>
 						<?php p($l->t('inbound_enable_button')); ?>
 					</button>

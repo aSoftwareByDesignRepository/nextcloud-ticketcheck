@@ -77,6 +77,7 @@ final class InboundSmtpSendService
 		]);
 	}
 
+	/** @param array<string, mixed> $cfg */
 	private function mailboxConfigStatusFromName(array $cfg): string
 	{
 		// From-Name comes from the address local part when no display name is

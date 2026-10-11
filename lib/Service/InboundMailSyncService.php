@@ -61,7 +61,7 @@ final class InboundMailSyncService
 	}
 
 	/**
-	 * @param callable(array<string,mixed>): array|null $clientFactory
+	 * @param callable(array<string,mixed>): array<string,mixed>|null $clientFactory
 	 *        test seam — returns ImapSyncClient::connect()-shaped result
 	 * @return array{status: string, processed?: int, created?: int, commented?: int, reason?: string}
 	 */
@@ -95,6 +95,7 @@ final class InboundMailSyncService
 	 * Exponential backoff after connection errors (spec §9.5):
 	 * gap = base × 2^(error_count-1), capped at 4h.
 	 */
+	/** @param array<string, mixed> $cfg */
 	private function inBackoff(array $cfg): bool
 	{
 		$count = (int)$cfg['error_count'];
@@ -111,6 +112,7 @@ final class InboundMailSyncService
 
 	/**
 	 * @param array<string, mixed> $cfg
+	 * @return array{status: string, processed?: int, created?: int, commented?: int, reason?: string}
 	 */
 	private function syncLocked(array $cfg, ?callable $clientFactory): array
 	{
@@ -132,6 +134,7 @@ final class InboundMailSyncService
 			'secret' => $cred['secret'],
 			'authMode' => $cred['mode'],
 			'allowSelfSigned' => !empty($cfg['allow_self_signed']),
+			'allowPrivateHost' => !empty($cfg['allow_private_host']),
 			'timeoutSeconds' => 20.0,
 		];
 		// Private hosts require the explicit opt-in — rechecked at dial time.
@@ -256,7 +259,7 @@ final class InboundMailSyncService
 	 *
 	 * @param array{uid: int, internalDate: ?string, flags: list<string>, headers: array<string, mixed>, rawHeader: string} $m
 	 * @param array<string, mixed> $cfg
-	 * @return array{action: string}
+	 * @return array{action: string, ticket_id?: int, comment_id?: int, duplicate?: bool}
 	 */
 	private function processOne(ImapSyncClient $client, array $m, int $uidvalidity, array $cfg): array
 	{

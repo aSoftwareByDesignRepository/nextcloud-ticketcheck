@@ -17,8 +17,9 @@ namespace OCA\Ticketcheck\Support;
  *    an explicit config opt-in.
  *  - Private/loopback hosts are refused unless the config opted in
  *    (ImapConnection::isBlockedMailHost + allow_private_host).
- *  - Host is re-resolved at connect time (DNS-rebinding defense) — handled
- *    by ImapConnection before connect() is invoked.
+ *  - DNS-rebinding defense: the dialed peer IP is verified post-connect
+ *    (ImapConnection::dialedPeerIpOrNull) — the hostname pre-check alone
+ *    cannot bind the address the socket actually reached.
  */
 final class ImapSyncClient
 {
@@ -54,7 +55,7 @@ final class ImapSyncClient
 	 *
 	 * @param array{
 	 *   host: string, port: int, enc: string, user: string, secret: string,
-	 *   authMode?: string, allowSelfSigned?: bool, timeoutSeconds?: float
+	 *   authMode?: string, allowSelfSigned?: bool, allowPrivateHost?: bool, timeoutSeconds?: float
 	 * } $cfg
 	 * @return array{ok: bool, reason?: string, detail?: string, client?: self}
 	 */
@@ -63,10 +64,15 @@ final class ImapSyncClient
 		$host = ImapConnection::normalizeHost((string)($cfg['host'] ?? ''));
 		$port = (int)($cfg['port'] ?? 993);
 		$enc = strtolower(trim((string)($cfg['enc'] ?? self::ENC_SSL)));
+		// Stored-config vocab (ImapConnection::ENC_TLS) spells STARTTLS "tls".
+		if ($enc === 'tls') {
+			$enc = self::ENC_STARTTLS;
+		}
 		$user = ImapConnection::normalizeUsername((string)($cfg['user'] ?? ''));
 		$secret = (string)($cfg['secret'] ?? '');
 		$authMode = strtolower(trim((string)($cfg['authMode'] ?? 'password')));
 		$allowSelfSigned = !empty($cfg['allowSelfSigned']);
+		$allowPrivateHost = !empty($cfg['allowPrivateHost']);
 		$timeout = max(1.0, (float)($cfg['timeoutSeconds'] ?? 20.0));
 
 		if ($host === '' || $port <= 0 || $user === '' || $secret === '') {
@@ -74,6 +80,9 @@ final class ImapSyncClient
 		}
 		if (!in_array($enc, [self::ENC_NONE, self::ENC_STARTTLS, self::ENC_SSL], true)) {
 			return ['ok' => false, 'reason' => 'unknown', 'detail' => 'unsupported encryption'];
+		}
+		if (!$allowPrivateHost && ImapConnection::isBlockedMailHost($host)) {
+			return ['ok' => false, 'reason' => 'blocked', 'detail' => 'host resolves to a private or reserved address'];
 		}
 
 		$verify = !$allowSelfSigned;
@@ -94,6 +103,12 @@ final class ImapSyncClient
 				'reason' => 'network',
 				'detail' => ImapConnection::sanitizeError($errstr !== '' ? $errstr : ('connect errno ' . $errno)),
 			];
+		}
+		// DNS-rebinding TOCTOU: verify the address actually dialed — the
+		// hostname pre-check resolved earlier, the socket resolved again.
+		if (ImapConnection::dialedPeerIpOrNull($fp, $allowPrivateHost) === null) {
+			fclose($fp);
+			return ['ok' => false, 'reason' => 'blocked', 'detail' => 'dialed address is private or unverifiable'];
 		}
 		stream_set_timeout($fp, (int)max(5, (int)ceil($timeout)));
 
@@ -237,7 +252,7 @@ final class ImapSyncClient
 	 * (BODY.PEEK[HEADER]) plus INTERNALDATE + FLAGS on the envelope line.
 	 *
 	 * @param list<int> $uids
-	 * @return array{ok: bool, messages: array<int, array{uid: int, internalDate: ?string, flags: list<string>, headers: array{from: string, to: list<string>, cc: list<string>, replyTo: ?string, resentFrom: ?string, xOriginalFrom: ?string, subject: string, sentAt: ?string, messageId: ?string}, rawHeader: string}>, response?: string}
+	 * @return array{ok: bool, messages: array<int, array{uid: int, internalDate: ?string, flags: list<string>, headers: array<string, mixed>, rawHeader: string}>, response?: string}
 	 */
 	public function fetchMessageMeta(array $uids): array
 	{
@@ -537,7 +552,7 @@ final class ImapSyncClient
 			$subtype = '';
 			foreach ($items as $it) {
 				if (is_array($it)) {
-					$parts[] = self::sexpInterpret($it);
+					$parts[] = self::sexpInterpret(array_values($it));
 				} elseif ($subtype === '') {
 					$subtype = strtolower(trim((string)$it, '"'));
 				}
@@ -557,7 +572,7 @@ final class ImapSyncClient
 		};
 		$params = [];
 		if (isset($items[2]) && is_array($items[2])) {
-			$params = self::sexpParams($items[2]);
+			$params = self::sexpParams(array_values($items[2]));
 		}
 		// Disposition is a separate leaf field (index 8 for most parts):
 		// ("ATTACHMENT" ("FILENAME" "f.pdf")) — FILENAME lives there, not in
@@ -574,7 +589,7 @@ final class ImapSyncClient
 			}
 			$disposition = strtolower($dispName);
 			if (isset($it[1]) && is_array($it[1])) {
-				foreach (self::sexpParams($it[1]) as $key => $val) {
+				foreach (self::sexpParams(array_values($it[1])) as $key => $val) {
 					if (!isset($params[$key])) {
 						$params[$key] = $val;
 					}
@@ -620,7 +635,7 @@ final class ImapSyncClient
 	 * partId follows RFC 3501 numbering (1-based at each level).
 	 *
 	 * @param array<string, mixed>|null $root
-	 * @return list<array{partId: string, type: string, subtype: string, params: array<string, string>, id: string, encoding: string, size: int, filename: string, cid: string, inline: bool}>
+	 * @return list<array{partId: string, type: string, subtype: string, params: array<string, string>, id: string, encoding: string, size: int, filename: string, cid: string, inline: bool, attachment: bool}>
 	 */
 	public static function flattenParts(?array $root): array
 	{

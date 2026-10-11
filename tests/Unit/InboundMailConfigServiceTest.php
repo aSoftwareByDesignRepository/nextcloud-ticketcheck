@@ -204,6 +204,86 @@ class InboundMailConfigServiceTest extends TestCase
 		self::assertSame('ENC(old)', $this->store['inbound_imap_secret_enc']);
 	}
 
+	// ---------- DEC-22 happy path: testable → detect persists → hash gates enable ----------
+
+	public function testHappyPathDetectPersistAndHashGatesEnable(): void
+	{
+		$svc = $this->service();
+		$v = $svc->validateInput($this->validInput(['password' => 'pw']));
+		$svc->save($v);
+
+		// 2-field happy path stores no host: testable (credentials exist) but
+		// not "configured" until a successful detect persists the endpoint.
+		self::assertTrue($svc->hasTestableConfig());
+		self::assertFalse($svc->isConfigured());
+		self::assertFalse($svc->configMatchesLastPass($svc->mailboxConfig()));
+
+		$svc->applyDetectedEndpoint('imap.example.com', 993, 'ssl', 'support@example.com');
+		$cfg = $svc->mailboxConfig();
+		self::assertTrue($svc->isConfigured());
+		self::assertSame('imap.example.com', $cfg['host']);
+		self::assertSame(993, $cfg['port']);
+		self::assertSame('ssl', $cfg['enc']);
+
+		// The test-pass hash is bound to the POST-detect config — the stored
+		// endpoint, not the pre-detect form values.
+		$svc->markTestPassed($cfg);
+		self::assertTrue($svc->configMatchesLastPass($svc->mailboxConfig()));
+		self::assertTrue($svc->status()['test_passed']);
+
+		// Drift on a hashed field invalidates the pass (enable must re-test).
+		$drifted = $cfg;
+		$drifted['host'] = 'other.example.com';
+		self::assertFalse($svc->configMatchesLastPass($drifted));
+	}
+
+	public function testApplyDetectedEndpointKeepsExplicitUsername(): void
+	{
+		$svc = $this->service();
+		$v = $svc->validateInput($this->validInput([
+			'password' => 'pw',
+			'username' => 'shared-mailbox@example.com',
+		]));
+		$svc->save($v);
+
+		$svc->applyDetectedEndpoint('imap.example.com', 143, 'starttls', 'derived@example.com');
+		$cfg = $svc->mailboxConfig();
+		self::assertSame('shared-mailbox@example.com', $cfg['username']);
+		self::assertSame(143, $cfg['port']);
+		self::assertSame('tls', $cfg['enc'], 'starttls normalizes to tls via resolveImapEnc');
+	}
+
+	public function testHasTestableConfigRequiresCredentials(): void
+	{
+		$svc = $this->service();
+		$v = $svc->validateInput($this->validInput(['password' => 'pw']));
+		$svc->save($v);
+		self::assertTrue($svc->hasTestableConfig());
+
+		$this->store = [];
+		$fresh = $this->service();
+		self::assertFalse($fresh->hasTestableConfig(), 'no secret stored → nothing to test');
+	}
+
+	// ---------- baselineForEnable ----------
+
+	public function testBaselineForEnable(): void
+	{
+		$svc = $this->service();
+		// Fresh enable → UIDNEXT-1 (skip history, process new mail only).
+		self::assertSame(41, $svc->baselineForEnable(['enabled' => false], 42, 777));
+		// process_backlog → 0 regardless of state.
+		self::assertSame(0, $svc->baselineForEnable(['enabled' => false, 'process_backlog' => true], 42, 777));
+		self::assertSame(0, $svc->baselineForEnable(['enabled' => true, 'process_backlog' => true, 'uidvalidity' => 777, 'last_uid' => 37], 42, 777));
+		// Re-enable on a live mailbox, same UIDVALIDITY → keep the cursor so
+		// mail that arrived since the last sync is not skipped.
+		self::assertSame(37, $svc->baselineForEnable(['enabled' => true, 'uidvalidity' => 777, 'last_uid' => 37], 42, 777));
+		// UIDVALIDITY change → server recreated the folder → fresh baseline.
+		self::assertSame(41, $svc->baselineForEnable(['enabled' => true, 'uidvalidity' => 100, 'last_uid' => 37], 42, 777));
+		// Enabled but no cursor yet → fresh baseline.
+		self::assertSame(41, $svc->baselineForEnable(['enabled' => true, 'uidvalidity' => 777, 'last_uid' => 0], 42, 777));
+	}
+
 	// ---------- testPassedHash / enable gating ----------
 
 	public function testTestPassedHashIgnoresSecretsAndFlags(): void

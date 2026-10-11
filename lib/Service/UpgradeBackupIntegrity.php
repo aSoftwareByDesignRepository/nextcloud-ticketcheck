@@ -143,7 +143,8 @@ final class UpgradeBackupIntegrity
 	}
 
 	/**
-	 * @param array{checksum?: string, rowCount?: int} $meta
+	 * @param array<string, mixed> $meta untrusted manifest JSON — every key
+	 *   is validated for presence AND type below before use.
 	 */
 	public static function assertTablePayload(string $table, string $content, array $meta): void
 	{

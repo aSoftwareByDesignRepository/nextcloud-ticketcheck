@@ -240,6 +240,18 @@ class InboundMailClassifierTest extends TestCase
 		self::assertLessThanOrEqual(1000, strlen($out));
 	}
 
+	public function testNormalizeBodyTruncationMarkerSurvivesSignatureStrip(): void
+	{
+		// Regression (tkc-imap-body-truncation-marker-missing): a "--"
+		// signature within the last 8 lines of the TRUNCATED text used to eat
+		// the appended marker — truncated mail showed no "[…gekürzt]".
+		$body = str_repeat('y', 900) . "\n--\n" . str_repeat('z', 5000);
+		$out = InboundMailClassifier::normalizeBody($body, '', 1000);
+		self::assertStringContainsString('[…gekürzt]', $out);
+		self::assertStringEndsWith('[…gekürzt]', $out);
+		self::assertLessThanOrEqual(1000, strlen($out));
+	}
+
 	// ---------- sanitizeFilename ----------
 
 	public function testSanitizeFilename(): void

@@ -65,6 +65,50 @@ class ImapSupportTest extends TestCase
 		self::assertTrue(ImapConnection::isBlockedIp('not-an-ip'));
 	}
 
+	// ---------- dialedPeerIpOrNull (DNS-rebinding TOCTOU) ----------
+
+	public function testDialedPeerBlocksPrivateLoopback(): void
+	{
+		// A real socketpair over loopback: the dialed peer is provably
+		// private — post-connect validation must refuse unless opted in.
+		$errno = 0;
+		$errstr = '';
+		$server = @stream_socket_server('tcp://127.0.0.1:0', $errno, $errstr);
+		self::assertNotFalse($server, $errstr);
+		$addr = (string)stream_socket_get_name($server, false);
+		$client = @stream_socket_client('tcp://' . $addr, $errno, $errstr, 2);
+		self::assertNotFalse($client, $errstr);
+		$accepted = @stream_socket_accept($server, 2);
+
+		try {
+			self::assertNull(ImapConnection::dialedPeerIpOrNull($client, false));
+			self::assertSame('127.0.0.1', ImapConnection::dialedPeerIpOrNull($client, true));
+		} finally {
+			if (is_resource($accepted)) {
+				fclose($accepted);
+			}
+			fclose($client);
+			fclose($server);
+		}
+	}
+
+	public function testDialedPeerUnverifiableFailsClosed(): void
+	{
+		// A unix socketpair has no ip:port peer name — the peer cannot be
+		// proven safe, so it must fail closed without an explicit opt-in.
+		$pair = @stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+		if ($pair === false) {
+			self::markTestSkipped('stream_socket_pair unavailable');
+		}
+		try {
+			self::assertNull(ImapConnection::dialedPeerIpOrNull($pair[0], false));
+			self::assertSame('0.0.0.0', ImapConnection::dialedPeerIpOrNull($pair[0], true));
+		} finally {
+			fclose($pair[0]);
+			fclose($pair[1]);
+		}
+	}
+
 	// ---------- isSafeImapFolder ----------
 
 	public function testSafeImapFolder(): void

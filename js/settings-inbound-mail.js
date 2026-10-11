@@ -205,6 +205,7 @@
 			smtp_username: (fd.get('smtp_username') || '').trim(),
 			smtp_password: fd.get('smtp_password') || '',
 			smtp_from: (fd.get('smtp_from') || '').trim(),
+			enable_after_test: bool('enable_after_test'),
 		};
 	}
 
@@ -233,20 +234,50 @@
 		return client.post('/apps/ticketcheck/api/settings/inbound-imap', payload());
 	}
 
+	// Contextual opt-in reveal (MH-29): on a matching test failure, open the
+	// Advanced block and focus exactly the opt-in the error calls for.
+	const REVEAL = {
+		private_host: 'tc-imap-allow-private',
+		blocked: 'tc-imap-allow-private',
+		cert: 'tc-imap-allow-selfsigned',
+	};
+	function revealOptIn(errorClass) {
+		const id = REVEAL[errorClass];
+		if (!id) {
+			return;
+		}
+		const adv = document.getElementById('tc-imap-advanced');
+		if (adv && adv.tagName === 'DETAILS') {
+			adv.open = true;
+		}
+		const el = document.getElementById(id);
+		if (el) {
+			el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+			el.focus({ preventScroll: true });
+		}
+	}
+
 	form.addEventListener('submit', (e) => {
 		e.preventDefault();
 		busy(els.save, true);
 		save()
 			.then((data) => {
 				if (data && data.success) {
-					say(t('settings_saved'), false);
+					if (data.enabled) {
+						say(t('inbound_enabled_ok'), false);
+					} else if (data.error) {
+						say(data.error, true);
+						revealOptIn(data.error_class);
+					} else {
+						say(t('settings_saved'), false);
+					}
 					applyStatus(data.status);
 				} else {
 					say((data && data.error) ? data.error : t('error_saving_settings'), true);
 				}
 			})
 			.catch((e) => say((e && e.message) ? e.message : t('error_saving_settings'), true))
-			.finally(() => busy(els.save, false, t('save_settings')));
+			.finally(() => busy(els.save, false, t('inbound_save_test_button')));
 	});
 
 	if (els.test) {

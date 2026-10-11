@@ -182,6 +182,52 @@ class SettingsControllerInboundMailTest extends TestCase
 		self::assertStringNotContainsString('s3cret', (string)$json);
 	}
 
+	public function testSaveWithEnableAfterTestKeepsConfigAndClassifies(): void
+	{
+		// DEC-22/MH-27 orchestrated save: when the probe cannot run, the
+		// just-saved config must NOT be lost, enabled must stay off, and
+		// error_class must be populated for the contextual opt-in reveal.
+		$c = $this->controller();
+		$params = [
+			'address' => 'support@example.com',
+			'dsgvo_ack' => 'yes',
+			'password' => '',
+			'enable_after_test' => 'yes',
+		];
+		$this->request->method('getParam')->willReturnCallback(
+			fn (string $k, $d = null) => $params[$k] ?? $d
+		);
+		$r = $c->inboundImapSave();
+		self::assertSame(200, $r->getStatus());
+		$data = $r->getData();
+		self::assertTrue($data['success']);
+		self::assertFalse($data['enabled']);
+		self::assertSame('auth', $data['error_class']);
+		self::assertSame('support@example.com', $this->store['inbound_imap_address']);
+		self::assertSame('no', $this->store['inbound_imap_enabled'] ?? 'no');
+		self::assertArrayHasKey('status', $data);
+	}
+
+	public function testSaveWithoutEnableAfterTestSkipsProbe(): void
+	{
+		$c = $this->controller();
+		$params = [
+			'address' => 'support@example.com',
+			'dsgvo_ack' => 'yes',
+			'password' => 's3cret',
+			'enable_after_test' => 'no',
+		];
+		$this->request->method('getParam')->willReturnCallback(
+			fn (string $k, $d = null) => $params[$k] ?? $d
+		);
+		$r = $c->inboundImapSave();
+		self::assertSame(200, $r->getStatus());
+		$data = $r->getData();
+		self::assertTrue($data['success']);
+		self::assertArrayNotHasKey('enabled', $data);
+		self::assertArrayNotHasKey('error_class', $data);
+	}
+
 	public function testSaveForbiddenWithoutPermission(): void
 	{
 		$this->canManage = false;

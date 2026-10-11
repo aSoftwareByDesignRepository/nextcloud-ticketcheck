@@ -204,6 +204,41 @@ final class ImapConnection
 	}
 
 	/**
+	 * Post-connect SSRF check (DNS-rebinding TOCTOU): the hostname pre-check
+	 * resolves once, but stream_socket_client resolves again — verify the
+	 * address actually dialed. Returns the peer IP, or null when it must be
+	 * refused (caller closes the socket and reports a blocked reason).
+	 *
+	 * @param resource $fp
+	 */
+	public static function dialedPeerIpOrNull($fp, bool $allowPrivateHost): ?string
+	{
+		$name = @stream_socket_get_name($fp, false);
+		if (!is_string($name) || $name === '') {
+			return $allowPrivateHost ? '0.0.0.0' : null;
+		}
+		// Peer name is "ip:port" — IPv6 arrives bracketed ("[::1]:993"); an
+		// unbracketed "2001:db8::1:993" splits on the LAST colon.
+		$ip = '';
+		if (str_starts_with($name, '[') && ($end = strpos($name, ']')) !== false) {
+			$ip = substr($name, 1, $end - 1);
+		} else {
+			$pos = strrpos($name, ':');
+			$ip = $pos === false ? $name : substr($name, 0, $pos);
+		}
+		$ip = trim($ip);
+		if ($ip === '' || !filter_var($ip, FILTER_VALIDATE_IP)) {
+			// Unparseable peer — cannot prove it is safe.
+			return $allowPrivateHost ? '0.0.0.0' : null;
+		}
+		if (!$allowPrivateHost && self::isBlockedIp($ip)) {
+			return null;
+		}
+
+		return $ip;
+	}
+
+	/**
 	 * Resolve SMTP encryption for SharedMailboxSmtpClient.
 	 * Port 465 → ssl (SMTPS), 587 → tls (STARTTLS).
 	 *
@@ -426,7 +461,7 @@ final class ImapConnection
 	 * Pick the mailbox’s Junk/Spam folder from LIST results (server-discovered only).
 	 * Prefer SPECIAL-USE \Junk / \Spam, then common names. Never returns INBOX.
 	 *
-	 * @param list<string|array{name?:string,flags?:list<string>}> $folders
+	 * @param list<string|array<array-key,mixed>> $folders
 	 */
 	public static function pickJunkFolder(array $folders): ?string
 	{

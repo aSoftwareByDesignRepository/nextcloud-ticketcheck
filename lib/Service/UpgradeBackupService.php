@@ -468,6 +468,7 @@ class UpgradeBackupService
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')->from($table);
 		$result = $qb->executeQuery();
+		/** @var list<array<string, mixed>> $rows */
 		$rows = $result->fetchAll();
 		$result->closeCursor();
 
@@ -525,6 +526,7 @@ class UpgradeBackupService
 			->where($qb->expr()->eq('app', $qb->createNamedParameter(UpgradeBackupCatalog::APP_ID)));
 
 		$result = $qb->executeQuery();
+		/** @var list<array<string, mixed>> $rows */
 		$rows = $result->fetchAll();
 		$result->closeCursor();
 
@@ -824,6 +826,7 @@ class UpgradeBackupService
 		}
 	}
 
+	/** @param list<string> $excludeIds */
 	private function rotateSnapshots(array $excludeIds = []): void
 	{
 		$max = UpgradeBackupCatalog::clampMaxSnapshots((int)$this->config->getAppValue(
@@ -849,7 +852,7 @@ class UpgradeBackupService
 	}
 
 	/**
-	 * @param array<string, mixed> $payload
+	 * @param array<array-key, mixed> $payload
 	 */
 	private function writeJsonFile(Folder $parent, string $name, array $payload): void
 	{

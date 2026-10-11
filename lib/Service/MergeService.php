@@ -49,7 +49,7 @@ class MergeService
 	 * @param int $sourceId Source ticket ID
 	 * @param int|null $targetId Target ticket ID (optional if targetTicketNumber provided)
 	 * @param string|null $targetTicketNumber Target ticket number (optional if targetId provided)
-	 * @return array{target_id: int, comments_moved: int, attachments_moved: int}
+	 * @return array{target_id: int, comments_moved: int, attachments_moved: int, relations_moved: int, relations_dropped: int}
 	 * @throws \InvalidArgumentException
 	 */
 	public function mergeTickets(int $sourceId, ?int $targetId = null, ?string $targetTicketNumber = null): array

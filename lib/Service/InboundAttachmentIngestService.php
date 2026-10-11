@@ -135,6 +135,7 @@ final class InboundAttachmentIngestService
 	 *
 	 * @param list<array{partId: string, encoding: string, size: int, name: string, inline: bool}> $plan
 	 * @param callable(int, string, int): ?string $fetchPart fn(uid,partId,maxBytes)→raw body
+	 * @param list<array{name: string, reason: string}> $preRejected
 	 * @return array{valid: list<array{tmp: string, name: string, size: int, mime: string}>, rejected: list<array{name: string, reason: string}>}
 	 */
 	public function prepare(int $uid, array $plan, callable $fetchPart, array $preRejected = []): array

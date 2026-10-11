@@ -195,6 +195,41 @@ final class InboundMailConfigService
 	}
 
 	/**
+	 * Enough input to attempt a connection — the happy path saves only
+	 * address + credential and lets detect() resolve host/port/enc, while
+	 * username falls back to the address at resolve() time. isConfigured()
+	 * stays the strict poll gate (a concrete endpoint is required).
+	 */
+	public function hasTestableConfig(): bool
+	{
+		$cfg = $this->mailboxConfig();
+		if ($cfg['address'] === '') {
+			return false;
+		}
+		if ($cfg['auth_mode'] === self::AUTH_XOAUTH2) {
+			return $cfg['oauth_access_enc'] !== '' || $cfg['oauth_refresh_enc'] !== '';
+		}
+
+		return $cfg['secret_enc'] !== '';
+	}
+
+	/**
+	 * Persist the endpoint detect() proved (DEC-22): the happy path stores
+	 * no host, so a successful detection must land in appconfig or the poll
+	 * job can never connect. Username is only filled when still unset —
+	 * an explicit admin value always wins.
+	 */
+	public function applyDetectedEndpoint(string $host, int $port, string $enc, string $username): void
+	{
+		$this->setKey('host', ImapConnection::normalizeHost($host));
+		$this->setKey('port', (string)$port);
+		$this->setKey('enc', $enc);
+		if ($this->getKey('username', '') === '' && trim($username) !== '') {
+			$this->setKey('username', ImapConnection::normalizeUsername($username));
+		}
+	}
+
+	/**
 	 * The address inbound replies route to. Prefers the IMAP mailbox address;
 	 * falls back to the legacy webhook inbound_email_address so Reply-To
 	 * generation stays correct when only the webhook is configured.
@@ -221,6 +256,7 @@ final class InboundMailConfigService
 	 * The connection-test hash (spec: enable requires a passing test against
 	 * the CURRENT config — editing any covered field invalidates it).
 	 */
+	/** @param array<string, mixed> $cfg */
 	public function testPassedHash(array $cfg): string
 	{
 		$parts = [];
@@ -230,6 +266,7 @@ final class InboundMailConfigService
 		return hash('sha256', implode('|', $parts));
 	}
 
+	/** @param array<string, mixed> $cfg */
 	public function configMatchesLastPass(array $cfg): bool
 	{
 		$stored = $this->getKey('test_passed_hash', '');
@@ -321,7 +358,7 @@ final class InboundMailConfigService
 			if ($port <= 0) {
 				$port = $enc === 'ssl' ? 993 : 143;
 			}
-			if ($port < 1 || $port > 65535) {
+			if ($port > 65535) {
 				$errors['port'] = $l->t('inbound_err_port_invalid');
 			}
 			if (!in_array($enc, ['ssl', 'starttls', 'none'], true)) {
@@ -380,7 +417,7 @@ final class InboundMailConfigService
 			if ($smtpPort <= 0) {
 				$smtpPort = $smtpEnc === 'ssl' ? 465 : 587;
 			}
-			if ($smtpPort < 1 || $smtpPort > 65535) {
+			if ($smtpPort > 65535) {
 				$errors['smtp_port'] = $l->t('inbound_err_port_invalid');
 			}
 			if (!in_array($smtpEnc, ['ssl', 'tls', 'starttls', 'none'], true)) {
@@ -412,7 +449,7 @@ final class InboundMailConfigService
 	 * Checkbox parsing — form-encoded "false"/"0" are truthy strings
 	 * (api-security-patterns §4); only explicit true values count.
 	 */
-	private function truthy(mixed $v): bool
+	public function truthy(mixed $v): bool
 	{
 		if (is_bool($v)) {
 			return $v;
@@ -499,6 +536,8 @@ final class InboundMailConfigService
 	/**
 	 * Persist a validateInput() result. Secrets are encrypted here and only
 	 * overwritten when a new value was actually submitted.
+	 *
+	 * @param array<string, mixed> $v
 	 */
 	public function save(array $v): void
 	{
@@ -553,6 +592,7 @@ final class InboundMailConfigService
 		return true;
 	}
 
+	/** @param array<string, mixed> $cfg */
 	public function markTestPassed(array $cfg): void
 	{
 		$this->setKey('test_passed_hash', $this->testPassedHash($cfg));
@@ -562,7 +602,34 @@ final class InboundMailConfigService
 	}
 
 	/**
+	 * UID cursor to start polling from. Fresh enable → UIDNEXT-1 (new mail
+	 * only) or 0 (process_backlog). Re-enable on an already-live mailbox with
+	 * an unchanged UIDVALIDITY keeps the cursor — otherwise mail delivered
+	 * since the last sync would be skipped silently. A UIDVALIDITY change
+	 * means the server recreated the folder, so UIDs are meaningless and a
+	 * fresh baseline is mandatory.
+	 *
+	 * @param array<string, mixed> $cfg
+	 */
+	public function baselineForEnable(array $cfg, int $uidnext, int $uidvalidity): int
+	{
+		if (!empty($cfg['process_backlog'])) {
+			return 0;
+		}
+		if (!empty($cfg['enabled'])
+			&& $uidvalidity > 0
+			&& (int)($cfg['uidvalidity'] ?? 0) === $uidvalidity
+			&& (int)($cfg['last_uid'] ?? 0) > 0
+		) {
+			return (int)$cfg['last_uid'];
+		}
+		return max(0, $uidnext - 1);
+	}
+
+	/**
 	 * Enable requires a passing test against the current config (spec gate).
+	 *
+	 * @param array<string, mixed> $cfg
 	 */
 	public function enable(array $cfg, int $baselineUid, int $uidvalidity): void
 	{

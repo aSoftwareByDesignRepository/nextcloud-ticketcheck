@@ -24,6 +24,14 @@ use OCA\Ticketcheck\Db\Ticket;
 use OCP\L10N\IFactory as L10NFactory;
 use Psr\Log\LoggerInterface;
 
+/**
+ * @phpstan-type InboundMsg array{from: string, fromName?: string, to: list<string>, cc: list<string>,
+ *   subject: string, messageId: ?string, rawHeader?: string, text: string,
+ *   html?: string, internalDate?: ?string}
+ * @phpstan-type InboundOpts array{attachments?: array{names: list<string>, rejected: list<array{name: string, reason: string}>,
+ *   persist: callable(int, ?int): array{saved: list<string>, rejected: list<array{name: string, reason: string}>}}}
+ * @phpstan-type InboundResult array{action: string, ticket_id?: int, comment_id?: int, duplicate?: bool}
+ */
 class InboundEmailService
 {
 	/** Bounded retry: a mail failing this many claims becomes error_permanent. */
@@ -85,6 +93,7 @@ class InboundEmailService
 	 * Normalize a webhook payload into the shared message shape.
 	 *
 	 * @param array<string, mixed> $payload
+	 * @return InboundMsg
 	 */
 	private function normalizeWebhook(array $payload): array
 	{
@@ -140,11 +149,9 @@ class InboundEmailService
 	/**
 	 * Shared inbound pipeline: claim → classify → route → effect → finish.
 	 *
-	 * @param array{from: string, fromName?: string, to: list<string>, cc: list<string>,
-	 *   subject: string, messageId: ?string, rawHeader?: string, text: string,
-	 *   html?: string, internalDate?: ?string} $msg
-	 * @param array{attachments?: array{names: list<string>, rejected: list<array{name: string, reason: string}>, persist: callable(int, ?int): array}} $opts
-	 * @return array{action: string, ticket_id?: int, comment_id?: int, duplicate?: bool}
+	 * @param InboundMsg $msg
+	 * @param InboundOpts $opts
+	 * @return InboundResult
 	 */
 	public function processInboundMessage(array $msg, string $channel, int $uid = 0, int $uidvalidity = 0, array $opts = []): array
 	{
@@ -189,11 +196,11 @@ class InboundEmailService
 				// reporting success here would silently drop a retryable mail.
 				return ['action' => InboundMessage::ACTION_ERROR_RETRYABLE];
 			}
-			return [
-				'action' => $row->getAction(),
-				'ticket_id' => $row->getTicketId() !== null ? (int)$row->getTicketId() : null,
-				'duplicate' => true,
-			];
+			$dup = ['action' => $row->getAction(), 'duplicate' => true];
+			if ($row->getTicketId() !== null) {
+				$dup['ticket_id'] = (int)$row->getTicketId();
+			}
+			return $dup;
 		}
 
 		// Bounded retry: reclaim past the attempt ceiling poisons out.
@@ -219,8 +226,8 @@ class InboundEmailService
 	/**
 	 * The state machine (spec §9.4). Returns the terminal action.
 	 *
-	 * @param array<string, mixed> $msg
-	 * @param array<string, mixed> $opts
+	 * @param InboundMsg $msg
+	 * @param InboundOpts $opts
 	 * @return array{action: string, ticket_id?: int, comment_id?: int}
 	 */
 	private function process(array $msg, InboundMessage $row, array $opts): array
@@ -282,6 +289,11 @@ class InboundEmailService
 
 	/**
 	 * Comment path: resolve merge chain → token check → sender authz → write.
+	 *
+	 * @param InboundMsg $msg
+	 * @param array{id: int, token: ?string, legacy: bool}|null $target
+	 * @param InboundOpts $opts
+	 * @return array{action: string, ticket_id?: int, comment_id?: int}
 	 */
 	private function processReply(array $msg, InboundMessage $row, int $ticketId, ?array $target, string $body, array $opts): array
 	{
@@ -338,7 +350,7 @@ class InboundEmailService
 		}
 
 		$commentId = (int)$comment->getId();
-		if (isset($opts['attachments']['persist']) && is_callable($opts['attachments']['persist'])) {
+		if (isset($opts['attachments']['persist'])) {
 			try {
 				($opts['attachments']['persist'])($activeId, $commentId);
 			} catch (\Throwable $e) {
@@ -356,8 +368,13 @@ class InboundEmailService
 
 	/**
 	 * Creation path: caps → routing → create → attachments → confirm.
+	 *
+	 * @param InboundMsg $msg
+	 * @param list<string> $recipients
+	 * @param InboundOpts $opts
+	 * @return array{action: string, ticket_id?: int, comment_id?: int}
 	 */
-	private function processCreate(array $msg, InboundMessage $row, string $from, string $subject, string $body, array $recipients, array $opts, $l): array
+	private function processCreate(array $msg, InboundMessage $row, string $from, string $subject, string $body, array $recipients, array $opts, \OCP\IL10N $l): array
 	{
 		// Runaway-create breakers (spec §9.6). Terminal on purpose: a cap that
 		// only delays isn't a breaker; mail stays UNSEEN for humans.
@@ -406,7 +423,7 @@ class InboundEmailService
 		]);
 		$ticketId = (int)$ticket->getId();
 
-		if (isset($opts['attachments']['persist']) && is_callable($opts['attachments']['persist'])) {
+		if (isset($opts['attachments']['persist'])) {
 			try {
 				($opts['attachments']['persist'])($ticketId, null);
 			} catch (\Throwable $e) {
@@ -432,8 +449,10 @@ class InboundEmailService
 	/**
 	 * Attachment listing appended to the ticket/comment text — accepted
 	 * names AND rejected names with reasons (no silent loss).
+	 *
+	 * @param array{names?: list<string>, rejected?: list<array{name: string, reason: string}>}|null $attachments
 	 */
-	private function attachmentSummary(?array $attachments, $l): string
+	private function attachmentSummary(?array $attachments, \OCP\IL10N $l): string
 	{
 		if ($attachments === null) {
 			return '';

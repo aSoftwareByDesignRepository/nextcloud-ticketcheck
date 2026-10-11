@@ -131,6 +131,8 @@ test.describe('TicketCheck inbound-mail settings', () => {
     if (!(await dsgvo.isChecked())) {
       await dsgvo.check();
     }
+    // Plain save — no orchestrated probe wanted in this test.
+    await page.locator('#tc-imap-enable-after-test').uncheck();
 
     // Poison the hidden SMTP port, then hide the block: a disabled control is
     // exempt from constraint validation, so save must still reach the server.
@@ -156,6 +158,43 @@ test.describe('TicketCheck inbound-mail settings', () => {
     const before = await page.locator('#tc-imap-routing-body tr').count();
     await page.locator('#tc-imap-routing-add').click();
     await expect(page.locator('#tc-imap-routing-body tr')).toHaveCount(before + 1);
+  });
+
+  test('orchestrated save keeps config and classifies the failure', async ({ page }) => {
+    await openSection(page);
+
+    // DEC-22/MH-27: single-request save → test → enable. With no usable
+    // credential the probe cannot run — the response must still persist the
+    // config, keep enabled=false, and carry an error_class for the reveal.
+    await expect(page.locator('#tc-imap-enable-after-test')).toBeChecked();
+    await page.locator('#tc-imap-address').fill('e2e-orchestrated@example.com');
+    const dsgvo = page.locator('#tc-imap-dsgvo');
+    if (!(await dsgvo.isChecked())) {
+      await dsgvo.check();
+    }
+    await page.locator('#tc-imap-password').fill('');
+
+    const responsePromise = page.waitForResponse(
+      (r) => r.url().includes('/api/settings/inbound-imap') && r.request().method() === 'POST',
+      { timeout: 60_000 },
+    );
+    await page.locator('#tc-imap-save-btn').click();
+    const response = await responsePromise;
+    expect(response.status()).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.enabled).toBe(false);
+    // The stored secret may or may not exist in this env — the contract is
+    // a classified failure + persisted config, not a specific class.
+    expect(['auth', 'cert', 'network', 'private_host', 'blocked']).toContain(data.error_class);
+    expect(data.status).toBeDefined();
+    expect(data.status.address).toBe('e2e-orchestrated@example.com');
+    expect(data.status.enabled).toBe(false);
+
+    // The error surfaced on the result line (server message, error styling).
+    const result = page.locator('#tc-imap-result');
+    await expect(result).toHaveClass(/helpdesk-form-error/);
+    await expect(result).not.toBeEmpty();
   });
 
   test('status endpoint never returns secrets', async ({ page }) => {

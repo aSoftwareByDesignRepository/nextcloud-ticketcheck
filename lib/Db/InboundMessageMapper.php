@@ -37,6 +37,7 @@ class InboundMessageMapper extends QBMapper
 		$row->setUpdatedAt(new \DateTime());
 		try {
 			$inserted = $this->insert($row);
+			assert($inserted instanceof InboundMessage);
 			return ['row' => $inserted, 'status' => 'claimed'];
 		} catch (\OCP\DB\Exception $e) {
 			if ($e->getReason() !== \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
@@ -62,7 +63,9 @@ class InboundMessageMapper extends QBMapper
 			$existing->setClaimedAt(new \DateTime());
 			$existing->setAttempts((int)$existing->getAttempts() + 1);
 			$existing->setUpdatedAt(new \DateTime());
-			return ['row' => $this->update($existing), 'status' => 'reclaim'];
+			$updated = $this->update($existing);
+			assert($updated instanceof InboundMessage);
+			return ['row' => $updated, 'status' => 'reclaim'];
 		}
 
 		return ['row' => $existing, 'status' => 'duplicate'];

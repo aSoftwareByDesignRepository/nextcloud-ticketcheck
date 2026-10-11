@@ -58,3 +58,59 @@ class ThemingDefaults
 		return '';
 	}
 }
+
+namespace OC\Security\CSRF;
+
+class CsrfToken
+{
+	public function __construct(string $value)
+	{
+	}
+
+	public function getEncryptedValue(): string
+	{
+		return '';
+	}
+}
+
+class CsrfTokenManager
+{
+	public function getToken(): CsrfToken
+	{
+		return new CsrfToken('');
+	}
+
+	public function isTokenValid(CsrfToken $token): bool
+	{
+		return false;
+	}
+}
+
+namespace Symfony\Component\Mime\Header;
+
+class Headers
+{
+	public function addTextHeader(string $name, string $body): void
+	{
+	}
+}
+
+namespace Symfony\Component\Mime;
+
+class Email
+{
+	public function getHeaders(): \Symfony\Component\Mime\Header\Headers
+	{
+		return new \Symfony\Component\Mime\Header\Headers();
+	}
+}
+
+namespace OC\Mail;
+
+class Message
+{
+	public function getSymfonyEmail(): \Symfony\Component\Mime\Email
+	{
+		return new \Symfony\Component\Mime\Email();
+	}
+}

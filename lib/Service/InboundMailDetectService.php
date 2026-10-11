@@ -90,11 +90,13 @@ final class InboundMailDetectService
 
 		$deadline = microtime(true) + self::TOTAL_BUDGET;
 		$attempted = 0;
+		$blocked = 0;
 		foreach (self::candidates($address) as $cand) {
 			if (microtime(true) >= $deadline) {
 				break;
 			}
 			if (!$allowPrivateHost && ImapConnection::isBlockedMailHost($cand['host'])) {
+				$blocked++;
 				continue;
 			}
 			$attempted++;
@@ -106,6 +108,7 @@ final class InboundMailDetectService
 				'secret' => $secret,
 				'authMode' => $authMode,
 				'allowSelfSigned' => !empty($cfg['allow_self_signed']),
+				'allowPrivateHost' => $allowPrivateHost,
 				'timeoutSeconds' => min(self::PER_DIAL_TIMEOUT, max(1.0, $deadline - microtime(true))),
 			]);
 			if (!empty($res['ok'])) {
@@ -123,6 +126,12 @@ final class InboundMailDetectService
 			if (($res['reason'] ?? '') === 'auth') {
 				return ['ok' => false, 'error' => 'auth', 'attempted' => $attempted];
 			}
+		}
+
+		// Every candidate skipped by the SSRF check → private_host class so the
+		// UI can reveal the allow_private_host opt-in (MH-29), not "unreachable".
+		if ($attempted === 0 && $blocked > 0) {
+			return ['ok' => false, 'error' => 'private_host', 'attempted' => $attempted];
 		}
 
 		return ['ok' => false, 'error' => 'unreachable', 'attempted' => $attempted];

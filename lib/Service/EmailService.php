@@ -44,6 +44,7 @@ class EmailService
     private IUserManager $userManager;
     private IGroupManager $groupManager;
     private ?TicketWatcherMapper $watcherMapper;
+    private ?InboundSmtpSendService $inboundSmtp;
 
     public function __construct(
         IMailer $mailer,
@@ -497,10 +498,15 @@ class EmailService
 
             // Loop prevention on every automated outbound (MH-19).
             $message->setAutoSubmitted('auto-generated');
-            try {
-                $message->getSymfonyEmail()->getHeaders()->addTextHeader('X-Auto-Response-Suppress', 'All');
-            } catch (\Throwable) {
-                // Header support is best-effort on older mailer backends.
+            // X-Auto-Response-Suppress is Exchange-specific loop hardening;
+            // reachable only via the concrete OC\Mail\Message — the OCP
+            // IMessage interface exposes no arbitrary-header API.
+            if ($message instanceof \OC\Mail\Message) {
+                try {
+                    $message->getSymfonyEmail()->getHeaders()->addTextHeader('X-Auto-Response-Suppress', 'All');
+                } catch (\Throwable) {
+                    // Header support is best-effort on older mailer backends.
+                }
             }
 
             $this->mailer->send($message);

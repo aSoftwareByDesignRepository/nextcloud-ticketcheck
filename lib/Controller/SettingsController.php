@@ -1228,6 +1228,7 @@ class SettingsController extends Controller
         if (!$this->inboundMailReady()) {
             return new JSONResponse(['error' => $l->t('inbound_err_unavailable')], 500);
         }
+        assert($this->inboundMailConfig !== null);
 
         return new JSONResponse(['status' => $this->inboundMailConfig->status()]);
     }
@@ -1246,6 +1247,7 @@ class SettingsController extends Controller
         if (!$this->inboundMailReady()) {
             return new JSONResponse(['error' => $l->t('inbound_err_unavailable')], 500);
         }
+        assert($this->inboundMailConfig !== null && $this->inboundMailAuth !== null && $this->inboundMailDetect !== null);
 
         $raw = [
             'address' => $this->request->getParam('address'),
@@ -1271,6 +1273,7 @@ class SettingsController extends Controller
             'smtp_username' => $this->request->getParam('smtp_username'),
             'smtp_password' => $this->request->getParam('smtp_password'),
             'smtp_from' => $this->request->getParam('smtp_from'),
+            'enable_after_test' => $this->request->getParam('enable_after_test'),
         ];
 
         try {
@@ -1281,8 +1284,59 @@ class SettingsController extends Controller
 
         $this->inboundMailConfig->save($validated);
 
+        if (!$this->inboundMailConfig->truthy($raw['enable_after_test'] ?? null)) {
+            return new JSONResponse([
+                'success' => true,
+                'status' => $this->inboundMailConfig->status(),
+            ]);
+        }
+
+        // DEC-22/MH-27 one-request orchestration: save → detect/test → enable.
+        // Test-fail keeps the saved config (no input loss), enabled stays off,
+        // and error_class drives the contextual opt-in reveal (MH-29).
+        if (!$this->inboundMailConfig->hasTestableConfig()) {
+            return new JSONResponse([
+                'success' => true,
+                'enabled' => false,
+                'error_class' => 'auth',
+                'error' => $l->t('inbound_err_not_configured'),
+                'status' => $this->inboundMailConfig->status(),
+            ]);
+        }
+        if (!$this->inboundMailConfig->probeThrottleCheck()) {
+            return new JSONResponse([
+                'success' => true,
+                'enabled' => false,
+                'error_class' => 'network',
+                'error' => $l->t('inbound_err_rate_limited'),
+                'status' => $this->inboundMailConfig->status(),
+            ]);
+        }
+
+        $probe = $this->probeInboundImap();
+        if (empty($probe['imap']['ok'])) {
+            $class = $this->inboundErrorClass($probe['imap'], $probe['smtp'] ?? null);
+            return new JSONResponse([
+                'success' => true,
+                'enabled' => false,
+                'error_class' => $class,
+                'error' => $this->inboundProbeMessage($probe['imap'], $class),
+                'imap' => $probe['imap'],
+                'smtp' => $probe['smtp'],
+                'status' => $this->inboundMailConfig->status(),
+            ]);
+        }
+
+        $enableError = $this->enableInboundImapNow($probe['cfg']);
+        $smtpFailed = isset($probe['smtp']) && empty($probe['smtp']['ok']);
+
         return new JSONResponse([
             'success' => true,
+            'enabled' => $enableError === null,
+            'error_class' => $enableError !== null ? 'network' : ($smtpFailed ? 'network' : null),
+            'error' => $enableError !== null ? $l->t($enableError) : ($smtpFailed ? $this->inboundProbeMessage($probe['smtp'], 'network') : null),
+            'imap' => array_intersect_key($probe['imap'], array_flip(['ok', 'host', 'port', 'enc'])),
+            'smtp' => $probe['smtp'],
             'status' => $this->inboundMailConfig->status(),
         ]);
     }
@@ -1303,22 +1357,46 @@ class SettingsController extends Controller
         if (!$this->inboundMailReady()) {
             return new JSONResponse(['error' => $l->t('inbound_err_unavailable')], 500);
         }
+        assert($this->inboundMailConfig !== null && $this->inboundMailAuth !== null && $this->inboundMailDetect !== null);
         if (!$this->inboundMailConfig->probeThrottleCheck()) {
             return new JSONResponse(['error' => $l->t('inbound_err_rate_limited')], 429);
         }
 
-        $cfg = $this->inboundMailConfig->mailboxConfig();
-        if (!$this->inboundMailConfig->isConfigured()) {
+        if (!$this->inboundMailConfig->hasTestableConfig()) {
             return new JSONResponse(['error' => $l->t('inbound_err_not_configured')], 422);
         }
 
+        $probe = $this->probeInboundImap();
+        $imapOk = !empty($probe['imap']['ok']);
+        $smtp = $probe['smtp'];
+
+        return new JSONResponse([
+            'success' => $imapOk && ($smtp === null || !empty($smtp['ok'])),
+            'error_class' => $imapOk ? ($smtp !== null && empty($smtp['ok']) ? 'network' : null)
+                : $this->inboundErrorClass($probe['imap'], $smtp),
+            'imap' => $imapOk
+                ? array_intersect_key($probe['imap'], array_flip(['ok', 'host', 'port', 'enc']))
+                : ['ok' => false, 'error' => (string)($probe['imap']['error'] ?? $probe['imap']['reason'] ?? 'unreachable')],
+            'smtp' => $smtp,
+            'status' => $this->inboundMailConfig->status(),
+        ]);
+    }
+
+    /**
+     * Dial/detect the stored config + optional SMTP probe. A successful
+     * auto-detect persists the endpoint (DEC-22 — otherwise the poll job
+     * could never connect) and markTestPassed hashes the persisted values.
+     *
+     * @return array{imap: array<string, mixed>, smtp: ?array<string, mixed>, cfg: array<string, mixed>}
+     */
+    private function probeInboundImap(): array
+    {
+        assert($this->inboundMailConfig !== null && $this->inboundMailAuth !== null && $this->inboundMailDetect !== null);
+        $cfg = $this->inboundMailConfig->mailboxConfig();
         try {
             $cred = $this->inboundMailAuth->resolve($cfg);
         } catch (\Throwable) {
-            return new JSONResponse([
-                'success' => false,
-                'imap' => ['ok' => false, 'error' => 'auth'],
-            ], 200);
+            return ['imap' => ['ok' => false, 'error' => 'auth'], 'smtp' => null, 'cfg' => $cfg];
         }
 
         if (trim((string)$cfg['host']) !== '') {
@@ -1340,6 +1418,13 @@ class SettingsController extends Controller
             }
         } else {
             $imap = $this->inboundMailDetect->detect($cfg, $cred['secret'], !empty($cfg['allow_private_host']));
+            if (!empty($imap['ok'])) {
+                $this->inboundMailConfig->applyDetectedEndpoint(
+                    (string)$imap['host'], (int)$imap['port'], (string)$imap['enc'],
+                    (string)$cred['user'],
+                );
+                $cfg = $this->inboundMailConfig->mailboxConfig();
+            }
         }
 
         $smtp = null;
@@ -1372,14 +1457,64 @@ class SettingsController extends Controller
             $this->inboundMailConfig->markTestPassed($cfg);
         }
 
-        return new JSONResponse([
-            'success' => !empty($imap['ok']) && ($smtp === null || !empty($smtp['ok'])),
-            'imap' => $imap['ok'] ?? false
-                ? array_intersect_key($imap, array_flip(['ok', 'host', 'port', 'enc']))
-                : ['ok' => false, 'error' => (string)($imap['error'] ?? $imap['reason'] ?? 'unreachable')],
-            'smtp' => $smtp,
-            'status' => $this->inboundMailConfig->status(),
-        ]);
+        return ['imap' => $imap, 'smtp' => $smtp, 'cfg' => $cfg];
+    }
+
+    /**
+     * Map a failed probe to the MH-29 error_class enum that drives the
+     * contextual opt-in reveal: {auth|cert|network|private_host|blocked}.
+     *
+     * @param array<string, mixed> $imap
+     * @param array<string, mixed>|null $smtp
+     */
+    private function inboundErrorClass(array $imap, ?array $smtp): string
+    {
+        $reason = (string)($imap['error'] ?? $imap['reason'] ?? '');
+        if (in_array($reason, ['auth', 'cert', 'network', 'private_host', 'blocked'], true)) {
+            if ($reason === 'blocked') {
+                $detail = (string)($imap['detail'] ?? '');
+                return str_contains($detail, 'dialed') ? 'blocked' : 'private_host';
+            }
+            return $reason;
+        }
+        if ($reason !== '') {
+            $cls = ImapConnection::classifyError($reason);
+            return $cls === 'unknown' ? 'network' : $cls;
+        }
+        if ($smtp !== null && empty($smtp['ok'])) {
+            $cls = ImapConnection::classifyError((string)($smtp['error'] ?? ''));
+            return $cls === 'unknown' ? 'network' : $cls;
+        }
+
+        return 'network';
+    }
+
+    /**
+     * Plain-language failure line for the result region — never echoes raw
+     * server banners (same contract as inboundProbeError).
+     *
+     * @param array<string, mixed> $probe
+     */
+    private function inboundProbeMessage(array $probe, ?string $errorClass = null): string
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        $reason = (string)($probe['error'] ?? $probe['reason'] ?? 'unreachable');
+        // 'blocked' covers pre-dial private-host refusal AND post-connect
+        // peer refusal — the class carries the discrimination for the text.
+        if ($reason === 'blocked' && $errorClass !== null) {
+            $reason = $errorClass;
+        }
+        $key = 'inbound_reason_' . $reason;
+        $translated = $l->t($key);
+        if ($translated === $key && $errorClass !== null) {
+            $classKey = 'inbound_reason_' . $errorClass;
+            $translated = $l->t($classKey);
+            if ($translated !== $classKey) {
+                return $translated;
+            }
+        }
+
+        return $translated !== $key ? $translated : $l->t('inbound_reason_unreachable');
     }
 
     /**
@@ -1419,16 +1554,37 @@ class SettingsController extends Controller
         if (!$this->inboundMailReady()) {
             return new JSONResponse(['error' => $l->t('inbound_err_unavailable')], 500);
         }
+        assert($this->inboundMailConfig !== null && $this->inboundMailAuth !== null && $this->inboundMailDetect !== null);
 
         $cfg = $this->inboundMailConfig->mailboxConfig();
+        $error = $this->enableInboundImapNow($cfg);
+        if ($error === 'inbound_err_test_required') {
+            return new JSONResponse(['error' => $l->t($error)], 422);
+        }
+        if ($error !== null) {
+            return new JSONResponse(['error' => $l->t($error)], 502);
+        }
+
+        return new JSONResponse(['success' => true, 'status' => $this->inboundMailConfig->status()]);
+    }
+
+    /**
+     * Connect + baseline + flip enabled. Shared by the enable endpoint and
+     * the DEC-22 save-orchestrated path. Returns an l10n error key or null.
+     *
+     * @param array<string, mixed> $cfg
+     */
+    private function enableInboundImapNow(array $cfg): ?string
+    {
+        assert($this->inboundMailConfig !== null && $this->inboundMailAuth !== null && $this->inboundMailDetect !== null);
         if (!$this->inboundMailConfig->configMatchesLastPass($cfg)) {
-            return new JSONResponse(['error' => $l->t('inbound_err_test_required')], 422);
+            return 'inbound_err_test_required';
         }
 
         try {
             $cred = $this->inboundMailAuth->resolve($cfg);
         } catch (\Throwable) {
-            return new JSONResponse(['error' => $l->t('inbound_err_test_required')], 422);
+            return 'inbound_err_test_required';
         }
 
         $res = ImapSyncClient::connect([
@@ -1443,23 +1599,23 @@ class SettingsController extends Controller
             'timeoutSeconds' => 15.0,
         ]);
         if (empty($res['ok']) || empty($res['client'])) {
-            return new JSONResponse(['error' => $l->t('inbound_err_enable_unreachable')], 502);
+            return 'inbound_err_enable_unreachable';
         }
 
         try {
             $select = $res['client']->selectFolder((string)$cfg['folder']);
             if (empty($select['ok'])) {
-                return new JSONResponse(['error' => $l->t('inbound_err_enable_unreachable')], 502);
+                return 'inbound_err_enable_unreachable';
             }
             $uidvalidity = (int)($select['uidvalidity'] ?? 0);
             $uidnext = (int)($select['uidnext'] ?? 1);
-            $baseline = !empty($cfg['process_backlog']) ? 0 : max(0, $uidnext - 1);
+            $baseline = $this->inboundMailConfig->baselineForEnable($cfg, $uidnext, $uidvalidity);
             $this->inboundMailConfig->enable($cfg, $baseline, $uidvalidity);
         } finally {
             $res['client']->close();
         }
 
-        return new JSONResponse(['success' => true, 'status' => $this->inboundMailConfig->status()]);
+        return null;
     }
 
     /**

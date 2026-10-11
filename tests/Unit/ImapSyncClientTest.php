@@ -158,4 +158,101 @@ class ImapSyncClientTest extends TestCase
 	{
 		self::assertSame([], ImapSyncClient::flattenParts(null));
 	}
+
+	// ---------- connect(): SSRF gate + live dial ----------
+
+	public function testConnectRefusesPrivateHostWithoutOptIn(): void
+	{
+		$res = ImapSyncClient::connect([
+			'host' => '127.0.0.1',
+			'port' => 1993,
+			'enc' => 'none',
+			'user' => 'u',
+			'secret' => 'p',
+			'timeoutSeconds' => 2.0,
+		]);
+		self::assertFalse($res['ok']);
+		self::assertSame('blocked', $res['reason']);
+	}
+
+	public function testConnectRejectsBadInputBeforeDialing(): void
+	{
+		foreach ([
+			['host' => '', 'port' => 993, 'enc' => 'ssl', 'user' => 'u', 'secret' => 'p'],
+			['host' => 'imap.example.com', 'port' => 993, 'enc' => 'bogus', 'user' => 'u', 'secret' => 'p'],
+			['host' => 'imap.example.com', 'port' => 993, 'enc' => 'ssl', 'user' => '', 'secret' => 'p'],
+		] as $cfg) {
+			$res = ImapSyncClient::connect($cfg + ['timeoutSeconds' => 1.0]);
+			self::assertFalse($res['ok'], json_encode($cfg));
+			self::assertSame('unknown', $res['reason']);
+		}
+	}
+
+	public function testConnectAcceptsStoredTlsVocabAsStarttls(): void
+	{
+		// Regression (tkc-imap-enc-vocab-tls-dead): persisted configs spell
+		// STARTTLS 'tls' (ImapConnection::ENC_TLS). connect() must map the
+		// alias, not reject it — a stored 143/STARTTLS config must reach the
+		// dialer instead of failing 'unsupported encryption' pre-flight.
+		$res = ImapSyncClient::connect([
+			'host' => '127.0.0.1', 'port' => 1, 'enc' => 'tls',
+			'user' => 'u', 'secret' => 'p',
+			'allowPrivateHost' => true, 'timeoutSeconds' => 1.0,
+		]);
+		self::assertFalse($res['ok']);
+		self::assertSame('network', $res['reason']);
+	}
+
+	public function testConnectLoopbackCompletesWithExplicitOptIn(): void
+	{
+		// Full dial path against a real socket — exercises pre-dial blocklist,
+		// post-connect peer validation, greeting parse and LOGIN. The peer is
+		// 127.0.0.1, so BOTH gates must observe allowPrivateHost to proceed.
+		// The fake server runs via proc_open (never fork — a forked child
+		// inherits and destroys the suite's shared DB connection on exit).
+		$code = <<<'PHP'
+			$server = stream_socket_server('tcp://127.0.0.1:0');
+			echo stream_socket_get_name($server, false), "\n";
+			fflush(STDOUT);
+			$conn = stream_socket_accept($server, 10);
+			fwrite($conn, "* OK fake imap ready\r\n");
+			fgets($conn);
+			fwrite($conn, "S001 OK Logged in\r\n");
+			usleep(300000);
+			fclose($conn);
+		PHP;
+		$proc = proc_open(
+			[PHP_BINARY, '-r', $code],
+			[1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+			$pipes
+		);
+		if (!is_resource($proc)) {
+			self::markTestSkipped('proc_open unavailable');
+		}
+		try {
+			$addr = trim((string)fgets($pipes[1]));
+			self::assertNotSame('', $addr, 'fake server did not announce its address');
+			$port = (int)substr($addr, strrpos($addr, ':') + 1);
+
+			$res = ImapSyncClient::connect([
+				'host' => '127.0.0.1',
+				'port' => $port,
+				'enc' => 'none',
+				'user' => 'u',
+				'secret' => 'p',
+				'allowPrivateHost' => true,
+				'timeoutSeconds' => 5.0,
+			]);
+			self::assertTrue($res['ok'], json_encode($res));
+			self::assertInstanceOf(ImapSyncClient::class, $res['client']);
+			$res['client']->close();
+		} finally {
+			foreach ($pipes as $p) {
+				if (is_resource($p)) {
+					fclose($p);
+				}
+			}
+			proc_close($proc);
+		}
+	}
 }
