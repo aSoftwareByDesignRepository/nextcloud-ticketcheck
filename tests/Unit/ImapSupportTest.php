@@ -131,6 +131,9 @@ class ImapSupportTest extends TestCase
 		self::assertSame('tls', ImapConnection::resolveImapEnc(null, 143));
 		self::assertSame('tls', ImapConnection::resolveImapEnc('ssl', 143));
 		self::assertSame('ssl', ImapConnection::resolveImapEnc('starttls', 993));
+		// Explicit starttls on a nonstandard port must dial STARTTLS, not
+		// silently fall through to the ssl default (wrong-protocol dial).
+		self::assertSame('tls', ImapConnection::resolveImapEnc('starttls', 1143));
 		self::assertSame('none', ImapConnection::resolveImapEnc('none', 3143));
 	}
 

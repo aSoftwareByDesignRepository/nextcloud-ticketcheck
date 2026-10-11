@@ -276,6 +276,12 @@ final class ImapConnection
 	public static function resolveImapEnc(?string $enc, int $port): string
 	{
 		$enc = strtolower(trim((string)$enc));
+		// User-entered 'starttls' maps onto the stored 'tls' vocab — without
+		// this, an explicit 1143+starttls config silently resolved to 'ssl'
+		// and dialed implicit TLS on a STARTTLS port (wrong protocol).
+		if ($enc === 'starttls') {
+			$enc = self::ENC_TLS;
+		}
 		if ($port === 993) {
 			return self::ENC_SSL;
 		}
