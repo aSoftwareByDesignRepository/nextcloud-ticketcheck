@@ -56,16 +56,30 @@ class InboundMessageMapper extends QBMapper
 		}
 
 		// Stale claim (crash between claim and finish) — one bounded reprocess.
-		$claimedAt = $existing->getClaimedAt();
-		$isStale = $claimedAt === null
-			|| $claimedAt->getTimestamp() < time() - $staleSeconds;
-		if ($isStale) {
-			$existing->setClaimedAt(new \DateTime());
-			$existing->setAttempts((int)$existing->getAttempts() + 1);
-			$existing->setUpdatedAt(new \DateTime());
-			$updated = $this->update($existing);
-			assert($updated instanceof InboundMessage);
-			return ['row' => $updated, 'status' => 'reclaim'];
+		// The reclaim is a single conditional UPDATE so two concurrent
+		// reclaimers cannot both win the stale window: only the first writer
+		// satisfies the WHERE clause, the loser sees rowCount=0.
+		$cutoff = new \DateTime();
+		$cutoff->setTimestamp(time() - $staleSeconds);
+		$qb = $this->db->getQueryBuilder();
+		$qb->update($this->getTableName())
+			->set('claimed_at', $qb->createNamedParameter(new \DateTime(), IQueryBuilder::PARAM_DATE))
+			->set('attempts', $qb->createFunction('attempts + 1'))
+			->set('updated_at', $qb->createNamedParameter(new \DateTime(), IQueryBuilder::PARAM_DATE))
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($existing->getId(), IQueryBuilder::PARAM_INT)))
+			->andWhere($qb->expr()->in('action', $qb->createNamedParameter(
+				[InboundMessage::ACTION_PROCESSING, InboundMessage::ACTION_ERROR_RETRYABLE],
+				IQueryBuilder::PARAM_STR_ARRAY
+			)))
+			->andWhere($qb->expr()->orX(
+				$qb->expr()->isNull('claimed_at'),
+				$qb->expr()->lt('claimed_at', $qb->createNamedParameter($cutoff, IQueryBuilder::PARAM_DATE))
+			));
+		if ($qb->executeStatement() === 1) {
+			$reclaimed = $this->findByMsgHash($row->getMsgHash());
+			if ($reclaimed !== null) {
+				return ['row' => $reclaimed, 'status' => 'reclaim'];
+			}
 		}
 
 		return ['row' => $existing, 'status' => 'duplicate'];

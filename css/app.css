@@ -15649,6 +15649,9 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 
 @media (max-width: 640px) {
 	#app-content.tc-app .tc-table-wrap { display: none; }
+	/* Form-bearing tables (editable rows, no card mirror) keep the
+	   horizontal-scroll wrap instead of being hidden. */
+	#app-content.tc-app .tc-table-wrap--form { display: block; }
 	#app-content.tc-app .tc-card-list { display: flex; }
 }
 

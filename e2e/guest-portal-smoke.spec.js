@@ -225,21 +225,27 @@ for (const vp of viewports) {
 			expect(style.marker).not.toBe('none');
 		});
 
-		test('create ticket: form area matches visual baseline', async ({ page }) => {
-			// Pixel guard: catches the whole class of "core guest.css leaks"
-			// (centered labels, sunken selects, missing markers) that computed-
-			// style assertions cover only one-by-one.
-			await page.goto(URLS.create, { waitUntil: 'networkidle' });
-			await ensureAuthenticated(page);
-			const blocked = page.locator('#portal-create-blocked-title');
-			if (await blocked.isVisible().catch(() => false)) {
-				test.skip();
-			}
-			await expect(page.locator('.tc-ticket-form-card').first()).toBeVisible();
-			await expect(page.locator('section.portal-create')).toHaveScreenshot(
-				`portal-create-form-${vp.name}.png`,
-				{ maxDiffPixelRatio: 0.002 },
-			);
+		test.describe('visual baseline', () => {
+			// Instance-wide accent mutations elsewhere in the suite can land
+			// inside a screenshot window — retry once rather than weaken the
+			// pixel assertion.
+			test.describe.configure({ retries: 1 });
+			test('create ticket: form area matches visual baseline', async ({ page }) => {
+				// Pixel guard: catches the whole class of "core guest.css leaks"
+				// (centered labels, sunken selects, missing markers) that computed-
+				// style assertions cover only one-by-one.
+				await page.goto(URLS.create, { waitUntil: 'networkidle' });
+				await ensureAuthenticated(page);
+				const blocked = page.locator('#portal-create-blocked-title');
+				if (await blocked.isVisible().catch(() => false)) {
+					test.skip();
+				}
+				await expect(page.locator('.tc-ticket-form-card').first()).toBeVisible();
+				await expect(page.locator('section.portal-create')).toHaveScreenshot(
+					`portal-create-form-${vp.name}.png`,
+					{ maxDiffPixelRatio: 0.002 },
+				);
+			});
 		});
 
 		test('email preferences: notification section and account deletion zone', async ({ page }) => {

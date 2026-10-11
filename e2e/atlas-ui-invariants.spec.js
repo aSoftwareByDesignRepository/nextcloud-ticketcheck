@@ -177,7 +177,7 @@ test.describe('ticketcheck UI invariants (atlas-ui-invariants)', () => {
 				// first click may trigger a successful submit + redirect; the
 				// second click must not block on navigation (or die on a
 				// detached/disabled button — that IS the dedup behaviour).
-				submit: () => page.locator('#ticket-form-submit').click({ noWaitAfter: true }).catch(() => {}),
+				submit: () => page.locator('#ticket-form-submit').click({ noWaitAfter: true, timeout: 10000 }).catch(() => {}),
 			});
 			// a real submit must have escaped — zero requests means validation
 			// blocked both clicks and the invariant would be theater.

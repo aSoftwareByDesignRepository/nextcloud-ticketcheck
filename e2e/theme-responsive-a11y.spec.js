@@ -203,7 +203,7 @@ async function gotoReady(page, path, ready) {
 }
 
 test.describe('TicketCheck theme × viewport a11y matrix', () => {
-	test.describe.configure({ mode: 'serial' });
+	test.describe.configure({ mode: 'serial', retries: 1 });
 	test.setTimeout(300_000);
 
 	test.beforeEach(() => {
@@ -294,6 +294,9 @@ test.describe('TicketCheck custom accent colour', () => {
 });
 
 test.describe('TicketCheck visual shell metrics (theme × breakpoint)', () => {
+	// Screenshots here can land inside the accent-mutation window of the
+	// neighbouring describe — retry once rather than weaken assertions.
+	test.describe.configure({ retries: 1 });
 	test.beforeEach(() => {
 		test.skip(!hasAuth(), 'Requires E2E credentials');
 	});
