@@ -18,8 +18,8 @@ return [
         // Dashboard routes
         ['name' => 'dashboard#index', 'url' => '/dashboard', 'verb' => 'GET'],
         ['name' => 'dashboard#getStats', 'url' => '/api/dashboard/stats', 'verb' => 'GET'],
-        ['name' => 'dashboard#getCustomerAnalytics', 'url' => '/api/dashboard/customers/{customerId}/analytics', 'verb' => 'GET'],
-        ['name' => 'dashboard#getProjectAnalytics', 'url' => '/api/dashboard/projects/{projectId}/analytics', 'verb' => 'GET'],
+        ['name' => 'dashboard#getCustomerAnalytics', 'url' => '/api/dashboard/customers/{customerId}/analytics', 'verb' => 'GET', 'requirements' => ['customerId' => '\\d+']],
+        ['name' => 'dashboard#getProjectAnalytics', 'url' => '/api/dashboard/projects/{projectId}/analytics', 'verb' => 'GET', 'requirements' => ['projectId' => '\\d+']],
         ['name' => 'dashboard#getSystemAnalytics', 'url' => '/api/dashboard/system/analytics', 'verb' => 'GET'],
 
         // Ticket management routes
@@ -27,23 +27,23 @@ return [
         ['name' => 'ticket#kanban', 'url' => '/tickets/kanban', 'verb' => 'GET'],
         ['name' => 'ticket#create', 'url' => '/tickets/create', 'verb' => 'GET'],
         ['name' => 'ticket#store', 'url' => '/tickets', 'verb' => 'POST'],
-        ['name' => 'ticket#show', 'url' => '/tickets/{id}', 'verb' => 'GET'],
-        ['name' => 'ticket#edit', 'url' => '/tickets/{id}/edit', 'verb' => 'GET'],
-        ['name' => 'ticket#update', 'url' => '/tickets/{id}', 'verb' => 'PUT'],
-        ['name' => 'ticket#updatePost', 'url' => '/tickets/{id}/update', 'verb' => 'POST'],
-        ['name' => 'ticket#delete', 'url' => '/tickets/{id}', 'verb' => 'DELETE'],
-        ['name' => 'ticket#changeStatus', 'url' => '/tickets/{id}/status', 'verb' => 'PUT'],
-        ['name' => 'ticket#assign', 'url' => '/tickets/{id}/assign', 'verb' => 'POST'],
-        ['name' => 'ticket#merge', 'url' => '/tickets/{id}/merge', 'verb' => 'POST'],
-        ['name' => 'ticket#split', 'url' => '/api/tickets/{id}/split', 'verb' => 'POST'],
-        ['name' => 'ticket#getLinks', 'url' => '/api/tickets/{id}/links', 'verb' => 'GET'],
-        ['name' => 'ticket#addLink', 'url' => '/api/tickets/{id}/links', 'verb' => 'POST'],
-        ['name' => 'ticket#removeLink', 'url' => '/api/tickets/{id}/links', 'verb' => 'DELETE'],
-        ['name' => 'ticket#getWatchers', 'url' => '/api/tickets/{id}/watchers', 'verb' => 'GET'],
-        ['name' => 'ticket#addWatcher', 'url' => '/api/tickets/{id}/watchers', 'verb' => 'POST'],
-        ['name' => 'ticket#removeWatcher', 'url' => '/api/tickets/{id}/watchers/{userId}', 'verb' => 'DELETE'],
-        ['name' => 'ticket#getProjectUsers', 'url' => '/api/tickets/projects/{projectId}/users', 'verb' => 'GET'],
-        ['name' => 'ticket#searchAssignableUsers', 'url' => '/api/tickets/{id}/assignable-users', 'verb' => 'GET'],
+        ['name' => 'ticket#show', 'url' => '/tickets/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#edit', 'url' => '/tickets/{id}/edit', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#update', 'url' => '/tickets/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#updatePost', 'url' => '/tickets/{id}/update', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#delete', 'url' => '/tickets/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#changeStatus', 'url' => '/tickets/{id}/status', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#assign', 'url' => '/tickets/{id}/assign', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#merge', 'url' => '/tickets/{id}/merge', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#split', 'url' => '/api/tickets/{id}/split', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#getLinks', 'url' => '/api/tickets/{id}/links', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#addLink', 'url' => '/api/tickets/{id}/links', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#removeLink', 'url' => '/api/tickets/{id}/links', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#getWatchers', 'url' => '/api/tickets/{id}/watchers', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#addWatcher', 'url' => '/api/tickets/{id}/watchers', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#removeWatcher', 'url' => '/api/tickets/{id}/watchers/{userId}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#getProjectUsers', 'url' => '/api/tickets/projects/{projectId}/users', 'verb' => 'GET', 'requirements' => ['projectId' => '\\d+']],
+        ['name' => 'ticket#searchAssignableUsers', 'url' => '/api/tickets/{id}/assignable-users', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
         // Bulk assign picker — helpdesk agents/admins only (no raw UID typing).
         ['name' => 'ticket#searchBulkAssignableUsers', 'url' => '/api/tickets/assignable-users', 'verb' => 'GET'],
 
@@ -51,12 +51,12 @@ return [
         // (removed ticket#search and ticket#filter - no controller methods)
 
         // Comment routes (update/delete not implemented; use addComment only)
-        ['name' => 'ticket#addComment', 'url' => '/tickets/{id}/comments', 'verb' => 'POST'],
+        ['name' => 'ticket#addComment', 'url' => '/tickets/{id}/comments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 
         // Attachment routes
-        ['name' => 'ticket#uploadAttachment', 'url' => '/tickets/{id}/attachments', 'verb' => 'POST'],
-        ['name' => 'ticket#downloadAttachment', 'url' => '/tickets/{ticketId}/attachments/{attachmentId}', 'verb' => 'GET'],
-        ['name' => 'ticket#deleteAttachment', 'url' => '/tickets/{ticketId}/attachments/{attachmentId}', 'verb' => 'DELETE'],
+        ['name' => 'ticket#uploadAttachment', 'url' => '/tickets/{id}/attachments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#downloadAttachment', 'url' => '/tickets/{ticketId}/attachments/{attachmentId}', 'verb' => 'GET', 'requirements' => ['ticketId' => '\\d+', 'attachmentId' => '\\d+']],
+        ['name' => 'ticket#deleteAttachment', 'url' => '/tickets/{ticketId}/attachments/{attachmentId}', 'verb' => 'DELETE', 'requirements' => ['ticketId' => '\\d+', 'attachmentId' => '\\d+']],
 
         // Export routes (admin CSV export UI + API)
         ['name' => 'export#index', 'url' => '/export', 'verb' => 'GET'],
@@ -68,30 +68,30 @@ return [
 
         // Legacy ticket export (admin-only; prefer /export UI)
         ['name' => 'ticket#exportCsv', 'url' => '/tickets/export/csv', 'verb' => 'GET'],
-        ['name' => 'ticket#exportPdf', 'url' => '/tickets/{id}/export/pdf', 'verb' => 'GET'],
+        ['name' => 'ticket#exportPdf', 'url' => '/tickets/{id}/export/pdf', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
 
         // API routes for AJAX calls
         ['name' => 'ticket#apiIndex', 'url' => '/api/tickets', 'verb' => 'GET'],
         ['name' => 'ticket#apiStore', 'url' => '/api/tickets', 'verb' => 'POST'],
         ['name' => 'ticket#searchMergeTargets', 'url' => '/api/tickets/merge-targets', 'verb' => 'GET'],
         ['name' => 'ticket#searchFilterOptions', 'url' => '/api/tickets/filter-options', 'verb' => 'GET'],
-        ['name' => 'ticket#apiShow', 'url' => '/api/tickets/{id}', 'verb' => 'GET'],
-        ['name' => 'ticket#apiUpdate', 'url' => '/api/tickets/{id}', 'verb' => 'PUT'],
-        ['name' => 'ticket#apiDelete', 'url' => '/api/tickets/{id}', 'verb' => 'DELETE'],
+        ['name' => 'ticket#apiShow', 'url' => '/api/tickets/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#apiUpdate', 'url' => '/api/tickets/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#apiDelete', 'url' => '/api/tickets/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
         ['name' => 'ticket#bulkAction', 'url' => '/api/tickets/bulk', 'verb' => 'POST'],
 
         // Customer Portal routes (for guest users)
         ['name' => 'customerPortal#index', 'url' => '/portal', 'verb' => 'GET'],
         ['name' => 'customerPortal#myTickets', 'url' => '/portal/tickets', 'verb' => 'GET'],
-        ['name' => 'customerPortal#projectTickets', 'url' => '/portal/projects/{projectId}/tickets', 'verb' => 'GET'],
+        ['name' => 'customerPortal#projectTickets', 'url' => '/portal/projects/{projectId}/tickets', 'verb' => 'GET', 'requirements' => ['projectId' => '\\d+']],
         ['name' => 'customerPortal#createTicket', 'url' => '/portal/tickets/create', 'verb' => 'GET'],
         ['name' => 'customerPortal#storeTicket', 'url' => '/portal/tickets', 'verb' => 'POST'],
-        ['name' => 'customerPortal#viewTicket', 'url' => '/portal/tickets/{id}', 'verb' => 'GET'],
-        ['name' => 'customerPortal#getTicketLinks', 'url' => '/portal/api/tickets/{id}/links', 'verb' => 'GET'],
-        ['name' => 'customerPortal#submitSurvey', 'url' => '/portal/tickets/{id}/survey', 'verb' => 'POST'],
-        ['name' => 'customerPortal#addReply', 'url' => '/portal/tickets/{id}/reply', 'verb' => 'POST'],
-        ['name' => 'customerPortal#uploadAttachment', 'url' => '/portal/tickets/{id}/attachments', 'verb' => 'POST'],
-        ['name' => 'customerPortal#downloadAttachment', 'url' => '/portal/tickets/{id}/attachments/{attachmentId}', 'verb' => 'GET'],
+        ['name' => 'customerPortal#viewTicket', 'url' => '/portal/tickets/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'customerPortal#getTicketLinks', 'url' => '/portal/api/tickets/{id}/links', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'customerPortal#submitSurvey', 'url' => '/portal/tickets/{id}/survey', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'customerPortal#addReply', 'url' => '/portal/tickets/{id}/reply', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'customerPortal#uploadAttachment', 'url' => '/portal/tickets/{id}/attachments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'customerPortal#downloadAttachment', 'url' => '/portal/tickets/{id}/attachments/{attachmentId}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+', 'attachmentId' => '\\d+']],
         ['name' => 'customerPortal#checkRateLimitStatus', 'url' => '/portal/rate-limit/status', 'verb' => 'GET'],
         // Logout uses POST so it cannot be triggered via cross-site GET (logout-CSRF protection).
         ['name' => 'customerPortal#logout', 'url' => '/portal/logout', 'verb' => 'POST'],
@@ -104,35 +104,35 @@ return [
         // Specific routes must come before parameterized routes
         ['name' => 'knowledgeBase#create', 'url' => '/kb/articles/create', 'verb' => 'GET'],
         ['name' => 'knowledgeBase#store', 'url' => '/kb/articles', 'verb' => 'POST'],
-        ['name' => 'knowledgeBase#edit', 'url' => '/kb/articles/{id}/edit', 'verb' => 'GET'],
-        ['name' => 'knowledgeBase#markHelpful', 'url' => '/kb/articles/{id}/helpful', 'verb' => 'POST'],
-        ['name' => 'knowledgeBase#article', 'url' => '/kb/articles/{id}', 'verb' => 'GET'],
-        ['name' => 'knowledgeBase#kpArticle', 'url' => '/kp/articles/{id}', 'verb' => 'GET'],
-        ['name' => 'knowledgeBase#update', 'url' => '/kb/articles/{id}', 'verb' => 'PUT'],
-        ['name' => 'knowledgeBase#delete', 'url' => '/kb/articles/{id}', 'verb' => 'DELETE'],
+        ['name' => 'knowledgeBase#edit', 'url' => '/kb/articles/{id}/edit', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'knowledgeBase#markHelpful', 'url' => '/kb/articles/{id}/helpful', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'knowledgeBase#article', 'url' => '/kb/articles/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'knowledgeBase#kpArticle', 'url' => '/kp/articles/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'knowledgeBase#update', 'url' => '/kb/articles/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'knowledgeBase#delete', 'url' => '/kb/articles/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
 
         // KB Image routes
         ['name' => 'knowledgeBase#uploadImage', 'url' => '/kb/images/upload', 'verb' => 'POST'],
         ['name' => 'knowledgeBase#getImage', 'url' => '/kb/images/{filename}', 'verb' => 'GET'],
 
         // KB Comment routes
-        ['name' => 'knowledgeBase#addComment', 'url' => '/kb/articles/{id}/comments', 'verb' => 'POST'],
-        ['name' => 'knowledgeBase#getComments', 'url' => '/kb/articles/{id}/comments', 'verb' => 'GET'],
+        ['name' => 'knowledgeBase#addComment', 'url' => '/kb/articles/{id}/comments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'knowledgeBase#getComments', 'url' => '/kb/articles/{id}/comments', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
 
         // KB Category management (settings)
         ['name' => 'settings#listKBCategories', 'url' => '/api/settings/kb-categories', 'verb' => 'GET'],
         ['name' => 'settings#createKBCategory', 'url' => '/api/settings/kb-categories', 'verb' => 'POST'],
-        ['name' => 'settings#updateKBCategory', 'url' => '/api/settings/kb-categories/{id}', 'verb' => 'PUT'],
-        ['name' => 'settings#deleteKBCategory', 'url' => '/api/settings/kb-categories/{id}', 'verb' => 'DELETE'],
+        ['name' => 'settings#updateKBCategory', 'url' => '/api/settings/kb-categories/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'settings#deleteKBCategory', 'url' => '/api/settings/kb-categories/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
 
         // Customer Portal KB routes
         ['name' => 'customerPortal#knowledgeBase', 'url' => '/portal/kb', 'verb' => 'GET'],
-        ['name' => 'customerPortal#kbArticle', 'url' => '/portal/kb/articles/{id}', 'verb' => 'GET'],
+        ['name' => 'customerPortal#kbArticle', 'url' => '/portal/kb/articles/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
         ['name' => 'customerPortal#kpKnowledgeBase', 'url' => '/portal/kp', 'verb' => 'GET'],
-        ['name' => 'customerPortal#kpArticle', 'url' => '/portal/kp/articles/{id}', 'verb' => 'GET'],
-        ['name' => 'knowledgeBase#portalMarkHelpful', 'url' => '/portal/kb/articles/{id}/helpful', 'verb' => 'POST'],
-        ['name' => 'knowledgeBase#portalAddComment', 'url' => '/portal/kb/articles/{id}/comments', 'verb' => 'POST'],
-        ['name' => 'knowledgeBase#portalGetComments', 'url' => '/portal/kb/articles/{id}/comments', 'verb' => 'GET'],
+        ['name' => 'customerPortal#kpArticle', 'url' => '/portal/kp/articles/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'knowledgeBase#portalMarkHelpful', 'url' => '/portal/kb/articles/{id}/helpful', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'knowledgeBase#portalAddComment', 'url' => '/portal/kb/articles/{id}/comments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'knowledgeBase#portalGetComments', 'url' => '/portal/kb/articles/{id}/comments', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
 
         // Settings routes
         // Inbound email webhook (SendGrid/Mailgun)
@@ -166,34 +166,34 @@ return [
         // Escalation rules
         ['name' => 'settings#getEscalationRules', 'url' => '/api/settings/escalation-rules', 'verb' => 'GET'],
         ['name' => 'settings#createEscalationRule', 'url' => '/api/settings/escalation-rules', 'verb' => 'POST'],
-        ['name' => 'settings#updateEscalationRule', 'url' => '/api/settings/escalation-rules/{id}', 'verb' => 'PUT'],
-        ['name' => 'settings#deleteEscalationRule', 'url' => '/api/settings/escalation-rules/{id}', 'verb' => 'DELETE'],
+        ['name' => 'settings#updateEscalationRule', 'url' => '/api/settings/escalation-rules/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'settings#deleteEscalationRule', 'url' => '/api/settings/escalation-rules/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
 
         // Project Management routes (new simple approach)
         ['name' => 'project#index', 'url' => '/projects', 'verb' => 'GET'],
         ['name' => 'project#create', 'url' => '/projects/create', 'verb' => 'GET'],
-        ['name' => 'project#edit', 'url' => '/projects/{id}/edit', 'verb' => 'GET'],
-        ['name' => 'project#show', 'url' => '/projects/{id}', 'verb' => 'GET'],
+        ['name' => 'project#edit', 'url' => '/projects/{id}/edit', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'project#show', 'url' => '/projects/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
         ['name' => 'project#store', 'url' => '/api/projects', 'verb' => 'POST'],
-        ['name' => 'project#update', 'url' => '/api/projects/{id}', 'verb' => 'PUT'],
-        ['name' => 'project#delete', 'url' => '/api/projects/{id}', 'verb' => 'DELETE'],
+        ['name' => 'project#update', 'url' => '/api/projects/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'project#delete', 'url' => '/api/projects/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
 
         // Project member routes
-        ['name' => 'projectMember#addMember', 'url' => '/api/projects/{projectId}/members', 'verb' => 'POST'],
-        ['name' => 'projectMember#removeMember', 'url' => '/api/projects/{projectId}/members/{userId}', 'verb' => 'DELETE'],
-        ['name' => 'projectMember#updateRole', 'url' => '/api/projects/{projectId}/members/{userId}', 'verb' => 'PUT'],
-        ['name' => 'projectMember#getMembers', 'url' => '/api/projects/{projectId}/members', 'verb' => 'GET'],
+        ['name' => 'projectMember#addMember', 'url' => '/api/projects/{projectId}/members', 'verb' => 'POST', 'requirements' => ['projectId' => '\\d+']],
+        ['name' => 'projectMember#removeMember', 'url' => '/api/projects/{projectId}/members/{userId}', 'verb' => 'DELETE', 'requirements' => ['projectId' => '\\d+']],
+        ['name' => 'projectMember#updateRole', 'url' => '/api/projects/{projectId}/members/{userId}', 'verb' => 'PUT', 'requirements' => ['projectId' => '\\d+']],
+        ['name' => 'projectMember#getMembers', 'url' => '/api/projects/{projectId}/members', 'verb' => 'GET', 'requirements' => ['projectId' => '\\d+']],
         ['name' => 'projectMember#getAvailableUsers', 'url' => '/api/users/available', 'verb' => 'GET'],
-        ['name' => 'projectMember#bulkAdd', 'url' => '/api/projects/{projectId}/members/bulk', 'verb' => 'POST'],
+        ['name' => 'projectMember#bulkAdd', 'url' => '/api/projects/{projectId}/members/bulk', 'verb' => 'POST', 'requirements' => ['projectId' => '\\d+']],
 
         // Customer Management routes
         ['name' => 'customer#index', 'url' => '/customers', 'verb' => 'GET'],
         ['name' => 'customer#create', 'url' => '/customers/create', 'verb' => 'GET'],
-        ['name' => 'customer#show', 'url' => '/customers/{id}', 'verb' => 'GET'],
-        ['name' => 'customer#edit', 'url' => '/customers/{id}/edit', 'verb' => 'GET'],
+        ['name' => 'customer#show', 'url' => '/customers/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'customer#edit', 'url' => '/customers/{id}/edit', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
         ['name' => 'customer#store', 'url' => '/api/customers', 'verb' => 'POST'],
-        ['name' => 'customer#update', 'url' => '/api/customers/{id}', 'verb' => 'PUT'],
-        ['name' => 'customer#delete', 'url' => '/api/customers/{id}', 'verb' => 'DELETE'],
+        ['name' => 'customer#update', 'url' => '/api/customers/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'customer#delete', 'url' => '/api/customers/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
 
         // Guest User Management routes
         ['name' => 'guestUser#index', 'url' => '/guests', 'verb' => 'GET'],
@@ -203,8 +203,8 @@ return [
         ['name' => 'guestUser#update', 'url' => '/api/guests/{userId}', 'verb' => 'PUT'],
         ['name' => 'guestUser#delete', 'url' => '/api/guests/{userId}', 'verb' => 'DELETE'],
         ['name' => 'guestUser#resetPassword', 'url' => '/api/guests/{userId}/reset-password', 'verb' => 'POST'],
-        ['name' => 'guestUser#grantProjectAccess', 'url' => '/api/guests/{userId}/projects/{projectId}', 'verb' => 'POST'],
-        ['name' => 'guestUser#revokeProjectAccess', 'url' => '/api/guests/{userId}/projects/{projectId}', 'verb' => 'DELETE'],
+        ['name' => 'guestUser#grantProjectAccess', 'url' => '/api/guests/{userId}/projects/{projectId}', 'verb' => 'POST', 'requirements' => ['projectId' => '\\d+']],
+        ['name' => 'guestUser#revokeProjectAccess', 'url' => '/api/guests/{userId}/projects/{projectId}', 'verb' => 'DELETE', 'requirements' => ['projectId' => '\\d+']],
 
         // Guest self-service routes (for guest users to manage their own account)
         ['name' => 'customerPortal#changePassword', 'url' => '/portal/change-password', 'verb' => 'GET'],
@@ -217,19 +217,19 @@ return [
         // Template Management routes
         ['name' => 'template#index', 'url' => '/api/templates', 'verb' => 'GET'],
         ['name' => 'template#store', 'url' => '/api/templates', 'verb' => 'POST'],
-        ['name' => 'template#update', 'url' => '/api/templates/{id}', 'verb' => 'PUT'],
-        ['name' => 'template#delete', 'url' => '/api/templates/{id}', 'verb' => 'DELETE'],
-        ['name' => 'template#process', 'url' => '/api/templates/{id}/process', 'verb' => 'POST'],
+        ['name' => 'template#update', 'url' => '/api/templates/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'template#delete', 'url' => '/api/templates/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'template#process', 'url' => '/api/templates/{id}/process', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 
         // Deletion analysis routes
-        ['name' => 'deletion#analyzeTicket', 'url' => '/api/deletion/analyze/ticket/{id}', 'verb' => 'GET'],
-        ['name' => 'deletion#analyzeCustomer', 'url' => '/api/deletion/analyze/customer/{id}', 'verb' => 'GET'],
-        ['name' => 'deletion#analyzeProject', 'url' => '/api/deletion/analyze/project/{id}', 'verb' => 'GET'],
-        ['name' => 'deletion#analyzeKBArticle', 'url' => '/api/deletion/analyze/kb-article/{id}', 'verb' => 'GET'],
+        ['name' => 'deletion#analyzeTicket', 'url' => '/api/deletion/analyze/ticket/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'deletion#analyzeCustomer', 'url' => '/api/deletion/analyze/customer/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'deletion#analyzeProject', 'url' => '/api/deletion/analyze/project/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'deletion#analyzeKBArticle', 'url' => '/api/deletion/analyze/kb-article/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
         ['name' => 'deletion#analyzeGuestUser', 'url' => '/api/deletion/analyze/guest/{userId}', 'verb' => 'GET'],
-        ['name' => 'deletion#analyzeKBCategory', 'url' => '/api/deletion/analyze/kb-category/{id}', 'verb' => 'GET'],
-        ['name' => 'deletion#analyzeTemplate', 'url' => '/api/deletion/analyze/template/{id}', 'verb' => 'GET'],
-        ['name' => 'deletion#analyzeAssignment', 'url' => '/api/deletion/analyze/assignment/{id}', 'verb' => 'GET'],
+        ['name' => 'deletion#analyzeKBCategory', 'url' => '/api/deletion/analyze/kb-category/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'deletion#analyzeTemplate', 'url' => '/api/deletion/analyze/template/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'deletion#analyzeAssignment', 'url' => '/api/deletion/analyze/assignment/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
 
         // Translation loading route for JavaScript
         ['name' => 'page#getTranslations', 'url' => '/l10n/{locale}.json', 'verb' => 'GET'],
@@ -255,14 +255,14 @@ return [
         ['name' => 'companion#queueCounts', 'url' => '/companion/api/v1/queue-counts', 'verb' => 'GET'],
         ['name' => 'companion#create', 'url' => '/companion/api/v1/tickets', 'verb' => 'POST'],
         ['name' => 'companion#bulkStatus', 'url' => '/companion/api/v1/tickets/bulk-status', 'verb' => 'POST'],
-        ['name' => 'companion#show', 'url' => '/companion/api/v1/tickets/{id}', 'verb' => 'GET'],
-        ['name' => 'companion#addComment', 'url' => '/companion/api/v1/tickets/{id}/comments', 'verb' => 'POST'],
-        ['name' => 'companion#changeStatus', 'url' => '/companion/api/v1/tickets/{id}/status', 'verb' => 'POST'],
-        ['name' => 'companion#assign', 'url' => '/companion/api/v1/tickets/{id}/assign', 'verb' => 'POST'],
-        ['name' => 'companion#assignableUsers', 'url' => '/companion/api/v1/tickets/{id}/assignable-users', 'verb' => 'GET'],
-        ['name' => 'companion#watch', 'url' => '/companion/api/v1/tickets/{id}/watch', 'verb' => 'POST'],
-        ['name' => 'companion#downloadAttachment', 'url' => '/companion/api/v1/tickets/{id}/attachments/{attachmentId}', 'verb' => 'GET'],
-        ['name' => 'companion#uploadAttachment', 'url' => '/companion/api/v1/tickets/{id}/attachments', 'verb' => 'POST'],
+        ['name' => 'companion#show', 'url' => '/companion/api/v1/tickets/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'companion#addComment', 'url' => '/companion/api/v1/tickets/{id}/comments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'companion#changeStatus', 'url' => '/companion/api/v1/tickets/{id}/status', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'companion#assign', 'url' => '/companion/api/v1/tickets/{id}/assign', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'companion#assignableUsers', 'url' => '/companion/api/v1/tickets/{id}/assignable-users', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'companion#watch', 'url' => '/companion/api/v1/tickets/{id}/watch', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'companion#downloadAttachment', 'url' => '/companion/api/v1/tickets/{id}/attachments/{attachmentId}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+', 'attachmentId' => '\\d+']],
+        ['name' => 'companion#uploadAttachment', 'url' => '/companion/api/v1/tickets/{id}/attachments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
         ['name' => 'companion#pushRegister', 'url' => '/companion/api/v1/push/register', 'verb' => 'POST'],
         ['name' => 'companion#pushUnregister', 'url' => '/companion/api/v1/push/unregister', 'verb' => 'POST'],
     ],
