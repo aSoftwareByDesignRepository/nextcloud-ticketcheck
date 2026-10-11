@@ -3,7 +3,7 @@ const { ensureAuthenticated } = require('./helpers/auth-guard');
 const { resolveGuestStorageState } = require('./helpers/guest-storage');
 const { assertIconsAcrossSchemes } = require('./helpers/icon-contrast');
 
-const BASE = (process.env.E2E_BASE || 'http://localhost:8081').replace(/\/$/, '');
+const BASE = (process.env.E2E_BASE || 'http://127.0.0.1:8081').replace(/\/$/, '');
 
 const URLS = {
 	home: process.env.E2E_GUEST_PORTAL_HOME_URL || `${BASE}/apps/ticketcheck/portal`,

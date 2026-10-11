@@ -22,9 +22,11 @@ final class MimeHeader
 		if ($raw === '') {
 			return '';
 		}
-		// Fast path — most subjects are already human text.
+		// Fast path — most subjects are already human text. Still collapse
+		// smuggled CR/LF/control runs: a header value is single-line by
+		// contract, and raw CRLF survives decoders as-is otherwise.
 		if (!str_contains($raw, '=?')) {
-			return $raw;
+			return self::collapseWs($raw);
 		}
 
 		if (function_exists('iconv_mime_decode')) {
@@ -51,7 +53,7 @@ final class MimeHeader
 			return self::collapseWs($manual);
 		}
 
-		return $raw;
+		return self::collapseWs($raw);
 	}
 
 	private static function stillEncoded(string $value): bool
@@ -61,7 +63,7 @@ final class MimeHeader
 
 	private static function collapseWs(string $value): string
 	{
-		return trim(preg_replace('/[ \t]+/', ' ', $value) ?? $value);
+		return trim(preg_replace('/[\x00-\x20]+/', ' ', $value) ?? $value);
 	}
 
 	/**

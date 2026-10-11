@@ -502,16 +502,38 @@ final class ImapSyncClient
 	 * @param list<string> $tokens
 	 * @return list<mixed>|null
 	 */
-	private static function sexpList(array $tokens, int &$pos): ?array
+	/**
+	 * @param list<string> $tokens
+	 * @return list<mixed>|null
+	 */
+	private static function sexpList(array $tokens, int &$pos, int $depth = 0): ?array
 	{
 		if ($pos >= count($tokens) || $tokens[$pos] !== '(') {
+			return null;
+		}
+		// Attacker-shaped nesting: BODYSTRUCTURE input is wire-capped at
+		// 64KiB but PHP has no native recursion limit — bound the depth.
+		// Consume the whole subtree so the caller's loop cannot spin on it.
+		if ($depth > self::SEXP_MAX_DEPTH) {
+			$balance = 0;
+			while ($pos < count($tokens)) {
+				if ($tokens[$pos] === '(') {
+					$balance++;
+				} elseif ($tokens[$pos] === ')') {
+					$balance--;
+				}
+				$pos++;
+				if ($balance === 0) {
+					break;
+				}
+			}
 			return null;
 		}
 		$pos++; // consume '('
 		$items = [];
 		while ($pos < count($tokens) && $tokens[$pos] !== ')') {
 			if ($tokens[$pos] === '(') {
-				$sub = self::sexpList($tokens, $pos);
+				$sub = self::sexpList($tokens, $pos, $depth + 1);
 				$items[] = $sub ?? [];
 			} else {
 				$items[] = $tokens[$pos];
@@ -537,14 +559,20 @@ final class ImapSyncClient
 		return self::sexpInterpret($items);
 	}
 
+	/** BODYSTRUCTURE nesting cap — real MIME trees never exceed ~10. */
+	private const SEXP_MAX_DEPTH = 32;
+
 	/**
 	 * Turn a raw item list into a part node (multipart container or leaf).
 	 *
 	 * @param list<mixed> $items
 	 * @return array<string, mixed>
 	 */
-	private static function sexpInterpret(array $items): array
+	private static function sexpInterpret(array $items, int $depth = 0): array
 	{
+		if ($depth > self::SEXP_MAX_DEPTH) {
+			return ['multipart' => false, 'type' => '', 'subtype' => '', 'parts' => []];
+		}
 		// Multipart: children are themselves part lists.
 		$isMultipart = $items !== [] && is_array($items[0]);
 		if ($isMultipart) {
@@ -552,7 +580,7 @@ final class ImapSyncClient
 			$subtype = '';
 			foreach ($items as $it) {
 				if (is_array($it)) {
-					$parts[] = self::sexpInterpret(array_values($it));
+					$parts[] = self::sexpInterpret(array_values($it), $depth + 1);
 				} elseif ($subtype === '') {
 					$subtype = strtolower(trim((string)$it, '"'));
 				}

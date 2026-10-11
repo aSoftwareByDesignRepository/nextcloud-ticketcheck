@@ -6,6 +6,8 @@ namespace OCA\Ticketcheck\Tests\Unit;
 
 use OCA\Ticketcheck\Service\InboundMailDetectService;
 use OCA\Ticketcheck\Support\ImapConnection;
+use OCA\Ticketcheck\Support\ImapLiveProbe;
+use OCA\Ticketcheck\Support\MimeHeader;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -190,5 +192,38 @@ class ImapSupportTest extends TestCase
 		$out = InboundMailDetectService::candidates('ops@203.0.113.10');
 		self::assertCount(2, $out);
 		self::assertSame('203.0.113.10', $out[0]['host']);
+	}
+
+	// ---------- MimeHeader decoded-CRLF hygiene ----------
+
+	public function testMimeHeaderDecodeStripsSmuggledCrlf(): void
+	{
+		// Plain path: embedded CRLF (header-injection shape) must collapse.
+		$plain = MimeHeader::decode("Re: order\r\nInjected: yes");
+		self::assertStringNotContainsString("\r", $plain);
+		self::assertStringNotContainsString("\n", $plain);
+		self::assertSame('Re: order Injected: yes', $plain);
+
+		// Encoded path: base64 payload carrying literal CRLF decodes, then
+		// the control bytes must still never reach a ticket title.
+		$enc = MimeHeader::decode('=?UTF-8?B?' . base64_encode("a\r\nb") . '?=');
+		self::assertStringNotContainsString("\r", $enc);
+		self::assertStringNotContainsString("\n", $enc);
+		self::assertSame('a b', $enc);
+	}
+
+	// ---------- readLine wire bound ----------
+
+	public function testImapReadLineIsBounded(): void
+	{
+		// A peer streaming a single unterminated line must not grow memory
+		// unbounded — readLine caps at 8192 bytes per call.
+		$fp = fopen('php://temp', 'r+');
+		self::assertIsResource($fp);
+		fwrite($fp, str_repeat('A', 20000) . "\r\n");
+		rewind($fp);
+		$line = ImapLiveProbe::readLine($fp);
+		fclose($fp);
+		self::assertLessThanOrEqual(8191, strlen($line));
 	}
 }

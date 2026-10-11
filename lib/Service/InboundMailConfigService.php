@@ -263,6 +263,13 @@ final class InboundMailConfigService
 		foreach (self::HASH_FIELDS as $f) {
 			$parts[] = (string)($cfg[$f] ?? '');
 		}
+		// Bind the gate to the credential for password auth — rotating the
+		// mailbox password must invalidate a stale test-pass. The encrypted
+		// blob is hashed (never the plaintext), and only for password mode:
+		// XOAUTH2 token fields rotate on refresh and must stay excluded.
+		if (($cfg['auth_mode'] ?? self::AUTH_PASSWORD) === self::AUTH_PASSWORD) {
+			$parts[] = 'secret:' . hash('sha256', (string)($cfg['secret_enc'] ?? ''));
+		}
 		return hash('sha256', implode('|', $parts));
 	}
 

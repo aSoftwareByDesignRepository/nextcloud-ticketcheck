@@ -4,7 +4,7 @@ const path = require('path');
 const { ensureAuthenticated } = require('./helpers/auth-guard');
 const { resolveGuestStorageState } = require('./helpers/guest-storage');
 
-const BASE = (process.env.E2E_BASE || 'http://localhost:8081').replace(/\/$/, '');
+const BASE = (process.env.E2E_BASE || 'http://127.0.0.1:8081').replace(/\/$/, '');
 const APP_HOME = `${BASE}/index.php/apps/ticketcheck/guests`;
 const PORTAL_HOME = `${BASE}/index.php/apps/ticketcheck/portal`;
 

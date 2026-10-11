@@ -286,18 +286,38 @@ class InboundMailConfigServiceTest extends TestCase
 
 	// ---------- testPassedHash / enable gating ----------
 
-	public function testTestPassedHashIgnoresSecretsAndFlags(): void
+	public function testTestPassedHashIgnoresFlagsButBindsPasswordSecret(): void
 	{
 		$svc = $this->service();
 		$v = $svc->validateInput($this->validInput(['host' => 'imap.example.com', 'port' => 993]));
 		$same = $v;
-		$same['password'] = 'different-password';
 		$same['dsgvo_ack'] = false;
 		self::assertSame($svc->testPassedHash($v), $svc->testPassedHash($same));
 
 		$changed = $v;
 		$changed['host'] = 'other.example.com';
 		self::assertNotSame($svc->testPassedHash($v), $svc->testPassedHash($changed));
+
+		// Password rotation must invalidate a stale test-pass: the hash binds
+		// the stored secret ciphertext in password mode (mailboxConfig shape).
+		$cfg = $v;
+		$cfg['auth_mode'] = 'password';
+		$cfg['secret_enc'] = 'enc:blob-A';
+		$rotated = $cfg;
+		$rotated['secret_enc'] = 'enc:blob-B';
+		self::assertNotSame($svc->testPassedHash($cfg), $svc->testPassedHash($rotated));
+
+		// XOAUTH2 token fields rotate on refresh — they must NOT bind the
+		// gate or every token refresh would silently break polling.
+		$oauth = $v;
+		$oauth['auth_mode'] = 'xoauth2';
+		$oauth['secret_enc'] = 'enc:blob-A';
+		$oauth['oauth_access_enc'] = 'enc:at-1';
+		$oauth['oauth_refresh_enc'] = 'enc:rt-1';
+		$oauthRotated = $oauth;
+		$oauthRotated['oauth_access_enc'] = 'enc:at-2';
+		$oauthRotated['oauth_refresh_enc'] = 'enc:rt-2';
+		self::assertSame($svc->testPassedHash($oauth), $svc->testPassedHash($oauthRotated));
 	}
 
 	// ---------- probe throttle ----------

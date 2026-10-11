@@ -175,10 +175,13 @@ class InboundMessageMapper extends QBMapper
 	 */
 	public function countTicketCreationsBySender(string $fromAddr, \DateTime $since): int
 	{
+		// Compare in the same normalized+truncated space the claim row stores
+		// (mb_substr at insert) — a >255-char From must not sidestep the cap.
+		$storedForm = mb_substr(strtolower($fromAddr), 0, 255);
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->createFunction('COUNT(*)'))
 			->from($this->getTableName())
-			->where($qb->expr()->eq('from_addr', $qb->createNamedParameter(strtolower($fromAddr))))
+			->where($qb->expr()->eq('from_addr', $qb->createNamedParameter($storedForm)))
 			->andWhere($qb->expr()->eq('action', $qb->createNamedParameter(InboundMessage::ACTION_TICKET_CREATED)))
 			->andWhere($qb->expr()->gte('finished_at', $qb->createNamedParameter($since, IQueryBuilder::PARAM_DATE)));
 		$result = $qb->executeQuery();

@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { ensureAuthenticated } = require('./helpers/auth-guard');
 
-const BASE = (process.env.E2E_BASE || 'http://localhost:8081').replace(/\/$/, '');
+const BASE = (process.env.E2E_BASE || 'http://127.0.0.1:8081').replace(/\/$/, '');
 const GUESTS_URL = `${BASE}/index.php/apps/ticketcheck/guests`;
 const CREATE_URL = `${GUESTS_URL}/create`;
 

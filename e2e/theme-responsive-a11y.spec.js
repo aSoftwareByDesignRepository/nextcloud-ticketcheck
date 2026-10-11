@@ -14,7 +14,7 @@ const {
 	resetAccentColor,
 } = require('./helpers/theming');
 
-const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
+const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://127.0.0.1:8081').replace(/\/$/, '');
 
 const routes = [
 	{ id: 'dashboard', path: '/apps/ticketcheck/', ready: '#tc-main-content' },

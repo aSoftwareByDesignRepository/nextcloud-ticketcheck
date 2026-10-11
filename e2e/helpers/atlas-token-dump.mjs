@@ -28,7 +28,7 @@ if (existsSync(ENV_PATH)) {
 	}
 }
 
-const BASE = (process.env.E2E_BASE || 'http://localhost:8081').replace(/\/$/, '')
+const BASE = (process.env.E2E_BASE || 'http://127.0.0.1:8081').replace(/\/$/, '')
 const USER = process.env.E2E_USER
 const PASS = process.env.E2E_PASSWORD || process.env.E2E_PASS
 

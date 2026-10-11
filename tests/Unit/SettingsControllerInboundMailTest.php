@@ -206,6 +206,58 @@ class SettingsControllerInboundMailTest extends TestCase
 		self::assertSame('support@example.com', $this->store['inbound_imap_address']);
 		self::assertSame('no', $this->store['inbound_imap_enabled'] ?? 'no');
 		self::assertArrayHasKey('status', $data);
+		// Not-configured early return carries no probe payload.
+		self::assertArrayNotHasKey('imap', $data);
+	}
+
+	public function testSaveOrchestratedProbeFailureEchoesStrippedImap(): void
+	{
+		// Stored secret that decrypts to empty → cred resolve fails → the
+		// failure response must carry the same stripped imap shape as
+		// inboundImapTest — never probe internals (no host/detail echo).
+		$this->store['inbound_imap_secret_enc'] = 'ENC()';
+		$c = $this->controller();
+		$params = [
+			'address' => 'support@example.com',
+			'dsgvo_ack' => 'yes',
+			'password' => '',
+			'enable_after_test' => 'yes',
+		];
+		$this->request->method('getParam')->willReturnCallback(
+			fn (string $k, $d = null) => $params[$k] ?? $d
+		);
+		$r = $c->inboundImapSave();
+		self::assertSame(200, $r->getStatus());
+		$data = $r->getData();
+		self::assertTrue($data['success']);
+		self::assertFalse($data['enabled']);
+		self::assertSame('auth', $data['error_class']);
+		self::assertSame(['ok' => false, 'error' => 'auth'], $data['imap']);
+		self::assertArrayNotHasKey('detail', $data['imap']);
+		self::assertArrayNotHasKey('host', $data['imap']);
+	}
+
+	public function testTestEndpointProbeFailureEchoesStrippedImap(): void
+	{
+		$c = $this->controller();
+		$this->store['inbound_imap_address'] = 'support@example.com';
+		$this->store['inbound_imap_secret_enc'] = 'ENC()';
+		$r = $c->inboundImapTest();
+		self::assertSame(200, $r->getStatus());
+		$data = $r->getData();
+		self::assertSame('auth', $data['error_class']);
+		self::assertSame('auth', $data['imap']['error']);
+		self::assertArrayNotHasKey('detail', $data['imap']);
+	}
+
+	public function testInboundErrorClassMapsMissingCredentialsToAuth(): void
+	{
+		// missing_credentials is an auth-class problem — the UI reveal
+		// depends on it — not a generic network failure.
+		$c = $this->controller();
+		$m = new \ReflectionMethod(SettingsController::class, 'inboundErrorClass');
+		self::assertSame('auth', $m->invoke($c, ['ok' => false, 'error' => 'missing_credentials'], null));
+		self::assertSame('auth', $m->invoke($c, ['ok' => false, 'reason' => 'missing_credentials'], null));
 	}
 
 	public function testSaveWithoutEnableAfterTestSkipsProbe(): void

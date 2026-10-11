@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { skipIfLoginPage } = require('./helpers/auth-guard');
 
-const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
+const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://127.0.0.1:8081').replace(/\/$/, '');
 const PROJECTS_URL = process.env.E2E_AGENT_PROJECTS_URL || `${BASE}/apps/ticketcheck/projects`;
 const LIST_URL = process.env.E2E_AGENT_TICKETS_LIST_URL || `${BASE}/apps/ticketcheck/tickets`;
 

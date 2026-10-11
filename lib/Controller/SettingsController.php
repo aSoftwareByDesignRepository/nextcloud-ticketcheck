@@ -1321,7 +1321,9 @@ class SettingsController extends Controller
                 'enabled' => false,
                 'error_class' => $class,
                 'error' => $this->inboundProbeMessage($probe['imap'], $class),
-                'imap' => $probe['imap'],
+                // Same wire contract as inboundImapTest: never echo probe
+                // internals (sanitized server detail included).
+                'imap' => ['ok' => false, 'error' => (string)($probe['imap']['error'] ?? $probe['imap']['reason'] ?? 'unreachable')],
                 'smtp' => $probe['smtp'],
                 'status' => $this->inboundMailConfig->status(),
             ]);
@@ -1419,11 +1421,21 @@ class SettingsController extends Controller
         } else {
             $imap = $this->inboundMailDetect->detect($cfg, $cred['secret'], !empty($cfg['allow_private_host']));
             if (!empty($imap['ok'])) {
-                $this->inboundMailConfig->applyDetectedEndpoint(
-                    (string)$imap['host'], (int)$imap['port'], (string)$imap['enc'],
-                    (string)$cred['user'],
-                );
-                $cfg = $this->inboundMailConfig->mailboxConfig();
+                // Write race: a concurrent save may have installed an
+                // explicit host while detect was dialing — never clobber
+                // it, and never stamp test_passed for a config we did not
+                // actually dial.
+                $fresh = $this->inboundMailConfig->mailboxConfig();
+                if (trim((string)$fresh['host']) === '') {
+                    $this->inboundMailConfig->applyDetectedEndpoint(
+                        (string)$imap['host'], (int)$imap['port'], (string)$imap['enc'],
+                        (string)$cred['user'],
+                    );
+                    $cfg = $this->inboundMailConfig->mailboxConfig();
+                } else {
+                    $imap['stale'] = true;
+                    $cfg = $fresh;
+                }
             }
         }
 
@@ -1453,7 +1465,7 @@ class SettingsController extends Controller
             }
         }
 
-        if (!empty($imap['ok'])) {
+        if (!empty($imap['ok']) && empty($imap['stale'])) {
             $this->inboundMailConfig->markTestPassed($cfg);
         }
 
@@ -1470,6 +1482,9 @@ class SettingsController extends Controller
     private function inboundErrorClass(array $imap, ?array $smtp): string
     {
         $reason = (string)($imap['error'] ?? $imap['reason'] ?? '');
+        if ($reason === 'missing_credentials') {
+            return 'auth';
+        }
         if (in_array($reason, ['auth', 'cert', 'network', 'private_host', 'blocked'], true)) {
             if ($reason === 'blocked') {
                 $detail = (string)($imap['detail'] ?? '');

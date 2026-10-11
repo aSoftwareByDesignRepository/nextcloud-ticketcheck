@@ -14,7 +14,7 @@ function resolveStorageState() {
   return undefined;
 }
 
-const baseURL = (process.env.E2E_BASE || process.env.BASE_URL || process.env.NC_BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
+const baseURL = (process.env.E2E_BASE || process.env.BASE_URL || process.env.NC_BASE_URL || 'http://127.0.0.1:8081').replace(/\/$/, '');
 
 module.exports = defineConfig({
   globalSetup: require.resolve('./e2e/global-setup.js'),

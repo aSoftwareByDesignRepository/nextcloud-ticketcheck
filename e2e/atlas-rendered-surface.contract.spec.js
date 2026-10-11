@@ -4,7 +4,7 @@ const { resolveGuestStorageState } = require('./helpers/guest-storage');
 const { assertAtlasRenderedSurface } = require('../../_shared/e2e/atlas-rendered-surface-contract');
 const { assertIconsAcrossSchemes } = require('./helpers/icon-contrast');
 
-const BASE = (process.env.E2E_BASE || 'http://localhost:8081').replace(/\/$/, '');
+const BASE = (process.env.E2E_BASE || 'http://127.0.0.1:8081').replace(/\/$/, '');
 
 /**
  * ATLAS_RENDERED_SURFACE_CONTRACT — asserts the *rendered* truth of each page

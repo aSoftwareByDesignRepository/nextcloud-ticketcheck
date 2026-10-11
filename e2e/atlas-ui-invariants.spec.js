@@ -27,7 +27,7 @@ const {
 const { ensureAuthenticated } = require('./helpers/auth-guard');
 const { resolveGuestStorageState } = require('./helpers/guest-storage');
 
-const BASE = (process.env.E2E_BASE || 'http://localhost:8081').replace(/\/$/, '');
+const BASE = (process.env.E2E_BASE || 'http://127.0.0.1:8081').replace(/\/$/, '');
 const APP = `${BASE}/index.php/apps/ticketcheck`;
 const CONTENT = '#tc-main-content';
 const RUNID = `tck-ui-inv-${Date.now()}`;

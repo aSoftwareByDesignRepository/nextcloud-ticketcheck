@@ -23,7 +23,7 @@
  *   node e2e/helpers/atlas-contrast-probe.mjs [--out <path.json>]
  *
  * Requires E2E_USER + E2E_PASSWORD (and E2E_GUEST_* for the portal leg) in
- * e2e/.env and http://localhost:8081.
+ * e2e/.env and http://127.0.0.1:8081.
  */
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -46,7 +46,7 @@ if (existsSync(ENV_PATH)) {
 	}
 }
 
-const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, '')
+const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://127.0.0.1:8081').replace(/\/$/, '')
 const USER = process.env.E2E_USER
 const PASS = process.env.E2E_PASS || process.env.E2E_PASSWORD
 const GUEST_USER = process.env.E2E_GUEST_USER

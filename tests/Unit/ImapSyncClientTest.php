@@ -154,6 +154,18 @@ class ImapSyncClientTest extends TestCase
 		self::assertNull(ImapSyncClient::parseBodyStructure('not an sexp'));
 	}
 
+	public function testParseBodyStructureDeepNestingIsBounded(): void
+	{
+		// Attacker-shaped BODYSTRUCTURE: nesting far beyond the depth cap must
+		// terminate (no unbounded recursion / infinite consume loop) and never
+		// produce an unbounded part tree.
+		$deep = str_repeat('(', 200) . '"text" "plain" NIL NIL NIL "7BIT" 10 1' . str_repeat(')', 200);
+		$start = microtime(true);
+		$root = ImapSyncClient::parseBodyStructure($deep);
+		self::assertLessThan(5.0, microtime(true) - $start);
+		self::assertLessThanOrEqual(64, count(ImapSyncClient::flattenParts($root)));
+	}
+
 	public function testFlattenNullRoot(): void
 	{
 		self::assertSame([], ImapSyncClient::flattenParts(null));

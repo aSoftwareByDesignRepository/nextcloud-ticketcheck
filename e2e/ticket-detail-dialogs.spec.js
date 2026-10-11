@@ -5,7 +5,7 @@ const path = require('path');
 
 const LIST_URL = process.env.E2E_AGENT_TICKETS_LIST_URL;
 const CREATE_URL = process.env.E2E_AGENT_CREATE_TICKET_URL;
-const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
+const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://127.0.0.1:8081').replace(/\/$/, '');
 const FIXTURE_PNG = path.join(__dirname, 'fixtures', 'atlas-lightbox.png');
 
 test.skip(!CREATE_URL && !LIST_URL, 'Set E2E_AGENT_CREATE_TICKET_URL or E2E_AGENT_TICKETS_LIST_URL');
