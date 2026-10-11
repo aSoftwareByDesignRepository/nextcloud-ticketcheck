@@ -178,6 +178,32 @@ class AttachmentUploadService
     }
 
     /**
+     * Persist a server-side temp file (non-HTTP origin — e.g. a MIME part
+     * decoded by the inbound-mail pipeline). move_uploaded_file() refuses
+     * these, so use rename with a copy fallback for cross-device temp dirs.
+     * The source file is consumed on success.
+     */
+    public function persistStoredFile(int $ticketId, string $tmpPath, string $originalName): ?string
+    {
+        $dataDir = $this->config->getSystemValue('datadirectory', '');
+        $uploadDir = $dataDir . '/helpdesk_attachments/' . $ticketId;
+        if (!file_exists($uploadDir) && !mkdir($uploadDir, 0750, true) && !is_dir($uploadDir)) {
+            return null;
+        }
+
+        $storedName = $this->buildStoredFilename($originalName);
+        $filePath = $uploadDir . '/' . $storedName;
+        if (!@rename($tmpPath, $filePath)) {
+            if (!@copy($tmpPath, $filePath)) {
+                return null;
+            }
+            @unlink($tmpPath);
+        }
+
+        return $storedName;
+    }
+
+    /**
      * Remove a file previously written by persistUploadedFile (orphan cleanup after failed DB insert).
      */
     public function deletePersistedFile(int $ticketId, string $storedName): void

@@ -53,6 +53,7 @@ final class UninstallDropTables implements IRepairStep
 		'helpdesk_customers',
 		'helpdesk_escalation_rules',
 		'helpdesk_guest_access',
+		'helpdesk_inbound_msgs',
 		'helpdesk_kb_articles',
 		'helpdesk_kb_categories',
 		'helpdesk_kb_comments',

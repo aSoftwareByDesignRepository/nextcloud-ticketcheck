@@ -19,6 +19,7 @@
 
 	const ANCHOR_SECTIONS = Object.freeze({
 		'settings-email-heading': 'email',
+		'settings-inbound-mail-heading': 'inbound-mail',
 		'settings-kb-heading': 'knowledge-base',
 		'settings-access-heading': 'access',
 		'app-access-preview-card': 'access',

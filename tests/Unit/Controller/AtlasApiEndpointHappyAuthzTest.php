@@ -128,6 +128,12 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 		'CompanionController::downloadAttachment', // CompanionControllerSurfaceTest
 		'CompanionController::uploadAttachment', // CompanionControllerSurfaceTest::testUploadHappyPathIs201
 		'InboundEmailController::webhook', // InboundEmailControllerTest (200 HMAC/Mailgun)
+		// Inbound-mail settings actions need saved config beyond dummy args;
+		// all covered by SettingsControllerInboundMailTest deterministic paths.
+		'SettingsController::inboundImapSave',
+		'SettingsController::inboundImapTest',
+		'SettingsController::inboundImapEnable',
+		'SettingsController::inboundImapOauthBegin',
 	];
 
 	/**

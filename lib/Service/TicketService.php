@@ -158,6 +158,63 @@ class TicketService
     }
 
     /**
+     * Create a ticket from an inbound email (no user session — cron context).
+     *
+     * Provenance is explicit: created_by='inbound-email' so audit/UI can
+     * distinguish mail-originated tickets; created_by_guest stays false
+     * because no guest session exists.
+     *
+     * @param array{title: string, description: string, customer_email: string,
+     *   customer_name?: string, customer_id?: int|null, project_id?: int|null,
+     *   category?: string} $data
+     * @throws \Exception
+     */
+    public function createTicketFromEmail(array $data): Ticket
+    {
+        $ticket = new Ticket();
+        $ticket->setTicketNumber($this->generateUniqueTicketNumber());
+        $ticket->setTitle($data['title'] ?? '');
+        $ticket->setDescription($data['description'] ?? '');
+        $ticket->setCustomerId($data['customer_id'] ?? null);
+        $ticket->setCustomerEmail($data['customer_email'] ?? '');
+        $ticket->setCustomerName(trim((string)($data['customer_name'] ?? '')) !== ''
+            ? (string)$data['customer_name']
+            : (string)($data['customer_email'] ?? ''));
+        $ticket->setProjectId($data['project_id'] ?? null);
+        $ticket->setCategory($data['category'] ?? Ticket::CATEGORY_GENERAL);
+        $ticket->setPriority(Ticket::PRIORITY_NORMAL);
+        $ticket->setStatus(Ticket::STATUS_NEW);
+        $ticket->setAssignedTo(null);
+        $ticket->setCreatedAt(new \DateTime());
+        $ticket->setUpdatedAt(Ticket::nextUpdatedAt($ticket->getUpdatedAt()));
+        $ticket->setCreatedBy('inbound-email');
+        $ticket->setCreatedByGuest(false);
+
+        $this->calculateSLADates($ticket);
+
+        $errors = $ticket->validate();
+        if (!empty($errors)) {
+            throw new \Exception('Validation failed: ' . implode(', ', $errors));
+        }
+
+        $maxInsertAttempts = 5;
+        for ($insertAttempt = 1; $insertAttempt <= $maxInsertAttempts; $insertAttempt++) {
+            try {
+                return $this->ticketMapper->insert($ticket);
+            } catch (\OCP\DB\Exception $e) {
+                $isUniqueViolation = $e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION;
+                if (!$isUniqueViolation || $insertAttempt === $maxInsertAttempts) {
+                    $this->logger->error('Failed to create ticket from email: ' . $e->getMessage(), ['exception' => $e]);
+                    throw new \Exception('Failed to create ticket', 0, $e);
+                }
+                $ticket->setTicketNumber($this->generateUniqueTicketNumber());
+            }
+        }
+
+        throw new \Exception('Failed to create ticket');
+    }
+
+    /**
      * Update a ticket
      *
      * @param int $id
@@ -1012,7 +1069,7 @@ class TicketService
                             $fileSize,
                             $mimeType,
                             $boundCommentId,
-                            $user
+                            $user->getUID()
                         );
                     } catch (\Throwable $e) {
                         $this->attachmentUploadService->deletePersistedFile($ticketId, $storedName);
@@ -1020,6 +1077,66 @@ class TicketService
                     }
                 },
                 'TicketCheck attachment upload'
+            );
+        } catch (\InvalidArgumentException $e) {
+            throw new \Exception($e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Persist an inbound-mail attachment (server-side temp file, no session).
+     * Same lock + merge-safety + orphan cleanup as addAttachmentFromUploadedFile;
+     * uploaded_by is the literal 'inbound-email' provenance marker.
+     */
+    public function addAttachmentFromEmail(
+        int $ticketId,
+        string $tmpPath,
+        string $originalName,
+        int $fileSize,
+        string $mimeType,
+        ?int $commentId = null
+    ): Attachment {
+        try {
+            return $this->workflowLock->withTicketLocks(
+                [$ticketId],
+                function () use ($ticketId, $tmpPath, $originalName, $fileSize, $mimeType, $commentId): Attachment {
+                    try {
+                        $ticket = $this->ticketMapper->find($ticketId);
+                    } catch (\Exception $e) {
+                        throw new \Exception('Ticket not found');
+                    }
+                    $this->assertTicketNotMerged($ticket);
+                    $boundCommentId = $this->assertCommentBelongsToTicket(
+                        $ticketId,
+                        $commentId,
+                        false
+                    );
+
+                    $storedName = $this->attachmentUploadService->persistStoredFile(
+                        $ticketId,
+                        $tmpPath,
+                        $originalName
+                    );
+                    if ($storedName === null) {
+                        throw new \Exception('Failed to save file');
+                    }
+
+                    try {
+                        return $this->insertAttachmentRow(
+                            $ticketId,
+                            $storedName,
+                            $originalName,
+                            $fileSize,
+                            $mimeType,
+                            $boundCommentId,
+                            'inbound-email'
+                        );
+                    } catch (\Throwable $e) {
+                        $this->attachmentUploadService->deletePersistedFile($ticketId, $storedName);
+                        throw $e;
+                    }
+                },
+                'TicketCheck inbound attachment'
             );
         } catch (\InvalidArgumentException $e) {
             throw new \Exception($e->getMessage(), 0, $e);
@@ -1067,13 +1184,10 @@ class TicketService
             $fileSize,
             $mimeType,
             $boundCommentId,
-            $user
+            $user->getUID()
         );
     }
 
-    /**
-     * @param \OCP\IUser $user
-     */
     private function insertAttachmentRow(
         int $ticketId,
         string $filePath,
@@ -1081,7 +1195,7 @@ class TicketService
         int $fileSize,
         string $mimeType,
         ?int $commentId,
-        $user
+        string $uploadedBy
     ): Attachment {
         $attachment = new Attachment();
         $attachment->setTicketId($ticketId);
@@ -1090,7 +1204,7 @@ class TicketService
         $attachment->setFileName($fileName);
         $attachment->setFileSize($fileSize);
         $attachment->setMimeType($mimeType);
-        $attachment->setUploadedBy($user->getUID());
+        $attachment->setUploadedBy($uploadedBy);
         $attachment->setUploadedAt(new \DateTime());
 
         $errors = $attachment->validate();

@@ -135,8 +135,11 @@ class PermissionServiceTest extends TestCase
         self::assertTrue($this->permissionService->canViewTicket($ticket));
     }
 
-    public function testCanViewTicket_GuestCannotViewEmailOnlyTicketWithoutProject(): void
+    public function testCanViewTicket_GuestCanViewOwnEmailOnlyTicketWithoutProject(): void
     {
+        // Inbound-email tickets carry created_by='inbound-email' and often have
+        // no project; the addressed customer must still see their own ticket
+        // (same email scope as the portal's findByCustomerEmail list).
         $user = $this->createMock(IUser::class);
         $user->method('getUID')->willReturn('guest2');
         $user->method('getEMailAddress')->willReturn('customer@example.com');
@@ -148,8 +151,8 @@ class PermissionServiceTest extends TestCase
             ['guest2', PermissionService::GROUP_HELPDESK_ADMINS, false],
         ]);
 
-        $ticket = $this->ticket('agent1', 'customer@example.com', null);
-        self::assertFalse($this->permissionService->canViewTicket($ticket));
+        $ticket = $this->ticket('inbound-email', 'customer@example.com', null);
+        self::assertTrue($this->permissionService->canViewTicket($ticket));
     }
 
     public function testCanViewTicket_GuestCannotViewOtherCustomersTicket(): void

@@ -238,7 +238,10 @@ class UpgradeBackupService
 				$this->db->executeStatement('ALTER SESSION SET CONSTRAINTS = DEFERRED');
 				$oracleConstraintsDeferred = true;
 			} catch (\Throwable $e) {
-				// best-effort: snapshot GC / platform fallback — failure must not abort the purge/restore flow
+				// best-effort: deferred constraints are an optimization; when the
+				// ALTER SESSION fails the FK-safe table order from
+				// UpgradeBackupCatalog::sortedRestoreTables still keeps the
+				// restore consistent, so warn and continue.
 				$this->logger->warning('TicketCheck: Oracle constraints could not be deferred for restore; relying on restore table order.', [
 					'exception' => $e,
 				]);
@@ -465,7 +468,6 @@ class UpgradeBackupService
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')->from($table);
 		$result = $qb->executeQuery();
-		/** @var list<array<string, mixed>> $rows */
 		$rows = $result->fetchAll();
 		$result->closeCursor();
 
@@ -523,7 +525,6 @@ class UpgradeBackupService
 			->where($qb->expr()->eq('app', $qb->createNamedParameter(UpgradeBackupCatalog::APP_ID)));
 
 		$result = $qb->executeQuery();
-		/** @var list<array<string, mixed>> $rows */
 		$rows = $result->fetchAll();
 		$result->closeCursor();
 
@@ -823,7 +824,6 @@ class UpgradeBackupService
 		}
 	}
 
-	/** @param list<string> $excludeIds */
 	private function rotateSnapshots(array $excludeIds = []): void
 	{
 		$max = UpgradeBackupCatalog::clampMaxSnapshots((int)$this->config->getAppValue(
@@ -849,7 +849,7 @@ class UpgradeBackupService
 	}
 
 	/**
-	 * @param array<mixed> $payload
+	 * @param array<string, mixed> $payload
 	 */
 	private function writeJsonFile(Folder $parent, string $name, array $payload): void
 	{
@@ -906,7 +906,10 @@ class UpgradeBackupService
 					$folder->delete();
 				}
 			} catch (\Throwable $e) {
-				// best-effort: snapshot GC / platform fallback — failure must not abort the purge/restore flow
+				// best-effort per snapshot: a corrupt/unreadable manifest or a
+				// failed ->delete() must not abort the purge sweep; the folder is
+				// still removed through the fallback path below so the corrupt
+				// snapshot cannot poison later listSnapshots() runs.
 				$this->logger->warning('TicketCheck: removing corrupt upgrade backup folder', [
 					'app' => UpgradeBackupCatalog::APP_ID,
 					'folder' => $snapshotId,

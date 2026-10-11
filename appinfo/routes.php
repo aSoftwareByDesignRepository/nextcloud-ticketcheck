@@ -142,7 +142,7 @@ return [
         // Keep the requirement literal (route files load without the app autoloader).
         // tests/Unit/Controller/SettingsPagesContractTest pins it to SettingsSectionCatalog::routeRequirement().
         ['name' => 'settings#section', 'url' => '/settings/{section}', 'verb' => 'GET',
-            'requirements' => ['section' => 'access|email|knowledge-base|kb-categories|escalation|about']],
+            'requirements' => ['section' => 'access|email|inbound-mail|knowledge-base|kb-categories|escalation|about']],
         ['name' => 'settings#updateEmail', 'url' => '/settings/email', 'verb' => 'POST'],
         ['name' => 'settings#updateKnowledgeBase', 'url' => '/settings/knowledge-base', 'verb' => 'POST'],
         ['name' => 'settings#updateAppAccess', 'url' => '/settings/app-access', 'verb' => 'POST'],
@@ -151,6 +151,15 @@ return [
         ['name' => 'settings#searchNextcloudUsers', 'url' => '/api/settings/users/search', 'verb' => 'GET'],
 
         ['name' => 'settings#testEmail', 'url' => '/api/settings/test-email', 'verb' => 'POST'],
+
+        // Inbound mailbox (IMAP) administration — settings section + probes
+        ['name' => 'settings#inboundImapStatus', 'url' => '/api/settings/inbound-imap/status', 'verb' => 'GET'],
+        ['name' => 'settings#inboundImapSave', 'url' => '/api/settings/inbound-imap', 'verb' => 'POST'],
+        ['name' => 'settings#inboundImapTest', 'url' => '/api/settings/inbound-imap/test', 'verb' => 'POST'],
+        ['name' => 'settings#inboundImapEnable', 'url' => '/api/settings/inbound-imap/enable', 'verb' => 'POST'],
+        ['name' => 'settings#inboundImapDisable', 'url' => '/api/settings/inbound-imap/disable', 'verb' => 'POST'],
+        ['name' => 'settings#inboundImapOauthBegin', 'url' => '/api/settings/inbound-imap/oauth/begin', 'verb' => 'GET'],
+        ['name' => 'settings#inboundImapOauthCallback', 'url' => '/api/settings/inbound-imap/oauth/callback', 'verb' => 'GET'],
 
         // Standalone project/customer management is handled by dedicated controllers.
 

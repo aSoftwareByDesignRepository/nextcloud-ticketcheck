@@ -205,7 +205,8 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Service\EmailHeaderSanitizer::class),
                 $c->get(\OCP\IUserManager::class),
                 $c->get(\OCP\IGroupManager::class),
-                $c->get(\OCA\Ticketcheck\Db\TicketWatcherMapper::class)
+                $c->get(\OCA\Ticketcheck\Db\TicketWatcherMapper::class),
+                $c->get(\OCA\Ticketcheck\Service\InboundSmtpSendService::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\ActivityEventService::class, function ($c) {
@@ -353,9 +354,90 @@ class Application extends App implements IBootstrap
             );
         });
 
+        // Inbound mail (IMAP + shared webhook/IMAP processor)
+        $context->registerService(\OCA\Ticketcheck\Service\InboundMailConfigService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\InboundMailConfigService(
+                $c->get(\OCP\IAppConfig::class),
+                $c->get(\OCP\IConfig::class),
+                $c->get(\OCP\Security\ICrypto::class),
+                $c->get(\OCP\L10N\IFactory::class)->get(self::APP_ID)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\InboundMailAuthService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\InboundMailAuthService(
+                $c->get(\OCA\Ticketcheck\Service\InboundMailConfigService::class),
+                $c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
+                $c->get(\Psr\Log\LoggerInterface::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\InboundMailOAuthService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\InboundMailOAuthService(
+                $c->get(\OCA\Ticketcheck\Service\InboundMailConfigService::class),
+                $c->get(\OCP\ICacheFactory::class),
+                $c->get(\OCP\Security\ISecureRandom::class),
+                $c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
+                $c->get(\OCP\IURLGenerator::class),
+                $c->get(\OCP\L10N\IFactory::class)->get(self::APP_ID)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\InboundMailDetectService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\InboundMailDetectService(
+                $c->get(\OCA\Ticketcheck\Service\InboundMailAuthService::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\ReplyTokenService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\ReplyTokenService(
+                $c->get(\OCP\IConfig::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\InboundAttachmentIngestService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\InboundAttachmentIngestService(
+                $c->get(\OCA\Ticketcheck\Service\AttachmentUploadService::class),
+                $c->get('TicketService'),
+                $c->get(\Psr\Log\LoggerInterface::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\InboundSmtpSendService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\InboundSmtpSendService(
+                $c->get(\OCA\Ticketcheck\Service\InboundMailConfigService::class),
+                $c->get(\OCA\Ticketcheck\Service\InboundMailAuthService::class),
+                $c->get(\Psr\Log\LoggerInterface::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\InboundMailSyncService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\InboundMailSyncService(
+                $c->get(\OCA\Ticketcheck\Service\InboundMailConfigService::class),
+                $c->get(\OCA\Ticketcheck\Service\InboundMailAuthService::class),
+                $c->get(\OCA\Ticketcheck\Service\InboundEmailService::class),
+                $c->get(\OCA\Ticketcheck\Service\InboundAttachmentIngestService::class),
+                $c->get(\OCP\Lock\ILockingProvider::class),
+                $c->get(\Psr\Log\LoggerInterface::class)
+            );
+        });
         $context->registerService(\OCA\Ticketcheck\Service\InboundEmailService::class, function ($c) {
             return new \OCA\Ticketcheck\Service\InboundEmailService(
                 $c->get('TicketService'),
+                $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get(\OCA\Ticketcheck\Service\InboundMailConfigService::class),
+                $c->get(\OCA\Ticketcheck\Db\InboundMessageMapper::class),
+                $c->get(\OCA\Ticketcheck\Service\ReplyTokenService::class),
+                $c->get('EmailService'),
+                $c->get(\OCA\Ticketcheck\Db\HelpdeskCustomerMapper::class),
+                $c->get(\OCA\Ticketcheck\Db\HelpdeskProjectMapper::class),
+                $c->get(\OCP\L10N\IFactory::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\BackgroundJob\InboundMailSyncJob::class, function ($c) {
+            return new \OCA\Ticketcheck\BackgroundJob\InboundMailSyncJob(
+                $c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
+                $c->get(\OCA\Ticketcheck\Service\InboundMailSyncService::class),
+                $c->get(\Psr\Log\LoggerInterface::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\BackgroundJob\InboundMailRetentionJob::class, function ($c) {
+            return new \OCA\Ticketcheck\BackgroundJob\InboundMailRetentionJob(
+                $c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
+                $c->get(\OCA\Ticketcheck\Db\InboundMessageMapper::class),
                 $c->get(\Psr\Log\LoggerInterface::class)
             );
         });

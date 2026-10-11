@@ -33,6 +33,7 @@ final class SettingsSectionCatalog
 	public const SECTIONS = [
 		'access',
 		'email',
+		'inbound-mail',
 		'knowledge-base',
 		'kb-categories',
 		'escalation',
@@ -69,6 +70,7 @@ final class SettingsSectionCatalog
 	 */
 	public const LEGACY_ANCHORS = [
 		'settings-email-heading' => 'email',
+		'settings-inbound-mail-heading' => 'inbound-mail',
 		'settings-kb-heading' => 'knowledge-base',
 		'settings-access-heading' => 'access',
 		'app-access-preview-card' => 'access',
@@ -126,6 +128,7 @@ final class SettingsSectionCatalog
 		return match ($section) {
 			'access' => $l->t('Access control'),
 			'email' => $l->t('Email notifications'),
+			'inbound-mail' => $l->t('Inbound email (IMAP)'),
 			'knowledge-base' => $l->t('Knowledge base settings'),
 			'kb-categories' => $l->t('Knowledge base categories'),
 			'escalation' => $l->t('Escalation rules'),
@@ -144,6 +147,7 @@ final class SettingsSectionCatalog
 		return match ($section) {
 			'access' => $l->t('Access'),
 			'email' => $l->t('Email'),
+			'inbound-mail' => $l->t('Inbound mail'),
 			'knowledge-base' => $l->t('Knowledge base'),
 			'kb-categories' => $l->t('KB categories'),
 			'escalation' => $l->t('Escalation'),
@@ -167,6 +171,7 @@ final class SettingsSectionCatalog
 		return match ($section) {
 			'access' => $l->t('settings_app_access_lead'),
 			'email' => $l->t('settings_email_lead'),
+			'inbound-mail' => $l->t('settings_inbound_mail_lead'),
 			'knowledge-base' => $l->t('settings_kb_lead'),
 			'kb-categories' => $l->t('settings_kb_categories_lead'),
 			'escalation' => $l->t('settings_escalation_lead'),

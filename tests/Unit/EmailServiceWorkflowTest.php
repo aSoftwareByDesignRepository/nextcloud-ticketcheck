@@ -54,7 +54,13 @@ class EmailServiceWorkflowTest extends TestCase
         $mailer->method('createMessage')->willReturn($message);
         $mailer->expects(self::once())->method('send')->with($message);
 
-        $message->expects(self::once())->method('setReplyTo')->with(['support+55@example.com']);
+        // Reply-To is the tokenized routing address: local+{ticketId}-{hmac}@domain
+        $message->expects(self::once())->method('setReplyTo')->with(
+            self::callback(static function (array $addrs): bool {
+                return count($addrs) === 1
+                    && preg_match('/^support\+55-[0-9a-f]{10}@example\.com$/', $addrs[0]) === 1;
+            })
+        );
 
         $config = $this->createMock(IConfig::class);
         $config->method('getAppValue')->willReturnCallback(

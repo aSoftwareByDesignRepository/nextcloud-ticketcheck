@@ -265,7 +265,7 @@ TicketCheck (tilskuddsprosjektet NEXTICK) finansieres av det tyske forsknings-, 
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png</screenshot>
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png</screenshot>
 
-	<version>2.3.14</version>
+	<version>2.4.0</version>
 	<licence>agpl</licence>
 	<author>Lara Raffel</author>
 	<author>Alexander Mäule</author>
@@ -292,6 +292,8 @@ TicketCheck (tilskuddsprosjektet NEXTICK) finansieres av det tyske forsknings-, 
 		<job>OCA\Ticketcheck\BackgroundJob\WeeklyDigestJob</job>
 		<job>OCA\Ticketcheck\BackgroundJob\EscalationJob</job>
 		<job>OCA\Ticketcheck\BackgroundJob\IdempotencyPurgeJob</job>
+		<job>OCA\Ticketcheck\BackgroundJob\InboundMailSyncJob</job>
+		<job>OCA\Ticketcheck\BackgroundJob\InboundMailRetentionJob</job>
 	</background-jobs>
 
 	<keywords>

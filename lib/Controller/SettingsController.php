@@ -23,7 +23,16 @@ use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\EmailHeaderSanitizer;
 use OCA\Ticketcheck\Service\SettingsSectionCatalog;
+use OCA\Ticketcheck\Service\InboundMailAuthService;
+use OCA\Ticketcheck\Service\InboundMailConfigService;
+use OCA\Ticketcheck\Service\InboundMailDetectService;
+use OCA\Ticketcheck\Service\InboundMailOAuthService;
+use OCA\Ticketcheck\Service\ProjectService;
+use OCA\Ticketcheck\Exception\ValidationException;
 use OCA\Ticketcheck\Support\AboutProjectLinks;
+use OCA\Ticketcheck\Support\HelpdeskSmtpClient;
+use OCA\Ticketcheck\Support\ImapConnection;
+use OCA\Ticketcheck\Support\ImapSyncClient;
 use OCA\Ticketcheck\Support\SupportUsLinks;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -75,6 +84,11 @@ class SettingsController extends Controller
     private LicenseService $licenseService;
     private SettingsSectionCatalog $settingsSections;
     private IUserSession $userSession;
+    private ?InboundMailConfigService $inboundMailConfig;
+    private ?InboundMailAuthService $inboundMailAuth;
+    private ?InboundMailDetectService $inboundMailDetect;
+    private ?InboundMailOAuthService $inboundMailOAuth;
+    private ?ProjectService $projectService;
 
     public function __construct(
         string $appName,
@@ -96,6 +110,11 @@ class SettingsController extends Controller
         LicenseService $licenseService,
         SettingsSectionCatalog $settingsSections,
         IUserSession $userSession,
+        ?InboundMailConfigService $inboundMailConfig = null,
+        ?InboundMailAuthService $inboundMailAuth = null,
+        ?InboundMailDetectService $inboundMailDetect = null,
+        ?InboundMailOAuthService $inboundMailOAuth = null,
+        ?ProjectService $projectService = null,
     ) {
         parent::__construct($appName, $request);
         $this->permissionService = $permissionService;
@@ -115,6 +134,11 @@ class SettingsController extends Controller
         $this->licenseService = $licenseService;
         $this->settingsSections = $settingsSections;
         $this->userSession = $userSession;
+        $this->inboundMailConfig = $inboundMailConfig;
+        $this->inboundMailAuth = $inboundMailAuth;
+        $this->inboundMailDetect = $inboundMailDetect;
+        $this->inboundMailOAuth = $inboundMailOAuth;
+        $this->projectService = $projectService;
     }
 
     protected function getFrontEndAssetService(): FrontEndAssetService
@@ -252,6 +276,7 @@ class SettingsController extends Controller
         return match ($section) {
             'access' => $this->accessSettingsExtras(),
             'email' => ['emailSettings' => $this->emailSettingsPayload()],
+            'inbound-mail' => $this->inboundMailSettingsExtras(),
             'knowledge-base' => ['knowledgeBaseSettings' => $this->knowledgeBaseSettingsPayload()],
             'kb-categories' => [
                 'knowledgeBaseSettings' => $this->knowledgeBaseSettingsPayload(),
@@ -1147,6 +1172,374 @@ class SettingsController extends Controller
     /**
      * Normalize a value to 'yes' or 'no' for config storage.
      */
+    /**
+     * Inbound-mail settings page payload: live status (secrets-free) plus the
+     * project/category pickers for the routing table.
+     *
+     * @return array<string, mixed>
+     */
+    private function inboundMailSettingsExtras(): array
+    {
+        $projects = [];
+        if ($this->projectService !== null) {
+            foreach ($this->projectService->getAllProjects(200) as $project) {
+                $projects[] = [
+                    'id' => (int)($project['id'] ?? 0),
+                    'name' => (string)($project['name'] ?? ''),
+                ];
+            }
+        }
+        // Ticket categories are a fixed enum — reuse it so the routing table
+        // can never offer values the ticket model would reject.
+        $categories = array_map(
+            static fn (string $cat): array => ['id' => $cat, 'name' => $cat],
+            Ticket::getCategories(),
+        );
+
+        return [
+            'inboundMailStatus' => $this->inboundMailConfig !== null ? $this->inboundMailConfig->status() : [],
+            'inboundMailProjects' => $projects,
+            'inboundMailCategories' => $categories,
+            'inboundImapOauthBeginUrl' => $this->urlGenerator->linkToRoute('ticketcheck.settings.inboundImapOauthBegin'),
+        ];
+    }
+
+    /**
+     * Inbound-mail endpoints share the settings authz surface (NC-admin or
+     * delegated app-admins). Returns false when the optional wiring is absent.
+     */
+    private function inboundMailReady(): bool
+    {
+        return $this->inboundMailConfig !== null
+            && $this->inboundMailAuth !== null
+            && $this->inboundMailDetect !== null;
+    }
+
+    /**
+     * GET: live mailbox status — never returns secrets, only *_set flags.
+     */
+    #[NoAdminRequired]
+    public function inboundImapStatus(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if (!$this->inboundMailReady()) {
+            return new JSONResponse(['error' => $l->t('inbound_err_unavailable')], 500);
+        }
+
+        return new JSONResponse(['status' => $this->inboundMailConfig->status()]);
+    }
+
+    /**
+     * POST: validate + persist mailbox config. Field-level errors serialize
+     * for inline rendering (never a bare banner).
+     */
+    #[NoAdminRequired]
+    public function inboundImapSave(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if (!$this->inboundMailReady()) {
+            return new JSONResponse(['error' => $l->t('inbound_err_unavailable')], 500);
+        }
+
+        $raw = [
+            'address' => $this->request->getParam('address'),
+            'auth_mode' => $this->request->getParam('auth_mode'),
+            'oauth_provider' => $this->request->getParam('oauth_provider'),
+            'host' => $this->request->getParam('host'),
+            'port' => $this->request->getParam('port'),
+            'enc' => $this->request->getParam('enc'),
+            'username' => $this->request->getParam('username'),
+            'folder' => $this->request->getParam('folder'),
+            'password' => $this->request->getParam('password'),
+            'allow_private_host' => $this->request->getParam('allow_private_host'),
+            'allow_self_signed' => $this->request->getParam('allow_self_signed'),
+            'process_backlog' => $this->request->getParam('process_backlog'),
+            'require_reply_token' => $this->request->getParam('require_reply_token'),
+            'send_via_smtp' => $this->request->getParam('send_via_smtp'),
+            'dsgvo_ack' => $this->request->getParam('dsgvo_ack'),
+            'unknown_sender_policy' => $this->request->getParam('unknown_sender_policy'),
+            'routing' => $this->request->getParam('routing'),
+            'smtp_host' => $this->request->getParam('smtp_host'),
+            'smtp_port' => $this->request->getParam('smtp_port'),
+            'smtp_enc' => $this->request->getParam('smtp_enc'),
+            'smtp_username' => $this->request->getParam('smtp_username'),
+            'smtp_password' => $this->request->getParam('smtp_password'),
+            'smtp_from' => $this->request->getParam('smtp_from'),
+        ];
+
+        try {
+            $validated = $this->inboundMailConfig->validateInput($raw);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('inbound_err_validation'), 'fields' => $e->getErrors()], 422);
+        }
+
+        $this->inboundMailConfig->save($validated);
+
+        return new JSONResponse([
+            'success' => true,
+            'status' => $this->inboundMailConfig->status(),
+        ]);
+    }
+
+    /**
+     * POST: probe the STORED config (save → test → enable is one flow in the
+     * UI, but the probe always tests what is persisted). Throttled so the
+     * endpoint cannot become a credential-confirmation oracle. Results never
+     * echo secrets or raw server responses.
+     */
+    #[NoAdminRequired]
+    public function inboundImapTest(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if (!$this->inboundMailReady()) {
+            return new JSONResponse(['error' => $l->t('inbound_err_unavailable')], 500);
+        }
+        if (!$this->inboundMailConfig->probeThrottleCheck()) {
+            return new JSONResponse(['error' => $l->t('inbound_err_rate_limited')], 429);
+        }
+
+        $cfg = $this->inboundMailConfig->mailboxConfig();
+        if (!$this->inboundMailConfig->isConfigured()) {
+            return new JSONResponse(['error' => $l->t('inbound_err_not_configured')], 422);
+        }
+
+        try {
+            $cred = $this->inboundMailAuth->resolve($cfg);
+        } catch (\Throwable) {
+            return new JSONResponse([
+                'success' => false,
+                'imap' => ['ok' => false, 'error' => 'auth'],
+            ], 200);
+        }
+
+        if (trim((string)$cfg['host']) !== '') {
+            // Explicit host — single dial.
+            $imap = ImapSyncClient::connect([
+                'host' => (string)$cfg['host'],
+                'port' => (int)$cfg['port'],
+                'enc' => (string)$cfg['enc'],
+                'user' => $cred['user'],
+                'secret' => $cred['secret'],
+                'authMode' => $cred['mode'],
+                'allowSelfSigned' => !empty($cfg['allow_self_signed']),
+                'allowPrivateHost' => !empty($cfg['allow_private_host']),
+                'timeoutSeconds' => 15.0,
+            ]);
+            if (!empty($imap['ok']) && !empty($imap['client'])) {
+                $imap['client']->close();
+                $imap = ['ok' => true, 'detected' => false];
+            }
+        } else {
+            $imap = $this->inboundMailDetect->detect($cfg, $cred['secret'], !empty($cfg['allow_private_host']));
+        }
+
+        $smtp = null;
+        if (!empty($imap['ok']) && !empty($cfg['send_via_smtp'])) {
+            $smtpCfg = $this->inboundMailConfig->smtpConfig();
+            if ($smtpCfg['host'] !== '') {
+                try {
+                    $smtpCred = $this->inboundMailAuth->resolveSmtp($smtpCfg, $cfg);
+                    HelpdeskSmtpClient::probe([
+                        'host' => $smtpCfg['host'],
+                        'port' => $smtpCfg['port'],
+                        'enc' => $smtpCfg['enc'],
+                        'username' => $smtpCred['user'],
+                        'password' => $smtpCred['secret'],
+                        'authMode' => $smtpCred['mode'],
+                        'from' => $smtpCfg['from'] !== '' ? $smtpCfg['from'] : (string)$cfg['address'],
+                        'to' => (string)$cfg['address'],
+                        'subject' => 'probe',
+                        'allowPrivateHost' => !empty($cfg['allow_private_host']),
+                        'allowSelfSignedCert' => !empty($cfg['allow_self_signed']),
+                    ]);
+                    $smtp = ['ok' => true];
+                } catch (\Throwable $e) {
+                    $smtp = ['ok' => false, 'error' => $this->inboundProbeError($e)];
+                }
+            }
+        }
+
+        if (!empty($imap['ok'])) {
+            $this->inboundMailConfig->markTestPassed($cfg);
+        }
+
+        return new JSONResponse([
+            'success' => !empty($imap['ok']) && ($smtp === null || !empty($smtp['ok'])),
+            'imap' => $imap['ok'] ?? false
+                ? array_intersect_key($imap, array_flip(['ok', 'host', 'port', 'enc']))
+                : ['ok' => false, 'error' => (string)($imap['error'] ?? $imap['reason'] ?? 'unreachable')],
+            'smtp' => $smtp,
+            'status' => $this->inboundMailConfig->status(),
+        ]);
+    }
+
+    /**
+     * Collapse probe exceptions into stable machine reasons — raw exception
+     * text may carry server banners or hostnames a delegated admin must not
+     * use as an oracle.
+     */
+    private function inboundProbeError(\Throwable $e): string
+    {
+        if ($e instanceof ValidationException) {
+            $errors = $e->getErrors();
+            $msg = strtolower(implode(' ', array_values($errors)));
+            if (str_contains($msg, 'auth')) {
+                return 'auth';
+            }
+            if (str_contains($msg, 'blocked') || str_contains($msg, 'private')) {
+                return 'host_blocked';
+            }
+            return 'config';
+        }
+
+        return 'network';
+    }
+
+    /**
+     * POST: enable polling. Hard gate — requires a passing probe against the
+     * CURRENT stored config, then baselines the UID cursor (UIDNEXT-1, or 0
+     * when process_backlog is on).
+     */
+    #[NoAdminRequired]
+    public function inboundImapEnable(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if (!$this->inboundMailReady()) {
+            return new JSONResponse(['error' => $l->t('inbound_err_unavailable')], 500);
+        }
+
+        $cfg = $this->inboundMailConfig->mailboxConfig();
+        if (!$this->inboundMailConfig->configMatchesLastPass($cfg)) {
+            return new JSONResponse(['error' => $l->t('inbound_err_test_required')], 422);
+        }
+
+        try {
+            $cred = $this->inboundMailAuth->resolve($cfg);
+        } catch (\Throwable) {
+            return new JSONResponse(['error' => $l->t('inbound_err_test_required')], 422);
+        }
+
+        $res = ImapSyncClient::connect([
+            'host' => (string)$cfg['host'],
+            'port' => (int)$cfg['port'],
+            'enc' => (string)$cfg['enc'],
+            'user' => $cred['user'],
+            'secret' => $cred['secret'],
+            'authMode' => $cred['mode'],
+            'allowSelfSigned' => !empty($cfg['allow_self_signed']),
+            'allowPrivateHost' => !empty($cfg['allow_private_host']),
+            'timeoutSeconds' => 15.0,
+        ]);
+        if (empty($res['ok']) || empty($res['client'])) {
+            return new JSONResponse(['error' => $l->t('inbound_err_enable_unreachable')], 502);
+        }
+
+        try {
+            $select = $res['client']->selectFolder((string)$cfg['folder']);
+            if (empty($select['ok'])) {
+                return new JSONResponse(['error' => $l->t('inbound_err_enable_unreachable')], 502);
+            }
+            $uidvalidity = (int)($select['uidvalidity'] ?? 0);
+            $uidnext = (int)($select['uidnext'] ?? 1);
+            $baseline = !empty($cfg['process_backlog']) ? 0 : max(0, $uidnext - 1);
+            $this->inboundMailConfig->enable($cfg, $baseline, $uidvalidity);
+        } finally {
+            $res['client']->close();
+        }
+
+        return new JSONResponse(['success' => true, 'status' => $this->inboundMailConfig->status()]);
+    }
+
+    /**
+     * POST: stop polling. Config is kept; secrets untouched.
+     */
+    #[NoAdminRequired]
+    public function inboundImapDisable(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->inboundMailConfig === null) {
+            return new JSONResponse(['error' => $l->t('inbound_err_unavailable')], 500);
+        }
+
+        $this->inboundMailConfig->disable();
+
+        return new JSONResponse(['success' => true, 'status' => $this->inboundMailConfig->status()]);
+    }
+
+    /**
+     * GET: redirect the admin into the provider consent flow. The state token
+     * is single-use, expires in 10 min, and is bound to the initiating UID.
+     */
+    #[NoAdminRequired]
+    public function inboundImapOauthBegin(): Response
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        $user = $this->userSession->getUser();
+        if (!$this->permissionService->canManageSettings() || $user === null) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->inboundMailOAuth === null || $this->inboundMailConfig === null) {
+            return new JSONResponse(['error' => $l->t('inbound_err_unavailable')], 500);
+        }
+
+        $provider = (string)$this->request->getParam('provider', '');
+        try {
+            $begin = $this->inboundMailOAuth->beginAuthorize($user->getUID(), $provider);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('inbound_err_validation'), 'fields' => $e->getErrors()], 422);
+        }
+
+        return new RedirectResponse($begin['authorizeUrl']);
+    }
+
+    /**
+     * GET (provider redirect, no CSRF token possible): single-use state +
+     * admin-UID binding inside completeAuthorize() provide the CSRF
+     * equivalent. Ends back on the settings page with a machine flag.
+     */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
+    public function inboundImapOauthCallback(): Response
+    {
+        $target = $this->urlGenerator->linkToRoute('ticketcheck.settings.section', ['section' => 'inbound-mail']);
+        $l = $this->l10nFactory->get('ticketcheck');
+        $user = $this->userSession->getUser();
+        if (!$this->permissionService->canManageSettings() || $user === null || $this->inboundMailOAuth === null) {
+            return new RedirectResponse($target . '?oauth=forbidden');
+        }
+
+        try {
+            $this->inboundMailOAuth->completeAuthorize(
+                (string)$this->request->getParam('state', ''),
+                (string)$this->request->getParam('code', ''),
+                $user->getUID(),
+            );
+        } catch (\Throwable $e) {
+            $this->logger->warning('Inbound mail OAuth callback failed', [
+                'app' => 'ticketcheck',
+                'exception' => $e,
+            ]);
+            return new RedirectResponse($target . '?oauth=error');
+        }
+
+        return new RedirectResponse($target . '?oauth=ok');
+    }
+
     private function normalizeYesNo(mixed $value): string
     {
         if (is_bool($value)) {

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.4.0 - 2026-11-01
+
+### Added
+- Inbound email via IMAP polling: connect an existing support mailbox (password or XOAUTH2 for Google/Microsoft) so incoming mail creates tickets or comments without a webhook provider.
+- Auto-create tickets from unknown senders with a configurable policy (create/ignore) and per-sender + global daily caps.
+- Tokenized Reply-To (`+{ticket}-{token}@`) binds replies to the ticket's customer address; replies from other addresses are triaged, not merged.
+- Inbound attachment ingestion with size/count/type validation, wire-size accounting, and quarantine reporting in the ticket body.
+- Outbound mail through the configured mailbox SMTP (AUTH LOGIN / XOAUTH2, STARTTLS/SMTPS) when enabled — replies then land back in the watched mailbox.
+- Recipient-key routing: plus-tag or alias addresses map inbound mail to a project and category.
+- New settings sub-page "Inbound mail" with save → test → enable flow, OAuth connect for Google/Microsoft, and live status (last sync, backlog, errors).
+- Security hardening: TLS verification on by default, private-host dial-out behind an explicit opt-in, no-reply/auto-responder suppression on all outbound, dedupe claims in `helpdesk_inbound_msgs`, exponential backoff on connection errors, 30-day retention purge.
+
+### Fixed
+- Guest customers can now open tickets that were created by inbound email (portal view no longer 404s on `created_by` markers).
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

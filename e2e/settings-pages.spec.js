@@ -13,6 +13,7 @@ const { ensureAuthenticated } = require('./helpers/auth-guard');
 const settingsSections = [
   'access',
   'email',
+  'inbound-mail',
   'knowledge-base',
   'kb-categories',
   'escalation',

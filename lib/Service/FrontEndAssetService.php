@@ -160,6 +160,9 @@ class FrontEndAssetService
 				Util::addStyle(Application::APP_ID, 'license-settings');
 				Util::addScript(Application::APP_ID, 'license-settings');
 			}
+			if ($settingsSection === 'inbound-mail') {
+				Util::addScript(Application::APP_ID, 'settings-inbound-mail');
+			}
 		}
 
 		if (in_array($pageScript, ['ticket-detail', 'customer-detail', 'project-detail', 'customers', 'projects'], true)) {

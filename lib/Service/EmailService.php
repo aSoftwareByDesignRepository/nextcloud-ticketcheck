@@ -58,7 +58,8 @@ class EmailService
         EmailHeaderSanitizer $emailHeaderSanitizer,
         IUserManager $userManager,
         IGroupManager $groupManager,
-        ?TicketWatcherMapper $watcherMapper = null
+        ?TicketWatcherMapper $watcherMapper = null,
+        ?InboundSmtpSendService $inboundSmtp = null
     ) {
         $this->mailer = $mailer;
         $this->config = $config;
@@ -73,6 +74,7 @@ class EmailService
         $this->userManager = $userManager;
         $this->groupManager = $groupManager;
         $this->watcherMapper = $watcherMapper;
+        $this->inboundSmtp = $inboundSmtp;
     }
     
     /**
@@ -436,7 +438,7 @@ class EmailService
      * @param int|null $ticketId Optional ticket ID for ticket-related emails (enables Reply-To with plus addressing)
      * @return bool
      */
-    private function sendEmail(string $to, string $toName, string $subject, string $htmlBody, string $textBody, ?int $ticketId = null): bool
+    private function sendEmail(string $to, string $toName, string $subject, string $htmlBody, string $textBody, ?int $ticketId = null, ?string $customerEmail = null): bool
     {
         // Validate email address
         if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
@@ -448,6 +450,27 @@ class EmailService
         if (!$this->isEmailEnabled()) {
             $this->logger->info('Email notifications are disabled');
             return false;
+        }
+
+        // Mailbox-SMTP branch (DEC-21): when the inbound mailbox has an
+        // explicit SMTP config and send_via_smtp is on, outbound goes through
+        // that mailbox — From = support address, replies land in the watched
+        // mailbox. Fails closed: an explicit but broken SMTP config must NOT
+        // silently fall back to the instance mailer.
+        if ($this->inboundSmtp !== null && $this->inboundSmtp->mailboxSmtpActive()) {
+            try {
+                $replyTo = $this->buildReplyToAddress($ticketId, $customerEmail);
+                $this->inboundSmtp->send($to, $toName, $subject, $textBody, $htmlBody, $replyTo);
+                $this->logger->info('Email sent via mailbox SMTP to: ' . $to);
+                return true;
+            } catch (\Throwable $e) {
+                $this->logger->error('Mailbox SMTP send failed to ' . $to . ': ' . $e->getMessage(), [
+                    'exception' => $e,
+                    'to' => $to,
+                    'subject' => $subject,
+                ]);
+                return false;
+            }
         }
 
         try {
@@ -467,18 +490,17 @@ class EmailService
             $message->setFrom([$fromAddress => $fromName]);
 
             // Set Reply-To when inbound email is configured (enables email-to-ticket routing)
-            $inboundAddress = trim((string) $this->config->getAppValue($this->appName, 'inbound_email_address', ''));
-            $inboundEnabled = $this->config->getAppValue($this->appName, 'inbound_email_enabled', 'no') === 'yes';
-            if ($inboundEnabled && $inboundAddress !== '' && filter_var($inboundAddress, FILTER_VALIDATE_EMAIL)) {
-                if ($ticketId !== null) {
-                    $atPos = strpos($inboundAddress, '@');
-                    $localPart = $atPos !== false ? substr($inboundAddress, 0, $atPos) : 'support';
-                    $domain = $atPos !== false ? substr($inboundAddress, $atPos + 1) : 'localhost';
-                    $replyTo = $localPart . '+' . $ticketId . '@' . $domain;
-                } else {
-                    $replyTo = $inboundAddress;
-                }
+            $replyTo = $this->buildReplyToAddress($ticketId, $customerEmail);
+            if ($replyTo !== '') {
                 $message->setReplyTo([$replyTo]);
+            }
+
+            // Loop prevention on every automated outbound (MH-19).
+            $message->setAutoSubmitted('auto-generated');
+            try {
+                $message->getSymfonyEmail()->getHeaders()->addTextHeader('X-Auto-Response-Suppress', 'All');
+            } catch (\Throwable) {
+                // Header support is best-effort on older mailer backends.
             }
 
             $this->mailer->send($message);
@@ -492,6 +514,37 @@ class EmailService
             ]);
             return false;
         }
+    }
+
+    /**
+     * Tokenized Reply-To for ticket-bound mail (ARGUS-04): +{id}-{token}@
+     * binds the ticket id to the authorized customer email so a leaked
+     * address can't be paired with a forged From. Staff-bound mail keeps
+     * the legacy +{id}@ shape — staff replies fail authz downstream anyway.
+     */
+    private function buildReplyToAddress(?int $ticketId, ?string $customerEmail): string
+    {
+        $inboundAddress = trim((string) $this->config->getAppValue($this->appName, 'inbound_email_address', ''));
+        $imapAddress = trim((string) $this->config->getAppValue($this->appName, 'inbound_imap_address', ''));
+        $inboundEnabled = $this->config->getAppValue($this->appName, 'inbound_email_enabled', 'no') === 'yes'
+            || $this->config->getAppValue($this->appName, 'inbound_imap_enabled', 'no') === 'yes';
+        if ($imapAddress !== '' && filter_var($imapAddress, FILTER_VALIDATE_EMAIL)) {
+            $inboundAddress = $imapAddress;
+        }
+        if (!$inboundEnabled || $inboundAddress === '' || !filter_var($inboundAddress, FILTER_VALIDATE_EMAIL)) {
+            return '';
+        }
+        if ($ticketId === null) {
+            return $inboundAddress;
+        }
+        $atPos = strpos($inboundAddress, '@');
+        $localPart = $atPos !== false ? substr($inboundAddress, 0, $atPos) : 'support';
+        $domain = $atPos !== false ? substr($inboundAddress, $atPos + 1) : 'localhost';
+        if ($customerEmail !== null && trim($customerEmail) !== '') {
+            $token = (new ReplyTokenService($this->config))->token($ticketId, $customerEmail);
+            return $localPart . '+' . $ticketId . '-' . $token . '@' . $domain;
+        }
+        return $localPart . '+' . $ticketId . '@' . $domain;
     }
 
     private function buildFromAddress(): string
@@ -1035,7 +1088,7 @@ class EmailService
             }
 
             $payload = $this->withUserLanguage($guestUserId, fn () => $composeContent());
-            if ($this->sendEmail($email, $name, (string)$payload['subject'], (string)$payload['htmlBody'], (string)$payload['textBody'], $ticket->getId())) {
+            if ($this->sendEmail($email, $name, (string)$payload['subject'], (string)$payload['htmlBody'], (string)$payload['textBody'], $ticket->getId(), $ticket->getCustomerEmail())) {
                 $sentAny = true;
             }
         }

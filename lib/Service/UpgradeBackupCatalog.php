@@ -44,6 +44,7 @@ final class UpgradeBackupCatalog
 		'helpdesk_customers',
 		'helpdesk_escalation_rules',
 		'helpdesk_guest_access',
+		'helpdesk_inbound_msgs',
 		'helpdesk_kb_articles',
 		'helpdesk_kb_categories',
 		'helpdesk_kb_comments',
@@ -69,6 +70,7 @@ final class UpgradeBackupCatalog
 		'helpdesk_customers',
 		'helpdesk_escalation_rules',
 		'helpdesk_guest_access',
+		'helpdesk_inbound_msgs',
 		'helpdesk_kb_articles',
 		'helpdesk_kb_categories',
 		'helpdesk_kb_comments',
@@ -110,7 +112,6 @@ final class UpgradeBackupCatalog
 	}
 
 	/**
-	 * @param list<string> $presentTables
 	 * @return list<string>
 	 */
 	public static function sortedRestoreTables(array $presentTables): array

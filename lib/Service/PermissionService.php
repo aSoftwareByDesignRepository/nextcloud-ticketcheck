@@ -215,14 +215,20 @@ class PermissionService
                 return true;
             }
             $projectId = $ticket->getProjectId();
-            if ($projectId !== null && $this->canAccessProject((int)$projectId)) {
-                return $this->emailsMatch(
-                    $this->getCurrentUserEmail(),
-                    (string) $ticket->getCustomerEmail()
-                );
+            if ($projectId !== null) {
+                return $this->canAccessProject((int)$projectId)
+                    && $this->emailsMatch(
+                        $this->getCurrentUserEmail(),
+                        (string) $ticket->getCustomerEmail()
+                    );
             }
-
-            return false;
+            // No project: creator owns it, and the addressed customer sees
+            // tickets emailed to them — same scope as the portal's
+            // findByCustomerEmail ticket list.
+            return $this->emailsMatch(
+                $this->getCurrentUserEmail(),
+                (string) $ticket->getCustomerEmail()
+            );
         }
 
         // Admins and agents can view all tickets
@@ -756,9 +762,15 @@ class PermissionService
         if ($this->isGuest()) {
             $projectId = $ticket->getProjectId();
 
-            // Tickets without a project are only visible to the guest who created them.
+            // Tickets without a project are visible to the guest who created
+            // them and to the addressed customer (inbound-email tickets carry
+            // created_by='inbound-email', so creator check alone would 404).
             if ($projectId === null) {
-                return $ticket->getCreatedBy() === $this->getCurrentUserId();
+                return $ticket->getCreatedBy() === $this->getCurrentUserId()
+                    || $this->emailsMatch(
+                        $this->getCurrentUserEmail(),
+                        (string) $ticket->getCustomerEmail()
+                    );
             }
 
             // Check project access
