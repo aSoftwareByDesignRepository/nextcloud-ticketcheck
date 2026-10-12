@@ -27,6 +27,7 @@ const routes = [
 const overflowViewports = [
 	{ width: 320, height: 640 },
 	{ width: 375, height: 812 },
+	{ width: 414, height: 896 },
 	{ width: 768, height: 1024 },
 	{ width: 1024, height: 768 },
 	{ width: 1440, height: 900 },
