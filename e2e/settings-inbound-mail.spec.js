@@ -14,6 +14,25 @@ async function openSection(page) {
   await page.goto(SECTION_URL, { waitUntil: 'domcontentloaded' });
   await ensureAuthenticated(page);
   await page.waitForSelector('#settings-inbound-mail-heading', { timeout: 30_000 });
+
+  // Fixture hygiene: a leftover enabled mailbox (manual probe, interrupted
+  // run) breaks the deterministic gating assertions — restore the disabled
+  // baseline before each test.
+  const requesttoken = await page.evaluate(() => document.head?.dataset?.requesttoken ?? '');
+  if (requesttoken !== '') {
+    const status = await page.request.get('/index.php/apps/ticketcheck/api/settings/inbound-imap/status', {
+      headers: { requesttoken },
+    });
+    const data = await status.json().catch(() => null);
+    if (data?.status?.enabled === true) {
+      await page.request.post('/index.php/apps/ticketcheck/api/settings/inbound-imap/disable', {
+        headers: { requesttoken },
+      });
+      // Status card renders server-side — reload so the healed state shows.
+      await page.goto(SECTION_URL, { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('#settings-inbound-mail-heading', { timeout: 30_000 });
+    }
+  }
 }
 
 test.describe('TicketCheck inbound-mail settings', () => {
