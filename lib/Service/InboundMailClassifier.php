@@ -128,6 +128,67 @@ final class InboundMailClassifier
 	}
 
 	/**
+	 * Thread fallback (NH-04): match In-Reply-To / References against the
+	 * token-bound Message-IDs stamped on outbound customer mail:
+	 *   Message-ID: <tc.ticket.{id}-{token}.{uniq}@domain>
+	 *   References: <tc.ticket.{id}-{token}@domain>
+	 *
+	 * In-Reply-To (the direct parent) wins over the References ancestor
+	 * chain; within a header the LAST match is the nearest ancestor. The
+	 * captured token is verified downstream exactly like an address
+	 * token — a fabricated reference classifies ignored_bad_token,
+	 * never a comment.
+	 *
+	 * @return array{id: int, token: ?string, legacy: bool}|null
+	 */
+	public static function extractThreadTarget(string $rawHeader): ?array
+	{
+		if ($rawHeader === '') {
+			return null;
+		}
+		// Unfold continuation lines so folded References values still parse.
+		$unfolded = preg_replace("/\r?\n[ \t]+/", ' ', str_replace("\r\n", "\n", $rawHeader)) ?? $rawHeader;
+
+		$references = null;
+		$inReplyTo = null;
+		if (preg_match_all('/^(references|in-reply-to)\s*:(.+)$/mi', $unfolded, $headers, PREG_SET_ORDER) !== false) {
+			foreach ($headers as $h) {
+				$hit = self::lastThreadMatchInLine($h[2]);
+				if ($hit === null) {
+					continue;
+				}
+				if (strtolower($h[1]) === 'in-reply-to') {
+					$inReplyTo = $hit;
+				} else {
+					$references = $hit;
+				}
+			}
+		}
+
+		return $inReplyTo ?? $references;
+	}
+
+	/**
+	 * Last `tc.ticket.` Message-ID match on one header line — the nearest
+	 * ancestor per RFC 5322 References ordering (oldest first).
+	 *
+	 * @return array{id: int, token: ?string, legacy: bool}|null
+	 */
+	private static function lastThreadMatchInLine(string $headerLine): ?array
+	{
+		$found = null;
+		if (preg_match_all('/<\s*tc\.ticket\.(\d+)-([a-f0-9]{10})(?:\.[^\s<>,@]+)?\s*@/i', $headerLine, $mm, PREG_SET_ORDER) !== false) {
+			foreach ($mm as $m) {
+				$id = (int)$m[1];
+				if ($id > 0) {
+					$found = ['id' => $id, 'token' => strtolower($m[2]), 'legacy' => false];
+				}
+			}
+		}
+		return $found;
+	}
+
+	/**
 	 * Subject fallback: "#123" or "ticket 123" — only used when no address
 	 * target exists and require_reply_token is off (spec §9.4).
 	 */

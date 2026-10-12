@@ -588,6 +588,105 @@ class EmailServiceWorkflowTest extends TestCase
         self::assertFalse($result);
     }
 
+    /**
+     * NH-04 thread anchor contract: customer-bound ticket mail gets a
+     * unique token-bound Message-ID plus a stable References root —
+     * and the stamped shapes must round-trip through the inbound
+     * classifier's extractThreadTarget pattern.
+     */
+    public function testThreadAnchorStampsUniqueIdStableRootAndRoundTrips(): void
+    {
+        $config = $this->inboundEnabledConfig();
+        $service = $this->buildService($this->createMock(IMailer::class), $config);
+        $expectedToken = (new \OCA\Ticketcheck\Service\ReplyTokenService($config))
+            ->token(55, 'guest@example.com');
+
+        [$msgId, $anchor] = $this->invokeThreadAnchor($service, 55, 'guest@example.com');
+
+        // Stable virtual root, bound to id+customer via HMAC.
+        self::assertSame("tc.ticket.55-{$expectedToken}@example.com", $anchor);
+        // Per-mail unique Message-ID carrying the same token.
+        self::assertMatchesRegularExpression(
+            '/^tc\.ticket\.55-[0-9a-f]{10}\.[0-9a-f]{8}@example\.com$/',
+            $msgId
+        );
+        self::assertStringContainsString('-' . $expectedToken . '.', $msgId);
+
+        // The outbound↔inbound contract: both stamped shapes resolve to
+        // the same ticket+token in the classifier.
+        $t1 = \OCA\Ticketcheck\Service\InboundMailClassifier::extractThreadTarget(
+            "In-Reply-To: <{$msgId}>\r\n"
+        );
+        $t2 = \OCA\Ticketcheck\Service\InboundMailClassifier::extractThreadTarget(
+            "References: <{$anchor}>\r\n"
+        );
+        self::assertSame(55, $t1['id']);
+        self::assertSame($expectedToken, $t1['token']);
+        self::assertSame(55, $t2['id']);
+        self::assertSame($expectedToken, $t2['token']);
+    }
+
+    public function testThreadAnchorMessageIdsDifferAcrossMails(): void
+    {
+        // Identical Message-IDs across notifications would let MTAs
+        // dedupe real mail away — the unique suffix prevents that while
+        // the References anchor stays stable for threading.
+        $service = $this->buildService($this->createMock(IMailer::class), $this->inboundEnabledConfig());
+        [$msgId1, $anchor1] = $this->invokeThreadAnchor($service, 55, 'guest@example.com');
+        [$msgId2, $anchor2] = $this->invokeThreadAnchor($service, 55, 'guest@example.com');
+        self::assertNotSame($msgId1, $msgId2);
+        self::assertSame($anchor1, $anchor2);
+    }
+
+    public function testThreadAnchorEmptyForStaffBoundMail(): void
+    {
+        // Staff mail carries no customer token — advertising a thread
+        // anchor there would be noise staff replies can't satisfy anyway.
+        $service = $this->buildService($this->createMock(IMailer::class), $this->inboundEnabledConfig());
+        self::assertSame(['', ''], $this->invokeThreadAnchor($service, 55, null));
+        self::assertSame(['', ''], $this->invokeThreadAnchor($service, 55, '  '));
+        self::assertSame(['', ''], $this->invokeThreadAnchor($service, null, 'guest@example.com'));
+        self::assertSame(['', ''], $this->invokeThreadAnchor($service, 0, 'guest@example.com'));
+    }
+
+    public function testThreadAnchorEmptyWhenInboundDisabled(): void
+    {
+        $config = $this->createMock(IConfig::class);
+        $config->method('getAppValue')->willReturnCallback(
+            static fn (string $app, string $key, string $default = ''): string => $default
+        );
+        $service = $this->buildService($this->createMock(IMailer::class), $config);
+        self::assertSame(['', ''], $this->invokeThreadAnchor($service, 55, 'guest@example.com'));
+    }
+
+    private function inboundEnabledConfig(): IConfig
+    {
+        $config = $this->createMock(IConfig::class);
+        $config->method('getAppValue')->willReturnCallback(
+            static function (string $app, string $key, string $default = ''): string {
+                return match ($key) {
+                    'inbound_imap_enabled' => 'yes',
+                    'inbound_imap_address' => 'support@example.com',
+                    default => $default,
+                };
+            }
+        );
+        $config->method('getSystemValue')->willReturnCallback(
+            static fn (string $key, mixed $default = null): mixed => $key === 'secret' ? 'test-secret' : $default
+        );
+        return $config;
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function invokeThreadAnchor(EmailService $service, ?int $ticketId, ?string $customerEmail): array
+    {
+        $m = new \ReflectionMethod(EmailService::class, 'buildThreadAnchor');
+        $m->setAccessible(true);
+        return $m->invoke($service, $ticketId, $customerEmail);
+    }
+
     private function buildService(
         IMailer $mailer,
         IConfig $config,

@@ -273,6 +273,175 @@ class InboundEmailServicePipelineTest extends TestCase
 		self::assertSame(InboundMessage::ACTION_TICKET_CREATED, $r['action']);
 	}
 
+	// ---------- thread fallback (NH-04) ----------
+
+	private function ticketToken(int $ticketId, string $customerEmail): string
+	{
+		$config = $this->createMock(IConfig::class);
+		$config->method('getSystemValue')->willReturnCallback(fn (string $k, $d = '') => $k === 'secret' ? 'test-secret' : $d);
+		return (new ReplyTokenService($config))->token($ticketId, $customerEmail);
+	}
+
+	public function testThreadReferenceReplyCreatesComment(): void
+	{
+		$token = $this->ticketToken(42, 'customer@example.com');
+		$ticket = new Ticket();
+		$ticket->setId(42);
+		$ticket->setCustomerEmail('customer@example.com');
+		$comment = new Comment();
+		$comment->setId(9);
+		$this->ticketService->method('getActiveTicket')->with(42)->willReturn($ticket);
+		$this->ticketService->expects(self::once())->method('addCommentFromEmail')->willReturn($comment);
+
+		// Gateway-mangled recipient (no +tag) but intact threading headers.
+		$r = $this->service->processInboundMessage($this->msg([
+			'rawHeader' => "In-Reply-To: <tc.ticket.42-{$token}@example.com>\r\n",
+		]), 'imap', 10, 1);
+		self::assertSame(InboundMessage::ACTION_COMMENT, $r['action']);
+		self::assertSame(42, $r['ticket_id']);
+	}
+
+	public function testThreadUniqueSuffixMessageIdMatches(): void
+	{
+		$token = $this->ticketToken(42, 'customer@example.com');
+		$ticket = new Ticket();
+		$ticket->setId(42);
+		$ticket->setCustomerEmail('customer@example.com');
+		$comment = new Comment();
+		$comment->setId(9);
+		$this->ticketService->method('getActiveTicket')->willReturn($ticket);
+		$this->ticketService->expects(self::once())->method('addCommentFromEmail')->willReturn($comment);
+
+		$r = $this->service->processInboundMessage($this->msg([
+			'rawHeader' => "References: <tc.ticket.42-{$token}@example.com>\r\n"
+				. "In-Reply-To: <tc.ticket.42-{$token}.a1b2c3d4@example.com>\r\n",
+		]), 'imap', 10, 1);
+		self::assertSame(InboundMessage::ACTION_COMMENT, $r['action']);
+	}
+
+	public function testForgedThreadReferenceIsBadToken(): void
+	{
+		// Anyone can write In-Reply-To — the token must verify against the
+		// ACTIVE ticket's customer before a comment is even attempted.
+		$ticket = new Ticket();
+		$ticket->setId(42);
+		$ticket->setCustomerEmail('customer@example.com');
+		$this->ticketService->method('getActiveTicket')->willReturn($ticket);
+		$this->ticketService->expects(self::never())->method('addCommentFromEmail');
+
+		$r = $this->service->processInboundMessage($this->msg([
+			'rawHeader' => "In-Reply-To: <tc.ticket.42-deadbeef00@example.com>\r\n",
+		]), 'imap', 10, 1);
+		self::assertSame(InboundMessage::ACTION_IGNORED_BAD_TOKEN, $r['action']);
+		self::assertSame(InboundMessage::ACTION_IGNORED_BAD_TOKEN, $this->finishedAction);
+	}
+
+	public function testThreadReferenceWrongSenderUnauthorized(): void
+	{
+		// Valid token for the ticket's customer — but From is someone else
+		// (e.g. forwarded notification answered by a third party).
+		$token = $this->ticketToken(42, 'customer@example.com');
+		$ticket = new Ticket();
+		$ticket->setId(42);
+		$ticket->setCustomerEmail('customer@example.com');
+		$this->ticketService->method('getActiveTicket')->willReturn($ticket);
+		$this->ticketService->expects(self::never())->method('addCommentFromEmail');
+
+		$r = $this->service->processInboundMessage($this->msg([
+			'from' => 'stranger@example.com',
+			'rawHeader' => "In-Reply-To: <tc.ticket.42-{$token}@example.com>\r\n",
+		]), 'imap', 10, 1);
+		self::assertSame(InboundMessage::ACTION_IGNORED_UNAUTHORIZED, $r['action']);
+	}
+
+	public function testThreadReferenceBeatsSubjectFallback(): void
+	{
+		// Subject says #99 (mangled/forwarded) but threading says 42 —
+		// the token-bound reference is the stronger signal.
+		$token = $this->ticketToken(42, 'customer@example.com');
+		$ticket = new Ticket();
+		$ticket->setId(42);
+		$ticket->setCustomerEmail('customer@example.com');
+		$comment = new Comment();
+		$comment->setId(1);
+		$this->ticketService->method('getActiveTicket')->with(42)->willReturn($ticket);
+		$this->ticketService->expects(self::once())->method('addCommentFromEmail')->willReturn($comment);
+
+		$r = $this->service->processInboundMessage($this->msg([
+			'subject' => 'Re: ticket #99 update',
+			'rawHeader' => "In-Reply-To: <tc.ticket.42-{$token}@example.com>\r\n",
+		]), 'imap', 10, 1);
+		self::assertSame(InboundMessage::ACTION_COMMENT, $r['action']);
+		self::assertSame(42, $r['ticket_id']);
+	}
+
+	public function testThreadReferenceWorksWhenTokenRequired(): void
+	{
+		// require_reply_token disables the From-only subject fallback but
+		// NOT the token-bound thread anchor — it carries the token itself.
+		$this->store['inbound_imap_require_reply_token'] = 'yes';
+		$token = $this->ticketToken(42, 'customer@example.com');
+		$ticket = new Ticket();
+		$ticket->setId(42);
+		$ticket->setCustomerEmail('customer@example.com');
+		$comment = new Comment();
+		$comment->setId(2);
+		$this->ticketService->method('getActiveTicket')->with(42)->willReturn($ticket);
+		$this->ticketService->expects(self::once())->method('addCommentFromEmail')->willReturn($comment);
+
+		$r = $this->service->processInboundMessage($this->msg([
+			'rawHeader' => "In-Reply-To: <tc.ticket.42-{$token}@example.com>\r\n",
+		]), 'imap', 10, 1);
+		self::assertSame(InboundMessage::ACTION_COMMENT, $r['action']);
+	}
+
+	public function testWebhookInReplyToFieldSynthesized(): void
+	{
+		// Mailgun-style dedicated field (not inside the headers blob) must
+		// route the same as a parsed header line.
+		$token = $this->ticketToken(42, 'customer@example.com');
+		$ticket = new Ticket();
+		$ticket->setId(42);
+		$ticket->setCustomerEmail('customer@example.com');
+		$comment = new Comment();
+		$comment->setId(3);
+		$this->ticketService->method('getActiveTicket')->willReturn($ticket);
+		$this->ticketService->expects(self::once())->method('addCommentFromEmail')->willReturn($comment);
+
+		$r = $this->service->processWebhook([
+			'from' => 'customer@example.com',
+			'to' => 'support@example.com',
+			'subject' => 'Re: your ticket',
+			'text' => 'Replying via webhook channel.',
+			'in-reply-to' => "garbage <tc.ticket.42-{$token}@example.com> more",
+		]);
+		self::assertTrue($r['success']);
+		self::assertSame(42, $r['ticket_id']);
+	}
+
+	public function testWebhookThreadFieldCannotInjectOtherHeaders(): void
+	{
+		// Free text in the threading field must not become header lines —
+		// an "Auto-Submitted" smuggle attempt is reduced to msg-id atoms.
+		$this->ticketService->expects(self::once())->method('createTicketFromEmail')
+			->willReturnCallback(function () {
+				$t = new Ticket();
+				$t->setId(5);
+				return $t;
+			});
+		$r = $this->service->processWebhook([
+			'from' => 'customer@example.com',
+			'to' => 'support@example.com',
+			'subject' => 'Hello',
+			'text' => 'Real body.',
+			'in-reply-to' => "<x@y>\r\nAuto-Submitted: auto-generated",
+		]);
+		// If the injection worked, isAutomated would classify ignored_auto;
+		// instead the mail is processed normally as a new ticket.
+		self::assertTrue($r['success']);
+		self::assertSame(5, $r['ticket_id']);
+	}
+
 	// ---------- dedupe / claim semantics ----------
 
 	public function testDuplicateTerminalRowReturnsStoredResult(): void

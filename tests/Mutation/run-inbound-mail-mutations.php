@@ -84,6 +84,20 @@ $mutations = [
 		'from' => "\$name = basename(str_replace('\\\\', '/', \$name));",
 		'to' => "\$name = \$name;",
 	],
+	'classifier_thread_tokenless_match' => [
+		// A tokenless tc.ticket.* reference must never route — it would
+		// carry no HMAC binding and reopen the forged-From comment hole.
+		'file' => 'lib/Service/InboundMailClassifier.php',
+		'from' => "'/<\\s*tc\\.ticket\\.(\\d+)-([a-f0-9]{10})(?:\\.[^\\s<>,@]+)?\\s*@/i'",
+		'to' => "'/<\\s*tc\\.ticket\\.(\\d+)(?:-([a-f0-9]{10}))?(?:\\.[^\\s<>,@]+)?\\s*@/i'",
+	],
+	'classifier_thread_inreplyto_not_prioritized' => [
+		// References must lose to In-Reply-To (the direct parent) — else a
+		// reply to notification B lands on the older thread root A.
+		'file' => 'lib/Service/InboundMailClassifier.php',
+		'from' => 'return $inReplyTo ?? $references;',
+		'to' => 'return $references ?? $inReplyTo;',
+	],
 
 	// --- HelpdeskSmtpClient ----------------------------------------------------
 	'smtp_dotstuff_removed' => [
@@ -121,6 +135,20 @@ $mutations = [
 		'from' => "			if (\$dupAction === InboundMessage::ACTION_PROCESSING\n"
 			. "\t\t\t\t|| \$dupAction === InboundMessage::ACTION_ERROR_RETRYABLE) {",
 		'to' => "			if (false) {",
+	],
+	'service_thread_fallback_skipped' => [
+		// Dropping the thread fallback silently loses replies whose
+		// +address or subject was mangled in transit.
+		'file' => 'lib/Service/InboundEmailService.php',
+		'from' => "\$target = InboundMailClassifier::extractThreadTarget((string)(\$msg['rawHeader'] ?? ''));",
+		'to' => "\$target = null;",
+	],
+	'webhook_thread_freetext_header' => [
+		// Injecting raw provider-field text into rawHeader lets a hostile
+		// payload smuggle header lines (e.g. Auto-Submitted) past parsing.
+		'file' => 'lib/Service/InboundEmailService.php',
+		'from' => "\$rawHeader .= \"\\n\" . \$name . ': ' . implode(' ', \$mm[0]);",
+		'to' => "\$rawHeader .= \"\\n\" . \$name . ': ' . \$payload[\$key];",
 	],
 
 	// --- InboundMailConfigService ----------------------------------------------

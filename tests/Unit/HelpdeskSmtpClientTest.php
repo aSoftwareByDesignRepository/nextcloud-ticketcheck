@@ -65,6 +65,28 @@ class HelpdeskSmtpClientTest extends TestCase
 		self::assertStringContainsString('Cc: <a@x.com>, <b@x.com>', $p);
 	}
 
+	public function testReferencesHeaderEmitted(): void
+	{
+		$p = HelpdeskSmtpClient::buildDataPayload($this->cfg([
+			'messageId' => 'tc.ticket.42-0123abcdef.ab12cd34@example.com',
+			'references' => 'tc.ticket.42-0123abcdef@example.com',
+		]));
+		self::assertStringContainsString('Message-ID: <tc.ticket.42-0123abcdef.ab12cd34@example.com>', $p);
+		self::assertStringContainsString('References: <tc.ticket.42-0123abcdef@example.com>', $p);
+	}
+
+	public function testNoReferencesHeaderWhenUnset(): void
+	{
+		$p = HelpdeskSmtpClient::buildDataPayload($this->cfg());
+		self::assertStringNotContainsString('References:', $p);
+	}
+
+	public function testInvalidReferencesDropped(): void
+	{
+		$p = HelpdeskSmtpClient::buildDataPayload($this->cfg(['references' => "a\r\nb"]));
+		self::assertStringNotContainsString('References:', $p);
+	}
+
 	public function testDotStuffing(): void
 	{
 		// A body line starting with '.' must be stuffed (..) so it can't

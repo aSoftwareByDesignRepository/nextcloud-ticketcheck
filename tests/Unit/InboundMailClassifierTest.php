@@ -149,6 +149,78 @@ class InboundMailClassifierTest extends TestCase
 		self::assertNull(InboundMailClassifier::extractReplyTarget(['support+5@example.com'], ''));
 	}
 
+	// ---------- extractThreadTarget (NH-04) ----------
+
+	public function testExtractThreadTargetInReplyTo(): void
+	{
+		$raw = "From: c@x\r\nIn-Reply-To: <tc.ticket.42-0123abcdef.a1b2c3d4@example.com>\r\n";
+		$target = InboundMailClassifier::extractThreadTarget($raw);
+		self::assertSame(42, $target['id']);
+		self::assertSame('0123abcdef', $target['token']);
+		self::assertFalse($target['legacy']);
+	}
+
+	public function testExtractThreadTargetReferencesAnchorShape(): void
+	{
+		// The stable anchor (no .{uniq} suffix) must match identically.
+		$raw = "References: <tc.ticket.42-0123abcdef@example.com>\r\n";
+		$target = InboundMailClassifier::extractThreadTarget($raw);
+		self::assertSame(['id' => 42, 'token' => '0123abcdef', 'legacy' => false], $target);
+	}
+
+	public function testExtractThreadTargetReferencesLastMatchWins(): void
+	{
+		// RFC 5322 References order is oldest→newest — the last ticket
+		// anchor is the nearest ancestor of this reply.
+		$raw = "References: <tc.ticket.7-aaaaaaaaaa@x> <other@y> <tc.ticket.9-bbbbbbbbbb@x>\r\n";
+		$target = InboundMailClassifier::extractThreadTarget($raw);
+		self::assertSame(9, $target['id']);
+		self::assertSame('bbbbbbbbbb', $target['token']);
+	}
+
+	public function testExtractThreadTargetInReplyToBeatsReferences(): void
+	{
+		// In-Reply-To is the direct parent — more precise than the chain.
+		$raw = "References: <tc.ticket.7-aaaaaaaaaa@x>\r\n"
+			. "In-Reply-To: <tc.ticket.9-bbbbbbbbbb@x>\r\n";
+		$target = InboundMailClassifier::extractThreadTarget($raw);
+		self::assertSame(9, $target['id']);
+	}
+
+	public function testExtractThreadTargetFoldedHeader(): void
+	{
+		$raw = "References: <a@b>,\r\n\t<tc.ticket.17-0123abcdef@x>\r\n";
+		$target = InboundMailClassifier::extractThreadTarget($raw);
+		self::assertSame(17, $target['id']);
+	}
+
+	public function testExtractThreadTargetRejectsNonMatchingShapes(): void
+	{
+		// No token → not ours (legacy +{id} shape never stamped outbound).
+		self::assertNull(InboundMailClassifier::extractThreadTarget("In-Reply-To: <tc.ticket.42@x>\r\n"));
+		// Wrong prefix → not ours.
+		self::assertNull(InboundMailClassifier::extractThreadTarget("In-Reply-To: <other.ticket.42-0123abcdef@x>\r\n"));
+		// Bad token shape → not ours.
+		self::assertNull(InboundMailClassifier::extractThreadTarget("In-Reply-To: <tc.ticket.42-xyz@x>\r\n"));
+		self::assertNull(InboundMailClassifier::extractThreadTarget("In-Reply-To: <tc.ticket.42-0123abcdef0@x>\r\n"));
+		// Zero id rejected.
+		self::assertNull(InboundMailClassifier::extractThreadTarget("In-Reply-To: <tc.ticket.0-0123abcdef@x>\r\n"));
+		// Pattern in a NON-threading header must not match.
+		self::assertNull(InboundMailClassifier::extractThreadTarget("Subject: see <tc.ticket.42-0123abcdef@x>\r\n"));
+		// Empty / unrelated headers.
+		self::assertNull(InboundMailClassifier::extractThreadTarget(''));
+		self::assertNull(InboundMailClassifier::extractThreadTarget("From: a@b\r\nTo: c@d\r\n"));
+	}
+
+	public function testExtractThreadTargetCaseInsensitive(): void
+	{
+		$raw = "IN-REPLY-TO: <TC.TICKET.42-0123ABCDEF@X>\r\n";
+		$target = InboundMailClassifier::extractThreadTarget($raw);
+		self::assertSame(42, $target['id']);
+		// Token is normalized to lowercase for the downstream hash_equals.
+		self::assertSame('0123abcdef', $target['token']);
+	}
+
 	// ---------- extractSubjectTicketId ----------
 
 	public function testExtractSubjectTicketId(): void

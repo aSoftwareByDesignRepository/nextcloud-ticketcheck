@@ -44,7 +44,7 @@ final class InboundSmtpSendService
 	 * @throws \RuntimeException on any failure — callers must NOT fall back
 	 *         to the instance mailer after an explicit SMTP config failed.
 	 */
-	public function send(string $to, string $toName, string $subject, string $textBody, string $htmlBody = '', string $replyTo = '', array $cc = []): void
+	public function send(string $to, string $toName, string $subject, string $textBody, string $htmlBody = '', string $replyTo = '', array $cc = [], ?string $messageId = null, ?string $references = null): void
 	{
 		$cfg = $this->mailboxConfig->mailboxConfig();
 		$smtp = $this->mailboxConfig->smtpConfig();
@@ -72,6 +72,8 @@ final class InboundSmtpSendService
 			'bodyHtml' => $htmlBody,
 			'replyTo' => $replyTo,
 			'cc' => $cc,
+			'messageId' => (string)$messageId,
+			'references' => (string)$references,
 			'allowPrivateHost' => !empty($cfg['allow_private_host']),
 			'allowSelfSignedCert' => !empty($cfg['allow_self_signed']),
 		]);

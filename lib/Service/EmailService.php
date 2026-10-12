@@ -453,6 +453,10 @@ class EmailService
             return false;
         }
 
+        // Thread anchor for inbound replies (NH-04) — customer-bound ticket
+        // mail only; staff-bound mail keeps a random Message-ID.
+        [$threadMsgId, $threadAnchor] = $this->buildThreadAnchor($ticketId, $customerEmail);
+
         // Mailbox-SMTP branch (DEC-21): when the inbound mailbox has an
         // explicit SMTP config and send_via_smtp is on, outbound goes through
         // that mailbox — From = support address, replies land in the watched
@@ -461,7 +465,7 @@ class EmailService
         if ($this->inboundSmtp !== null && $this->inboundSmtp->mailboxSmtpActive()) {
             try {
                 $replyTo = $this->buildReplyToAddress($ticketId, $customerEmail);
-                $this->inboundSmtp->send($to, $toName, $subject, $textBody, $htmlBody, $replyTo);
+                $this->inboundSmtp->send($to, $toName, $subject, $textBody, $htmlBody, $replyTo, [], $threadMsgId, $threadAnchor);
                 $this->logger->info('Email sent via mailbox SMTP to: ' . $to);
                 return true;
             } catch (\Throwable $e) {
@@ -503,7 +507,15 @@ class EmailService
             // IMessage interface exposes no arbitrary-header API.
             if ($message instanceof \OC\Mail\Message) {
                 try {
-                    $message->getSymfonyEmail()->getHeaders()->addTextHeader('X-Auto-Response-Suppress', 'All');
+                    $headers = $message->getSymfonyEmail()->getHeaders();
+                    $headers->addTextHeader('X-Auto-Response-Suppress', 'All');
+                    if ($threadMsgId !== '') {
+                        // Token-bound Message-ID + stable References anchor
+                        // (NH-04): replies route via threading even when a
+                        // gateway strips the +address or mangles the subject.
+                        $headers->addIdHeader('Message-ID', [$threadMsgId]);
+                        $headers->addIdHeader('References', [$threadAnchor]);
+                    }
                 } catch (\Throwable) {
                     // Header support is best-effort on older mailer backends.
                 }
@@ -528,7 +540,7 @@ class EmailService
      * address can't be paired with a forged From. Staff-bound mail keeps
      * the legacy +{id}@ shape — staff replies fail authz downstream anyway.
      */
-    private function buildReplyToAddress(?int $ticketId, ?string $customerEmail): string
+    private function inboundMailAddress(): string
     {
         $inboundAddress = trim((string) $this->config->getAppValue($this->appName, 'inbound_email_address', ''));
         $imapAddress = trim((string) $this->config->getAppValue($this->appName, 'inbound_imap_address', ''));
@@ -538,6 +550,46 @@ class EmailService
             $inboundAddress = $imapAddress;
         }
         if (!$inboundEnabled || $inboundAddress === '' || !filter_var($inboundAddress, FILTER_VALIDATE_EMAIL)) {
+            return '';
+        }
+        return $inboundAddress;
+    }
+
+    /**
+     * Token-bound threading anchor for customer-bound ticket mail (NH-04):
+     * replies keep routing even when a gateway strips the +address or
+     * mangles the subject — In-Reply-To/References carry the ticket id and
+     * the same HMAC token as the reply address, so the fallback is exactly
+     * as hard to forge. Returns [unique Message-ID local, stable
+     * References anchor local] without angle brackets, or ['',''] when
+     * not applicable.
+     *
+     * The Message-ID gets a per-mail unique suffix — identical IDs across
+     * multiple notifications would let MTAs dedupe real mail away. The
+     * References anchor is the virtual thread root every ticket-N mail
+     * (and its replies) hangs under.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function buildThreadAnchor(?int $ticketId, ?string $customerEmail): array
+    {
+        if ($ticketId === null || $ticketId <= 0 || $customerEmail === null || trim($customerEmail) === '') {
+            return ['', ''];
+        }
+        $inboundAddress = $this->inboundMailAddress();
+        if ($inboundAddress === '') {
+            return ['', ''];
+        }
+        $domain = substr($inboundAddress, (int)strrpos($inboundAddress, '@') + 1);
+        $token = (new ReplyTokenService($this->config))->token($ticketId, $customerEmail);
+        $base = 'tc.ticket.' . $ticketId . '-' . $token;
+        return [$base . '.' . bin2hex(random_bytes(4)) . '@' . $domain, $base . '@' . $domain];
+    }
+
+    private function buildReplyToAddress(?int $ticketId, ?string $customerEmail): string
+    {
+        $inboundAddress = $this->inboundMailAddress();
+        if ($inboundAddress === '') {
             return '';
         }
         if ($ticketId === null) {

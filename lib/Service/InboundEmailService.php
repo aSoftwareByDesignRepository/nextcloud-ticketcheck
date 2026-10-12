@@ -131,6 +131,22 @@ class InboundEmailService
 				$messageId = trim($m[1]);
 			}
 		}
+		// Providers may surface threading headers as dedicated fields rather
+		// than inside the headers blob (Mailgun's In-Reply-To). Synthesize
+		// header lines from msg-id atoms only — free text must never become
+		// a header line the automated-mail scanner could misread.
+		foreach (['In-Reply-To', 'References'] as $name) {
+			if (preg_match('/^' . strtolower($name) . '\s*:/mi', $rawHeader) === 1) {
+				continue;
+			}
+			foreach ([strtolower($name), $name] as $key) {
+				if (isset($payload[$key]) && is_string($payload[$key])
+					&& preg_match_all('/<[^<>\s]+>/', $payload[$key], $mm) > 0) {
+					$rawHeader .= "\n" . $name . ': ' . implode(' ', $mm[0]);
+					break;
+				}
+			}
+		}
 
 		return [
 			'from' => $this->extractEmail((string)($payload['from'] ?? $payload['sender'] ?? '')),
@@ -265,6 +281,14 @@ class InboundEmailService
 
 		// 3. Address target: tokenized/legacy plus-address in To OR Cc.
 		$target = InboundMailClassifier::extractReplyTarget($recipients, $inboundAddress);
+		if ($target === null) {
+			// 3b. Thread anchor (NH-04): token-bound Message-IDs in
+			// In-Reply-To / References survive gateways that strip +tags
+			// or mangle subjects. The token is verified in processReply
+			// exactly like an address token — a fabricated reference
+			// classifies ignored_bad_token, never a comment.
+			$target = InboundMailClassifier::extractThreadTarget((string)($msg['rawHeader'] ?? ''));
+		}
 		$ticketId = null;
 		if ($target !== null) {
 			$ticketId = $target['id'];

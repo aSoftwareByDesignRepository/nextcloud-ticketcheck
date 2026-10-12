@@ -75,6 +75,14 @@ final class HelpdeskSmtpClient
 			$messageId = self::generateMessageId($from);
 		}
 		$headers[] = 'Message-ID: ' . $messageId;
+		// Stable thread anchor (NH-04): every ticket-N mail hangs under the
+		// same virtual root so customer MUAs thread the whole conversation —
+		// and inbound replies can route via References even when +tags or
+		// subjects are mangled in transit.
+		$references = self::normalizeMessageId((string)($cfg['references'] ?? ''));
+		if ($references !== '') {
+			$headers[] = 'References: ' . $references;
+		}
 		$replyTo = self::addr((string)($cfg['replyTo'] ?? ''));
 		if ($replyTo !== '' && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
 			$headers[] = 'Reply-To: <' . $replyTo . '>';

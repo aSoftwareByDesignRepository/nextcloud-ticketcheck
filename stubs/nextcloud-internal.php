@@ -93,6 +93,13 @@ class Headers
 	public function addTextHeader(string $name, string $body): void
 	{
 	}
+
+	/**
+	 * @param string|array<int, string> $ids
+	 */
+	public function addIdHeader(string $name, string|array $ids): void
+	{
+	}
 }
 
 namespace Symfony\Component\Mime;
