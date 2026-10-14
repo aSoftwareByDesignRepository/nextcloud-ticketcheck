@@ -16,15 +16,8 @@ $projects = is_array($_['projects'] ?? null) ? $_['projects'] : [];
 $hasProjects = $projects !== [];
 $defaultProjectId = isset($_['defaultProjectId']) ? (int)$_['defaultProjectId'] : 0;
 $priorities = is_array($_['priorities'] ?? null) ? $_['priorities'] : ['low', 'normal', 'high', 'urgent'];
-$categories = is_array($_['categories'] ?? null) ? $_['categories'] : ['general', 'technical', 'bug', 'billing', 'feature'];
-
-$categoryLabelKeys = [
-    'general' => 'general_category',
-    'technical' => 'technical_issue',
-    'bug' => 'bug_report',
-    'billing' => 'billing',
-    'feature' => 'feature_request',
-];
+// {key,label} pairs resolved server-side via TicketCategoryService.
+$categories = is_array($_['categories'] ?? null) ? $_['categories'] : [];
 
 $customerFilterOptions = [];
 $seenCustomerIds = [];
@@ -192,7 +185,7 @@ if ($activeProjectCount === 1) {
                                                                     print_unescaped(' checked');
                                                                 } ?>>
                                                             <span class="portal-project-picker__card">
-                                                                <span class="portal-project-picker__name"><?php p($project['name']); ?></span>
+                                                                <span class="portal-project-picker__name"><?php p(trim((string)$project['name']) !== '' ? $project['name'] : '#' . (int)$project['id']); ?></span>
                                                                 <?php if (!empty($project['customer_name'])): ?>
                                                                     <span class="portal-project-picker__meta helpdesk-text-muted"><?php p($project['customer_name']); ?></span>
                                                                 <?php endif; ?>
@@ -236,7 +229,7 @@ if ($activeProjectCount === 1) {
                                                         <?php if ($isSelected) {
                                                             print_unescaped(' selected');
                                                         } ?>>
-                                                        <?php p($project['name']); ?>
+                                                        <?php p(trim((string)$project['name']) !== '' ? $project['name'] : '#' . (int)$project['id']); ?>
                                                         <?php if (!empty($project['customer_name'])): ?>
                                                             (<?php p($project['customer_name']); ?>)
                                                         <?php endif; ?>
@@ -294,7 +287,7 @@ if ($activeProjectCount === 1) {
                                         <label for="category" class="helpdesk-form-label"><?php p($l->t('category')); ?></label>
                                         <select id="category" name="category" class="helpdesk-form-control">
                                             <?php foreach ($categories as $cat): ?>
-                                                <option value="<?php p($cat); ?>"><?php p($l->t($categoryLabelKeys[$cat] ?? ('category_' . $cat))); ?></option>
+                                                <option value="<?php p($cat['key']); ?>"><?php p($cat['label']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>

@@ -28,6 +28,14 @@ $portalProjectLabel = static function (?int $projectId) use ($projectNames): str
 
 	return (string)($projectNames[$projectId] ?? '');
 };
+
+// Dynamic category labels (TicketCategoryService::labelMap()); unknown
+// keys render as the raw key — never a stale l10n guess.
+$categoryLabelMap = is_array($_['categoryLabelMap'] ?? null) ? $_['categoryLabelMap'] : [];
+$categoryLabel = static function (?string $key) use ($categoryLabelMap): string {
+	$key = strtolower((string)$key);
+	return $categoryLabelMap[$key] ?? $key;
+};
 ?>
 
 <?php if (empty($tickets)): ?>
@@ -167,7 +175,7 @@ $portalProjectLabel = static function (?int $projectId) use ($projectNames): str
 							<td class="tc-tickets-table__cell-badge">
 								<?php if ($ticket->getCategory()): ?>
 									<span class="helpdesk-badge helpdesk-ticket-card__category-badge">
-										<?php p($l->t('category_' . strtolower($ticket->getCategory()))); ?>
+										<?php p($categoryLabel($ticket->getCategory())); ?>
 									</span>
 								<?php else: ?>
 									<span class="helpdesk-text-muted"><?php p($l->t('none')); ?></span>
@@ -260,7 +268,7 @@ $portalProjectLabel = static function (?int $projectId) use ($projectNames): str
 									• <?php p($createdLabel); ?>
 									<?php if ($ticket->getCategory()): ?>
 										• <span class="helpdesk-badge helpdesk-ticket-card__category-badge">
-											<?php p($l->t('category_' . strtolower($ticket->getCategory()))); ?>
+											<?php p($categoryLabel($ticket->getCategory())); ?>
 										</span>
 									<?php endif; ?>
 								</div>

@@ -191,7 +191,12 @@ function main() {
 		getAttribute(k) {
 			return this[k] || null;
 		},
-		querySelector() {
+		querySelector(sel) {
+			// A toast that already carries a *-toast__feedback link is
+			// app-owned and skipped by attachReportLink — this stub isn't.
+			if (String(sel).includes('toast__feedback')) {
+				return null;
+			}
 			return { appendChild() {} };
 		},
 	};

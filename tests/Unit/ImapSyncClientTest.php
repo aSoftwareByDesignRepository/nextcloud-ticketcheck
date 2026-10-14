@@ -242,7 +242,20 @@ class ImapSyncClientTest extends TestCase
 			self::markTestSkipped('proc_open unavailable');
 		}
 		try {
-			$addr = trim((string)fgets($pipes[1]));
+			// The child may emit environment noise (e.g. JIT warnings) on stdout
+			// before the address line — scan for the first host:port line.
+			$addr = '';
+			for ($i = 0; $i < 10; $i++) {
+				$line = fgets($pipes[1]);
+				if ($line === false) {
+					break;
+				}
+				$line = trim($line);
+				if (preg_match('/^\d+\.\d+\.\d+\.\d+:\d+$/', $line) === 1) {
+					$addr = $line;
+					break;
+				}
+			}
 			self::assertNotSame('', $addr, 'fake server did not announce its address');
 			$port = (int)substr($addr, strrpos($addr, ':') + 1);
 

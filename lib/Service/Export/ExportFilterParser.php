@@ -22,6 +22,16 @@ class ExportFilterParser
     public const MAX_SELECTED_IDS = 500;
 
     /**
+     * @param \OCA\Ticketcheck\Service\TicketCategoryService|null $ticketCategories Dynamic category
+     *        validation. Null falls back to the builtin enum keys — used by
+     *        legacy test construction only; DI always injects the service.
+     */
+    public function __construct(
+        private readonly ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories = null,
+    ) {
+    }
+
+    /**
      * @param array<string, mixed> $params
      * @return array{
      *   scope: string,
@@ -59,7 +69,7 @@ class ExportFilterParser
             'status_in' => $statusIn,
             'status_not' => $statusNot,
             'priority' => $this->parseEnumValue($params['priority'] ?? null, Ticket::getPriorities()),
-            'category' => $this->parseEnumValue($params['category'] ?? null, Ticket::getCategories()),
+            'category' => $this->parseEnumValue($params['category'] ?? null, $this->categoryKeys()),
             'assigned_to' => $this->parseAssignedTo($params['assigned_to'] ?? null),
             'project_ids' => $scope === 'selected' ? [] : $this->parseIdList($params['project_ids'] ?? $params['project_ids[]'] ?? $params['project_id'] ?? null),
             'customer_ids' => $scope === 'selected' ? [] : $this->parseIdList($params['customer_ids'] ?? $params['customer_ids[]'] ?? $params['customer_id'] ?? null),
@@ -160,6 +170,19 @@ class ExportFilterParser
     /**
      * @param list<string> $allowed
      */
+    /**
+     * @param list<string> $allowed
+     */
+    /**
+     * @return list<string>
+     */
+    private function categoryKeys(): array
+    {
+        return $this->ticketCategories !== null
+            ? $this->ticketCategories->keys()
+            : Ticket::getCategories();
+    }
+
     /**
      * @param list<string> $allowed
      */

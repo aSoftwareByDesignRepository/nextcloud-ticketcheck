@@ -127,6 +127,17 @@ const gates = [
 		pattern: "class: 'button",
 		glob: 'js',
 	},
+	{
+		// NN-03 (SPEC ticketcheck-category-labels-2026-10): render surfaces must
+		// resolve labels via categoryLabelMap / TicketCategoryService — never
+		// compose `category_*` l10n keys directly. Exception:
+		// portal-ticket-row.php keeps one `??`-guarded degrade fallback for when
+		// the controller omits the map (rollback/mid-upgrade safety).
+		name: 'no direct category_* l10n composition in templates/js',
+		pattern: "'category_'\\s*[.+]|\"category_\"\\s*[.+]|`category_\\$\\{",
+		glob: '{templates,js}',
+		extraArgs: '--glob "!templates/common/portal-ticket-row.php"',
+	},
 ];
 
 let failed = false;

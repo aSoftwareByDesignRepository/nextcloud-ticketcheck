@@ -29,6 +29,7 @@ use OCA\Ticketcheck\Service\InboundMailDetectService;
 use OCA\Ticketcheck\Service\InboundMailOAuthService;
 use OCA\Ticketcheck\Service\ProjectService;
 use OCA\Ticketcheck\Exception\ValidationException;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCA\Ticketcheck\Support\AboutProjectLinks;
 use OCA\Ticketcheck\Support\HelpdeskSmtpClient;
 use OCA\Ticketcheck\Support\ImapConnection;
@@ -51,6 +52,7 @@ use OCP\IUserSession;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\L10N\IFactory;
+use OCP\Lock\LockedException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -89,6 +91,7 @@ class SettingsController extends Controller
     private ?InboundMailDetectService $inboundMailDetect;
     private ?InboundMailOAuthService $inboundMailOAuth;
     private ?ProjectService $projectService;
+    private ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories;
 
     public function __construct(
         string $appName,
@@ -115,6 +118,7 @@ class SettingsController extends Controller
         ?InboundMailDetectService $inboundMailDetect = null,
         ?InboundMailOAuthService $inboundMailOAuth = null,
         ?ProjectService $projectService = null,
+        ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories = null,
     ) {
         parent::__construct($appName, $request);
         $this->permissionService = $permissionService;
@@ -139,6 +143,7 @@ class SettingsController extends Controller
         $this->inboundMailDetect = $inboundMailDetect;
         $this->inboundMailOAuth = $inboundMailOAuth;
         $this->projectService = $projectService;
+        $this->ticketCategories = $ticketCategories;
     }
 
     protected function getFrontEndAssetService(): FrontEndAssetService
@@ -275,6 +280,7 @@ class SettingsController extends Controller
     {
         return match ($section) {
             'access' => $this->accessSettingsExtras(),
+            'categories' => $this->ticketCategorySettingsExtras(),
             'email' => ['emailSettings' => $this->emailSettingsPayload()],
             'inbound-mail' => $this->inboundMailSettingsExtras(),
             'knowledge-base' => ['knowledgeBaseSettings' => $this->knowledgeBaseSettingsPayload()],
@@ -885,6 +891,297 @@ class SettingsController extends Controller
     }
 
     /**
+     * Ticket categories settings payload — list incl. per-locale labels,
+     * available locales, and the configured default key.
+     *
+     * @return array<string, mixed>
+     */
+    private function ticketCategorySettingsExtras(): array
+    {
+        $categories = [];
+        $defaultKey = \OCA\Ticketcheck\Service\TicketCategoryService::DEFAULT_KEY;
+        if ($this->ticketCategories !== null) {
+            $defaultKey = $this->ticketCategories->defaultKey();
+            // One grouped COUNT for the whole list — not N queries.
+            $categories = $this->ticketCategories->listArrays();
+        }
+        return [
+            'ticketCategories' => $categories,
+            'ticketCategoryLocales' => $this->ticketCategories !== null
+                ? $this->ticketCategories->availableLocales()
+                : ['en'],
+            'ticketCategoryDefaultKey' => $defaultKey,
+        ];
+    }
+
+    private function ticketCategoryActorUid(): string
+    {
+        return (string)($this->userSession->getUser()?->getUID() ?? '');
+    }
+
+    /**
+     * Uniform "not found" payload for category routes — unknown and
+     * inaccessible keys collapse into one response (no existence oracle).
+     */
+    private function ticketCategoryNotFound(IL10N $l): JSONResponse
+    {
+        return new JSONResponse(['success' => false, 'error' => $l->t('category_not_found')], 404);
+    }
+
+    /**
+     * Category mutations hold a fail-fast global lock — a contender gets a
+     * retryable 409, not an opaque 400/404 that masks a transient conflict.
+     */
+    private function ticketCategoryBusy(IL10N $l): JSONResponse
+    {
+        return new JSONResponse(['success' => false, 'error' => $l->t('category_busy')], 409);
+    }
+
+    /**
+     * List ticket categories (key, labels, effective label, flags).
+     */
+    #[NoAdminRequired]
+    public function listTicketCategories(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketCategories === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        return new JSONResponse($this->ticketCategories->listArrays());
+    }
+
+    /**
+     * Create ticket category — labels: {locale: label}; key auto-generated.
+     */
+    #[NoAdminRequired]
+    public function createTicketCategory(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketCategories === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        $labels = $this->request->getParam('labels', []);
+        if (!is_array($labels)) {
+            $labels = [];
+        }
+        try {
+            $created = $this->ticketCategories->create($labels, $this->ticketCategoryActorUid());
+            return new JSONResponse([
+                'success' => true,
+                'category' => $this->ticketCategories->toArray($created),
+            ]);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('category_validation_failed'), 'fields' => $e->getErrors()], 422);
+        } catch (LockedException) {
+            return $this->ticketCategoryBusy($l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Settings operation failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 400);
+        }
+    }
+
+    /**
+     * Update ticket category (labels, position, enabled).
+     */
+    #[NoAdminRequired]
+    public function updateTicketCategory(string $key): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketCategories === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        $labels = $this->request->getParam('labels');
+        $position = $this->request->getParam('position');
+        $enabled = $this->request->getParam('enabled');
+        try {
+            $updated = $this->ticketCategories->update(
+                $key,
+                is_array($labels) ? $labels : null,
+                $position !== null ? (int)$position : null,
+                // checkbox-style params arrive as "1"/"0" strings — parse
+                // explicitly, never truthiness (api-security §4).
+                $enabled !== null ? in_array(strtolower((string)$enabled), ['1', 'true', 'yes'], true) : null,
+                $this->ticketCategoryActorUid(),
+            );
+            return new JSONResponse([
+                'success' => true,
+                'category' => $this->ticketCategories->toArray($updated),
+            ]);
+        } catch (DoesNotExistException) {
+            return $this->ticketCategoryNotFound($l);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('category_validation_failed'), 'fields' => $e->getErrors()], 422);
+        } catch (LockedException) {
+            return $this->ticketCategoryBusy($l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Settings operation failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+    }
+
+    /**
+     * Delete ticket category — custom keys only; reassign_to mandatory while
+     * tickets or inbound routing rules still reference the key.
+     */
+    #[NoAdminRequired]
+    public function deleteTicketCategory(string $key): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketCategories === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        $reassignTo = $this->request->getParam('reassign_to');
+        try {
+            $result = $this->ticketCategories->delete(
+                $key,
+                is_string($reassignTo) && trim($reassignTo) !== '' ? trim($reassignTo) : null,
+                $this->ticketCategoryActorUid(),
+            );
+            return new JSONResponse(['success' => true] + $result);
+        } catch (\OCA\Ticketcheck\Exception\CategoryReassignRequiredException $e) {
+            return new JSONResponse([
+                'success' => false,
+                'error' => $l->t('category_reassign_required'),
+                'reassignRequired' => true,
+                'ticketCount' => $e->getTicketCount(),
+                'routingCount' => $e->getRoutingCount(),
+            ], 422);
+        } catch (DoesNotExistException) {
+            return $this->ticketCategoryNotFound($l);
+        } catch (ValidationException $e) {
+            $errors = $e->getErrors();
+            $status = in_array('builtin_cannot_be_deleted', $errors, true) ? 400 : 422;
+            return new JSONResponse(['error' => $l->t('category_validation_failed'), 'fields' => $errors], $status);
+        } catch (LockedException) {
+            return $this->ticketCategoryBusy($l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Settings operation failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+    }
+
+    /**
+     * Export the full category snapshot (JSON for transfer between instances).
+     */
+    #[NoAdminRequired]
+    public function exportTicketCategories(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketCategories === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        return new JSONResponse($this->ticketCategories->exportCategories());
+    }
+
+    /**
+     * Import a category snapshot (upsert-only — never deletes categories).
+     */
+    #[NoAdminRequired]
+    public function importTicketCategories(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketCategories === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        $payload = $this->request->getParam('payload');
+        if (is_string($payload)) {
+            $decoded = json_decode($payload, true);
+            $payload = is_array($decoded) ? $decoded : null;
+        }
+        if (!is_array($payload)) {
+            return new JSONResponse(['error' => $l->t('category_import_invalid')], 422);
+        }
+        try {
+            $result = $this->ticketCategories->importCategories($payload, $this->ticketCategoryActorUid());
+            return new JSONResponse(['success' => true] + $result);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('category_validation_failed'), 'fields' => $e->getErrors()], 422);
+        } catch (LockedException) {
+            return $this->ticketCategoryBusy($l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Settings operation failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 400);
+        }
+    }
+
+    /**
+     * Persist the full category order (single atomic call — the client sends
+     * the complete ordered key list, not per-row position writes).
+     */
+    #[NoAdminRequired]
+    public function reorderTicketCategories(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketCategories === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        $keys = $this->request->getParam('keys', []);
+        if (!is_array($keys)) {
+            return new JSONResponse(['error' => $l->t('category_validation_failed'), 'fields' => ['order' => 'invalid_category_order']], 422);
+        }
+        $keys = array_values(array_map(
+            fn (mixed $k): string => is_scalar($k) ? (string)$k : '',
+            $keys,
+        ));
+        try {
+            $this->ticketCategories->reorder($keys, $this->ticketCategoryActorUid());
+            return new JSONResponse(['success' => true]);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('category_validation_failed'), 'fields' => $e->getErrors()], 422);
+        } catch (LockedException) {
+            return $this->ticketCategoryBusy($l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Settings operation failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 400);
+        }
+    }
+
+    /**
+     * Set the default category applied to new tickets.
+     */
+    #[NoAdminRequired]
+    public function setDefaultTicketCategory(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketCategories === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        $key = (string)$this->request->getParam('key', '');
+        try {
+            $this->ticketCategories->setDefaultKey($key, $this->ticketCategoryActorUid());
+            return new JSONResponse(['success' => true, 'key' => $this->ticketCategories->defaultKey()]);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('category_validation_failed'), 'fields' => $e->getErrors()], 422);
+        } catch (LockedException) {
+            return $this->ticketCategoryBusy($l);
+        }
+    }
+
+    /**
      * Delete KB category
      */
     #[NoAdminRequired]
@@ -1189,12 +1486,17 @@ class SettingsController extends Controller
                 ];
             }
         }
-        // Ticket categories are a fixed enum — reuse it so the routing table
-        // can never offer values the ticket model would reject.
-        $categories = array_map(
-            static fn (string $cat): array => ['id' => $cat, 'name' => $cat],
-            Ticket::getCategories(),
-        );
+        // Ticket categories come from the dynamic category table so the
+        // routing table can never offer values the ticket model would reject.
+        $categories = $this->ticketCategories !== null
+            ? array_map(
+                static fn (array $o): array => ['id' => $o['key'], 'name' => $o['label']],
+                $this->ticketCategories->options(),
+            )
+            : array_map(
+                static fn (string $cat): array => ['id' => $cat, 'name' => $cat],
+                Ticket::getCategories(),
+            );
 
         return [
             'inboundMailStatus' => $this->inboundMailConfig !== null ? $this->inboundMailConfig->status() : [],

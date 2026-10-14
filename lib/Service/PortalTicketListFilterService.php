@@ -15,6 +15,16 @@ final class PortalTicketListFilterService
 	public const MAX_SEARCH_LENGTH = 200;
 
 	/**
+	 * @param TicketCategoryService|null $ticketCategories Dynamic category
+	 *        validation. Null falls back to the builtin enum keys — used by
+	 *        legacy test construction only; DI always injects the service.
+	 */
+	public function __construct(
+		private readonly ?TicketCategoryService $ticketCategories = null,
+	) {
+	}
+
+	/**
 	 * @param list<int> $allowedProjectIds
 	 * @return array{currentFilters: array<string, string>, status: string, priority: string, category: string, project_id: string, search: string, hide_done: string}
 	 */
@@ -138,8 +148,11 @@ final class PortalTicketListFilterService
 	private function sanitizeCategory(string $category): string
 	{
 		$category = trim($category);
+		$allowed = $this->ticketCategories !== null
+			? $this->ticketCategories->keys()
+			: Ticket::getCategories();
 
-		return in_array($category, Ticket::getCategories(), true) ? $category : '';
+		return in_array($category, $allowed, true) ? $category : '';
 	}
 
 	/**

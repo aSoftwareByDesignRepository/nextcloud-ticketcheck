@@ -159,8 +159,8 @@ $todayHuman = $localeFormat !== null
                                 <label class="tc-field__label" for="filter-category"><?php p($l->t('category')); ?></label>
                                 <select id="filter-category" class="helpdesk-form-control portal-filter-select portal-filter-select--category">
                                     <option value=""><?php p($l->t('all_categories')); ?></option>
-                                    <?php foreach ($_['categories'] as $category): ?>
-                                        <option value="<?php p($category); ?>"><?php p($l->t('category_' . strtolower($category))); ?></option>
+                                    <?php foreach ((array)($_['categories'] ?? []) as $category): ?>
+                                        <option value="<?php p($category['key']); ?>"><?php p($category['label']); ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>

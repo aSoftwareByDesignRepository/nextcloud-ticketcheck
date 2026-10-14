@@ -183,23 +183,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         showAlert(message);
     }
-    function parseJsonOrThrow(response) {
-        return response.text().then((text) => {
-            let data = null;
-            try { data = JSON.parse(text); } catch (e) {}
-            if (!response.ok) {
-                const msg = (data && (data.message || data.error))
-                    ? (data.message || data.error)
-                    : tSafe('server_error_try_again_later', 'Server error. Please try again later.');
-                throw new Error(msg);
-            }
-            if (!data) {
-                throw new Error(tSafe('server_error_try_again_later', 'Server error. Please try again later.'));
-            }
-            return data;
-        });
-    }
-
     function requireApi() {
         const api = window.TicketCheckApi;
         if (!api) {
@@ -273,8 +256,77 @@ document.addEventListener('DOMContentLoaded', function () {
     const assignSearchInput = document.getElementById('assign-search-input');
     const assignSearchStatus = document.getElementById('assign-search-status');
     const assignSearchResults = document.getElementById('assign-search-results');
+    const statusSelect = document.getElementById('status-select');
+    const prioritySelect = document.getElementById('priority-select');
+
+    // Quick actions serialize: while a PUT is in flight the other controls
+    // are disabled, and the success reload only fires once nothing is
+    // pending — otherwise a fast second change could be killed mid-flight
+    // by the first change's scheduled reload.
+    const quickControls = [assignSelect, assignSearchInput, statusSelect, prioritySelect].filter(Boolean);
+    let quickActionBusy = false;
+    let quickActionReloadTimer = null;
+    let assignCombobox = null;
+
+    function setQuickActionsBusy(busy) {
+        quickActionBusy = busy;
+        quickControls.forEach(function (el) {
+            el.disabled = busy;
+            if (busy) {
+                el.setAttribute('aria-busy', 'true');
+            } else {
+                el.removeAttribute('aria-busy');
+            }
+        });
+    }
+
+    function scheduleDetailReload() {
+        if (quickActionReloadTimer) {
+            clearTimeout(quickActionReloadTimer);
+        }
+        quickActionReloadTimer = setTimeout(function () {
+            quickActionReloadTimer = null;
+            if (quickActionBusy) {
+                scheduleDetailReload();
+                return;
+            }
+            window.location.reload();
+        }, QUICK_ACTION_RELOAD_MS);
+    }
+
+    // revert() puts the control back on failure so the UI never shows a
+    // value the server rejected.
+    function runQuickAction(select, request, successMessage, revert) {
+        if (quickActionBusy) {
+            revert();
+            return;
+        }
+        setQuickActionsBusy(true);
+        request
+            .then(function (data) {
+                if (data && data.success) {
+                    select.dataset.knownValue = select.value;
+                    showQuickActionSuccess(successMessage);
+                    setQuickActionsBusy(false);
+                    scheduleDetailReload();
+                } else {
+                    revert();
+                    setQuickActionsBusy(false);
+                    showAlert(tSafe('error', 'Error') + ': ' + ((data && data.message) || tSafe('an_error_occurred', 'An error occurred')));
+                }
+            })
+            .catch(function (error) {
+                revert();
+                setQuickActionsBusy(false);
+                console.error('Quick action failed:', error);
+                const msg = error.message || tSafe('server_error_try_again_later', 'Server error. Please try again later.');
+                showAlert(tSafe('error', 'Error') + ': ' + msg + '\n\n' + tSafe('reload_page_and_verify', 'If this change was applied anyway, reload the page to sync the current state.'));
+            });
+    }
+
     if (assignSelect) {
         const assignTicketId = assignSelect.dataset.ticketId;
+        assignSelect.dataset.knownValue = assignSelect.value;
         const assignDefaultOption = assignSelect.options[0] ? {
             value: assignSelect.options[0].value,
             label: assignSelect.options[0].textContent || ''
@@ -282,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (assignSearchInput && assignSearchResults && assignTicketId && window.TicketCheckSelectCombobox) {
             assignSearchInput.placeholder = assignSearchInput.placeholder || tSafe('assignee_search_placeholder', 'Search assignee...');
-            window.TicketCheckSelectCombobox.attach({
+            assignCombobox = window.TicketCheckSelectCombobox.attach({
                 root: assignSearchInput.closest('.tc-select-combobox'),
                 input: assignSearchInput,
                 select: assignSelect,
@@ -313,71 +365,66 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         assignSelect.addEventListener('change', function () {
-            const ticketId = this.dataset.ticketId;
-            const userId = this.value;
-
-
-            tcApiPost('/apps/ticketcheck/tickets/' + ticketId + '/assign', { user_id: userId || null })
-                .then(function (data) {
-                    if (data.success) {
-                        showQuickActionSuccess(tSafe('ticket_assigned_successfully', 'Ticket assigned successfully'));
-                        setTimeout(() => location.reload(), QUICK_ACTION_RELOAD_MS);
-                    } else {
-                        showAlert(tSafe('error', 'Error') + ': ' + (data.message || tSafe('failed_to_assign_ticket', 'Failed to assign ticket')));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error assigning ticket:', error);
-                    showAlert(tSafe('error', 'Error') + ': ' + error.message);
-                });
+            const select = this;
+            const prevValue = select.dataset.knownValue || '';
+            const revert = function () {
+                select.value = prevValue;
+                if (assignCombobox && typeof assignCombobox.syncFromSelect === 'function') {
+                    assignCombobox.syncFromSelect();
+                }
+            };
+            runQuickAction(
+                select,
+                tcApiPost('/apps/ticketcheck/tickets/' + select.dataset.ticketId + '/assign', { user_id: select.value || null }),
+                tSafe('ticket_assigned_successfully', 'Ticket assigned successfully'),
+                revert
+            );
         });
+
+        // One-click self-assignment — only rendered when the current user is
+        // an assignable agent on this project.
+        const assignMeBtn = document.getElementById('assign-me-btn');
+        if (assignMeBtn) {
+            quickControls.push(assignMeBtn);
+            assignMeBtn.addEventListener('click', function () {
+                if (quickActionBusy) {
+                    return;
+                }
+                assignSelect.value = this.dataset.assignMe || '';
+                if (assignCombobox && typeof assignCombobox.syncFromSelect === 'function') {
+                    assignCombobox.syncFromSelect();
+                }
+                assignSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        }
     }
 
     // Handle status change
-    const statusSelect = document.getElementById('status-select');
     if (statusSelect) {
+        statusSelect.dataset.knownValue = statusSelect.value;
         statusSelect.addEventListener('change', function () {
-            const ticketId = this.dataset.ticketId;
-            const newStatus = this.value;
-
-
-            tcApiPut('/apps/ticketcheck/tickets/' + ticketId + '/status', { status: newStatus })
-                .then(data => {
-                    if (data.success) {
-                        showQuickActionSuccess(tSafe('status_updated', 'Status updated successfully'));
-                        setTimeout(() => location.reload(), QUICK_ACTION_RELOAD_MS);
-                    } else {
-                        showAlert(tSafe('error', 'Error') + ': ' + (data.message || tSafe('failed_to_update_status', 'Failed to update status')));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating status:', error);
-                    const msg = error.message || tSafe('server_error_try_again_later', 'Server error. Please try again later.');
-                    showAlert(tSafe('error', 'Error') + ': ' + msg + '\n\n' + tSafe('reload_page_and_verify', 'If this change was applied anyway, reload the page to sync the current state.'));
-                });
+            const select = this;
+            const prevValue = select.dataset.knownValue || '';
+            runQuickAction(
+                select,
+                tcApiPut('/apps/ticketcheck/tickets/' + select.dataset.ticketId + '/status', { status: select.value }),
+                tSafe('status_updated', 'Status updated successfully'),
+                function () { select.value = prevValue; }
+            );
         });
     }
 
-    const prioritySelect = document.getElementById('priority-select');
     if (prioritySelect) {
+        prioritySelect.dataset.knownValue = prioritySelect.value;
         prioritySelect.addEventListener('change', function () {
-            const ticketId = this.dataset.ticketId;
-            const priority = this.value;
-
-            tcApiPut('/apps/ticketcheck/tickets/' + ticketId, { priority })
-                .then(data => {
-                    if (data.success) {
-                        showQuickActionSuccess(tSafe('priority_updated', 'Priority updated successfully'));
-                        setTimeout(() => location.reload(), QUICK_ACTION_RELOAD_MS);
-                    } else {
-                        showAlert(tSafe('error', 'Error') + ': ' + (data.message || tSafe('failed_to_update_priority', 'Failed to update priority')));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating priority:', error);
-                    const msg = error.message || tSafe('server_error_try_again_later', 'Server error. Please try again later.');
-                    showAlert(tSafe('error', 'Error') + ': ' + msg + '\n\n' + tSafe('reload_page_and_verify', 'If this change was applied anyway, reload the page to sync the current state.'));
-                });
+            const select = this;
+            const prevValue = select.dataset.knownValue || '';
+            runQuickAction(
+                select,
+                tcApiPut('/apps/ticketcheck/tickets/' + select.dataset.ticketId, { priority: select.value }),
+                tSafe('priority_updated', 'Priority updated successfully'),
+                function () { select.value = prevValue; }
+            );
         });
     }
     });
@@ -566,6 +613,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
     renderPreview();
 
+    // Reply draft autosave — a reload (quick actions schedule one) or a
+    // stray navigation must never silently eat a half-typed comment.
+    const replyDraftKey = 'ticketcheck:reply-draft:' + String(parseTicketId(replyFormEl.dataset.ticketId) || 'new');
+    const isInternalEl = replyFormEl.querySelector('#is-internal, input[name="is_internal"]');
+    function persistReplyDraft() {
+        try {
+            localStorage.setItem(replyDraftKey, JSON.stringify({
+                content: contentInput ? contentInput.value : '',
+                is_internal: Boolean(isInternalEl && isInternalEl.checked),
+            }));
+        } catch (e) {}
+    }
+    function clearReplyDraft() {
+        try { localStorage.removeItem(replyDraftKey); } catch (e) {}
+    }
+    try {
+        const raw = localStorage.getItem(replyDraftKey);
+        if (raw) {
+            const draft = JSON.parse(raw);
+            if (draft && typeof draft.content === 'string' && draft.content !== '' && contentInput) {
+                contentInput.value = draft.content;
+                if (isInternalEl && draft.is_internal) {
+                    isInternalEl.checked = true;
+                }
+            }
+        }
+    } catch (e) {}
+    if (contentInput) {
+        contentInput.addEventListener('input', persistReplyDraft);
+    }
+    if (isInternalEl) {
+        isInternalEl.addEventListener('change', persistReplyDraft);
+    }
+
     replyFormEl.addEventListener('submit', function (e) {
         e.preventDefault();
         if (replySubmitting) {
@@ -630,6 +711,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     throw new Error(commentData.message || commentData.error || tSafe('failed_to_add_comment', 'Failed to add comment'));
                 }
                 commentSaved = true;
+                clearReplyDraft();
 
                 if (files.length > 0 && commentData.comment && commentData.comment.id) {
                     if (submitBtn) {
@@ -1247,42 +1329,73 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     safeInit('ticket-relations', function () {
-    // Remove link
+    async function confirmRemoval(title, body) {
+        const C = window.TicketCheckComponents;
+        if (!C || typeof C.confirmDialog !== 'function') {
+            return true;
+        }
+        return C.confirmDialog({ title: title, body: body, confirmLabel: t('ticketcheck', 'Remove'), danger: true });
+    }
+
+    // Remove link — single click must not silently drop the relation.
     document.querySelectorAll('.remove-link-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', async function () {
             const ticketId = this.dataset.ticketId;
             const linkedId = this.dataset.linkedId;
             const linkType = this.dataset.linkType;
             if (!ticketId || !linkedId || !linkType) return;
+            if (!await confirmRemoval(t('ticketcheck', 'remove_link'), tSafe('remove_link_confirm', 'Remove this ticket link?'))) {
+                return;
+            }
+            this.disabled = true;
             tcApiDel('/apps/ticketcheck/api/tickets/' + ticketId + '/links', {
                 linked_ticket_id: linkedId,
                 link_type: linkType,
             }).then(function (data) {
                 if (data.success) { showSuccess(t('ticketcheck', 'remove_link')); setTimeout(() => location.reload(), 500); }
-                else showAlert(data.message || tSafe('operation_failed', 'Something went wrong'));
-            }).catch(err => showAlert(err.message || tSafe('operation_failed', 'Something went wrong')));
+                else { showAlert(data.message || tSafe('operation_failed', 'Something went wrong')); btn.disabled = false; }
+            }).catch(err => { showAlert(err.message || tSafe('operation_failed', 'Something went wrong')); btn.disabled = false; });
         });
     });
 
-    // Remove watcher
+    // Remove watcher — same: confirm before unwatching.
     document.querySelectorAll('.remove-watcher-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', async function () {
             const ticketId = this.dataset.ticketId;
             const userId = this.dataset.userId;
             if (!ticketId || !userId) return;
+            if (!await confirmRemoval(t('ticketcheck', 'remove_watcher'), tSafe('remove_watcher_confirm', 'Remove this watcher? They will no longer get updates for this ticket.'))) {
+                return;
+            }
+            this.disabled = true;
             tcApiDel('/apps/ticketcheck/api/tickets/' + ticketId + '/watchers/' + encodeURIComponent(userId)).then(function (data) {
                 if (data.success) { showSuccess(t('ticketcheck', 'remove_watcher')); setTimeout(() => location.reload(), 500); }
-                else showAlert(data.message || tSafe('operation_failed', 'Something went wrong'));
-            }).catch(err => showAlert(err.message || tSafe('operation_failed', 'Something went wrong')));
+                else { showAlert(data.message || tSafe('operation_failed', 'Something went wrong')); btn.disabled = false; }
+            }).catch(err => { showAlert(err.message || tSafe('operation_failed', 'Something went wrong')); btn.disabled = false; });
         });
     });
 
-    // Handle ticket deletion
+    // Handle ticket deletion — prefer the dependency-analysis modal (shows
+    // what will cascade: comments, attachments, links) over a bare confirm.
     const deleteBtn = document.querySelector('[data-delete-ticket-id]');
     if (deleteBtn) {
         deleteBtn.addEventListener('click', async function (e) {
             e.preventDefault();
             const ticketId = this.getAttribute('data-delete-ticket-id');
+            const ticketName = this.getAttribute('data-ticket-name') || ('#' + ticketId);
+
+            if (typeof window.showDeletionModal === 'function' && typeof OC !== 'undefined' && OC.generateUrl) {
+                window.showDeletionModal({
+                    entityType: 'ticket',
+                    entityId: ticketId,
+                    entityName: ticketName,
+                    deleteUrl: OC.generateUrl('/apps/ticketcheck/api/tickets/' + ticketId),
+                    onSuccess: function () {
+                        window.location.href = appUrl('/apps/ticketcheck/tickets');
+                    },
+                });
+                return;
+            }
 
             const C = window.TicketCheckComponents;
             if (!C || typeof C.confirmDialog !== 'function') {

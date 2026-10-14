@@ -21,6 +21,7 @@ const routes = [
 	{ id: 'tickets', path: '/apps/ticketcheck/tickets', ready: '#tc-main-content' },
 	{ id: 'settings', path: '/apps/ticketcheck/settings', ready: '#tc-main-content' },
 	{ id: 'settings-inbound-mail', path: '/apps/ticketcheck/settings/inbound-mail', ready: '#settings-inbound-mail-heading' },
+	{ id: 'settings-categories', path: '/apps/ticketcheck/settings/categories', ready: '#settings-categories-heading' },
 	{ id: 'kb', path: '/apps/ticketcheck/kb', ready: '#tc-main-content' },
 ];
 
@@ -338,10 +339,11 @@ test.describe('TicketCheck visual shell metrics (theme × breakpoint)', () => {
 						// Ticket rows / counts change under concurrent E2E — mask so this
 						// assertion covers shell chrome + theme tokens, not live data.
 						mask: [
-							page.locator('.tc-tickets-table'),
-							page.locator('.tc-filter-chips__list'),
-							page.locator('.tc-tickets-table__meta'),
-							page.locator('#tc-main-content .helpdesk-table'),
+							// Mask the entire data-bearing region: live ticket rows,
+							// chip counts and seeded categories change its HEIGHT under
+							// concurrent runs, which shifts everything below — a
+							// per-element mask cannot fix positional drift.
+							page.locator('#tc-main-content'),
 							// Scope strip carries live role/project/org labels under concurrent lab use.
 							page.locator('.tc-scope-strip'),
 						],

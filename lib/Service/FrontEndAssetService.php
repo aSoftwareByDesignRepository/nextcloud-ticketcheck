@@ -54,15 +54,15 @@ class FrontEndAssetService
 			Util::addStyle(Application::APP_ID, 'guest-portal');
 		}
 
-		$path = (string)$this->request->getPathInfo();
-		$isTicketEdit = $pageScript === 'ticket-form' && str_contains($path, '/edit');
-
 		$scriptMap = [
 			'dashboard' => null,
 			'tickets' => 'tickets',
 			'tickets-kanban' => 'tickets',
 			'ticket-detail' => 'ticket-detail',
-			'ticket-form' => $isTicketEdit ? 'ticket-edit-form' : 'ticket-form',
+			// One module for create + edit — the template carries data-is-edit
+			// and ticket-form.js branches on it. (ticket-edit-form.js was merged
+			// in; a diverged fork left the edit project combobox unwired.)
+			'ticket-form' => 'ticket-form',
 			'projects' => 'projects-index',
 			'project-detail' => 'project-detail',
 			'project-form' => 'project-form',
@@ -162,6 +162,9 @@ class FrontEndAssetService
 			}
 			if ($settingsSection === 'inbound-mail') {
 				Util::addScript(Application::APP_ID, 'settings-inbound-mail');
+			}
+			if ($settingsSection === 'categories') {
+				Util::addScript(Application::APP_ID, 'settings-categories');
 			}
 		}
 

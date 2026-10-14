@@ -156,6 +156,26 @@ class Application extends App implements IBootstrap
             \OCA\Ticketcheck\Listener\GlobalGuestRequestListener::class
         );
 
+        // Dynamic ticket categories (registry + label resolution). The
+        // optional InboundMailConfigService dep is resolved lazily here to
+        // avoid a ctor-level cycle (inbound classify uses this service too).
+        $context->registerService(\OCA\Ticketcheck\Db\TicketCategoryMapper::class, function ($c) {
+            return new \OCA\Ticketcheck\Db\TicketCategoryMapper(
+                $c->get(\OCP\IDBConnection::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\TicketCategoryService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\TicketCategoryService(
+                $c->get(\OCA\Ticketcheck\Db\TicketCategoryMapper::class),
+                $c->get(\OCP\IDBConnection::class),
+                $c->get(\OCP\IConfig::class),
+                $c->get(\OCP\L10N\IFactory::class),
+                $c->get(\OCP\Lock\ILockingProvider::class),
+                $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get(\OCA\Ticketcheck\Service\InboundMailConfigService::class),
+            );
+        });
+
         // Register services
         $context->registerService('TicketService', function ($c) {
             return new \OCA\Ticketcheck\Service\TicketService(
@@ -172,6 +192,7 @@ class Application extends App implements IBootstrap
                 $c->get(\OCP\IConfig::class),
                 $c->get(\Psr\Log\LoggerInterface::class),
                 $c->get(\OCP\IDBConnection::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class),
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\TicketService::class, function ($c) {
@@ -424,7 +445,8 @@ class Application extends App implements IBootstrap
                 $c->get('EmailService'),
                 $c->get(\OCA\Ticketcheck\Db\HelpdeskCustomerMapper::class),
                 $c->get(\OCA\Ticketcheck\Db\HelpdeskProjectMapper::class),
-                $c->get(\OCP\L10N\IFactory::class)
+                $c->get(\OCP\L10N\IFactory::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\BackgroundJob\InboundMailSyncJob::class, function ($c) {

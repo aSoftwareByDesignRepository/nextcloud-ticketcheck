@@ -31,9 +31,10 @@ test.describe('Rendered-surface contract — staff', () => {
 
 	for (const [path, name] of STAFF_SURFACES) {
 		test(`ATLAS_RENDERED_SURFACE_CONTRACT ${name} (${path})`, async ({ page }) => {
-			// Icon-dense pages (tickets list ≈ 200 icons × 2 schemes) legitimately
-			// exceed the 60s default under parallel worker load.
-			test.setTimeout(120_000);
+			// Icon-dense pages (tickets list ≈ 200 icons × 2 schemes ≈ 90s on a
+			// quiet run at 320px) legitimately exceed the default under parallel
+			// worker load — CPU contention roughly doubles the pixel sweep.
+			test.setTimeout(240_000);
 			await page.goto(`${BASE}/index.php${path}`, { waitUntil: 'domcontentloaded' });
 			await ensureAuthenticated(page);
 			await assertAtlasRenderedSurface(page, {

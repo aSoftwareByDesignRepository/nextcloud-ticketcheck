@@ -367,8 +367,11 @@ class Ticket extends Entity
             $errors['customerName'] = 'Customer name is required';
         }
 
-        // Validate category
-        if (!in_array($this->getCategory(), self::getCategories())) {
+        // Validate category — categories are dynamic rows now, so the
+        // entity can only enforce the key shape; membership/enabled checks
+        // live in TicketCategoryService (write-path trust boundary).
+        $category = (string) $this->getCategory();
+        if ($category === '' || preg_match('/^[a-z0-9][a-z0-9_-]{0,63}$/', $category) !== 1) {
             $errors['category'] = 'Invalid category';
         }
 

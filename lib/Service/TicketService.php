@@ -44,6 +44,7 @@ class TicketService
     private IConfig $config;
     private IDBConnection $db;
     private LoggerInterface $logger;
+    private ?TicketCategoryService $ticketCategories;
 
     public function __construct(
         TicketMapper $ticketMapper,
@@ -59,6 +60,7 @@ class TicketService
         IConfig $config,
         LoggerInterface $logger,
         IDBConnection $db,
+        ?TicketCategoryService $ticketCategories = null,
     ) {
         $this->ticketMapper = $ticketMapper;
         $this->commentMapper = $commentMapper;
@@ -73,6 +75,40 @@ class TicketService
         $this->config = $config;
         $this->logger = $logger;
         $this->db = $db;
+        $this->ticketCategories = $ticketCategories;
+    }
+
+    /**
+     * Category trust-boundary: resolve a caller-supplied key against the
+     * dynamic registry (enabled categories + configured default). Falls
+     * back to the legacy static allowlist only when the registry service
+     * is not wired (unit tests constructing the service manually) — that
+     * direction is safe because it rejects custom keys rather than
+     * accepting junk.
+     */
+    private function resolveWriteCategory(mixed $raw): string
+    {
+        if ($this->ticketCategories !== null) {
+            return $this->ticketCategories->resolveWriteKey(
+                $raw === null ? null : (string) $raw
+            );
+        }
+        $key = strtolower(trim((string) ($raw ?? '')));
+        return $key !== '' && in_array($key, Ticket::getCategories(), true)
+            ? $key
+            : Ticket::CATEGORY_GENERAL;
+    }
+
+    /** Lenient variant for non-interactive writers (inbound mail). */
+    private function resolveWriteCategoryOrDefault(mixed $raw): string
+    {
+        try {
+            return $this->resolveWriteCategory($raw);
+        } catch (\InvalidArgumentException) {
+            return $this->ticketCategories !== null
+                ? $this->ticketCategories->defaultKey()
+                : Ticket::CATEGORY_GENERAL;
+        }
     }
 
     /**
@@ -83,6 +119,21 @@ class TicketService
      * @throws \Exception
      */
     public function createTicket(array $data): Ticket
+    {
+        // Shared category write-guard: an in-flight category delete+reassign
+        // (exclusive lock) cannot slip past the resolve→insert sequence.
+        if ($this->ticketCategories !== null) {
+            return $this->ticketCategories->withCategoryWriteGuard(
+                fn (): Ticket => $this->doCreateTicket($data)
+            );
+        }
+        return $this->doCreateTicket($data);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function doCreateTicket(array $data): Ticket
     {
         $user = $this->userSession->getUser();
         if (!$user) {
@@ -97,7 +148,7 @@ class TicketService
         $ticket->setCustomerEmail($data['customer_email'] ?? $user->getEMailAddress());
         $ticket->setCustomerName($data['customer_name'] ?? $user->getDisplayName());
         $ticket->setProjectId($data['project_id'] ?? null);
-        $ticket->setCategory($data['category'] ?? Ticket::CATEGORY_GENERAL);
+        $ticket->setCategory($this->resolveWriteCategory($data['category'] ?? null));
         $ticket->setPriority($data['priority'] ?? Ticket::PRIORITY_NORMAL);
         $ticket->setStatus(Ticket::STATUS_NEW);
         $assignedTo = isset($data['assigned_to']) ? (string) $data['assigned_to'] : '';
@@ -171,6 +222,21 @@ class TicketService
      */
     public function createTicketFromEmail(array $data): Ticket
     {
+        if ($this->ticketCategories !== null) {
+            return $this->ticketCategories->withCategoryWriteGuard(
+                fn (): Ticket => $this->doCreateTicketFromEmail($data)
+            );
+        }
+        return $this->doCreateTicketFromEmail($data);
+    }
+
+    /**
+     * @param array{title: string, description: string, customer_email: string,
+     *   customer_name?: string, customer_id?: int|null, project_id?: int|null,
+     *   category?: string} $data
+     */
+    private function doCreateTicketFromEmail(array $data): Ticket
+    {
         $ticket = new Ticket();
         $ticket->setTicketNumber($this->generateUniqueTicketNumber());
         $ticket->setTitle($data['title'] ?? '');
@@ -181,7 +247,7 @@ class TicketService
             ? (string)$data['customer_name']
             : (string)($data['customer_email'] ?? ''));
         $ticket->setProjectId($data['project_id'] ?? null);
-        $ticket->setCategory($data['category'] ?? Ticket::CATEGORY_GENERAL);
+        $ticket->setCategory($this->resolveWriteCategoryOrDefault($data['category'] ?? null));
         $ticket->setPriority(Ticket::PRIORITY_NORMAL);
         $ticket->setStatus(Ticket::STATUS_NEW);
         $ticket->setAssignedTo(null);
@@ -225,9 +291,16 @@ class TicketService
     public function updateTicket(int $id, array $data, ?callable $assertAuthorized = null): Ticket
     {
         try {
+            // Shared category write-guard only when the update actually
+            // touches the category column — keeps non-category updates
+            // free of the global lock while a delete+reassign is in flight.
+            $work = fn (): Ticket => $this->updateTicketLocked($id, $data, $assertAuthorized);
+            if ($this->ticketCategories !== null && isset($data['category'])) {
+                $work = fn (): Ticket => $this->ticketCategories->withCategoryWriteGuard($work);
+            }
             return $this->workflowLock->withTicketLocks(
                 [$id],
-                fn (): Ticket => $this->updateTicketLocked($id, $data, $assertAuthorized),
+                $work,
                 'TicketCheck update'
             );
         } catch (\InvalidArgumentException $e) {
@@ -261,7 +334,13 @@ class TicketService
             $ticket->setDescription($data['description']);
         }
         if (isset($data['category'])) {
-            $ticket->setCategory($data['category']);
+            // Submitting the stored value is a no-op — existing tickets may
+            // legitimately sit on a disabled category; only a real change
+            // must pass the enabled-key boundary.
+            $newCategory = strtolower(trim((string) $data['category']));
+            if ($newCategory !== strtolower((string) $ticket->getCategory())) {
+                $ticket->setCategory($this->resolveWriteCategory($newCategory));
+            }
         }
         if (isset($data['priority'])) {
             $ticket->setPriority($data['priority']);

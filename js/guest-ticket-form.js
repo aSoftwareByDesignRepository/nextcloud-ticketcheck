@@ -75,8 +75,6 @@
         const fileCountText = document.getElementById('file-count-text');
         const projectPickerMode = form.getAttribute('data-portal-project-mode') || 'none';
         const projectSelect = document.getElementById('project_id');
-        const projectSearchInput = document.getElementById('project-search-input');
-        const projectSearchStatus = document.getElementById('project-search-status');
         const customerFilter = document.getElementById('customer_filter');
         const projectRadioPicker = form.querySelector('.portal-project-picker');
         const draftKey = 'ticketcheck:guest-create-ticket:draft';
@@ -165,33 +163,6 @@
                     box.parentNode.removeChild(box);
                 }
             }, 4000);
-        }
-
-        function parseErrorText(text, status) {
-            try {
-                const parsed = JSON.parse(text);
-                if (parsed && typeof parsed === 'object') {
-                    if (typeof parsed.error === 'string' && parsed.error.trim() !== '') {
-                        return parsed.error.trim();
-                    }
-                    if (typeof parsed.message === 'string' && parsed.message.trim() !== '') {
-                        return parsed.message.trim();
-                    }
-                }
-            } catch (e) {
-                // not JSON
-            }
-            if (status === 403) {
-                return tSafe('guest_no_projects', 'You cannot create tickets right now.');
-            }
-            if (status === 429) {
-                return tSafe('rate_limit', 'Too many requests. Please try again later.');
-            }
-            if (status >= 500) {
-                return tSafe('server_error_try_again_later', 'A server error occurred. Please reload and verify the result.');
-            }
-            const cleaned = String(text || '').trim();
-            return cleaned !== '' ? cleaned.substring(0, 240) : tSafe('an_error_occurred', 'An error occurred');
         }
 
         function getProjectIdValue() {
@@ -882,6 +853,15 @@
 
             api.postFormUrl(submitUrl, formData)
                 .then(function (ticketData) {
+                    // A 200 can still carry {success:false} (soft-fail
+                    // controllers) — never treat that as a created ticket.
+                    if (!ticketData || ticketData.success !== true) {
+                        throw new Error(
+                            (ticketData && ticketData.message)
+                            || (ticketData && ticketData.error)
+                            || tSafe('an_error_occurred', 'An error occurred')
+                        );
+                    }
                     hideValidationSummary();
                     if (selectedFiles.length > 0) {
                         showSubmitStatus(tSafe('success_redirect', 'Ticket created. Redirecting...'), 'success');

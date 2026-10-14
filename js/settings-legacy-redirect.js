@@ -18,6 +18,8 @@
 	'use strict';
 
 	const ANCHOR_SECTIONS = Object.freeze({
+		'settings-categories-heading': 'categories',
+		'ticket-categories': 'categories',
 		'settings-email-heading': 'email',
 		'settings-inbound-mail-heading': 'inbound-mail',
 		'settings-kb-heading': 'knowledge-base',

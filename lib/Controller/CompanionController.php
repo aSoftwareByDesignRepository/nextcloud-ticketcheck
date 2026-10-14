@@ -113,6 +113,8 @@ class CompanionController extends Controller
 			$title = (string)$this->request->getParam('title', '');
 			$description = (string)$this->request->getParam('description', '');
 			$priority = (string)$this->request->getParam('priority', \OCA\Ticketcheck\Db\Ticket::PRIORITY_NORMAL);
+			$categoryParam = $this->request->getParam('category');
+			$category = is_string($categoryParam) && trim($categoryParam) !== '' ? trim($categoryParam) : null;
 			// Optional idempotency: offline-queue flush / lost-200 retry with the
 			// same key (body idempotencyKey or X-TC-Idempotency-Key) returns the
 			// original ticket instead of a duplicate row. Scope includes project
@@ -121,7 +123,7 @@ class CompanionController extends Controller
 				$uid,
 				'companion.ticket.create.' . ($projectId !== null && $projectId > 0 ? (string)$projectId : 'noproject'),
 				$this->idempotencyKey(),
-				fn (): array => $this->tickets->create($uid, $projectId, $title, $description, $priority),
+				fn (): array => $this->tickets->create($uid, $projectId, $title, $description, $priority, $category),
 			);
 			return new JSONResponse(['ok' => true] + $result, Http::STATUS_CREATED);
 		} catch (CompanionConflictException $e) {

@@ -58,6 +58,9 @@ $row_normalizedClass = PortalTicketDisplay::statusBadgeClass($row_status);
 $row_displayStatus = $row_l->t(PortalTicketDisplay::statusTranslationKey($row_status));
 $row_priority = (string)$row_ticket->getPriority();
 $row_category = (string)($row_ticket->getCategory() ?? '');
+$row_categoryLabelMap = is_array($rowContext['categoryLabelMap'] ?? null) ? $rowContext['categoryLabelMap'] : [];
+$row_categoryLabel = $row_categoryLabelMap[strtolower($row_category)]
+	?? $row_l->t('category_' . strtolower($row_category));
 $row_createdAt = $row_ticket->getCreatedAt();
 $row_createdLabel = $row_localeFormat !== null
 	? $row_localeFormat->formatDate($row_createdAt->format('Y-m-d'), 'medium', $row_l)
@@ -128,7 +131,7 @@ if ($row_showExcerpt) {
 				</div>
 				<?php if ($row_showCategoryBadge && $row_category !== ''): ?>
 					<span class="helpdesk-badge portal-ticket-row__cat-badge">
-						<?php p($row_l->t('category_' . strtolower($row_category))); ?>
+						<?php p($row_categoryLabel); ?>
 					</span>
 				<?php endif; ?>
 			</div>

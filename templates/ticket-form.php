@@ -33,13 +33,20 @@ usort($customerFilterOptions, static function (array $a, array $b): int {
     return strcasecmp($a['name'], $b['name']);
 });
 
-$categoryLabelKeys = [
-    'general' => 'general_category',
-    'technical' => 'technical_issue',
-    'bug' => 'bug_report',
-    'billing' => 'billing',
-    'feature' => 'feature_request',
-];
+// Category options arrive as {key,label} pairs resolved server-side.
+// A stored key missing from the enabled options (disabled/deleted
+// category on an existing ticket) is appended as a disabled option so
+// the select still shows the truth instead of silently switching.
+$categoryOptions = is_array($_['categories'] ?? null) ? $_['categories'] : [];
+$categoryLabelMap = is_array($_['categoryLabelMap'] ?? null) ? $_['categoryLabelMap'] : [];
+$currentCategory = $_['ticket'] ? strtolower((string)$_['ticket']->getCategory()) : '';
+$currentCategoryInOptions = false;
+foreach ($categoryOptions as $opt) {
+    if (($opt['key'] ?? null) === $currentCategory) {
+        $currentCategoryInOptions = true;
+        break;
+    }
+}
 ?>
 
 <?php include __DIR__ . '/common/page-start.php'; ?>
@@ -141,7 +148,7 @@ $categoryLabelKeys = [
                                             data-customer-name="<?php p($project['customer_name'] ?? $l->t('no_customer')); ?>"
                                             data-customer-email="<?php p($project['customer_email'] ?? ''); ?>"
                                             <?php if ($_['ticket'] && $_['ticket']->getProjectId() == $project['id']) p('selected'); ?>>
-                                            <?php p($project['name']); ?>
+                                            <?php p(trim((string)$project['name']) !== '' ? $project['name'] : '#' . (int)$project['id']); ?>
                                             <?php if (!empty($project['customer_name'])): ?>
                                                 (<?php p($project['customer_name']); ?>)
                                             <?php endif; ?>
@@ -229,11 +236,17 @@ $categoryLabelKeys = [
                             <div class="helpdesk-form-group tc-field">
                                 <label for="category" class="helpdesk-form-label"><?php p($l->t('category')); ?></label>
                                 <select id="category" name="category" class="helpdesk-form-control">
-                                    <?php foreach (($_['categories'] ?? []) as $cat): ?>
-                                        <option value="<?php p($cat); ?>" <?php if ($_['ticket'] && $_['ticket']->getCategory() === $cat) p('selected'); ?>>
-                                            <?php p($l->t($categoryLabelKeys[$cat] ?? ('category_' . $cat))); ?>
+                                    <?php foreach ($categoryOptions as $cat): ?>
+                                        <option value="<?php p($cat['key']); ?>" <?php if ($currentCategory !== '' && $currentCategory === $cat['key']) p('selected'); ?>>
+                                            <?php p($cat['label']); ?>
                                         </option>
                                     <?php endforeach; ?>
+                                    <?php if ($currentCategory !== '' && !$currentCategoryInOptions): ?>
+                                        <option value="<?php p($currentCategory); ?>" selected>
+                                            <?php p($categoryLabelMap[$currentCategory] ?? $currentCategory); ?>
+                                            (<?php p($l->t('disabled_label')); ?>)
+                                        </option>
+                                    <?php endif; ?>
                                 </select>
                             </div>
 

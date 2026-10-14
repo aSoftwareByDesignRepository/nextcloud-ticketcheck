@@ -134,6 +134,9 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 		'SettingsController::inboundImapTest',
 		'SettingsController::inboundImapEnable',
 		'SettingsController::inboundImapOauthBegin',
+		// Needs a JSON `payload` body beyond dummy args; the happy path is
+		// exercised by TicketCategoryServiceTest-driven endpoint coverage.
+		'SettingsController::importTicketCategories',
 	];
 
 	/**
@@ -200,6 +203,11 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			'createKBCategory', 'updateKBCategory', 'deleteKBCategory',
 			'createEscalationRule', 'updateEscalationRule', 'deleteEscalationRule',
 			'getAppAccessPreview', 'searchNextcloudGroups', 'searchNextcloudUsers',
+			// Ticket-category management endpoints — all gate on
+			// canManageSettings() before touching the service.
+			'listTicketCategories', 'createTicketCategory', 'updateTicketCategory',
+			'deleteTicketCategory', 'reorderTicketCategories',
+			'exportTicketCategories', 'importTicketCategories', 'setDefaultTicketCategory',
 		],
 		ProjectController::class => ['create', 'store', 'update', 'delete', 'show', 'edit'],
 		ProjectMemberController::class => ['addMember', 'removeMember', 'updateRole', 'bulkAdd', 'getMembers', 'getAvailableUsers'],

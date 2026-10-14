@@ -17,6 +17,14 @@ $currentUserId = $currentUser ? $currentUser->getUID() : null;
 $l = $_['l'];
 /** @var \OCA\Ticketcheck\Service\LocaleFormatService|null $localeFormat */
 $localeFormat = $_['localeFormat'] ?? null;
+
+// Dynamic category labels (TicketCategoryService::labelMap()); unknown
+// keys render as the raw key — never a stale l10n guess.
+$categoryLabelMap = is_array($_['categoryLabelMap'] ?? null) ? $_['categoryLabelMap'] : [];
+$categoryLabel = static function (?string $key) use ($categoryLabelMap): string {
+	$key = strtolower((string)$key);
+	return $categoryLabelMap[$key] ?? $key;
+};
 ?>
 
 <?php include __DIR__ . '/common/page-start.php'; ?>
@@ -199,7 +207,7 @@ $localeFormat = $_['localeFormat'] ?? null;
                                         <td>
                                             <?php if ($ticket->getCategory()): ?>
                                                 <span class="helpdesk-badge helpdesk-ticket-card__category-badge">
-                                                    <?php p($l->t('category_' . strtolower($ticket->getCategory()))); ?>
+                                                    <?php p($categoryLabel($ticket->getCategory())); ?>
                                                 </span>
                                             <?php else: ?>
                                                 <span class="helpdesk-text-muted"><?php p($l->t('none')); ?></span>
@@ -296,7 +304,7 @@ $localeFormat = $_['localeFormat'] ?? null;
                                                 <?php p($createdLabel); ?>
                                                 <?php if ($ticket->getCategory()): ?>
                                                     • <span class="helpdesk-badge helpdesk-ticket-card__category-badge">
-                                                        <?php p($l->t('category_' . strtolower($ticket->getCategory()))); ?>
+                                                        <?php p($categoryLabel($ticket->getCategory())); ?>
                                                     </span>
                                                 <?php endif; ?>
                                             </div>

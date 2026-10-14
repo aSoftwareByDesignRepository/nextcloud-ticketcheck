@@ -51,6 +51,7 @@ class CompanionTicketService
 		private readonly EmailService $emailService,
 		private readonly LoggerInterface $logger,
 		private readonly TicketWorkflowLock $workflowLock,
+		private readonly ?TicketCategoryService $ticketCategories = null,
 	) {
 	}
 
@@ -167,10 +168,30 @@ class CompanionTicketService
 			$this->logger->warning('Companion filter options: project list failed', ['exception' => $e]);
 		}
 
+		// Dynamic ticket categories as {key,label} pairs — the companion
+		// renders labels verbatim (no client-side enum translation).
+		$categories = [];
+		try {
+			if ($this->ticketCategories !== null) {
+				$categories = $this->ticketCategories->options();
+			}
+		} catch (\Throwable $e) {
+			$this->logger->warning('Companion filter options: category list failed', ['exception' => $e]);
+		}
+		if ($categories === []) {
+			foreach (Ticket::getCategories() as $key) {
+				$categories[] = ['key' => $key, 'label' => $key];
+			}
+		}
+
 		return [
 			'projects' => $projects,
 			'priorities' => Ticket::getPriorities(),
 			'statuses' => Ticket::getStatuses(),
+			'categories' => $categories,
+			'defaultCategory' => $this->ticketCategories !== null
+				? $this->ticketCategories->defaultKey()
+				: Ticket::CATEGORY_GENERAL,
 		];
 	}
 
@@ -443,7 +464,7 @@ class CompanionTicketService
 	 *
 	 * @return array<string, mixed> detail payload of the created ticket
 	 */
-	public function create(string $uid, ?int $projectId, string $title, string $description, string $priority): array
+	public function create(string $uid, ?int $projectId, string $title, string $description, string $priority, ?string $category = null): array
 	{
 		if ($projectId === null || $projectId < 1) {
 			throw new CompanionValidationException('project_required', 'projectId is required');
@@ -460,6 +481,18 @@ class CompanionTicketService
 		if (!in_array($priority, Ticket::getPriorities(), true)) {
 			throw new CompanionValidationException('invalid_priority', 'Unknown priority');
 		}
+		// Category boundary: explicit value must be a selectable (enabled)
+		// key; absent/null falls through to the configured default. A null
+		// service falls back to the builtin enum — never skip validation.
+		if ($category !== null && $category !== '') {
+			$normalized = strtolower(trim($category));
+			$valid = $this->ticketCategories !== null
+				? $this->ticketCategories->isEnabledKey($normalized)
+				: in_array($normalized, Ticket::getCategories(), true);
+			if (!$valid) {
+				throw new CompanionValidationException('invalid_category', 'Unknown category');
+			}
+		}
 
 		$data = [
 			'title' => $title,
@@ -468,6 +501,9 @@ class CompanionTicketService
 			'project_id' => $projectId,
 			'created_by_guest' => false,
 		];
+		if ($category !== null && trim($category) !== '') {
+			$data['category'] = strtolower(trim($category));
+		}
 
 		$project = null;
 		try {
@@ -740,6 +776,8 @@ class CompanionTicketService
 			'title' => $ticket->getTitle(),
 			'status' => $ticket->getStatus(),
 			'priority' => $ticket->getPriority(),
+			'category' => (string)$ticket->getCategory(),
+			'categoryLabel' => $this->categoryLabel($ticket->getCategory()),
 			'projectId' => $ticket->getProjectId(),
 			'projectName' => $this->projectName($ticket->getProjectId()),
 			'assignedTo' => $ticket->getAssignedTo(),
@@ -765,6 +803,8 @@ class CompanionTicketService
 			'description' => $ticket->getDescription(),
 			'status' => $ticket->getStatus(),
 			'priority' => $ticket->getPriority(),
+			'category' => (string)$ticket->getCategory(),
+			'categoryLabel' => $this->categoryLabel($ticket->getCategory()),
 			'projectId' => $ticket->getProjectId(),
 			'projectName' => $this->projectName($ticket->getProjectId()),
 			'assignedTo' => $ticket->getAssignedTo(),
@@ -808,6 +848,22 @@ class CompanionTicketService
 			'size' => $attachment->getFileSize(),
 			'visibility' => $isInternal ? 'internal' : 'public',
 		];
+	}
+
+	private function categoryLabel(mixed $key): string
+	{
+		$key = strtolower((string)$key);
+		if ($key === '') {
+			return '';
+		}
+		if ($this->ticketCategories !== null) {
+			try {
+				return $this->ticketCategories->labelFor($key);
+			} catch (\Throwable) {
+				// fall through to raw key
+			}
+		}
+		return $key;
 	}
 
 	private function projectName(?int $projectId): ?string

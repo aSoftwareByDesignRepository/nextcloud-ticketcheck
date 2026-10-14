@@ -7,20 +7,21 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-    function showAlert(message) {
+    function notify(message, kind) {
+        const text = String(message || '');
         if (window.TicketCheckMessaging && typeof TicketCheckMessaging.announce === 'function') {
-            TicketCheckMessaging.announce(String(message || ''), 'error');
+            TicketCheckMessaging.announce(text, kind || 'error');
             return;
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
-            OC.Notification.showTemporary(String(message || ''), { type: 'error' });
+            OC.Notification.showTemporary(text, { type: kind || 'error' });
             return;
         }
         const host = document.getElementById('app-content') || document.body;
         const box = document.createElement('div');
         box.className = 'helpdesk-alert helpdesk-alert--error helpdesk-mb-md';
-        box.setAttribute('role', 'alert');
-        box.textContent = String(message || '');
+        box.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+        box.textContent = text;
         host.insertAdjacentElement('afterbegin', box);
         setTimeout(() => {
             if (box.parentNode) {
@@ -28,7 +29,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }, 6000);
     }
-    const alert = showAlert;
+    function showAlert(message) {
+        notify(message, 'error');
+    }
 
     const form = document.getElementById('ticket-form');
     if (!form) return;
@@ -135,12 +138,13 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         const queryNorm = normalizePickerText(query);
+        // Exact match only — an `includes` hit would silently file the
+        // ticket under the first project containing the typed substring.
         const match = Array.from(projectSelect.options).find(function (option, index) {
             if (index === 0 || option.disabled) {
                 return false;
             }
-            const labelNorm = normalizePickerText(option.textContent);
-            return labelNorm === queryNorm || labelNorm.includes(queryNorm);
+            return normalizePickerText(option.textContent) === queryNorm;
         });
         if (match) {
             projectSelect.value = match.value;
@@ -300,20 +304,6 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             field.removeAttribute('aria-describedby');
         }
-    }
-
-    function showInlineFieldError(field, message) {
-        if (!field) return;
-        const id = fieldErrorId(field);
-        clearInlineFieldError(field);
-        const errorEl = document.createElement('div');
-        errorEl.id = id;
-        errorEl.className = 'helpdesk-form-field-error';
-        errorEl.setAttribute('role', 'alert');
-        errorEl.textContent = message;
-        field.insertAdjacentElement('afterend', errorEl);
-        const describedBy = (field.getAttribute('aria-describedby') || '').trim();
-        field.setAttribute('aria-describedby', describedBy ? `${describedBy} ${id}` : id);
     }
 
     function hideValidationSummary() {
@@ -527,46 +517,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function parseErrorText(text, status) {
-        let data = null;
-        try { data = JSON.parse(text); } catch (e) {}
-        if (data && (data.message || data.error)) {
-            return data.message || data.error;
-        }
-        if (status >= 500) {
-            return tSafe('server_error_try_again_later', 'A server error occurred. Please reload and verify the result.');
-        }
-        return text ? text.substring(0, 220) : tSafe('an_error_occurred', 'An error occurred');
-    }
-
-    function parseJsonResponse(response) {
-        return response.text().then((text) => {
-            let data = null;
-            try { data = JSON.parse(text); } catch (e) {}
-            if (!response.ok) {
-                throw new Error(parseErrorText(text, response.status));
-            }
-            if (!data) {
-                throw new Error(tSafe('server_error_try_again_later', 'A server error occurred. Please reload and verify the result.'));
-            }
-            return data;
-        });
-    }
-
     function loadUsersForProject(projectId, preserveValue) {
         if (!assignedToSelect || !projectId) return;
-        assignedToSelect.textContent = '';
-        const loadingOption = document.createElement('option');
-        loadingOption.value = '';
-        loadingOption.textContent = '' + tSafe('loading_users', 'Loading users');
-        assignedToSelect.appendChild(loadingOption);
-        assignedToSelect.disabled = true;
-
         const api = window.TicketCheckApi;
         if (!api || typeof api.get !== 'function') {
-            assignedToSelect.disabled = false;
             return;
         }
+        // Keep the existing options until data arrives — wiping first would
+        // strand the current assignee (edit page) if the request fails.
+        assignedToSelect.disabled = true;
+        assignedToSelect.setAttribute('aria-busy', 'true');
 
         api.get('/apps/ticketcheck/api/tickets/projects/' + projectId + '/users')
             .then(function (data) {
@@ -585,14 +545,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (preserveValue) assignedToSelect.value = preserveValue;
                 }
                 assignedToSelect.disabled = false;
+                assignedToSelect.removeAttribute('aria-busy');
             })
             .catch(() => {
-                assignedToSelect.textContent = '';
-                const unassignedOption = document.createElement('option');
-                unassignedOption.value = '';
-                unassignedOption.textContent = '-- ' + tSafe('unassigned', 'Unassigned') + ' --';
-                assignedToSelect.appendChild(unassignedOption);
+                // Options untouched — whatever the server rendered stays valid.
                 assignedToSelect.disabled = false;
+                assignedToSelect.removeAttribute('aria-busy');
             });
     }
 
@@ -707,6 +665,65 @@ document.addEventListener('DOMContentLoaded', function () {
         bindDropzone(dropTarget);
     }
 
+    // Existing-attachment deletion (edit page only — the buttons render
+    // only when $isEdit && $attachments). Confirm first, then DELETE and
+    // remove the row without a page reload.
+    form.querySelectorAll('.delete-attachment-btn').forEach(function (button) {
+        button.addEventListener('click', async function () {
+            const attachmentId = this.getAttribute('data-attachment-id');
+            const ticketIdAttr = this.getAttribute('data-ticket-id');
+            const attachmentItem = this.closest('.helpdesk-attachment-item');
+            const C = window.TicketCheckComponents;
+            if (!C || typeof C.confirmDialog !== 'function') {
+                return;
+            }
+            const confirmed = await C.confirmDialog({
+                title: tSafe('delete', 'Delete'),
+                body: tSafe('confirm_delete_attachment', 'Delete this attachment?'),
+                confirmLabel: tSafe('delete', 'Delete'),
+                danger: true,
+            });
+            if (!confirmed) {
+                return;
+            }
+            this.disabled = true;
+            this.setAttribute('aria-busy', 'true');
+
+            const api = window.TicketCheckApi;
+            if (!api || typeof api.del !== 'function') {
+                this.disabled = false;
+                this.removeAttribute('aria-busy');
+                showAlert(tSafe('an_error_occurred', 'An error occurred'));
+                return;
+            }
+
+            api.del('/apps/ticketcheck/tickets/' + ticketIdAttr + '/attachments/' + attachmentId)
+                .then(function (res) {
+                    if (!res.success) {
+                        throw new Error(res.message || 'Failed to delete attachment');
+                    }
+                    if (attachmentItem) {
+                        attachmentItem.style.transition = 'opacity 0.3s';
+                        attachmentItem.style.opacity = '0';
+                        setTimeout(() => {
+                            attachmentItem.remove();
+                            const attachmentsList = document.getElementById('existing-attachments-list');
+                            if (attachmentsList && attachmentsList.children.length === 0) {
+                                const group = attachmentsList.closest('.helpdesk-form-group');
+                                if (group) group.remove();
+                            }
+                        }, 300);
+                    }
+                    notify(tSafe('attachment_deleted_successfully', 'Attachment deleted'), 'success');
+                })
+                .catch((err) => {
+                    showAlert(tFormat('error_with_recovery', 'Error: {message}', { message: err.message || tSafe('failed_to_delete_attachment', 'Failed to delete attachment') }));
+                    this.disabled = false;
+                    this.removeAttribute('aria-busy');
+                });
+        });
+    });
+
     function clearFieldValidationState(el) {
         if (!el) {
             return;
@@ -801,14 +818,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (selectedFiles.some((file) => file.size > maxPerFileSize)) {
             submitInFlight = false;
             resetSubmitUi(submitBtn, submitLabelEl, originalText);
-            OC.Notification.showTemporary(tSafe('max_file_size', 'Maximum file size is 10MB'), { type: 'warning' });
+            notify(tSafe('max_file_size', 'Maximum file size is 10MB'), 'warning');
             return;
         }
         const totalUploadSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
         if (selectedFiles.length > maxTotalFiles || totalUploadSize > maxTotalSize) {
             submitInFlight = false;
             resetSubmitUi(submitBtn, submitLabelEl, originalText);
-            OC.Notification.showTemporary(tSafe('upload_limit_exceeded', 'Upload limits exceeded'), { type: 'warning' });
+            notify(tSafe('upload_limit_exceeded', 'Upload limits exceeded'), 'warning');
             return;
         }
 
@@ -829,6 +846,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         syncProjectComboboxBeforeValidate();
         const payload = new FormData(form);
+        // Drop the raw file-input entry (an empty File when nothing was
+        // picked) — selectedFiles is the single source of truth.
+        payload.delete('attachments[]');
         if (projectSelect && projectSelect.value) {
             payload.set('project_id', projectSelect.value);
         }
@@ -838,7 +858,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!api || typeof api.postForm !== 'function' || typeof api.postFormUrl !== 'function') {
             submitInFlight = false;
             resetSubmitUi(submitBtn, submitLabelEl, originalText);
-            OC.Notification.showTemporary(tSafe('an_error_occurred', 'An error occurred'), { type: 'error' });
+            notify(tSafe('an_error_occurred', 'An error occurred'), 'error');
             return;
         }
 
@@ -854,10 +874,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearDraft();
                 hideValidationSummary();
                 const ticketIdValue = data.ticket_id || (data.ticket && data.ticket.id) || form.getAttribute('data-ticket-id');
-                OC.Notification.showTemporary(isEdit ? tSafe('ticket_updated', 'Ticket updated successfully') : tSafe('ticket_created', 'Ticket created successfully'), { type: 'success' });
+                notify(isEdit ? tSafe('ticket_updated', 'Ticket updated successfully') : tSafe('ticket_created', 'Ticket created successfully'), 'success');
                 if (ticketIdValue) {
                     setTimeout(() => {
-                        window.location.href = OC.generateUrl('/apps/ticketcheck/tickets/' + ticketIdValue);
+                        if (typeof OC !== 'undefined' && OC.generateUrl) {
+                            window.location.href = OC.generateUrl('/apps/ticketcheck/tickets/' + ticketIdValue);
+                        } else {
+                            window.location.reload();
+                        }
                     }, 400);
                 } else {
                     setTimeout(() => window.location.reload(), 400);
@@ -865,7 +889,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch((error) => {
                 submitInFlight = false;
-                OC.Notification.showTemporary(`${tSafe('error', 'Error')}: ${error.message}`, { type: 'error' });
+                notify(`${tSafe('error', 'Error')}: ${error.message}`, 'error');
                 resetSubmitUi(submitBtn, submitLabelEl, originalText);
             });
     }

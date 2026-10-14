@@ -21,6 +21,7 @@ use OCA\Ticketcheck\Db\HelpdeskProjectMapper;
 use OCA\Ticketcheck\Db\InboundMessage;
 use OCA\Ticketcheck\Db\InboundMessageMapper;
 use OCA\Ticketcheck\Db\Ticket;
+use OCA\Ticketcheck\Service\TicketCategoryService;
 use OCP\L10N\IFactory as L10NFactory;
 use Psr\Log\LoggerInterface;
 
@@ -50,6 +51,7 @@ class InboundEmailService
 		private HelpdeskCustomerMapper $customerMapper,
 		private HelpdeskProjectMapper $projectMapper,
 		private L10NFactory $l10nFactory,
+		private ?TicketCategoryService $ticketCategories = null,
 	) {
 	}
 
@@ -423,6 +425,15 @@ class InboundEmailService
 		);
 		$projectId = $routing['project_id'] ?? null;
 		$category = $routing['category'] ?? Ticket::CATEGORY_GENERAL;
+		// Routing rules may still point at a deleted category (appconfig is not
+		// part of the delete transaction) — normalize unknown keys to general.
+		if ($this->ticketCategories !== null && !$this->ticketCategories->isEnabledKey($category)) {
+			$this->logger->warning('Inbound routing target category missing or disabled — falling back', [
+				'app' => 'ticketcheck',
+				'category' => $category,
+			]);
+			$category = $this->ticketCategories->defaultKey();
+		}
 		if ($projectId !== null && !$this->projectExists((int)$projectId)) {
 			$this->logger->warning('Inbound routing target project missing — falling back', [
 				'app' => 'ticketcheck',

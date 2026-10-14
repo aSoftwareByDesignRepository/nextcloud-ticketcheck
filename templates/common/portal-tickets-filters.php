@@ -80,11 +80,11 @@ $showProjectFilter = empty($_['scopedProjectId']) && count($portalProjects) > 1;
 				<?php p($l->t('priority_urgent')); ?>
 			</a>
 			<?php foreach (($_['categories'] ?? []) as $category): ?>
-				<?php $categoryActive = ($cfTickets['category'] ?? '') === $category; ?>
-				<a href="<?php p($portalFilterLink(['category' => $category])); ?>"
+				<?php $categoryActive = ($cfTickets['category'] ?? '') === $category['key']; ?>
+				<a href="<?php p($portalFilterLink(['category' => $category['key']])); ?>"
 					class="tc-filter-chip<?php echo $categoryActive ? ' tc-filter-chip--active' : ''; ?>"
 					<?php if ($categoryActive) : ?>aria-current="page"<?php endif; ?>>
-					<?php p($l->t('category_' . strtolower((string) $category))); ?>
+					<?php p($category['label']); ?>
 				</a>
 			<?php endforeach; ?>
 		</div>
@@ -144,10 +144,10 @@ $showProjectFilter = empty($_['scopedProjectId']) && count($portalProjects) > 1;
 						<select name="category" id="portal-filter-category" class="tc-filter-field__control">
 							<option value=""><?php p($l->t('all_categories_option')); ?></option>
 							<?php foreach (($_['categories'] ?? []) as $category): ?>
-								<option value="<?php p($category); ?>" <?php if (($cfTickets['category'] ?? '') === $category) {
+								<option value="<?php p($category['key']); ?>" <?php if (($cfTickets['category'] ?? '') === $category['key']) {
 									p('selected');
 								} ?>>
-									<?php p($l->t('category_' . strtolower((string) $category))); ?>
+									<?php p($category['label']); ?>
 								</option>
 							<?php endforeach; ?>
 						</select>

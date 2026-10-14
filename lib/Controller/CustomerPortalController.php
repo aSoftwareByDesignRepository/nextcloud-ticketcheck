@@ -34,6 +34,7 @@ use OCA\Ticketcheck\Service\AttachmentDisplayHelper;
 use OCA\Ticketcheck\Service\KbSearchTextHelper;
 use OCA\Ticketcheck\Service\PortalTicketDisplay;
 use OCA\Ticketcheck\Service\PortalTicketListFilterService;
+use OCA\Ticketcheck\Service\TicketCategoryService;
 use OCA\Ticketcheck\Db\TicketMapper;
 use OCA\Ticketcheck\Db\KBArticleMapper;
 use OCA\Ticketcheck\Db\AttachmentMapper;
@@ -95,6 +96,7 @@ class CustomerPortalController extends Controller
     private GuestPasswordPolicyService $guestPasswordPolicy;
     private PortalTicketListFilterService $portalTicketListFilter;
     private AttachmentDeliveryService $attachmentDelivery;
+    private ?TicketCategoryService $ticketCategories;
 
     /** Maximum tickets loaded for guest list pages (email-scoped). */
     private const PORTAL_TICKET_LIST_LIMIT = 500;
@@ -131,6 +133,7 @@ class CustomerPortalController extends Controller
         GuestPasswordPolicyService $guestPasswordPolicy,
         PortalTicketListFilterService $portalTicketListFilter,
         AttachmentDeliveryService $attachmentDelivery,
+        ?TicketCategoryService $ticketCategories = null,
     ) {
         parent::__construct($appName, $request);
         $this->ticketService = $ticketService;
@@ -162,6 +165,39 @@ class CustomerPortalController extends Controller
         $this->guestPasswordPolicy = $guestPasswordPolicy;
         $this->portalTicketListFilter = $portalTicketListFilter;
         $this->attachmentDelivery = $attachmentDelivery;
+        $this->ticketCategories = $ticketCategories;
+    }
+
+    /**
+     * Dynamic ticket-category template params — `categories` as
+     * `[{key,label}]` option pairs plus `categoryLabelMap` for rendering
+     * stored keys. Filters pass $includeDisabled so historic tickets stay
+     * filterable. Falls back to the static enum when the service is not
+     * wired (manual construction in tests).
+     *
+     * @return array{categories: list<array{key:string,label:string}>, categoryLabelMap: array<string,string>}
+     */
+    private function categoryTemplateParams(bool $includeDisabled = false): array
+    {
+        if ($this->ticketCategories !== null) {
+            return [
+                'categories' => $this->ticketCategories->options(null, $includeDisabled),
+                'categoryLabelMap' => $this->ticketCategories->labelMap(),
+            ];
+        }
+        $l = $this->l10nFactory->get($this->appName);
+        $keys = Ticket::getCategories();
+        $map = [];
+        foreach ($keys as $key) {
+            $map[$key] = $l->t('category_' . $key);
+        }
+        return [
+            'categories' => array_map(
+                static fn (string $k): array => ['key' => $k, 'label' => $map[$k]],
+                $keys
+            ),
+            'categoryLabelMap' => $map,
+        ];
     }
 
     /**
@@ -279,7 +315,7 @@ class CustomerPortalController extends Controller
                 'tickets' => $tickets,
                 'projects' => $projects,
                 'stats' => $stats,
-                'categories' => Ticket::getCategories(),
+                ...$this->categoryTemplateParams(true),
                 'userName' => $this->permissionService->getCurrentUserDisplayName(),
                 'creatorNames' => $creatorNames,
             ],
@@ -436,7 +472,7 @@ class CustomerPortalController extends Controller
             'portal-create',
             [
                 'priorities' => Ticket::getPriorities(),
-                'categories' => Ticket::getCategories(),
+                ...$this->categoryTemplateParams(),
                 'projects' => $projects,
                 'defaultProjectId' => $defaultProjectId,
                 'hasAccessibleProjects' => $hasAccessibleProjects,
@@ -477,7 +513,16 @@ class CustomerPortalController extends Controller
             $title = $this->request->getParam('title');
             $description = $this->request->getParam('description');
             $priority = $this->request->getParam('priority', 'normal');
-            $category = $this->request->getParam('category', 'general');
+            $category = $this->request->getParam('category');
+            // Explicit boundary check for a clean error — the service
+            // enforces the same rule as last line of defense.
+            if ($category !== null && $category !== ''
+                && $this->ticketCategories !== null
+                && !$this->ticketCategories->isEnabledKey(strtolower(trim((string)$category)))) {
+                return new JSONResponse([
+                    'error' => $l->t('category_invalid'),
+                ], 400);
+            }
             $projectId = $this->normalizeOptionalPositiveInt($this->request->getParam('project_id'));
 
             // Validate required fields
@@ -1020,6 +1065,7 @@ class CustomerPortalController extends Controller
                 'portal-ticket-detail',
                 [
                     'ticket' => $ticket,
+                    ...$this->categoryTemplateParams(true),
                     'survey' => $survey,
                     'links' => $links,
                     'showSurveyForm' => $showSurveyForm,
@@ -2361,7 +2407,7 @@ class CustomerPortalController extends Controller
             'currentFilters' => $resolved['currentFilters'],
             'statuses' => Ticket::getStatuses(),
             'priorities' => Ticket::getPriorities(),
-            'categories' => Ticket::getCategories(),
+            ...$this->categoryTemplateParams(true),
             'portalProjects' => $portalProjects,
             'portalProjectNames' => $portalProjectNames,
             'portalShowProjectColumn' => $scopedProjectId === null && count($portalProjects) > 1,

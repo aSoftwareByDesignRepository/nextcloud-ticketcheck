@@ -85,6 +85,7 @@ $localeFormat = $_['localeFormat'] ?? null;
                                 <button type="button"
                                     class="helpdesk-btn helpdesk-btn--danger"
                                     data-delete-ticket-id="<?php p($_['ticket']->getId()); ?>"
+                                    data-ticket-name="<?php p('#' . $_['ticket']->getTicketNumber() . ' ' . $_['ticket']->getTitle()); ?>"
                                     title="<?php p($l->t('delete_ticket_help')); ?>"
                                     aria-label="<?php p($l->t('delete_ticket')); ?>">
                                     <?php print_unescaped(IconCatalog::render('trash-2')); ?>
@@ -408,7 +409,11 @@ $localeFormat = $_['localeFormat'] ?? null;
                             <?php endif; ?>
                             <div>
                                 <div class="helpdesk-text-muted ticket-detail-info-label"><?php p($l->t('Category')); ?></div>
-                                <strong><?php p($l->t('category_' . strtolower($_['ticket']->getCategory()))); ?></strong>
+                                <strong><?php
+                                    $catKey = strtolower((string)$_['ticket']->getCategory());
+                                    $catMap = is_array($_['categoryLabelMap'] ?? null) ? $_['categoryLabelMap'] : [];
+                                    p($catMap[$catKey] ?? $catKey);
+                                ?></strong>
                             </div>
                             <div>
                                 <div class="helpdesk-text-muted ticket-detail-info-label"><?php p($l->t('Created')); ?></div>

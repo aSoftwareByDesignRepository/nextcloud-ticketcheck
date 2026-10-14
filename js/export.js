@@ -194,6 +194,8 @@
 			const categorySelect = root.querySelector('#export-filter-category');
 			fillEnumSelect(statusSelect, data.statuses || [], 'status_');
 			fillEnumSelect(prioritySelect, data.priorities || [], 'priority_');
+			// Categories arrive as {key,label} pairs — labels are resolved
+			// server-side (custom categories have no l10n key to translate).
 			fillEnumSelect(categorySelect, data.categories || [], 'category_');
 		}
 
@@ -206,9 +208,12 @@
 				select.remove(1);
 			}
 			values.forEach((value) => {
+				const isPair = value !== null && typeof value === 'object';
 				const option = document.createElement('option');
-				option.value = value;
-				option.textContent = translateToken(prefix, value);
+				option.value = isPair ? String(value.key ?? '') : String(value);
+				option.textContent = isPair
+					? String(value.label ?? value.key ?? '')
+					: translateToken(prefix, value);
 				select.appendChild(option);
 			});
 			select.value = current;

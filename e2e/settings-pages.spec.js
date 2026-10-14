@@ -16,6 +16,7 @@ const settingsSections = [
   'inbound-mail',
   'knowledge-base',
   'kb-categories',
+  'categories',
   'escalation',
   'about',
 ];

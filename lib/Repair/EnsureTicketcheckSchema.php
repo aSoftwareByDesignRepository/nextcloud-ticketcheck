@@ -35,6 +35,7 @@ final class EnsureTicketcheckSchema implements IRepairStep
 		$missingBefore = $this->missingTables();
 		if ($missingBefore === []) {
 			$output->info('Ticketcheck: all ' . count(UninstallDropTables::TABLES) . ' tables are present.');
+			$this->ensureBuiltinTicketCategories($output);
 			return;
 		}
 
@@ -51,16 +52,60 @@ final class EnsureTicketcheckSchema implements IRepairStep
 		$migrationService->migrate('latest', false);
 
 		$missingAfter = $this->missingTables();
-		if ($missingAfter === []) {
-			$output->info('Ticketcheck: schema repair completed; all tables are now present.');
+		if ($missingAfter !== []) {
+			throw new \RuntimeException(sprintf(
+				'Ticketcheck schema is still incomplete after migrate("latest"). Missing: %s. '
+				. 'Run `php occ upgrade` or re-enable the app and check nextcloud.log.',
+				implode(', ', $missingAfter),
+			));
+		}
+		$output->info('Ticketcheck: schema repair completed; all tables are now present.');
+		$this->ensureBuiltinTicketCategories($output);
+	}
+
+	/**
+	 * Backstop for a partial seed: the category table can exist while
+	 * builtin rows were skipped (e.g. racing installer). Builtin keys are
+	 * the API contract — insert-if-missing is idempotent and safe here.
+	 */
+	private function ensureBuiltinTicketCategories(IOutput $output): void
+	{
+		$missingBefore = $this->missingTables();
+		if ($missingBefore !== [] || !in_array('helpdesk_ticket_categories', UninstallDropTables::TABLES, true)) {
 			return;
 		}
 
-		throw new \RuntimeException(sprintf(
-			'Ticketcheck schema is still incomplete after migrate("latest"). Missing: %s. '
-			. 'Run `php occ upgrade` or re-enable the app and check nextcloud.log.',
-			implode(', ', $missingAfter),
-		));
+		$builtinKeys = ['technical', 'bug', 'feature', 'general', 'billing'];
+		$missingKeys = 0;
+		foreach ($builtinKeys as $position => $key) {
+			$check = $this->connection->getQueryBuilder();
+			$check->select($check->func()->count('id'))
+				->from('helpdesk_ticket_categories')
+				->where($check->expr()->eq('cat_key', $check->createNamedParameter($key)));
+			if ((int)$check->executeQuery()->fetchOne() > 0) {
+				continue;
+			}
+			try {
+				$qb = $this->connection->getQueryBuilder();
+				$qb->insert('helpdesk_ticket_categories')
+					->values([
+						'cat_key' => $qb->createNamedParameter($key),
+						'labels' => $qb->createNamedParameter(null),
+						'position' => $qb->createNamedParameter($position, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT),
+						'builtin' => $qb->createNamedParameter(1, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT),
+						'is_enabled' => $qb->createNamedParameter(1, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT),
+						'created_at' => $qb->createNamedParameter(new \DateTime(), \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_DATETIME_MUTABLE),
+						'updated_at' => $qb->createNamedParameter(new \DateTime(), \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_DATETIME_MUTABLE),
+					])
+					->executeStatement();
+				$missingKeys++;
+			} catch (\Throwable) {
+				// Concurrent seed won the unique index — nothing to do.
+			}
+		}
+		if ($missingKeys > 0) {
+			$output->info(sprintf('Ticketcheck: seeded %d missing builtin ticket categor(ies).', $missingKeys));
+		}
 	}
 
 	/**

@@ -20,7 +20,6 @@
 
     function init() {
         currentFilters = collectFiltersFromPage();
-        setupQuickFilters();
         setupAdvancedFilters();
         setupSavedViewsContainer();
         loadSavedViews();
@@ -71,29 +70,6 @@
         const trimmed = name.trim();
         if (trimmed === '') return null;
         return trimmed.slice(0, MAX_VIEW_NAME_LENGTH);
-    }
-
-    /**
-     * Setup quick filter buttons
-     */
-    function setupQuickFilters() {
-        const quickFilters = {
-            'filter-my-tickets': () => ({ assigned_to: OC.getCurrentUser().uid }),
-            'filter-unassigned': () => ({ assigned_to: '' }),
-            'filter-urgent': () => ({ priority: 'urgent' }),
-            'filter-due-today': () => ({ due_today: true }),
-            'filter-open': () => ({ status: 'open' })
-        };
-
-        Object.entries(quickFilters).forEach(([id, getFilter]) => {
-            const btn = document.getElementById(id);
-            if (btn) {
-                btn.addEventListener('click', () => {
-                    currentFilters = getFilter();
-                    applyFilters();
-                });
-            }
-        });
     }
 
     /**
@@ -168,8 +144,18 @@
             return;
         }
 
-        currentFilters = collectFiltersFromPage();
-        savedViews[viewName] = currentFilters;
+        // Snapshot the *applied* filters (the URL), not the form DOM —
+        // saving after typing but before Apply would otherwise store a
+        // view that doesn't match the list on screen.
+        const applied = {};
+        const params = new URLSearchParams(window.location.search);
+        for (const [key, value] of params.entries()) {
+            if (value !== '') {
+                applied[key] = value;
+            }
+        }
+        currentFilters = applied;
+        savedViews[viewName] = applied;
         localStorage.setItem('helpdesk_saved_views', JSON.stringify(savedViews));
 
         const savedMessage = tSafe('saved_view_saved', 'View "{viewName}" saved', { viewName });

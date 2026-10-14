@@ -11,6 +11,22 @@ if (empty($_['canEdit']) || !isset($_['ticket'], $_['l'])) {
 /** @var \OCP\IL10N $l */
 $l = $_['l'];
 $ticket = $_['ticket'];
+
+// "Assign to me" is only offered when the current user is an assignable
+// agent on this project — a dead shortcut is worse than no shortcut.
+$meUid = null;
+if (isset($_['currentUser']) && $_['currentUser'] !== null) {
+	$meUid = $_['currentUser']->getUID();
+}
+$meAssignable = false;
+if ($meUid !== null) {
+	foreach (($_['availableAgents'] ?? []) as $agent) {
+		if (($agent['user_id'] ?? '') === $meUid) {
+			$meAssignable = true;
+			break;
+		}
+	}
+}
 ?>
 <div class="ticket-detail-quick-actions ticket-detail-quick-actions--top helpdesk-card" role="region" aria-labelledby="ticket-detail-quick-actions-title">
 	<div class="helpdesk-card__body">
@@ -74,6 +90,14 @@ $ticket = $_['ticket'];
 					<?php endif; ?>
 				</select>
 				<div id="assign-search-results" class="tc-select-combobox__results" role="listbox" aria-label="<?php p($l->t('assign_to')); ?>" hidden></div>
+				<?php if ($meAssignable && $ticket->getAssignedTo() !== $meUid): ?>
+					<button type="button"
+						id="assign-me-btn"
+						class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm ticket-detail-assign-me"
+						data-assign-me="<?php p($meUid); ?>">
+						<?php p($l->t('assign_to_me')); ?>
+					</button>
+				<?php endif; ?>
 			</div>
 		</div>
 	</div>

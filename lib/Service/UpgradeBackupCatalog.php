@@ -49,6 +49,7 @@ final class UpgradeBackupCatalog
 		'helpdesk_kb_categories',
 		'helpdesk_kb_comments',
 		'helpdesk_projects',
+		'helpdesk_ticket_categories',
 		'helpdesk_ticket_links',
 		'helpdesk_ticket_surveys',
 		'helpdesk_ticket_templates',
@@ -75,6 +76,9 @@ final class UpgradeBackupCatalog
 		'helpdesk_kb_categories',
 		'helpdesk_kb_comments',
 		'helpdesk_projects',
+		// Categories restore before tickets — tickets.category references
+		// category keys (no FK, but keeps restore-order reads sane).
+		'helpdesk_ticket_categories',
 		'helpdesk_ticket_links',
 		'helpdesk_ticket_surveys',
 		'helpdesk_ticket_templates',

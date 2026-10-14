@@ -22,7 +22,7 @@ final class L10nPlaceholderParityTest extends TestCase
 
 	public function testFooterLocalesKeepEnglishPlaceholders(): void
 	{
-		$locales = ['de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR'];
+		$locales = ['de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR', 'pt'];
 		$en = $this->loadTranslations('en');
 		self::assertNotEmpty($en);
 		foreach ($locales as $locale) {

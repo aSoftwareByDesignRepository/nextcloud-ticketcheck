@@ -343,7 +343,11 @@ if ($projectName === '' && $ticket->getProjectId()) {
                             <?php endif; ?>
                             <div>
                                 <div class="helpdesk-text-muted ticket-detail-info-label"><?php p($l->t('category')); ?></div>
-                                <strong><?php p($l->t('category_' . strtolower($ticket->getCategory() ?: 'general'))); ?></strong>
+                                <strong><?php
+                                    $catKey = strtolower((string)($ticket->getCategory() ?: 'general'));
+                                    $catMap = is_array($_['categoryLabelMap'] ?? null) ? $_['categoryLabelMap'] : [];
+                                    p($catMap[$catKey] ?? $catKey);
+                                ?></strong>
                             </div>
                             <div>
                                 <div class="helpdesk-text-muted ticket-detail-info-label"><?php p($l->t('created')); ?></div>

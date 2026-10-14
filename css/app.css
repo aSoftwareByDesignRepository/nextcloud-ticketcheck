@@ -16806,6 +16806,115 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 	cursor: grabbing;
 }
 
+/* Ticket categories settings section */
+#app-content.tc-app--settings .tc-category-default-select {
+	max-width: 24rem;
+}
+#app-content.tc-app--settings .tc-category-item__main {
+	display: flex;
+	flex: 1 1 16rem;
+	flex-wrap: wrap;
+	align-items: baseline;
+	min-width: 0;
+	gap: var(--tc-space-2, 0.5rem) var(--tc-space-3, 0.75rem);
+}
+#app-content.tc-app--settings .tc-category-item__label {
+	font-weight: 600;
+}
+#app-content.tc-app--settings .tc-category-item__key {
+	font-size: 0.85em;
+	color: var(--color-text-maxcontrast, var(--tc-muted));
+}
+#app-content.tc-app--settings .tc-category-item__badges {
+	display: inline-flex;
+	gap: var(--tc-space-2, 0.5rem);
+}
+#app-content.tc-app--settings .tc-category-badge {
+	font-size: 0.8em;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+#app-content.tc-app--settings .tc-category-badge--disabled {
+	color: var(--color-error-text, var(--color-error, #8a0000));
+}
+#app-content.tc-app--settings .tc-category-item__count {
+	font-size: 0.85em;
+}
+#app-content.tc-app--settings .tc-category-item__editor,
+#app-content.tc-app--settings .tc-category-item__delete-confirm {
+	flex-basis: 100%;
+	padding: var(--tc-space-3, 0.75rem) 0 0;
+}
+#app-content.tc-app--settings .tc-category-locale-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+	gap: var(--tc-space-3, 0.75rem);
+}
+#app-content.tc-app--settings .tc-category-locale-field {
+	margin-bottom: 0;
+}
+#app-content.tc-app--settings .tc-category-locale-field .helpdesk-form-label {
+	font-size: 0.85em;
+}
+#app-content.tc-app--settings .tc-category-editor-actions,
+#app-content.tc-app--settings .tc-category-delete-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--tc-space-3, 0.75rem);
+	margin-top: var(--tc-space-3, 0.75rem);
+}
+#app-content.tc-app--settings .tc-category-delete-text {
+	margin: 0 0 var(--tc-space-2, 0.5rem);
+	font-size: 0.9em;
+	color: var(--color-error-text, var(--color-error, #8a0000));
+}
+#app-content.tc-app--settings .tc-category-reassign-select {
+	flex: 0 1 16rem;
+	min-width: 10rem;
+}
+#app-content.tc-app--settings .tc-category-transfer {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--tc-space-3, 0.75rem);
+}
+#app-content.tc-app--settings .tc-category-import-input {
+	width: 100%;
+	max-width: 40rem;
+	font-family: var(--font-face, monospace);
+	font-size: 0.85em;
+}
+#app-content.tc-app--settings .tc-category-item__move {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 2px;
+}
+#app-content.tc-app--settings .tc-category-move-btn {
+	/* Compact dense-list sizing on pointer devices; 24px floor keeps the
+	   control inside the WCAG 2.5.8 minimum-target boundary too. */
+	min-width: 1.5rem;
+	min-height: 1.5rem;
+	padding: 0 0.35rem;
+	line-height: 1;
+}
+#app-content.tc-app--settings .tc-category-list--busy {
+	opacity: 0.6;
+	pointer-events: none;
+}
+@media (max-width: 640px) {
+	/* Phones: side-by-side full-size touch targets — the compact arrow
+	   stack is too small for reliable touch (<44px). */
+	#app-content.tc-app--settings .tc-category-item__move {
+		flex-direction: row;
+	}
+	#app-content.tc-app--settings .tc-category-move-btn {
+		min-width: var(--tc-touch-min, 44px);
+		min-height: var(--helpdesk-touch-target, 44px);
+	}
+}
+
 /* About this project — Prototype Fund / BMFTR acknowledgement */
 #app-content.tc-app--settings .tc-about .helpdesk-card + .helpdesk-card {
 	margin-top: var(--tc-space-4, 1rem);

@@ -541,6 +541,20 @@ final class InboundMailConfigService
 	}
 
 	/**
+	 * Persist a routing map verbatim (already-normalized
+	 * recipient → {project_id, category} shape, as produced by
+	 * {@see routingMap()}). Used by the ticket-category delete flow to
+	 * rewrite rules that referenced a deleted category. Other config keys
+	 * are untouched.
+	 *
+	 * @param array<string, array{project_id: int|null, category: string}> $map
+	 */
+	public function saveRoutingMap(array $map): void
+	{
+		$this->setKey('routing_json', $map === [] ? '' : (string)json_encode($map));
+	}
+
+	/**
 	 * Persist a validateInput() result. Secrets are encrypted here and only
 	 * overwritten when a new value was actually submitted.
 	 *

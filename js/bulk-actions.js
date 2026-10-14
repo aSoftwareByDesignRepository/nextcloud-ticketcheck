@@ -650,9 +650,31 @@
     }
 
     /**
-     * Perform bulk update via API
+     * Perform bulk update via API — serialized: the bulk bar locks while a
+     * request is in flight so a second action can't fire concurrently.
      */
+    let bulkUpdateInFlight = false;
+
+    function setBulkBarBusy(busy) {
+        const bulkBar = document.getElementById('bulk-actions-bar');
+        if (bulkBar) {
+            if (busy) {
+                bulkBar.setAttribute('aria-busy', 'true');
+            } else {
+                bulkBar.removeAttribute('aria-busy');
+            }
+        }
+        document.querySelectorAll('#bulk-actions-bar button').forEach((b) => {
+            b.disabled = busy;
+        });
+    }
+
     function bulkUpdateTickets(action, data) {
+        if (bulkUpdateInFlight) {
+            return;
+        }
+        bulkUpdateInFlight = true;
+        setBulkBarBusy(true);
         const ticketIds = Array.from(selectedTickets);
 
         tcApiPost('/apps/ticketcheck/api/tickets/bulk', {
@@ -674,10 +696,14 @@
                         location.reload();
                     }
                 } else {
+                    bulkUpdateInFlight = false;
+                    setBulkBarBusy(false);
                     tcAlert(t('ticketcheck', 'error_with_recovery', { message: response.error || t('ticketcheck', 'an_error_occurred') }));
                 }
             })
             .catch(error => {
+                bulkUpdateInFlight = false;
+                setBulkBarBusy(false);
                 tcAlert(t('ticketcheck', 'error_with_recovery', { message: error.message || t('ticketcheck', 'an_error_occurred') }));
             });
     }

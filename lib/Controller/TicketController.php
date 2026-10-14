@@ -14,6 +14,7 @@ namespace OCA\Ticketcheck\Controller;
 use OCA\Ticketcheck\Service\FrontEndAssetService;
 use OCA\Ticketcheck\Service\LocaleFormatService;
 use OCA\Ticketcheck\Service\NavigationContextService;
+use OCA\Ticketcheck\Service\TicketCategoryService;
 use OCA\Ticketcheck\Service\TicketService;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Service\EmailService;
@@ -83,6 +84,7 @@ class TicketController extends Controller
     private NavigationContextService $navigationContext;
     private FrontEndAssetService $frontEndAssets;
     private AttachmentDeliveryService $attachmentDelivery;
+    private ?TicketCategoryService $ticketCategories;
 
     public function __construct(
         string $appName,
@@ -112,6 +114,7 @@ class TicketController extends Controller
         NavigationContextService $navigationContext,
         FrontEndAssetService $frontEndAssets,
         AttachmentDeliveryService $attachmentDelivery,
+        ?TicketCategoryService $ticketCategories = null,
     ) {
         parent::__construct($appName, $request);
         $this->ticketService = $ticketService;
@@ -139,6 +142,44 @@ class TicketController extends Controller
         $this->navigationContext = $navigationContext;
         $this->frontEndAssets = $frontEndAssets;
         $this->attachmentDelivery = $attachmentDelivery;
+        $this->ticketCategories = $ticketCategories;
+    }
+
+    /**
+     * Dynamic ticket-category payload for templates.
+     *
+     * - `categories`: `[{key,label}]` option pairs — enabled-only for
+     *   ticket forms, including disabled ones for filters so historic
+     *   tickets stay filterable.
+     * - `categoryLabelMap`: key → resolved display label for rendering a
+     *   ticket's stored category (kanban, rows, detail).
+     *
+     * Falls back to the legacy static enum when the registry service is
+     * not wired (unit tests constructing the controller manually).
+     *
+     * @return array{categories: list<array{key:string,label:string}>, categoryLabelMap: array<string,string>}
+     */
+    private function categoryTemplateParams(bool $includeDisabled = false): array
+    {
+        if ($this->ticketCategories !== null) {
+            return [
+                'categories' => $this->ticketCategories->options(null, $includeDisabled),
+                'categoryLabelMap' => $this->ticketCategories->labelMap(),
+            ];
+        }
+        $l = $this->l10nFactory->get($this->appName);
+        $keys = Ticket::getCategories();
+        $map = [];
+        foreach ($keys as $key) {
+            $map[$key] = $l->t('category_' . $key);
+        }
+        return [
+            'categories' => array_map(
+                static fn (string $k): array => ['key' => $k, 'label' => $map[$k]],
+                $keys
+            ),
+            'categoryLabelMap' => $map,
+        ];
     }
 
     protected function getFrontEndAssetService(): FrontEndAssetService
@@ -312,7 +353,8 @@ class TicketController extends Controller
             'tickets' => $tickets,
             'statuses' => Ticket::getStatuses(),
             'priorities' => Ticket::getPriorities(),
-            'categories' => Ticket::getCategories(),
+            // Filters include disabled categories — historic tickets stay filterable.
+            ...$this->categoryTemplateParams(true),
             'projects' => $projectsAndCustomers['projects'],
             'customers' => $projectsAndCustomers['customers'],
             'currentUser' => $this->userSession->getUser(),
@@ -626,6 +668,7 @@ class TicketController extends Controller
                 [
                     'ticket' => $ticket,
                     'priorities' => Ticket::getPriorities(),
+                    ...$this->categoryTemplateParams(true),
                     'comments' => $comments,
                     'commentsWithAttachments' => $commentsWithAttachments,
                     'attachments' => $attachments,
@@ -715,7 +758,7 @@ class TicketController extends Controller
                 'projects' => $projects,
                 'customers' => $customers,
                 'priorities' => Ticket::getPriorities(),
-                'categories' => Ticket::getCategories(),
+                ...$this->categoryTemplateParams(),
                 'availableAgents' => $availableAgents,
                 'isEdit' => false,
             ],
@@ -876,7 +919,7 @@ class TicketController extends Controller
                     'projects' => $projects,
                     'customers' => $customers,
                     'priorities' => Ticket::getPriorities(),
-                    'categories' => Ticket::getCategories(),
+                    ...$this->categoryTemplateParams(),
                     'availableAgents' => $availableAgents,
                     'attachments' => $ticketAttachments,
                     'isEdit' => true,

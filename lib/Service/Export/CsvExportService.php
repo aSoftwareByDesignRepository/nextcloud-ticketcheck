@@ -106,6 +106,7 @@ class CsvExportService
         private SafeFilenameService $safeFilenameService,
         private ExportFilterParser $filterParser,
         private LoggerInterface $logger,
+        private ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories = null,
     ) {
     }
 
@@ -117,7 +118,7 @@ class CsvExportService
      *   projectPresets: list<array{id:string,label:string,columns:list<string>}>,
      *   statuses: list<string>,
      *   priorities: list<string>,
-     *   categories: list<string>,
+     *   categories: list<array{key:string,label:string}>,
      *   maxRows: int,
      *   maxSelectedIds: int
      * }
@@ -158,7 +159,12 @@ class CsvExportService
             ]),
             'statuses' => Ticket::getStatuses(),
             'priorities' => Ticket::getPriorities(),
-            'categories' => Ticket::getCategories(),
+            'categories' => $this->ticketCategories !== null
+                ? $this->ticketCategories->options()
+                : array_map(
+                    static fn (string $c): array => ['key' => $c, 'label' => $l->t('category_' . $c)],
+                    Ticket::getCategories(),
+                ),
             'maxRows' => ExportFilterParser::MAX_EXPORT_ROWS,
             'maxSelectedIds' => ExportFilterParser::MAX_SELECTED_IDS,
         ];
@@ -432,7 +438,9 @@ class CsvExportService
             'description' => $this->plainText($ticket->getDescription()),
             'status' => $this->translateToken('status_' . $ticket->getStatus(), $ticket->getStatus(), $l),
             'priority' => $this->translateToken('priority_' . $ticket->getPriority(), $ticket->getPriority(), $l),
-            'category' => $this->translateToken('category_' . $ticket->getCategory(), $ticket->getCategory(), $l),
+            'category' => $this->ticketCategories !== null
+                ? $this->ticketCategories->labelFor((string)$ticket->getCategory())
+                : $this->translateToken('category_' . $ticket->getCategory(), $ticket->getCategory(), $l),
             'customer_id' => $ticket->getCustomerId() !== null ? (string)$ticket->getCustomerId() : '',
             'customer_name' => $ticket->getCustomerName(),
             'customer_email' => $ticket->getCustomerEmail(),

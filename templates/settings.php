@@ -19,6 +19,7 @@ include __DIR__ . '/common/page-start.php';
 // sections (license, support) keep their partials on disk but stay unreachable.
 $tcSettingsSectionFiles = [
 	'access' => 'access.php',
+	'categories' => 'categories.php',
 	'email' => 'email.php',
 	'inbound-mail' => 'inbound-mail.php',
 	'knowledge-base' => 'knowledge-base.php',

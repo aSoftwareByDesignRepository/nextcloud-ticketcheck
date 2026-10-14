@@ -89,11 +89,11 @@ $allActive = empty($cfTickets['assigned_to'])
 				<?php p($l->t('priority_urgent')); ?>
 			</a>
 			<?php foreach (($_['categories'] ?? []) as $category): ?>
-				<?php $categoryActive = ($cfTickets['category'] ?? '') === $category; ?>
-				<a href="<?php p($ticketFilterLink(['category' => $category])); ?>"
+				<?php $categoryActive = ($cfTickets['category'] ?? '') === $category['key']; ?>
+				<a href="<?php p($ticketFilterLink(['category' => $category['key']])); ?>"
 					class="tc-filter-chip<?php echo $categoryActive ? ' tc-filter-chip--active' : ''; ?>"
 					<?php if ($categoryActive) : ?>aria-current="page"<?php endif; ?>>
-					<?php p($l->t('category_' . strtolower((string) $category))); ?>
+					<?php p($category['label']); ?>
 				</a>
 			<?php endforeach; ?>
 		</div>
@@ -168,10 +168,10 @@ $allActive = empty($cfTickets['assigned_to'])
 						<select name="category" id="filter-category" class="tc-filter-field__control">
 							<option value=""><?php p($l->t('all_categories_option')); ?></option>
 							<?php foreach (($_['categories'] ?? []) as $category): ?>
-								<option value="<?php p($category); ?>" <?php if (($cfTickets['category'] ?? '') === $category) {
+								<option value="<?php p($category['key']); ?>" <?php if (($cfTickets['category'] ?? '') === $category['key']) {
 									p('selected');
 								} ?>>
-									<?php p($l->t('category_' . strtolower((string) $category))); ?>
+									<?php p($category['label']); ?>
 								</option>
 							<?php endforeach; ?>
 						</select>
@@ -285,6 +285,7 @@ $allActive = empty($cfTickets['assigned_to'])
 
 				<div class="tc-tickets-filters__saved" role="region" aria-labelledby="saved-views-heading">
 					<h3 id="saved-views-heading" class="tc-tickets-filters__saved-title"><?php p($l->t('saved_filter_views')); ?></h3>
+					<p class="helpdesk-form-help"><?php p($l->t('saved_views_device_only')); ?></p>
 					<div id="saved-views-list" class="tc-tickets-filters__saved-list"></div>
 					<div class="tc-tickets-filters__save-form">
 						<label for="filter-save-view-name" class="tc-filter-field__label">

@@ -13,6 +13,14 @@ use OCA\Ticketcheck\Service\IconCatalog;
 $l = $_['l'];
 /** @var \OCA\Ticketcheck\Service\LocaleFormatService|null $localeFormat */
 $localeFormat = $_['localeFormat'] ?? null;
+
+// Dynamic category labels (TicketCategoryService::labelMap()); unknown
+// keys render as the raw key — never a stale l10n guess.
+$categoryLabelMap = is_array($_['categoryLabelMap'] ?? null) ? $_['categoryLabelMap'] : [];
+$categoryLabel = static function (?string $key) use ($categoryLabelMap): string {
+	$key = strtolower((string)$key);
+	return $categoryLabelMap[$key] ?? $key;
+};
 $tickets = $_['tickets'] ?? [];
 $columns = [
     'new' => [],
@@ -144,7 +152,7 @@ $kanbanColumnClass = static function (string $columnStatus): string {
                                                     $l->t('priority_' . $priority),
                                                 ];
                                                 if ($item->getCategory()) {
-                                                    $kanbanAriaParts[] = $l->t('category_' . strtolower((string) $item->getCategory()));
+                                                    $kanbanAriaParts[] = $categoryLabel($item->getCategory());
                                                 }
                                                 p(implode(', ', $kanbanAriaParts));
                                             ?>">
@@ -169,7 +177,7 @@ $kanbanColumnClass = static function (string $columnStatus): string {
                                                     </span>
                                                     <?php if ($item->getCategory()): ?>
                                                         <span class="tc-badge tc-badge--muted" aria-hidden="true">
-                                                            <?php p($l->t('category_' . strtolower((string) $item->getCategory()))); ?>
+                                                            <?php p($categoryLabel($item->getCategory())); ?>
                                                         </span>
                                                     <?php endif; ?>
                                                 </div>
