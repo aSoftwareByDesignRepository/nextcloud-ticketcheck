@@ -261,6 +261,7 @@ OC.L10N.register(
 	"bulk_delete_confirm" : "{count} tickets verwijderen?\n\nDit kan niet ongedaan worden gemaakt!",
 	"bulk_priority_prompt" : "Geef prioriteit (laag\/normaal\/hoog\/dringend):",
 	"bulk_status_prompt" : "Status invoeren (nieuw\/in uitvoering\/wacht\/gedaan):",
+	"bulk_update_partial" : "{succeeded} van {total} tickets bijgewerkt; {failed} mislukt: {reasons}",
 	"bulk_updated_tickets" : "Bijgewerkt {count} tickets",
 	"By" : "Door",
 	"Can't find what you're looking for?" : "Kan u niet vinden wat u zoekt?",
@@ -288,7 +289,9 @@ OC.L10N.register(
 	"category_busy" : "Er loopt al een andere categoriewijziging. Probeer het zo opnieuw.",
 	"category_delete_failed" : "Categorie verwijderen mislukt",
 	"category_delete_reassign_hint" : "Deze categorie is nog in gebruik ({tickets} tickets). Kies een categorie om ze naartoe te verplaatsen.",
+	"category_delete_reassign_hint_routing" : "Deze categorie is nog in gebruik ({tickets} tickets, {routing} routeringsregels). Kies een categorie om ze naartoe te verplaatsen.",
 	"category_deleted" : "Categorie geschrapt",
+	"category_deleted_counts" : "Categorie geschrapt: {reassigned} tickets verplaatst, {routing} routeringsregels bijgewerkt",
 	"category_enabled_label" : "Ingeschakeld voor nieuwe tickets",
 	"category_example_general" : "b.v., generaal",
 	"category_exists" : "Er bestaat al een categorie met deze naam",
@@ -299,6 +302,7 @@ OC.L10N.register(
 	"category_filter" : "Categoriefilter",
 	"category_general" : "Algemeen",
 	"category_general_desc" : "Algemene vraag",
+	"category_import_counts" : "Categorieën geïmporteerd: {created} aangemaakt, {updated} bijgewerkt",
 	"category_import_done" : "Categorieën geïmporteerd",
 	"category_import_failed" : "Categorieën importeren mislukt",
 	"category_import_help" : "Importeren voegt nieuwe categorieën toe en werkt labels van bestaande bij.",
@@ -2217,6 +2221,5 @@ OC.L10N.register(
 	"your_support_tickets" : "Uw support tickets",
 	"your_tickets" : "Uw tickets",
 	"{used} of {total} seats used" : "{used} van {total} stoelen gebruikt"
-	},
-	"nplurals=2; plural=(n != 1);"
+	}
 );

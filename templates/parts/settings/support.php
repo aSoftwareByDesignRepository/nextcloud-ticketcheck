@@ -12,5 +12,5 @@ $supportUsLinks = $_['supportUsLinks'] ?? null;
 $supportUsLanguageCode = method_exists($l, 'getLanguageCode') ? (string)$l->getLanguageCode() : 'en';
 $supportUsCssPrefix = 'tc';
 $supportUsBtnPrimaryClass = 'helpdesk-btn helpdesk-btn--primary';
-$supportUsBtnSecondaryClass = 'helpdesk-btn';
+$supportUsBtnSecondaryClass = 'helpdesk-btn helpdesk-btn--secondary';
 include dirname(__DIR__) . '/support-us-section.php';

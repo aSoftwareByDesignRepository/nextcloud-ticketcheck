@@ -237,7 +237,7 @@ class GuestAccessAllowlist
      */
     private static function isAllowedKbImageGetPath(string $path): bool
     {
-        foreach (['/apps/ticketcheck/kb/images/', '/index.php/apps/ticketcheck/kb/images/'] as $prefix) {
+        foreach (['/apps/ticketcheck/kb/images/', '/index.php/apps/ticketcheck/kb/images/'] as $prefix) { // urlgate:ok — path matching, not URL emission
             if (!str_starts_with($path, $prefix)) {
                 continue;
             }

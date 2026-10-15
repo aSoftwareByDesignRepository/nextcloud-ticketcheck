@@ -616,6 +616,7 @@ document.addEventListener('DOMContentLoaded', function () {
         nameInput.type = 'text';
         nameInput.value = String(category.name || '');
         nameInput.setAttribute('data-category-id', String(category.id));
+        nameInput.setAttribute('data-prev', String(category.name || ''));
         nameInput.className = 'kb-category-name-input helpdesk-form-control settings-kb-category-name-input';
         li.appendChild(nameInput);
 
@@ -684,6 +685,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (list) {
         // Initialize drag and drop for current items
         list.querySelectorAll('li').forEach(attachCategoryDragHandlers);
+        // Seed the rename revert target from the server-rendered value —
+        // without it a failed save could not restore the persisted name.
+        list.querySelectorAll('.kb-category-name-input').forEach((el) => {
+            el.setAttribute('data-prev', el.value);
+        });
         // Ensure current toggle state is reflected for category controls.
         const kbEnabledCheckbox = document.getElementById('kb-enabled');
         const kbCategoriesEnabled = !(kbEnabledCheckbox && !kbEnabledCheckbox.checked);
@@ -704,18 +710,37 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!input) return;
             const id = input.getAttribute('data-category-id');
             const name = input.value.trim();
+            const prev = input.getAttribute('data-prev') || '';
+            if (name === prev) {
+                input.value = prev;
+                return;
+            }
             if (!name) {
+                // Blank renames are rejected server-side too — fail loudly and
+                // restore the persisted name instead of leaving a stale input.
+                input.value = prev;
+                input.setAttribute('aria-invalid', 'true');
+                announceSettings(t('ticketcheck', 'name_required'), 'error');
+                input.focus();
                 return;
             }
             requestJson('PUT', '/apps/ticketcheck/api/settings/kb-categories/' + id, { name })
                 .then(data => {
                     if (data.success) {
+                        const saved = (data.category && typeof data.category.name === 'string')
+                            ? data.category.name
+                            : name;
+                        input.value = saved;
+                        input.setAttribute('data-prev', saved);
+                        input.removeAttribute('aria-invalid');
                         announceSettings(t('ticketcheck', 'category_updated'), 'success');
                     } else {
+                        input.value = prev;
                         announceSettings(t('ticketcheck', 'failed_to_update_category'), 'error');
                     }
                 })
                 .catch(() => {
+                    input.value = prev;
                     announceSettings(t('ticketcheck', 'failed_to_update_category'), 'error');
                 });
         });

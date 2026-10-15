@@ -174,7 +174,9 @@ $categoryLabel = static function (?string $key) use ($categoryLabelMap): string 
 							<td class="tc-tickets-table__cell-date"><?php p($createdLabel); ?></td>
 							<td class="tc-tickets-table__cell-badge">
 								<?php if ($ticket->getCategory()): ?>
-									<span class="helpdesk-badge helpdesk-ticket-card__category-badge">
+									<span class="helpdesk-badge helpdesk-ticket-card__category-badge"
+										title="<?php p($categoryLabel($ticket->getCategory())); ?>"
+										aria-label="<?php p($l->t('category') . ': ' . $categoryLabel($ticket->getCategory())); ?>">
 										<?php p($categoryLabel($ticket->getCategory())); ?>
 									</span>
 								<?php else: ?>
@@ -189,7 +191,9 @@ $categoryLabel = static function (?string $key) use ($categoryLabelMap): string 
 								</span>
 							</td>
 							<td class="tc-tickets-table__cell-badge">
-								<span class="helpdesk-badge helpdesk-badge--priority-<?php p($ticket->getPriority()); ?>">
+								<span class="helpdesk-badge helpdesk-badge--priority-<?php p($ticket->getPriority()); ?>"
+									title="<?php p($l->t('priority_' . $ticket->getPriority())); ?>"
+									aria-label="<?php p($l->t('priority') . ': ' . $l->t('priority_' . $ticket->getPriority())); ?>">
 									<?php p($l->t('priority_' . $ticket->getPriority())); ?>
 								</span>
 							</td>
@@ -267,7 +271,9 @@ $categoryLabel = static function (?string $key) use ($categoryLabelMap): string 
 									<?php endif; ?>
 									• <?php p($createdLabel); ?>
 									<?php if ($ticket->getCategory()): ?>
-										• <span class="helpdesk-badge helpdesk-ticket-card__category-badge">
+										• <span class="helpdesk-badge helpdesk-ticket-card__category-badge"
+											title="<?php p($categoryLabel($ticket->getCategory())); ?>"
+											aria-label="<?php p($l->t('category') . ': ' . $categoryLabel($ticket->getCategory())); ?>">
 											<?php p($categoryLabel($ticket->getCategory())); ?>
 										</span>
 									<?php endif; ?>
@@ -283,7 +289,9 @@ $categoryLabel = static function (?string $key) use ($categoryLabelMap): string 
 									aria-label="<?php p($l->t('status') . ': ' . $ticketStatusLabel); ?>">
 									<?php p($ticketStatusLabel); ?>
 								</span>
-								<span class="helpdesk-badge helpdesk-badge--priority-<?php p($ticket->getPriority()); ?>">
+								<span class="helpdesk-badge helpdesk-badge--priority-<?php p($ticket->getPriority()); ?>"
+									title="<?php p($l->t('priority_' . $ticket->getPriority())); ?>"
+									aria-label="<?php p($l->t('priority') . ': ' . $l->t('priority_' . $ticket->getPriority())); ?>">
 									<?php p($l->t('priority_' . $ticket->getPriority())); ?>
 								</span>
 							</div>

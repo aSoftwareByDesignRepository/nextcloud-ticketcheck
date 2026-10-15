@@ -290,7 +290,7 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 										<?php } ?>
 									</select>
 								</td>
-								<td><button type="button" class="helpdesk-btn tc-imap-routing-remove">
+								<td><button type="button" class="helpdesk-btn helpdesk-btn--danger tc-imap-routing-remove">
 									<?php p($l->t('inbound_routing_remove')); ?>
 								</button></td>
 							</tr>
@@ -298,7 +298,7 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 					</tbody>
 				</table>
 				</div>
-				<button type="button" class="helpdesk-btn" id="tc-imap-routing-add">
+				<button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="tc-imap-routing-add">
 					<?php p($l->t('inbound_routing_add')); ?>
 				</button>
 				<template id="tc-imap-routing-row-template">
@@ -324,7 +324,7 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 								<?php } ?>
 							</select>
 						</td>
-						<td><button type="button" class="helpdesk-btn tc-imap-routing-remove">
+						<td><button type="button" class="helpdesk-btn helpdesk-btn--danger tc-imap-routing-remove">
 							<?php p($l->t('inbound_routing_remove')); ?>
 						</button></td>
 					</tr>
@@ -400,14 +400,14 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 					<button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="tc-imap-save-btn">
 						<?php p($l->t('inbound_save_test_button')); ?>
 					</button>
-					<button type="button" class="helpdesk-btn" id="tc-imap-test-btn">
+					<button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="tc-imap-test-btn">
 						<?php p($l->t('inbound_test_button')); ?>
 					</button>
-					<button type="button" class="helpdesk-btn" id="tc-imap-enable-btn"
+					<button type="button" class="helpdesk-btn helpdesk-btn--success" id="tc-imap-enable-btn"
 						<?php if (empty($tcImapStatus['test_passed']) || !empty($tcImapStatus['enabled'])) { p('disabled'); } ?>>
 						<?php p($l->t('inbound_enable_button')); ?>
 					</button>
-					<button type="button" class="helpdesk-btn" id="tc-imap-disable-btn"
+					<button type="button" class="helpdesk-btn helpdesk-btn--warning" id="tc-imap-disable-btn"
 						<?php if (empty($tcImapStatus['enabled'])) { p('disabled'); } ?>>
 						<?php p($l->t('inbound_disable_button')); ?>
 					</button>

@@ -93,8 +93,15 @@ function measureHorizontalOverflow(page) {
 				if (el.classList.contains('helpdesk-sr-only') || el.classList.contains('tc-sr-only')) continue;
 				const style = getComputedStyle(el);
 				if (style.display === 'none' || style.visibility === 'hidden') continue;
-				// Intentional horizontal scroll regions (tables, kanban, chip rows)
+				// Intentional horizontal scroll regions (tables, kanban, chip rows):
+				// skip the scroll container AND its descendants — a clipped child's
+				// border-box still reports past the container's right edge.
 				if (/(auto|scroll)/.test(style.overflowX)) continue;
+				let insideScrollRegion = false;
+				for (let anc = el.parentElement; anc && anc !== root; anc = anc.parentElement) {
+					if (/(auto|scroll)/.test(getComputedStyle(anc).overflowX)) { insideScrollRegion = true; break; }
+				}
+				if (insideScrollRegion) continue;
 				const rect = el.getBoundingClientRect();
 				if (rect.width === 0 && rect.height === 0) continue;
 				farthestRight = Math.max(farthestRight, rect.right);

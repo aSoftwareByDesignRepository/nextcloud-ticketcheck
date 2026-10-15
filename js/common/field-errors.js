@@ -56,6 +56,10 @@
 			const sel = '[name="' + esc + '"], [data-field="' + esc + '"], #' + esc;
 			const input = scope.querySelector(sel) || document.querySelector(sel);
 			if (!input || typeof input.focus !== 'function') return;
+			// A control hidden inside a closed disclosure must be revealed —
+			// aria-invalid + the inline error are otherwise invisible (WCAG 3.3.1).
+			const det = input.closest('details');
+			if (det) det.open = true;
 			input.setAttribute('aria-invalid', 'true');
 			input.setAttribute(invalidData(), '1');
 			const errId = `${prefix}-field-error-${esc}`;

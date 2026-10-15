@@ -261,6 +261,7 @@ OC.L10N.register(
 	"bulk_delete_confirm" : "Supprimer les tickets {count} ?\n\nÇa ne peut pas être annulé !",
 	"bulk_priority_prompt" : "Entrez la priorité (faible\/normal\/haut\/urgent):",
 	"bulk_status_prompt" : "Entrez le statut (nouveau\/en cours\/attente\/fait):",
+	"bulk_update_partial" : "{succeeded} tickets sur {total} mis à jour ; {failed} ont échoué : {reasons}",
 	"bulk_updated_tickets" : "Tickets {count} mis à jour",
 	"By" : "Par",
 	"Can't find what you're looking for?" : "Vous ne trouvez pas ce que vous cherchez ?",
@@ -288,7 +289,9 @@ OC.L10N.register(
 	"category_busy" : "Une autre modification de catégorie est en cours. Réessayez dans un instant.",
 	"category_delete_failed" : "Échec de la suppression de la catégorie",
 	"category_delete_reassign_hint" : "Cette catégorie est encore utilisée ({tickets} tickets). Choisissez une catégorie vers laquelle les déplacer.",
+	"category_delete_reassign_hint_routing" : "Cette catégorie est encore utilisée ({tickets} tickets, {routing} règles de routage). Choisissez une catégorie vers laquelle les déplacer.",
 	"category_deleted" : "Catégorie supprimée",
+	"category_deleted_counts" : "Catégorie supprimée : {reassigned} tickets réassignés, {routing} règles de routage mises à jour",
 	"category_enabled_label" : "Activée pour les nouveaux tickets",
 	"category_example_general" : "Par exemple, général",
 	"category_exists" : "Une catégorie portant ce nom existe déjà",
@@ -299,6 +302,7 @@ OC.L10N.register(
 	"category_filter" : "Filtre de catégorie",
 	"category_general" : "Général",
 	"category_general_desc" : "Question générale",
+	"category_import_counts" : "Catégories importées : {created} créées, {updated} mises à jour",
 	"category_import_done" : "Catégories importées",
 	"category_import_failed" : "Échec de l’import des catégories",
 	"category_import_help" : "L’import ajoute de nouvelles catégories et met à jour les libellés existants.",
@@ -2217,6 +2221,5 @@ OC.L10N.register(
 	"your_support_tickets" : "Vos tickets de soutien",
 	"your_tickets" : "Vos tickets",
 	"{used} of {total} seats used" : "{used} sièges utilisés sur {total}"
-	},
-	"nplurals=2; plural=(n > 1);"
+	}
 );

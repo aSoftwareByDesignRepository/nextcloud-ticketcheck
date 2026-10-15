@@ -5509,6 +5509,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -9447,7 +9448,6 @@ body.guest-user .portal-kb__filter-clear-icon , body#body-login:has([data-tc-nav
 #app-content.tc-app--portal-kb svg.tc-icon {
 	display: block;
 	flex-shrink: 0;
-	vertical-align: unset;
 }
 #app-content.tc-app--portal-kb .portal-kb-hero__icon-wrap,
 #app-content.tc-app--portal-kb .portal-kb__filter-label-icon,
@@ -14370,33 +14370,39 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 
 #app-content.tc-app--tickets table.tc-tickets-table {
 	table-layout: fixed;
+	/* Below this floor the .tc-table-wrap overflow-x:auto scrolls instead of
+	   compressing the fixed-vocabulary columns. */
+	min-width: 72rem;
 }
 #app-content.tc-app--tickets table.tc-tickets-table col.tc-tickets-table__col-select {
 	width: 3.25rem;
 }
 #app-content.tc-app--tickets table.tc-tickets-table col.tc-tickets-table__col-title {
-	width: 28%;
+	width: 15%;
 }
 #app-content.tc-app--tickets table.tc-tickets-table col.tc-tickets-table__col-customer {
-	width: 14%;
+	width: 7rem;
 }
+/* Enum columns carry fixed vocabulary: rem widths sized to the longest
+   translated header/badge so pills never clip at >=1280; tighter inline
+   padding buys title room; below the table min-width the wrap scrolls. */
 #app-content.tc-app--tickets table.tc-tickets-table col.tc-tickets-table__col-created {
-	width: 8%;
+	width: 7.25rem;
 }
 #app-content.tc-app--tickets table.tc-tickets-table col.tc-tickets-table__col-category {
-	width: 10%;
+	width: 8.75rem;
 }
 #app-content.tc-app--tickets table.tc-tickets-table col.tc-tickets-table__col-status {
-	width: 10%;
+	width: 8.25rem;
 }
 #app-content.tc-app--tickets table.tc-tickets-table col.tc-tickets-table__col-priority {
-	width: 9%;
+	width: 6.5rem;
 }
 #app-content.tc-app--tickets table.tc-tickets-table col.tc-tickets-table__col-assignee {
-	width: 11%;
+	width: 9.25rem;
 }
 #app-content.tc-app--tickets table.tc-tickets-table col.tc-tickets-table__col-actions {
-	width: 9.5rem;
+	width: 9.75rem;
 }
 #app-content.tc-app--tickets table.tc-tickets-table th,
 #app-content.tc-app--tickets table.tc-tickets-table td {
@@ -14406,6 +14412,10 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	vertical-align: middle;
 	min-width: 0;
 	padding: var(--tc-space-2) var(--tc-space-3);
+}
+#app-content.tc-app--tickets table.tc-tickets-table th:nth-child(n+4):nth-child(-n+8),
+#app-content.tc-app--tickets table.tc-tickets-table td:nth-child(n+4):nth-child(-n+8) {
+	padding-inline: var(--tc-space-2);
 }
 #app-content.tc-app--tickets table.tc-tickets-table .tc-tickets-table__select-col {
 	padding-inline-end: var(--tc-space-2);
@@ -14516,42 +14526,48 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal {
 	table-layout: fixed;
 	width: 100%;
+	/* Below this floor the .tc-table-wrap overflow-x:auto scrolls instead of
+	   compressing the fixed-vocabulary columns. */
+	min-width: 66rem;
 }
+/* Enum columns carry fixed vocabulary: rem widths sized to the longest
+   translated header/badge so pills never clip; below the table min-width
+   the wrap scrolls. */
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-title {
-	width: 38%;
-}
-#app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-created {
-	width: 11%;
-}
-#app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-category {
-	width: 13%;
-}
-#app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-status {
-	width: 14%;
-}
-#app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-priority {
-	width: 13%;
-}
-#app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-actions {
-	width: 9.5rem;
-}
-#app-content.tc-app--portal-tickets table.tc-tickets-table--portal.tc-tickets-table--with-project col.tc-tickets-table__col-title {
 	width: 30%;
 }
+#app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-created {
+	width: 7.5rem;
+}
+#app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-category {
+	width: 9.25rem;
+}
+#app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-status {
+	width: 8.75rem;
+}
+#app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-priority {
+	width: 7rem;
+}
+#app-content.tc-app--portal-tickets table.tc-tickets-table--portal col.tc-tickets-table__col-actions {
+	width: 9.75rem;
+}
+#app-content.tc-app--portal-tickets table.tc-tickets-table--portal.tc-tickets-table--with-project col.tc-tickets-table__col-title {
+	width: 23%;
+}
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal.tc-tickets-table--with-project col.tc-tickets-table__col-project {
-	width: 14%;
+	width: 12%;
 }
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal.tc-tickets-table--with-project col.tc-tickets-table__col-created {
-	width: 10%;
+	width: 7.5rem;
 }
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal.tc-tickets-table--with-project col.tc-tickets-table__col-category {
-	width: 12%;
+	width: 9.25rem;
 }
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal.tc-tickets-table--with-project col.tc-tickets-table__col-status {
-	width: 13%;
+	width: 8.75rem;
 }
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal.tc-tickets-table--with-project col.tc-tickets-table__col-priority {
-	width: 12%;
+	width: 7rem;
 }
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal th,
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal td {
@@ -15629,6 +15645,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	display: -webkit-box;
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 3;
+	line-clamp: 3;
 	overflow: hidden;
 }
 #app-content.tc-app--customer-detail .tc-customer-detail-project-card__stats,
@@ -19106,8 +19123,8 @@ body.guest-user footer.guest-box , body#body-login:has([data-tc-nav-mode="guest"
 	#app-content.tc-app .helpdesk-card,
 	#app-content.tc-app .tc-card,
 	#app-content.tc-app .helpdesk-modal,
-	#app-content.tc-app dialog.helpdesk-dialog,
-	#app-content.tc-app dialog.tc-dialog {
+	dialog.helpdesk-dialog,
+	dialog.tc-dialog {
 		border: 1px solid CanvasText;
 		background: Canvas;
 		color: CanvasText;

@@ -293,7 +293,7 @@
 		actionsTd.className = 'tc-license-seat-row__actions';
 		var removeSeatBtn = document.createElement('button');
 		removeSeatBtn.type = 'button';
-		removeSeatBtn.className = 'helpdesk-btn tc-license-seat-remove';
+		removeSeatBtn.className = 'helpdesk-btn helpdesk-btn--danger tc-license-seat-remove';
 		removeSeatBtn.setAttribute('data-uid', seat.uid);
 		removeSeatBtn.setAttribute(
 			'aria-label',

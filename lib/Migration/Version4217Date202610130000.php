@@ -119,9 +119,10 @@ class Version4217Date202610130000 extends SimpleMigrationStep
 					->executeStatement();
 				$inserted++;
 			} catch (\Throwable $e) {
-				// A racing installer may have won the unique index — that is
-				// success, not failure. Anything else is still non-fatal:
-				// EnsureTicketcheckSchema backstops a partial seed.
+				// non-fatal: a racing installer may have won the unique index —
+				// that is success, not failure. Anything else is backstopped:
+				// EnsureTicketcheckSchema::ensureBuiltinTicketCategories
+				// re-seeds missing builtin keys idempotently on repair runs.
 				$output->warning("ticketcheck: builtin category '{$key}' seed skipped: " . $e->getMessage());
 			}
 		}

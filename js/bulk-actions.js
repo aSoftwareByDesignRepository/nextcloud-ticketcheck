@@ -684,8 +684,44 @@
         })
             .then(function (response) {
                 if (response.success) {
+                    const results = Array.isArray(response.results) ? response.results : [];
+                    const failedCount = typeof response.failed === 'number'
+                        ? response.failed
+                        : results.filter(function (r) { return !r || r.success !== true; }).length;
+                    const succeededCount = typeof response.succeeded === 'number'
+                        ? response.succeeded
+                        : Math.max(0, ticketIds.length - failedCount);
+                    if (failedCount > 0) {
+                        const reasons = [];
+                        results.forEach(function (r) {
+                            const reason = (r && r.success !== true && r.error) ? String(r.error) : '';
+                            if (reason !== '' && reasons.indexOf(reason) === -1 && reasons.length < 3) {
+                                reasons.push(reason);
+                            }
+                        });
+                        const partialMessage = tSafe(
+                            'bulk_update_partial',
+                            'Updated {succeeded} of {total} tickets; {failed} failed: {reasons}',
+                            {
+                                succeeded: succeededCount,
+                                total: ticketIds.length,
+                                failed: failedCount,
+                                reasons: reasons.join(', ') || t('ticketcheck', 'an_error_occurred'),
+                            }
+                        );
+                        if (window.TicketCheckMessaging && typeof TicketCheckMessaging.announce === 'function') {
+                            TicketCheckMessaging.announce(partialMessage, 'warning');
+                            window.setTimeout(() => location.reload(), 2600);
+                        } else if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
+                            OC.Notification.showTemporary(partialMessage, { type: 'error' });
+                            location.reload();
+                        } else {
+                            location.reload();
+                        }
+                        return;
+                    }
                     const updatedMessage = tSafe('bulk_updated_tickets', 'Updated {count} tickets')
-                        .replace('{count}', String(ticketIds.length));
+                        .replace('{count}', String(succeededCount));
                     if (window.TicketCheckMessaging && typeof TicketCheckMessaging.announce === 'function') {
                         TicketCheckMessaging.announce(updatedMessage, 'success');
                         window.setTimeout(() => location.reload(), 450);

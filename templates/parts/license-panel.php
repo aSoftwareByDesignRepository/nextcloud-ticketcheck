@@ -139,7 +139,7 @@ try {
 			<a class="helpdesk-btn helpdesk-btn--primary tc-license-cta__link" href="<?php p($purchaseMailto); ?>">
 				<?php p($t('askForLicenseButton')); ?>
 			</a>
-			<a class="helpdesk-btn tc-license-cta__link" href="<?php p($productsUrl); ?>" target="_blank" rel="noopener noreferrer">
+			<a class="helpdesk-btn helpdesk-btn--secondary tc-license-cta__link" href="<?php p($productsUrl); ?>" target="_blank" rel="noopener noreferrer">
 				<?php p($t('seeProductsButton')); ?>
 			</a>
 		</div>
@@ -197,7 +197,7 @@ try {
 			<p id="tc-license-key-hint" class="ticketcheck-hint"><?php p($t('keyHint')); ?></p>
 			<div class="tc-license-actions">
 				<button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="tc-license-save"><?php p($t('saveButton')); ?></button>
-				<button type="button" class="helpdesk-btn" id="tc-license-remove"><?php p($t('removeButton')); ?></button>
+				<button type="button" class="helpdesk-btn helpdesk-btn--danger" id="tc-license-remove"><?php p($t('removeButton')); ?></button>
 			</div>
 		</form>
 
@@ -270,7 +270,7 @@ try {
 							</td>
 							<td class="tc-license-seat-row__assigned"><?php p($seatAssignedDate); ?></td>
 							<td class="tc-license-seat-row__actions">
-								<button type="button" class="helpdesk-btn tc-license-seat-remove" data-uid="<?php p($seatUid); ?>" aria-label="<?php p($seatRemoveAria); ?>">
+								<button type="button" class="helpdesk-btn helpdesk-btn--danger tc-license-seat-remove" data-uid="<?php p($seatUid); ?>" aria-label="<?php p($seatRemoveAria); ?>">
 									<?php p($t('seatRemoveButton')); ?>
 								</button>
 							</td>
@@ -293,8 +293,8 @@ try {
 				<h2 id="tc-license-confirm-title" class="tc-license-modal__title"><?php p($t('confirmRemoveTitle')); ?></h2>
 				<p id="tc-license-confirm-body" class="tc-license-modal__body"><?php p($t('confirmRemoveBody')); ?></p>
 				<div class="tc-license-modal__actions">
-					<button type="button" class="helpdesk-btn" id="tc-license-confirm-cancel"><?php p($t('confirmRemoveCancel')); ?></button>
-					<button type="button" class="helpdesk-btn tc-license-modal__confirm-danger" id="tc-license-confirm-ok"><?php p($t('confirmRemoveConfirm')); ?></button>
+					<button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="tc-license-confirm-cancel"><?php p($t('confirmRemoveCancel')); ?></button>
+					<button type="button" class="helpdesk-btn helpdesk-btn--danger tc-license-modal__confirm-danger" id="tc-license-confirm-ok"><?php p($t('confirmRemoveConfirm')); ?></button>
 				</div>
 			</div>
 		</div>

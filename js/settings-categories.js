@@ -33,6 +33,16 @@
 		return (err && err.message) ? err.message : t_(fallbackKey);
 	}
 
+	function announceCategoryDeleted(data) {
+		const reassigned = (data && typeof data.reassigned === 'number') ? data.reassigned : 0;
+		const rewritten = (data && typeof data.routingRewritten === 'number') ? data.routingRewritten : 0;
+		if (reassigned > 0 || rewritten > 0) {
+			announce(t_('category_deleted_counts', { reassigned: reassigned, routing: rewritten }), 'success');
+		} else {
+			announce(t_('category_deleted'), 'success');
+		}
+	}
+
 	document.addEventListener('DOMContentLoaded', function () {
 		const list = document.getElementById('tc-category-list');
 		const addBtn = document.getElementById('tc-add-category-btn');
@@ -120,15 +130,18 @@
 					// reassign_required response drives the confirm UI.
 					setBusy(deleteBtn, true);
 					window.TicketCheckApi.del(API_BASE + '/' + encodeURIComponent(key))
-						.then(function () {
+						.then(function (data) {
 							li.remove();
-							announce(t_('category_deleted'), 'success');
+							announceCategoryDeleted(data);
 						})
 						.catch(function (err) {
 							if (err && err.status === 422 && err.payload && err.payload.reassignRequired) {
 								const tickets = typeof err.payload.ticketCount === 'number' ? err.payload.ticketCount : 0;
+								const routing = typeof err.payload.routingCount === 'number' ? err.payload.routingCount : 0;
 								if (deleteText) {
-									deleteText.textContent = t_('category_delete_reassign_hint', { tickets });
+									deleteText.textContent = routing > 0
+										? t_('category_delete_reassign_hint_routing', { tickets: tickets, routing: routing })
+										: t_('category_delete_reassign_hint', { tickets });
 								}
 								confirmArea.removeAttribute('hidden');
 								if (reassignSelect) {
@@ -158,9 +171,9 @@
 					const target = reassignSelect ? reassignSelect.value : '';
 					setBusy(confirmBtn, true);
 					window.TicketCheckApi.del(API_BASE + '/' + encodeURIComponent(key), { reassign_to: target })
-						.then(function () {
+						.then(function (data) {
 							li.remove();
-							announce(t_('category_deleted'), 'success');
+							announceCategoryDeleted(data);
 						})
 						.catch(function (err) {
 							announce(apiErrorMessage(err, 'category_delete_failed'), 'error');
@@ -408,8 +421,10 @@
 				importInput.removeAttribute('aria-invalid');
 				setBusy(importBtn, true);
 				window.TicketCheckApi.post(API_BASE + '/import', { payload: raw })
-					.then(function () {
-						announce(t_('category_import_done'), 'success');
+					.then(function (data) {
+						const created = (data && typeof data.created === 'number') ? data.created : 0;
+						const updated = (data && typeof data.updated === 'number') ? data.updated : 0;
+						announce(t_('category_import_counts', { created: created, updated: updated }), 'success');
 						window.location.reload();
 					})
 					.catch(function (err) {

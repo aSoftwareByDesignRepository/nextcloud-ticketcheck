@@ -330,7 +330,7 @@ class ClientLicenseMiddleware extends Middleware
 	private function normalizeApiPath(string $pathInfo): string
 	{
 		$path = GuestAccessAllowlist::normalizePath($pathInfo);
-		foreach (['/index.php/apps/ticketcheck', '/apps/ticketcheck'] as $prefix) {
+		foreach (['/index.php/apps/ticketcheck', '/apps/ticketcheck'] as $prefix) { // urlgate:ok — path matching, not URL emission
 			if ($path === $prefix) {
 				return '/';
 			}

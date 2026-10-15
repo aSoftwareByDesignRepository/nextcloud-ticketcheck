@@ -18,7 +18,6 @@ declare(strict_types=1);
  * @license AGPL-3.0-or-later
  */
 
-use OCA\Ticketcheck\Service\IconCatalog;
 use OCA\Ticketcheck\Support\AppFeedbackLinks;
 
 $l = $l ?? (\OCP\Util::getL10N('ticketcheck'));
@@ -44,13 +43,8 @@ if (!isset($appFeedbackLinks) || !$appFeedbackLinks instanceof AppFeedbackLinks)
 	$appFeedbackLinks = new AppFeedbackLinks('ticketcheck', 'TicketCheck', $version);
 }
 $pageUrl = '';
-if (class_exists(\OCP\Server::class)) {
-	try {
-		$requestUri = \OCP\Server::get(\OCP\IRequest::class)->getRequestUri();
-		$pageUrl = $appFeedbackLinks->sanitizePageUrl((string)$requestUri);
-	} catch (\Throwable) {
-		$pageUrl = '';
-	}
+if (isset($_SERVER['REQUEST_URI']) && is_string($_SERVER['REQUEST_URI'])) {
+	$pageUrl = $appFeedbackLinks->sanitizePageUrl((string)$_SERVER['REQUEST_URI']);
 }
 $ncVersion = '';
 if (class_exists(\OCP\Server::class)) {
@@ -72,7 +66,15 @@ $footerId = $prefix . '-nav-footer';
 $menuId = $prefix . '-feedback-menu';
 $newTab = $l->t('(opens in a new tab)');
 
-$sbdFeedbackIcon = static fn (string $iconPrefix, string $name): string => IconCatalog::render($name, $iconPrefix . '-icon');
+$sbdFeedbackIcon = static function (string $iconPrefix, string $inner): string {
+	$class = htmlspecialchars($iconPrefix . '-icon', ENT_QUOTES, 'UTF-8');
+
+	return sprintf(
+		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="%s" aria-hidden="true" focusable="false">%s</svg>',
+		$class,
+		$inner
+	);
+};
 ?>
 <nav
 	class="<?php p($prefix); ?>-nav-footer"
@@ -89,7 +91,7 @@ $sbdFeedbackIcon = static fn (string $iconPrefix, string $name): string => IconC
 			aria-haspopup="true"
 		>
 			<span class="<?php p($prefix); ?>-nav-footer__trigger-icon" aria-hidden="true"><?php
-				print_unescaped($sbdFeedbackIcon($prefix, 'info'));
+				print_unescaped($sbdFeedbackIcon($prefix, '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/>'));
 			?></span>
 			<span class="<?php p($prefix); ?>-nav-footer__trigger-label"><?php p($l->t('Help')); ?></span>
 		</button>
@@ -108,7 +110,7 @@ $sbdFeedbackIcon = static fn (string $iconPrefix, string $name): string => IconC
 					data-app-feedback-kind="problem"
 				>
 					<span class="<?php p($prefix); ?>-nav-footer__menu-icon" aria-hidden="true"><?php
-						print_unescaped($sbdFeedbackIcon($prefix, 'alert-circle'));
+						print_unescaped($sbdFeedbackIcon($prefix, '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/>'));
 					?></span>
 					<?php p($l->t('Report a problem')); ?>
 				</a>
@@ -122,7 +124,7 @@ $sbdFeedbackIcon = static fn (string $iconPrefix, string $name): string => IconC
 					data-app-feedback-kind="idea"
 				>
 					<span class="<?php p($prefix); ?>-nav-footer__menu-icon" aria-hidden="true"><?php
-						print_unescaped($sbdFeedbackIcon($prefix, 'square-pen'));
+						print_unescaped($sbdFeedbackIcon($prefix, '<path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/>'));
 					?></span>
 					<?php p($l->t('Suggest an improvement')); ?>
 				</a>
@@ -138,7 +140,7 @@ $sbdFeedbackIcon = static fn (string $iconPrefix, string $name): string => IconC
 					rel="noopener noreferrer"
 				>
 					<span class="<?php p($prefix); ?>-nav-footer__menu-icon" aria-hidden="true"><?php
-						print_unescaped($sbdFeedbackIcon($prefix, 'file-text'));
+						print_unescaped($sbdFeedbackIcon($prefix, '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/>'));
 					?></span>
 					<?php p($l->t('Open GitHub Issues')); ?>
 					<span class="<?php p($prefix); ?>-nav-footer__new-tab"><?php p($newTab); ?></span>

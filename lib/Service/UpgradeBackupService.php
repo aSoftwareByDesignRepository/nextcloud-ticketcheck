@@ -23,7 +23,6 @@ use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
-use OCP\Files\NotPermittedException;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\Lock\ILockingProvider;
@@ -167,6 +166,8 @@ class UpgradeBackupService
 			try {
 				$snapshots[] = $this->readManifest($this->getSnapshotFolder($snapshotId), $snapshotId);
 			} catch (\Throwable $e) {
+				// best-effort: one corrupt folder must not hide every good
+				// snapshot from the restore listing — skip it and log.
 				$this->logger->warning('TicketCheck: skipping unreadable upgrade backup folder', [
 					'app' => UpgradeBackupCatalog::APP_ID,
 					'folder' => $snapshotId,
@@ -220,7 +221,8 @@ class UpgradeBackupService
 			UpgradeBackupCatalog::existingBackupTables(fn (string $table): bool => $this->db->tableExists($table)),
 		);
 		$fkChecksDisabled = false;
-		$pgReplicaRole = false;
+		$pgTriggerTables = [];
+		$pgTriggersDisabled = [];
 		$sqliteFkDisabled = false;
 		$oracleConstraintsDeferred = false;
 
@@ -228,8 +230,12 @@ class UpgradeBackupService
 			$this->db->executeStatement('SET FOREIGN_KEY_CHECKS=0');
 			$fkChecksDisabled = true;
 		} elseif ($this->db->getDatabaseProvider() === IDBConnection::PLATFORM_POSTGRES) {
-			$this->db->executeStatement('SET session_replication_role = replica');
-			$pgReplicaRole = true;
+			// `SET session_replication_role = replica` requires superuser,
+			// which the Nextcloud DB user must not have in production.
+			// Per-table `DISABLE TRIGGER ALL` only needs table ownership and
+			// is transactional in PostgreSQL, so it runs inside the restore
+			// transaction and reverts automatically on rollback.
+			$pgTriggerTables = array_values(array_unique(array_merge($tablesToClear, $tables)));
 		} elseif ($this->db->getDatabaseProvider() === IDBConnection::PLATFORM_SQLITE) {
 			$this->db->executeStatement('PRAGMA foreign_keys = OFF');
 			$sqliteFkDisabled = true;
@@ -250,12 +256,34 @@ class UpgradeBackupService
 
 		$this->db->beginTransaction();
 		try {
+			foreach ($pgTriggerTables as $pgTable) {
+				try {
+					$this->db->executeStatement(
+						'ALTER TABLE ' . $this->quotePgIdent($this->tablePrefix() . $pgTable) . ' DISABLE TRIGGER ALL',
+					);
+					$pgTriggersDisabled[] = $pgTable;
+				} catch (\Throwable $e) {
+					// best-effort: missing ownership (e.g. shared/schema-managed
+					// installs) must not abort the restore — the FK-safe order
+					// from sortedRestoreTables still keeps it consistent.
+					$this->logger->warning('TicketCheck: PostgreSQL triggers could not be disabled for restore; relying on restore table order.', [
+						'exception' => $e,
+					]);
+				}
+			}
+
 			foreach (array_reverse($tablesToClear) as $table) {
 				$this->truncateTableIfExists($table);
 			}
 
 			foreach ($tables as $table) {
 				$this->restoreTableRows($folder, $table, $tableManifest[$table] ?? []);
+			}
+
+			foreach ($pgTriggersDisabled as $pgTable) {
+				$this->db->executeStatement(
+					'ALTER TABLE ' . $this->quotePgIdent($this->tablePrefix() . $pgTable) . ' ENABLE TRIGGER ALL',
+				);
 			}
 
 			$this->restorePreferences($folder);
@@ -267,9 +295,6 @@ class UpgradeBackupService
 		} finally {
 			if ($fkChecksDisabled) {
 				$this->db->executeStatement('SET FOREIGN_KEY_CHECKS=1');
-			}
-			if ($pgReplicaRole) {
-				$this->db->executeStatement('SET session_replication_role = DEFAULT');
 			}
 			if ($sqliteFkDisabled) {
 				$this->db->executeStatement('PRAGMA foreign_keys = ON');
@@ -586,17 +611,15 @@ class UpgradeBackupService
 		}
 		UpgradeBackupIntegrity::assertAppDataFolderName($folderName);
 
+		$destPath = $this->getAppDataPath($folderName);
+		try {
+			$this->rootFolder->get($destPath)->delete();
+		} catch (NotFoundException) {
+		}
+
 		try {
 			$source = $snapshotFolder->get($folderName);
 		} catch (NotFoundException) {
-			// Snapshot has no tree for this folder — clear destination if present.
-			$destPath = $this->getAppDataPath($folderName);
-			try {
-				$this->rootFolder->get($destPath)->delete();
-			} catch (NotFoundException) {
-			} catch (NotPermittedException) {
-				$this->prepareAppDataDestinationFolder($folderName);
-			}
 			return;
 		}
 
@@ -604,103 +627,8 @@ class UpgradeBackupService
 			return;
 		}
 
-		$dest = $this->prepareAppDataDestinationFolder($folderName);
-		$this->copyFolderTreeIntoExisting($source, $dest);
-	}
-
-	/**
-	 * Prepare (or clear) the live appdata destination folder for restore.
-	 * When delete of a root-owned leftover is blocked, clear children in place and reuse.
-	 */
-	private function prepareAppDataDestinationFolder(string $folderName): Folder
-	{
-		UpgradeBackupIntegrity::assertAppDataFolderName($folderName);
-		$destPath = $this->getAppDataPath($folderName);
-		$appRoot = $this->getAppDataRootFolder();
-
-		try {
-			$existing = $this->rootFolder->get($destPath);
-			try {
-				$existing->delete();
-			} catch (NotPermittedException) {
-				// Fall through to in-place clear via app root child handle.
-				$reuse = $this->ensureChildFolder($appRoot, $folderName);
-				foreach ($reuse->getDirectoryListing() as $child) {
-					try {
-						$child->delete();
-					} catch (NotPermittedException $e) {
-						throw new UpgradeBackupException(
-							'Permission denied clearing app data child during restore: ' . $folderName,
-							0,
-							$e,
-						);
-					}
-				}
-				return $reuse;
-			}
-		} catch (NotFoundException) {
-		}
-
-		return $this->ensureChildFolder($appRoot, $folderName);
-	}
-
-	private function ensureChildFolder(Folder $parent, string $name): Folder
-	{
-		try {
-			$node = $parent->get($name);
-			if ($node instanceof Folder) {
-				return $node;
-			}
-			$node->delete();
-		} catch (NotFoundException) {
-		}
-		return $parent->newFolder($name);
-	}
-
-	private function replaceChildFile(Folder $parent, string $name, string $content): File
-	{
-		try {
-			$existing = $parent->get($name);
-			try {
-				$existing->delete();
-			} catch (NotPermittedException $e) {
-				throw new UpgradeBackupException(
-					'Permission denied replacing app data file during restore: ' . $name,
-					0,
-					$e,
-				);
-			}
-		} catch (NotFoundException) {
-		}
-
-		try {
-			$created = $parent->newFile($name, $content);
-		} catch (NotPermittedException $e) {
-			throw new UpgradeBackupException(
-				'Permission denied writing app data file during restore: ' . $name,
-				0,
-				$e,
-			);
-		}
-		if (!$created instanceof File) {
-			throw new UpgradeBackupException('Failed to write app data file during restore: ' . $name);
-		}
-		return $created;
-	}
-
-	private function copyFolderTreeIntoExisting(Folder $source, Folder $dest): void
-	{
-		foreach ($source->getDirectoryListing() as $node) {
-			$name = $node->getName();
-			if ($node instanceof Folder) {
-				$child = $this->ensureChildFolder($dest, $name);
-				$this->copyFolderTreeIntoExisting($node, $child);
-				continue;
-			}
-			if ($node instanceof File) {
-				$this->replaceChildFile($dest, $name, $node->getContent());
-			}
-		}
+		$dest = $this->getAppDataRootFolder()->newFolder($folderName);
+		$this->copyFolderTree($source, $dest);
 	}
 
 	/**
@@ -742,6 +670,26 @@ class UpgradeBackupService
 		}
 	}
 
+	/**
+	 * Reads the table prefix from `IConfig` because the public
+	 * `IDBConnection` interface does not expose `getPrefix()`.
+	 */
+	private function tablePrefix(): string
+	{
+		return (string)$this->config->getSystemValue('dbtableprefix', 'oc_');
+	}
+
+	/**
+	 * Double-quote a Postgres identifier. Only used on the Postgres restore
+	 * branch; the input is whitelist-derived (prefix + BACKUP_TABLES name).
+	 * `IDBConnection` does not expose `quoteIdentifier()` (runtime-only on
+	 * `OC\DB\Connection`), so we quote locally.
+	 */
+	private function quotePgIdent(string $name): string
+	{
+		return '"' . str_replace('"', '""', $name) . '"';
+	}
+
 	private function truncateTableIfExists(string $table): void
 	{
 		if (!$this->db->tableExists($table) || !UpgradeBackupCatalog::isBackupTable($table)) {
@@ -775,7 +723,7 @@ class UpgradeBackupService
 
 	private function restorePreferences(Folder $snapshotFolder): void
 	{
-		/** @var list<array{userid: string, configkey: string, configvalue: string}> $rows */
+		/** @var list<array<string, mixed>> $rows */
 		$rows = json_decode($this->readFile($snapshotFolder, 'preferences.json'), true, 512, JSON_THROW_ON_ERROR);
 
 		$deleteQb = $this->db->getQueryBuilder();
@@ -826,7 +774,9 @@ class UpgradeBackupService
 		}
 	}
 
-	/** @param list<string> $excludeIds */
+	/**
+	 * @param list<string> $excludeIds
+	 */
 	private function rotateSnapshots(array $excludeIds = []): void
 	{
 		$max = UpgradeBackupCatalog::clampMaxSnapshots((int)$this->config->getAppValue(
@@ -851,6 +801,9 @@ class UpgradeBackupService
 		}
 	}
 
+	/**
+	 * @param array<string, mixed> $payload
+	 */
 	/**
 	 * @param array<array-key, mixed> $payload
 	 */

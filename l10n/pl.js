@@ -261,6 +261,7 @@ OC.L10N.register(
 	"bulk_delete_confirm" : "Usuń zgłoszenia na {count}?\n\nTego nie da się cofnąć!",
 	"bulk_priority_prompt" : "Wprowadź priorytet (niski \/ normalny \/ wysoki \/ pilny):",
 	"bulk_status_prompt" : "Wprowadź status (nowy \/ w toku \/ czekający \/ gotowy):",
+	"bulk_update_partial" : "Zaktualizowano {succeeded} z {total} zgłoszeń; {failed} nie powiodło się: {reasons}",
 	"bulk_updated_tickets" : "Aktualizacja zgłoszeń {count}",
 	"By" : "Przez",
 	"Can't find what you're looking for?" : "Nie możesz znaleźć tego, czego szukasz?",
@@ -288,7 +289,9 @@ OC.L10N.register(
 	"category_busy" : "Trwa już inna zmiana kategorii. Spróbuj ponownie za chwilę.",
 	"category_delete_failed" : "Nie udało się usunąć kategorii",
 	"category_delete_reassign_hint" : "Ta kategoria jest nadal używana ({tickets} zgłoszeń). Wybierz kategorię, do której je przenieść.",
+	"category_delete_reassign_hint_routing" : "Ta kategoria jest nadal używana ({tickets} zgłoszeń, {routing} reguł routingu). Wybierz kategorię, do której je przenieść.",
 	"category_deleted" : "Kategoria usunięta",
+	"category_deleted_counts" : "Kategoria usunięta: {reassigned} zgłoszeń przeniesionych, {routing} reguł routingu zaktualizowanych",
 	"category_enabled_label" : "Włączona dla nowych zgłoszeń",
 	"category_example_general" : "np. ogólne",
 	"category_exists" : "Kategoria o tej nazwie już istnieje",
@@ -299,6 +302,7 @@ OC.L10N.register(
 	"category_filter" : "Filtr kategorii",
 	"category_general" : "Ogólne",
 	"category_general_desc" : "Pytanie ogólne",
+	"category_import_counts" : "Kategorie zaimportowane: utworzono {created}, zaktualizowano {updated}",
 	"category_import_done" : "Kategorie zaimportowane",
 	"category_import_failed" : "Nie udało się zaimportować kategorii",
 	"category_import_help" : "Import dodaje nowe kategorie i aktualizuje etykiety istniejących.",
@@ -833,7 +837,7 @@ OC.L10N.register(
 	"export_filter_results_count" : "Mecze {count}",
 	"export_filters_panel_title" : "Filtry",
 	"export_include_merged_tickets" : "Dołącz połączone zgłoszenia",
-	"export_limit_exceeded" : "Twój wybór pasuje do {count} rekordów, ale maksymalna liczba na eksport to {maxRows}. Zawęź filtry i spróbuj ponownie.",
+	"export_limit_exceeded" : "Wybrana selekcja pasuje do {count} rekordów, ale maksymalna liczba na eksport to {maxRows}. Proszę zawęzić filtry i spróbować ponownie.",
 	"export_matching_filters" : "Eksportuj bieżące filtry",
 	"export_multi_no_results" : "Brak dopasowań.",
 	"export_multi_remove_customer" : "Usuń klienta {name}",
@@ -2217,6 +2221,5 @@ OC.L10N.register(
 	"your_support_tickets" : "Zgłoszenia wsparcia",
 	"your_tickets" : "Zgłoszenia",
 	"{used} of {total} seats used" : "Zastosowano gniazda {used} z {total}"
-	},
-	"nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);"
+	}
 );

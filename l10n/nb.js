@@ -261,6 +261,7 @@ OC.L10N.register(
 	"bulk_delete_confirm" : "Slette {count} saker?\n\nDette kan ikke angres!",
 	"bulk_priority_prompt" : "Oppgi prioritet (lav\/normal\/høy\/urgent):",
 	"bulk_status_prompt" : "Skriv inn status (ny\/in fremgang\/venting\/done):",
+	"bulk_update_partial" : "{succeeded} av {total} saker oppdatert; {failed} mislyktes: {reasons}",
 	"bulk_updated_tickets" : "Oppdatert {count} saker",
 	"By" : "Ved",
 	"Can't find what you're looking for?" : "Kan ikke finne det leter etter?",
@@ -288,7 +289,9 @@ OC.L10N.register(
 	"category_busy" : "En annen kategoriendring pågår. Prøv igjen om et øyeblikk.",
 	"category_delete_failed" : "Kunne ikke slette kategorien",
 	"category_delete_reassign_hint" : "Denne kategorien er fortsatt i bruk ({tickets} saker). Velg en kategori å flytte dem til.",
+	"category_delete_reassign_hint_routing" : "Denne kategorien er fortsatt i bruk ({tickets} saker, {routing} rutingsregler). Velg en kategori å flytte dem til.",
 	"category_deleted" : "Kategori slettet",
+	"category_deleted_counts" : "Kategori slettet: {reassigned} saker flyttet, {routing} rutingsregler oppdatert",
 	"category_enabled_label" : "Aktivert for nye saker",
 	"category_example_general" : "f.eks. generell",
 	"category_exists" : "Det finnes allerede en kategori med dette navnet",
@@ -299,6 +302,7 @@ OC.L10N.register(
 	"category_filter" : "Kategorifilter",
 	"category_general" : "Generell",
 	"category_general_desc" : "Generelt spørsmål",
+	"category_import_counts" : "Kategorier importert: {created} opprettet, {updated} oppdatert",
 	"category_import_done" : "Kategorier importert",
 	"category_import_failed" : "Kunne ikke importere kategorier",
 	"category_import_help" : "Import legger til nye kategorier og oppdaterer etikettene på eksisterende.",
@@ -2217,6 +2221,5 @@ OC.L10N.register(
 	"your_support_tickets" : "Dine støttesaker",
 	"your_tickets" : "Dine saker",
 	"{used} of {total} seats used" : "{used} av {total} seter brukt"
-	},
-	"nplurals=2; plural=(n != 1);"
+	}
 );

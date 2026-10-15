@@ -62,13 +62,13 @@ $tcDefaultKey = (string)($_['ticketCategoryDefaultKey'] ?? 'general');
 
 						<span class="tc-category-item__move">
 							<button type="button"
-								class="helpdesk-btn helpdesk-btn--sm tc-category-move-btn tc-category-move-up"
+								class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm tc-category-move-btn tc-category-move-up"
 								data-category-key="<?php p($cat['key']); ?>"
 								data-direction="up"
 								aria-label="<?php p($l->t('category_move_up') . ': ' . $cat['label']); ?>"
 							><span aria-hidden="true">↑</span></button>
 							<button type="button"
-								class="helpdesk-btn helpdesk-btn--sm tc-category-move-btn tc-category-move-down"
+								class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm tc-category-move-btn tc-category-move-down"
 								data-category-key="<?php p($cat['key']); ?>"
 								data-direction="down"
 								aria-label="<?php p($l->t('category_move_down') . ': ' . $cat['label']); ?>"
@@ -95,7 +95,7 @@ $tcDefaultKey = (string)($_['ticketCategoryDefaultKey'] ?? 'general');
 						</div>
 
 						<button type="button"
-							class="helpdesk-btn helpdesk-btn--sm tc-category-toggle-btn"
+							class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm tc-category-toggle-btn"
 							data-category-key="<?php p($cat['key']); ?>"
 							aria-expanded="false"
 							aria-controls="tc-cat-editor-<?php p($cat['key']); ?>"
@@ -179,7 +179,7 @@ $tcDefaultKey = (string)($_['ticketCategoryDefaultKey'] ?? 'general');
 									<?php p($l->t('delete_button')); ?>
 								</button>
 								<button type="button"
-									class="helpdesk-btn helpdesk-btn--sm tc-category-delete-cancel-btn"
+									class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm tc-category-delete-cancel-btn"
 									data-category-key="<?php p($cat['key']); ?>">
 									<?php p($l->t('cancel_button')); ?>
 								</button>
@@ -197,14 +197,14 @@ $tcDefaultKey = (string)($_['ticketCategoryDefaultKey'] ?? 'general');
 		<div class="helpdesk-card__body">
 			<h3 class="tc-section__title tc-section__title--sub"><?php p($l->t('category_transfer_title')); ?></h3>
 			<div class="tc-category-transfer">
-				<button type="button" id="tc-export-categories-btn" class="helpdesk-btn helpdesk-btn--sm">
+				<button type="button" id="tc-export-categories-btn" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm">
 					<?php p($l->t('export_button')); ?>
 				</button>
 				<div class="helpdesk-form-group tc-field tc-field--full-width">
 					<label for="tc-import-categories" class="helpdesk-form-label"><?php p($l->t('import_categories_label')); ?></label>
 					<textarea id="tc-import-categories" class="helpdesk-form-control tc-category-import-input" rows="4"
 						placeholder='{"version":1,"categories":[…]}'></textarea>
-					<button type="button" id="tc-import-categories-btn" class="helpdesk-btn helpdesk-btn--sm helpdesk-mt-sm">
+					<button type="button" id="tc-import-categories-btn" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm helpdesk-mt-sm">
 						<?php p($l->t('import_button')); ?>
 					</button>
 					<span class="helpdesk-form-help"><?php p($l->t('category_import_help')); ?></span>

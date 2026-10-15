@@ -261,6 +261,7 @@ OC.L10N.register(
 	"bulk_delete_confirm" : "Eliminar {count} tickets?\n\nEsta ação não pode ser anulada!",
 	"bulk_priority_prompt" : "Introduza a prioridade (baixa\/normal\/alta\/urgente):",
 	"bulk_status_prompt" : "Introduza o estado (novo\/em curso\/em espera\/concluído):",
+	"bulk_update_partial" : "{succeeded} de {total} tickets atualizados; {failed} falharam: {reasons}",
 	"bulk_updated_tickets" : "{count} tickets atualizados",
 	"By" : "Por",
 	"Can't find what you're looking for?" : "Não encontra o que procura?",
@@ -288,7 +289,9 @@ OC.L10N.register(
 	"category_busy" : "Está em curso outra alteração de categoria. Tente novamente dentro de momentos.",
 	"category_delete_failed" : "Falha ao eliminar a categoria",
 	"category_delete_reassign_hint" : "Esta categoria ainda está em utilização ({tickets} tickets). Escolha uma categoria para onde os mover.",
+	"category_delete_reassign_hint_routing" : "Esta categoria está ainda em utilização ({tickets} tickets, {routing} regras de encaminhamento). Escolha uma categoria para onde os mover.",
 	"category_deleted" : "Categoria eliminada",
+	"category_deleted_counts" : "Categoria eliminada: {reassigned} tickets reatribuídos, {routing} regras de encaminhamento atualizadas",
 	"category_enabled_label" : "Ativada para novos tickets",
 	"category_example_general" : "p. ex. Geral",
 	"category_exists" : "Já existe uma categoria com este nome",
@@ -299,6 +302,7 @@ OC.L10N.register(
 	"category_filter" : "Filtro de categoria",
 	"category_general" : "Geral",
 	"category_general_desc" : "Questão geral",
+	"category_import_counts" : "Categorias importadas: {created} criadas, {updated} atualizadas",
 	"category_import_done" : "Categorias importadas",
 	"category_import_failed" : "Falha ao importar as categorias",
 	"category_import_help" : "A importação adiciona novas categorias e atualiza as etiquetas das existentes.",
@@ -2217,6 +2221,5 @@ OC.L10N.register(
 	"your_support_tickets" : "Os seus tickets de suporte",
 	"your_tickets" : "Os seus tickets",
 	"{used} of {total} seats used" : "{used} de {total} lugares usados"
-	},
-	"nplurals=2; plural=(n != 1);"
+	}
 );

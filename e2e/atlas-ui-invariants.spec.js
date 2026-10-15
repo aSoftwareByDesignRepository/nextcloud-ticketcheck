@@ -144,9 +144,11 @@ test.describe('ticketcheck UI invariants (atlas-ui-invariants)', () => {
 		}
 	});
 
-	test('double-submit: rapid create submits at most one write', async ({ page }) => {
+	test('double-submit: rapid create submits at most one write', async ({ page }, testInfo) => {
 		await gotoApp(page, `${APP}/tickets/create`);
-		const title = `${RUNID} dblsubmit`;
+		// project name in the title keeps the persisted-row lookup unique when
+		// both viewport projects run the same millisecond RUNID concurrently.
+		const title = `${RUNID} dblsubmit ${testInfo.project.name}`;
 		await page.locator('#title').fill(title);
 		await page.locator('#description').fill(`${RUNID} double submit probe`);
 		// native project select is aria-hidden behind the combobox — pick the
@@ -162,14 +164,6 @@ test.describe('ticketcheck UI invariants (atlas-ui-invariants)', () => {
 		expect(projectValue, 'create form exposed no selectable project').not.toEqual('');
 
 		let createdId = null;
-		page.on('response', async (res) => {
-			if (res.request().method() === 'POST' && res.url().includes('/apps/ticketcheck/tickets')) {
-				try {
-					const j = await res.json();
-					createdId = j?.ticket?.id || j?.ticket_id || null;
-				} catch { /* non-json */ }
-			}
-		});
 		try {
 			await assertNoDuplicateSubmit(page, {
 				mutatingUrl: /\/apps\/ticketcheck\/tickets$/,
@@ -179,9 +173,21 @@ test.describe('ticketcheck UI invariants (atlas-ui-invariants)', () => {
 				// detached/disabled button — that IS the dedup behaviour).
 				submit: () => page.locator('#ticket-form-submit').click({ noWaitAfter: true, timeout: 10000 }).catch(() => {}),
 			});
-			// a real submit must have escaped — zero requests means validation
-			// blocked both clicks and the invariant would be theater.
-			expect(createdId, 'expected exactly one ticket create to reach the server').toBeTruthy();
+			// Durable postcondition: the create succeeded AND persisted. The
+			// success path redirects to /tickets/{id} 400ms after the promise
+			// resolves — the id in the URL is race-free where the POST response
+			// body is not (observed chromium-320 flake: write landed, response
+			// body unread post-navigation → leaked row + false failure).
+			// No redirect = validation blocked both clicks = invariant theater.
+			await page.waitForURL(/\/apps\/ticketcheck\/tickets\/\d+/, { timeout: 5000 }).catch(() => {});
+			const redirectMatch = page.url().match(/\/apps\/ticketcheck\/tickets\/(\d+)/);
+			createdId = redirectMatch ? parseInt(redirectMatch[1], 10) : null;
+			expect(createdId, `expected one create to reach the server (no ticket-detail redirect; landed on ${page.url()})`).toBeTruthy();
+			const row = await apiCall(page, 'get', `/apps/ticketcheck/api/tickets/${createdId}`);
+			expect(
+				row.ok && row.data && row.data.title === title,
+				`persisted ticket ${createdId} did not re-read with title "${title}": ${JSON.stringify(row.data && row.data.title)}`,
+			).toBeTruthy();
 		} finally {
 			if (createdId) await apiCall(page, 'del', `/apps/ticketcheck/tickets/${createdId}`);
 		}

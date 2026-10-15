@@ -16,18 +16,14 @@
         return key;
     }
 
-    function parseApiResponse(response) {
-        return response.text().then((text) => {
-            let data = null;
-            try { data = JSON.parse(text); } catch (e) {}
-            if (!response.ok) {
-                throw new Error((data && (data.error || data.message)) || t('ticketcheck', 'server_error_try_again_later'));
-            }
-            if (!data) {
-                throw new Error(t('ticketcheck', 'server_error_try_again_later'));
-            }
-            return data;
-        });
+    function announce(message, kind) {
+        if (window.TicketCheckMessaging && typeof window.TicketCheckMessaging.announce === 'function') {
+            window.TicketCheckMessaging.announce(message, kind || 'info');
+        }
+    }
+
+    function apiErrorMessage(err, fallbackKey) {
+        return (err && err.message) ? err.message : t('ticketcheck', fallbackKey);
     }
 
     function requireApi() {
@@ -60,10 +56,47 @@
         });
     }
 
-    function renameKBCategory(id, name) {
+    function renameKBCategory(input, id, name) {
+        // data-prev holds the last persisted name — revert target on failure.
+        const prev = input.getAttribute('data-prev') || '';
+        const trimmed = (name || '').trim();
+        if (trimmed === prev) {
+            input.value = prev;
+            return;
+        }
+        if (trimmed === '') {
+            input.value = prev;
+            input.setAttribute('aria-invalid', 'true');
+            announce(t('ticketcheck', 'name_required'), 'error');
+            input.focus();
+            return;
+        }
+        let api;
         try {
-            requireApi().put('/apps/ticketcheck/api/settings/kb-categories/' + id, { name }).catch(function () {});
-        } catch (e) {}
+            api = requireApi();
+        } catch (err) {
+            input.value = prev;
+            announce(apiErrorMessage(err, 'category_update_failed'), 'error');
+            return;
+        }
+        input.disabled = true;
+        api.put('/apps/ticketcheck/api/settings/kb-categories/' + id, { name: trimmed })
+            .then(function (data) {
+                const saved = (data && data.category && typeof data.category.name === 'string')
+                    ? data.category.name
+                    : trimmed;
+                input.value = saved;
+                input.setAttribute('data-prev', saved);
+                input.removeAttribute('aria-invalid');
+                announce(t('ticketcheck', 'category_updated'), 'success');
+            })
+            .catch(function (err) {
+                input.value = prev;
+                announce(apiErrorMessage(err, 'category_update_failed'), 'error');
+            })
+            .finally(function () {
+                input.disabled = false;
+            });
     }
 
     async function deleteKBCategory(id) {
@@ -102,24 +135,62 @@
         const list = document.getElementById('kb-category-list');
         if (!list) return;
         let draggingEl = null;
+        let preDragOrder = null;
+
+        function currentOrder() {
+            return Array.from(list.querySelectorAll('li[data-id]'))
+                .map(function (n) { return n.getAttribute('data-id'); });
+        }
+
+        function restoreOrder(order) {
+            order.forEach(function (id) {
+                const node = list.querySelector('li[data-id="' + CSS.escape(id) + '"]');
+                if (node) {
+                    list.appendChild(node);
+                }
+            });
+        }
+
+        function failReorder(err) {
+            if (preDragOrder) {
+                restoreOrder(preDragOrder);
+            }
+            announce(apiErrorMessage(err, 'failed_to_update_category_order'), 'error');
+        }
+
         list.querySelectorAll('li').forEach(li => {
             li.draggable = true;
-            li.addEventListener('dragstart', () => draggingEl = li);
+            li.addEventListener('dragstart', () => {
+                draggingEl = li;
+                preDragOrder = currentOrder();
+            });
             li.addEventListener('dragover', (e) => { e.preventDefault(); });
             li.addEventListener('drop', (e) => {
                 e.preventDefault();
                 if (!draggingEl || draggingEl === li) return;
                 list.insertBefore(draggingEl, li);
-                const ids = Array.from(list.querySelectorAll('li')).map(n => parseInt(n.getAttribute('data-id'), 10));
+                const ids = currentOrder();
+                if (preDragOrder && ids.join('|') === preDragOrder.join('|')) {
+                    return;
+                }
                 let api;
                 try {
                     api = requireApi();
-                } catch (e) {
+                } catch (err) {
+                    failReorder(err);
                     return;
                 }
-                ids.forEach(function (id, idx) {
-                    api.put('/apps/ticketcheck/api/settings/kb-categories/' + id, { position: idx }).catch(function () {});
-                });
+                // No atomic reorder endpoint — positions persist per id. Any
+                // failure restores the pre-drop order and announces it.
+                Promise.all(ids.map(function (id, idx) {
+                    return api.put('/apps/ticketcheck/api/settings/kb-categories/' + id, { position: idx });
+                })).then(function () {
+                    announce(t('ticketcheck', 'category_order_saved'), 'success');
+                }).catch(failReorder);
+            });
+            li.addEventListener('dragend', () => {
+                draggingEl = null;
+                preDragOrder = null;
             });
         });
     }
@@ -132,11 +203,13 @@
         if (addBtn) addBtn.addEventListener('click', addKBCategory);
 
         document.querySelectorAll('#kb-category-list input[type="text"]').forEach(input => {
+            // Seed the revert target from the server-rendered value.
+            input.setAttribute('data-prev', input.value);
             input.addEventListener('change', function () {
                 const li = this.closest('li');
                 if (!li) return;
                 const id = parseInt(li.getAttribute('data-id'), 10);
-                renameKBCategory(id, this.value);
+                renameKBCategory(this, id, this.value);
             });
         });
 

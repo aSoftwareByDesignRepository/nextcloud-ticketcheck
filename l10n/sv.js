@@ -261,6 +261,7 @@ OC.L10N.register(
 	"bulk_delete_confirm" : "Ta bort {count}-ärenden?\n\nDetta kan inte vara ogjort!",
 	"bulk_priority_prompt" : "Ange prioritet (låg\/normal\/hög\/brådskande):",
 	"bulk_status_prompt" : "Ange status (ny\/in progress\/waiting\/done):",
+	"bulk_update_partial" : "{succeeded} av {total} ärenden uppdaterade; {failed} misslyckades: {reasons}",
 	"bulk_updated_tickets" : "Uppdaterade {count}-ärenden",
 	"By" : "Genom att",
 	"Can't find what you're looking for?" : "Kan inte hitta vad letar efter?",
@@ -288,7 +289,9 @@ OC.L10N.register(
 	"category_busy" : "En annan kategoriändring pågår. Försök igen om ett ögonblick.",
 	"category_delete_failed" : "Kunde inte ta bort kategorin",
 	"category_delete_reassign_hint" : "Den här kategorin används fortfarande ({tickets} ärenden). Välj en kategori att flytta dem till.",
+	"category_delete_reassign_hint_routing" : "Den här kategorin används fortfarande ({tickets} ärenden, {routing} routningsregler). Välj en kategori att flytta dem till.",
 	"category_deleted" : "Kategori raderad",
+	"category_deleted_counts" : "Kategori raderad: {reassigned} ärenden flyttade, {routing} routningsregler uppdaterade",
 	"category_enabled_label" : "Aktiverad för nya ärenden",
 	"category_example_general" : "t.ex. general",
 	"category_exists" : "En kategori med det här namnet finns redan",
@@ -299,6 +302,7 @@ OC.L10N.register(
 	"category_filter" : "Kategorifilter",
 	"category_general" : "Allmänt",
 	"category_general_desc" : "Allmän fråga",
+	"category_import_counts" : "Kategorier importerade: {created} skapade, {updated} uppdaterade",
 	"category_import_done" : "Kategorier importerade",
 	"category_import_failed" : "Kunde inte importera kategorier",
 	"category_import_help" : "Importen lägger till nya kategorier och uppdaterar befintliga etiketter.",
@@ -2217,6 +2221,5 @@ OC.L10N.register(
 	"your_support_tickets" : "Dina supportärenden",
 	"your_tickets" : "Dina ärenden",
 	"{used} of {total} seats used" : "{used} av {total} säten används"
-	},
-	"nplurals=2; plural=(n != 1);"
+	}
 );

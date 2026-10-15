@@ -143,12 +143,11 @@ final class UpgradeBackupIntegrity
 	}
 
 	/**
-	 * @param array<string, mixed> $meta untrusted manifest JSON — every key
-	 *   is validated for presence AND type below before use.
+	 * @param array{checksum?: string, rowCount?: int} $meta
 	 */
 	public static function assertTablePayload(string $table, string $content, array $meta): void
 	{
-		if (!isset($meta['checksum']) || !is_string($meta['checksum'])) {
+		if (!is_string($meta['checksum'] ?? null)) {
 			throw new UpgradeBackupException('Snapshot table metadata is missing a checksum for ' . $table . '.');
 		}
 

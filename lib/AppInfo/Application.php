@@ -21,6 +21,7 @@ use OCA\Ticketcheck\Repair\CleanupDanglingMergeShells;
 use OCA\Ticketcheck\Repair\UninstallDropTables;
 use OCA\Ticketcheck\Service\GuestAccessAllowlist;
 use OCA\Ticketcheck\Service\PermissionService;
+use OCA\Ticketcheck\Support\NavGate;
 use OCP\INavigationManager;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -294,6 +295,19 @@ class Application extends App implements IBootstrap
                 $c->get('ProjectService'),
                 $c->get(\OCA\Ticketcheck\Db\HelpdeskCustomerMapper::class),
                 $c->get(\OCP\IGroupManager::class),
+            );
+        });
+        // FC-WCHK-EXPORT — one-way escalation export for whistlecheck;
+        // explicit registration keeps Server::get(FQCN) deterministic.
+        $context->registerService(\OCA\Ticketcheck\Public\EscalationTicketWriteFacade::class, function ($c) {
+            return new \OCA\Ticketcheck\Public\EscalationTicketWriteFacade(
+                $c->get(\OCA\Ticketcheck\Service\TicketService::class),
+                $c->get(\OCP\IUserSession::class),
+                $c->get(\OCP\IUserManager::class),
+                $c->get(\OCP\IGroupManager::class),
+                $c->get(\OCA\Ticketcheck\Service\IdempotencyService::class),
+                $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class),
             );
         });
 
@@ -702,7 +716,15 @@ class Application extends App implements IBootstrap
      */
     public function boot(IBootContext $context): void
     {
-        $this->registerNavigationEntry();
+        $app = $context->getAppContainer();
+        NavGate::register(
+            $app,
+            'ticketcheck.page.index',
+            'app.svg',
+            'ticketcheck',
+            11,
+            static fn(string $uid): bool => $app->get(PermissionService::class)->canUserAccessAppByUid($uid),
+        );
 
         // HTML assets: EnrichTemplateShellContext → FrontEndAssetService; exempt surfaces in
         // layout.guest.php, access-denied.php, desklet, NC personal settings (ARCH-03).
@@ -715,36 +737,6 @@ class Application extends App implements IBootstrap
 
         // Override navigation for guest users
         $this->overrideNavigationForGuests();
-    }
-
-    /**
-     * Register app navigation dynamically so users without app access
-     * do not see Ticketcheck in the global navbar.
-     */
-    private function registerNavigationEntry(): void
-    {
-        $container = $this->getContainer();
-        $userSession = $container->get(\OCP\IUserSession::class);
-        $permissionService = $container->get(PermissionService::class);
-
-        if ($userSession->getUser() === null || !$permissionService->canAccessApp()) {
-            return;
-        }
-
-        $navigationManager = $container->get(INavigationManager::class);
-        $urlGenerator = $container->get(\OCP\IURLGenerator::class);
-        $l10nFactory = $container->get(\OCP\L10N\IFactory::class);
-
-        $navigationManager->add(function () use ($urlGenerator, $l10nFactory): array {
-            return [
-                'id' => self::APP_ID,
-                'app' => self::APP_ID,
-                'order' => 11,
-                'href' => $urlGenerator->linkToRoute('ticketcheck.page.index'),
-                'icon' => $urlGenerator->imagePath(self::APP_ID, 'app.svg'),
-                'name' => $l10nFactory->get(self::APP_ID)->t('ticketcheck'),
-            ];
-        });
     }
 
     /**

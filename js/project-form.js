@@ -176,7 +176,7 @@
 
         const setStatus = (text, isError) => {
             statusEl.textContent = text;
-            statusEl.classList.toggle('helpdesk-form-error-text', !!isError);
+            statusEl.classList.toggle('helpdesk-text-error', !!isError);
         };
 
         const closeResults = () => {
