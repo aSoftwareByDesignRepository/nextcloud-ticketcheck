@@ -69,8 +69,8 @@ $mutations = [
 	],
 	// Category allowlist dropped → unknown categories reach the entity.
 	'category_allowlist_dropped' => [
-		'from' => 'if (!in_array($req->category, $validCategories, true)) {',
-		'to' => 'if (false && !in_array($req->category, $validCategories, true)) {',
+		'from' => 'if (!$categoryOk) {',
+		'to' => 'if (false && !$categoryOk) {',
 	],
 	// Convergence retry removed → a racing same-key caller gets a raw error
 	// instead of the winner's row (the exact 502 the concurrency spec caught).
