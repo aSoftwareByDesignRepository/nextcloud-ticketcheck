@@ -19,6 +19,8 @@ const baseURL = (process.env.E2E_BASE || process.env.BASE_URL || process.env.NC_
 module.exports = defineConfig({
   globalSetup: require.resolve('./e2e/global-setup.js'),
   testDir: './e2e',
+  globalTeardown: './e2e/global-teardown.mjs',
+
   timeout: 60_000,
   expect: {
     timeout: 10_000,

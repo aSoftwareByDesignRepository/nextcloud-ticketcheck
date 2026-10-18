@@ -54,6 +54,8 @@ async function loginAndSave({ user, pass, loginUrl, outputPath, label }) {
 }
 
 module.exports = async function globalSetup() {
+	const { acquireSharedInstanceLock } = await import('./shared-instance-lock.mjs')
+	await acquireSharedInstanceLock('ticketcheck')
 	const base = (process.env.E2E_BASE || 'http://127.0.0.1:8081').replace(/\/$/, '');
 	const loginUrl = process.env.E2E_LOGIN_URL || `${base}/index.php/login`;
 	const authDir = path.resolve(__dirname, '..', '.auth');
