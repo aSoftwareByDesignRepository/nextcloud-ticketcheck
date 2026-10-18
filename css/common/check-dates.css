@@ -1,0 +1,80 @@
+/* check-dates — canonical temporal-input chrome. SYNCED FILE: edit the
+ * template in scripts/check-dates/check-dates.css.tpl and re-run
+ * sync_check_dates.py — never edit the per-app copy. */
+
+.tc-date-field {
+	position: relative;
+	display: block;
+	width: 100%;
+}
+.tc-date-field > input[type="date"] {
+	width: 100%;
+	color: transparent;
+	caret-color: var(--color-main-text, #222);
+	padding-right: 3rem;
+}
+.tc-date-field > input[type="date"]::-webkit-datetime-edit,
+.tc-date-field > input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+.tc-date-field > input[type="date"]::-webkit-datetime-edit-text,
+.tc-date-field > input[type="date"]::-webkit-datetime-edit-month-field,
+.tc-date-field > input[type="date"]::-webkit-datetime-edit-day-field,
+.tc-date-field > input[type="date"]::-webkit-datetime-edit-year-field {
+	color: transparent;
+}
+/* The explicit .tc-date-picker button is the single affordance — hide the
+ * engine-native indicator (absent in Firefox anyway). */
+.tc-date-field > input[type="date"]::-webkit-calendar-picker-indicator {
+	opacity: 0;
+	position: absolute;
+	right: 0.5rem;
+	width: 0;
+}
+.tc-date-display {
+	position: absolute;
+	inset: 0 3rem 0 0.85rem;
+	display: flex;
+	align-items: center;
+	pointer-events: none;
+	font-size: var(--tc-fs-md, 1rem);
+	line-height: 1.2;
+	color: var(--color-main-text, #222);
+	z-index: 1;
+	overflow: hidden;
+	white-space: nowrap;
+}
+.tc-date-display--empty {
+	color: var(--color-text-maxcontrast, #767676);
+	letter-spacing: 0.04em;
+}
+.tc-date-picker {
+	position: absolute;
+	right: 0.125rem;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 44px;
+	height: 44px;
+	min-width: 44px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	background: transparent;
+	color: var(--color-main-text, #222);
+	border-radius: var(--border-radius, 6px);
+	cursor: pointer;
+	padding: 0;
+	z-index: 2;
+}
+.tc-date-picker:hover {
+	background: var(--color-background-hover);
+}
+.tc-date-picker:focus-visible {
+	outline: 2px solid var(--color-primary-element, #0082c9);
+	outline-offset: 2px;
+}
+.tc-date-picker svg {
+	display: block;
+}
+.tc-date-locale-hint {
+	display: none !important;
+}

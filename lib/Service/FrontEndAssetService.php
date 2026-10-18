@@ -28,6 +28,7 @@ class FrontEndAssetService
 		Util::addScript(Application::APP_ID, 'common/l10n');
 		Util::addScript(Application::APP_ID, 'common/constants');
 		Util::addScript(Application::APP_ID, 'common/icons');
+		Util::addScript(Application::APP_ID, 'common/check-dates');
 		Util::addScript(Application::APP_ID, 'common/dates');
 		Util::addScript(Application::APP_ID, 'common/messaging');
 		Util::addScript(Application::APP_ID, 'common/components');
