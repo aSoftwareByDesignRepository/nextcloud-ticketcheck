@@ -112,7 +112,7 @@ class ProjectController extends Controller
         }
 
         // Use pagination to avoid loading too many at once
-        $includeInactive = (bool)$this->request->getParam('includeInactive', false);
+        $includeInactive = filter_var($this->request->getParam('includeInactive', false), FILTER_VALIDATE_BOOLEAN);
         $search = (string)($this->request->getParam('search', ''));
         $customerIdParsed = $this->normalizeOptionalPositiveInt($this->request->getParam('customer_id'));
         $customerId = ($customerIdParsed === false) ? null : $customerIdParsed;

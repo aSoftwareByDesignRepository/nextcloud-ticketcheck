@@ -2,7 +2,6 @@ OC.L10N.register(
 	"ticketcheck",
 	{
 	"%1$s (%2$s)" : "%1$s (%2$s)",
-	"%n article in %s" : "Article %n dans %s",
 	"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:" : "%s reste gratuit (AGPL) sur votre Nextcloud. Les signalements de bugs et les idées sur GitHub restent les bienvenus — c'est l'entretien open source gratuit. Si votre organisation a besoin d'une aide réservable, facturée — ou de licences mobiles officielles — choisissez une option ci-dessous :",
 	"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:" : "%s reste gratuit (AGPL) sur votre Nextcloud. Les signalements de bugs et les idées sur GitHub restent les bienvenus — c'est l'entretien open source gratuit. Si votre organisation a besoin d'une aide réservable, facturée, choisissez une option ci-dessous :",
 	"(opens in a new tab)" : "(s’ouvre dans un nouvel onglet)",
@@ -176,6 +175,7 @@ OC.L10N.register(
 	"article_statistics" : "Statistiques des articles",
 	"articles" : "Articles publiés",
 	"articles_in_category" : "Article %n dans %s",
+	"articles_in_category_plural" : "Articles %n dans %s",
 	"Ask about setup or training" : "Demander une installation ou une formation",
 	"Ask for a license" : "Demander une licence",
 	"Ask for a partner offer" : "Demander une offre partenaire",
@@ -2221,5 +2221,6 @@ OC.L10N.register(
 	"your_support_tickets" : "Vos tickets de soutien",
 	"your_tickets" : "Vos tickets",
 	"{used} of {total} seats used" : "{used} sièges utilisés sur {total}"
-	}
+	},
+	"nplurals=2; plural=(n > 1);"
 );

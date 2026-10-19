@@ -1,7 +1,6 @@
 {
 	"translations": {
 		"%1$s (%2$s)": "%1$s (%2$s)",
-		"%n article in %s": "%n Artikel in %s",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s ist auf Ihrer Nextcloud kostenlos (AGPL). Fehler und Ideen über GitHub bleiben willkommen — das gehört zur kostenlosen Open-Source-Pflege. Wenn Ihre Organisation planbare Hilfe mit Rechnung braucht — oder offizielle Mobile-Lizenzen — wählen Sie unten eine Option:",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s ist auf Ihrer Nextcloud kostenlos (AGPL). Fehler und Ideen über GitHub bleiben willkommen — das gehört zur kostenlosen Open-Source-Pflege. Wenn Ihre Organisation planbare Hilfe mit Rechnung braucht, wählen Sie unten eine Option:",
 		"(opens in a new tab)": "(öffnet in neuem Tab)",
@@ -178,6 +177,7 @@
 		"article_statistics": "Artikelstatistik",
 		"articles": "Artikel",
 		"articles_in_category": "%n Artikel in %s",
+		"articles_in_category_plural": "%n Artikel in %s",
 		"Ask about setup or training": "Einrichtung oder Schulung anfragen",
 		"Ask for a license": "Lizenz anfragen",
 		"Ask for a partner offer": "Partner-Angebot anfragen",

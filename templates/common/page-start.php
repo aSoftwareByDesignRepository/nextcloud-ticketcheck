@@ -77,6 +77,12 @@ if ($pageId === 'portal-tickets') {
 	// Reuse staff ticket list filter/table/card responsive styles on guest my-tickets.
 	$appContentClass .= ' tc-app--tickets';
 }
+if ($pageId === 'portal-home') {
+	// Portal dashboard embeds the same portal-tickets-list.php table/card markup —
+	// reuse its fixed-layout column rules so enum headers/actions never clip
+	// behind an unannounced horizontal scroll.
+	$appContentClass .= ' tc-app--portal-tickets';
+}
 
 $urlsJson = htmlspecialchars(json_encode($urls, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
 $roleAttr = htmlspecialchars($roleBadge !== '' ? $roleBadge : 'user', ENT_QUOTES, 'UTF-8');

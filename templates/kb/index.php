@@ -131,7 +131,7 @@ $renderArticleCard = static function (KBArticle $article) use ($l, $_): void {
                                     <?php if ($isActive) {
                                         echo ' aria-current="page"';
                                     } ?>
-                                    aria-label="<?php p($l->t('%n article in %s', [$count, $catName])); ?>">
+                                    aria-label="<?php p($l->n('articles_in_category', 'articles_in_category_plural', $count, [$catName])); ?>">
                                     <span class="tc-kb-filter-pill__count" aria-hidden="true"><?php p((string)$count); ?></span>
                                     <?php p($catName); ?>
                                 </a>

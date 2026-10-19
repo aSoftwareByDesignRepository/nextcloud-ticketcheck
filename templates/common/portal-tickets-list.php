@@ -73,7 +73,8 @@ $categoryLabel = static function (?string $key) use ($categoryLabelMap): string 
 	</div>
 <?php else: ?>
 	<div class="tc-tickets-list">
-		<div class="tc-table-wrap">
+		<div class="tc-table-wrap" role="region" tabindex="0"
+			aria-label="<?php p($l->t('tickets_list_section')); ?>">
 			<table class="helpdesk-table tc-table tc-tickets-table tc-tickets-table--portal<?php echo $showProjectColumn ? ' tc-tickets-table--with-project' : ''; ?>">
 				<caption class="tc-sr-only"><?php p($l->t('tickets_list_section')); ?></caption>
 				<colgroup>

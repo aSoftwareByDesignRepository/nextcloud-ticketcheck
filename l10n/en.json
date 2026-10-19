@@ -1,7 +1,6 @@
 {
 	"translations": {
 		"%1$s (%2$s)": "%1$s (%2$s)",
-		"%n article in %s": "%n article in %s",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:",
 		"(opens in a new tab)": "(opens in a new tab)",
@@ -178,6 +177,7 @@
 		"article_statistics": "Article statistics",
 		"articles": "Articles",
 		"articles_in_category": "%n article in %s",
+		"articles_in_category_plural": "%n articles in %s",
 		"Ask about setup or training": "Ask about setup or training",
 		"Ask for a license": "Ask for a license",
 		"Ask for a partner offer": "Ask for a partner offer",

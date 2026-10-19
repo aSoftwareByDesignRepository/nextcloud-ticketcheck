@@ -96,7 +96,7 @@ $canCreateTicket = !empty($_['canCreateTicket']);
                             <a href="<?php p($_['urlGenerator']->linkToRoute('ticketcheck.customerPortal.kpKnowledgeBase', ['category' => $category])); ?>"
                                 class="kb-filter-pill portal-kb__filter-pill <?php echo $_['categoryFilter'] === $category ? 'kb-filter-pill--active' : ''; ?>"
                                 aria-current="<?php echo $_['categoryFilter'] === $category ? 'page' : 'false'; ?>"
-                                aria-label="<?php p($l->t('%n article in %s', [$count, $category])); ?>"
+                                aria-label="<?php p($l->n('articles_in_category', 'articles_in_category_plural', $count, [$category])); ?>"
                                 >
                                 <span class="kb-filter-pill__count portal-kb__filter-pill-count"><?php p($count); ?></span>
                                 <?php p($category); ?>

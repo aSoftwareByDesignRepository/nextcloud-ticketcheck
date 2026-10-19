@@ -102,5 +102,74 @@ class SettingsControllerEscalationNormalizationTest extends TestCase
         self::assertSame(200, $response->getStatus());
         self::assertTrue((bool)($response->getData()['success'] ?? false));
     }
+
+    public function testUpdateEscalationRuleParsesFormEncodedIsActiveFalse(): void
+    {
+        $request = $this->createMock(IRequest::class);
+        $permissionService = $this->createMock(PermissionService::class);
+        $emailService = $this->createMock(EmailService::class);
+        $config = $this->createMock(IConfig::class);
+        $urlGenerator = $this->createMock(IURLGenerator::class);
+        $categoryService = $this->createMock(CategoryService::class);
+        $emailHeaderSanitizer = $this->createMock(EmailHeaderSanitizer::class);
+        $l10nFactory = $this->createMock(IFactory::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $escalationRuleMapper = $this->createMock(EscalationRuleMapper::class);
+        $userManager = $this->createMock(IUserManager::class);
+        $groupManager = $this->createMock(IGroupManager::class);
+
+        $permissionService->method('canManageSettings')->willReturn(true);
+
+        $l10n = $this->createMock(IL10N::class);
+        $l10n->method('t')->willReturnCallback(static fn (string $key): string => $key);
+        $l10nFactory->method('get')->with('ticketcheck')->willReturn($l10n);
+
+        $request->method('getParam')->willReturnMap([
+            ['name', null, null],
+            ['conditions', null, null],
+            ['action', null, null],
+            ['is_active', null, 'false'],
+        ]);
+
+        $rule = new EscalationRule();
+        $rule->setIsActive(1);
+        $rule->setConditions([]);
+        $rule->setAction([]);
+        $rule->setCreatedAt(new \DateTime('2026-10-19T00:00:00Z'));
+        $escalationRuleMapper->method('find')->with(7)->willReturn($rule);
+
+        $escalationRuleMapper->expects(self::once())
+            ->method('updateRule')
+            ->with(self::callback(static fn (EscalationRule $r): bool => $r->getIsActive() === 0))
+            ->willReturnCallback(static fn (EscalationRule $r): EscalationRule => $r);
+
+        $controller = new SettingsController(
+            'ticketcheck',
+            $request,
+            $permissionService,
+            $emailService,
+            $config,
+            $urlGenerator,
+            $categoryService,
+            $emailHeaderSanitizer,
+            $l10nFactory,
+            $logger,
+            $escalationRuleMapper,
+            $userManager,
+            $groupManager,
+            $this->createMock(LocaleFormatService::class),
+            $this->createMock(NavigationContextService::class),
+            $this->createMock(FrontEndAssetService::class),
+            $this->createMock(\OCA\Ticketcheck\Service\LicenseService::class),
+			new SettingsSectionCatalog(),
+			$this->createMock(IUserSession::class),
+		);
+
+        $response = $controller->updateEscalationRule(7);
+
+        self::assertInstanceOf(JSONResponse::class, $response);
+        self::assertSame(200, $response->getStatus());
+        self::assertSame(0, $response->getData()['rule']['is_active'] ?? null);
+    }
 }
 

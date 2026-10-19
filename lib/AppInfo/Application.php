@@ -47,7 +47,11 @@ class Application extends App implements IBootstrap
      */
     public function register(IRegistrationContext $context): void
     {
-        // Register security middleware
+        // Register security middleware.
+        // afterException iterates middlewares in REVERSE registration order, so
+        // the catch-all API envelope is registered FIRST = consulted LAST (every
+        // typed middleware still handles its own exceptions first).
+        $context->registerMiddleware(\OCA\Ticketcheck\Middleware\ApiExceptionMiddleware::class);
         $context->registerMiddleware(\OCA\Ticketcheck\Middleware\GuestSecurityMiddleware::class);
         $context->registerMiddleware(\OCA\Ticketcheck\Middleware\AppAccessMiddleware::class);
         // Companion TKC2 seat gate (Basic auth only; never gates browser session)

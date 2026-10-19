@@ -905,7 +905,7 @@ body.tc-attachment-lightbox-open {
     overflow: hidden;
 }
 
-@media (max-width: 40rem) {
+@media (max-width: 39.99875rem) {
     dialog.tc-attachment-lightbox[open] {
         top: 50% !important;
         left: 50% !important;
@@ -1193,7 +1193,7 @@ body.tc-attachment-lightbox-open {
     font-weight: 600;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
     .ticket-detail-reply {
         padding: var(--helpdesk-spacing-md);
     }
@@ -1416,7 +1416,7 @@ dialog.helpdesk-dialog.ticket-detail-dialog[open]::backdrop {
 	background: color-mix(in srgb, var(--color-background-dark) 45%, transparent);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
 	dialog.helpdesk-dialog.ticket-detail-dialog[open] {
 		width: min(96vw, 560px);
 		max-height: min(92vh, 760px);
@@ -1819,7 +1819,7 @@ body.helpdesk-nav-open {
     display: none !important;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1023.98px) {
     #app-navigation.helpdesk-nav {
         position: fixed !important;
         top: 50px !important;
@@ -2169,7 +2169,7 @@ body.helpdesk-nav-open {
     margin-top: 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
     .helpdesk-dashboard-section__heading {
         font-size: var(--helpdesk-text-lg);
     }
@@ -2432,7 +2432,7 @@ body.helpdesk-nav-open {
     flex-shrink: 0;
 }
 /* Phones: stack title → status chips → meta text (feedback: no column layout) */
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
     .helpdesk-recent-activity-item {
         grid-template-columns: minmax(0, 1fr);
         grid-template-areas:
@@ -2715,7 +2715,7 @@ a.helpdesk-quick-action-card > .helpdesk-card__body {
 }
 
 /* iPad portrait and similar tablets: tighter visual rhythm */
-@media (min-width: 768px) and (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1023.98px) {
     .helpdesk-tickets-page .helpdesk-filter-bar--quick {
         padding: 6px 10px;
         gap: 6px;
@@ -4702,7 +4702,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
    ============================================== */
 
 /* Tablet and below */
-@media (max-width: 1024px) {
+@media (max-width: 1023.98px) {
     #app-content-wrapper.helpdesk-wrapper {
         padding: var(--helpdesk-spacing-md);
     }
@@ -4734,7 +4734,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 }
 
 /* Mobile */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     :root,
     body {
         --helpdesk-nav-width: 0px;
@@ -5138,7 +5138,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 }
 
 /* Responsive Design for Guest Access */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .helpdesk-modal {
         padding: var(--helpdesk-spacing-sm);
     }
@@ -5450,7 +5450,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     margin-bottom: 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
     .helpdesk-section-title-row {
         flex-wrap: wrap;
     }
@@ -5918,7 +5918,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     margin: var(--helpdesk-spacing-sm) 0 0 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
     .settings-app-access-preview-card__header {
         flex-direction: column;
         align-items: stretch;
@@ -6180,7 +6180,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .kb-filter-bar {
         position: static;
         padding: var(--helpdesk-spacing-sm);
@@ -6862,7 +6862,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 }
 
 /* ===== FINAL RESPONSIVE NAV OVERRIDES (must stay last) ===== */
-@media (max-width: 1024px) {
+@media (max-width: 1023.98px) {
     body.helpdesk-has-nav #app-content,
     body:has(#app-navigation.helpdesk-nav) #app-content,
     #app-content.tc-app {
@@ -6914,7 +6914,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .helpdesk-nav-toggle.helpdesk-nav-toggle--active {
         left: calc(env(safe-area-inset-left, 0px) + 6px) !important;
         top: calc(50px + env(safe-area-inset-top, 0px) + 6px) !important;
@@ -7011,7 +7011,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     color: color-mix(in srgb, var(--helpdesk-text-secondary) 86%, black 14%);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .helpdesk-tickets-page .helpdesk-filters-advanced__content {
         padding: var(--helpdesk-spacing-sm);
     }
@@ -9891,7 +9891,7 @@ body.guest-user #app-content.tc-app--portal-password .portal-password__actions.h
 #app-content.tc-app--portal-password .portal-password__actions .helpdesk-btn--lg {
 	min-height: var(--tc-touch-min, 44px);
 }
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
 	#app-content.tc-app--portal-password .portal-password__card-body {
 		padding: var(--tc-space-4, 1rem);
 	}
@@ -9971,7 +9971,7 @@ body.guest-user #app-content #app-navigation-toggle , body#body-login:has([data-
     display: none !important;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1023.98px) {
     /* Use full width when nav is off-canvas to avoid wasted space */
     body.guest-user #content,     body#body-login:has([data-tc-nav-mode="guest"]) #content,
     body.guest-user #app-content-wrapper,     body#body-login:has([data-tc-nav-mode="guest"]) #app-content-wrapper,
@@ -10372,7 +10372,7 @@ body.guest-user .portal-ticket-survey-card .helpdesk-card__title , body#body-log
 
 /* Mobile drawer positioning: see tc-nav-toggle block (staff + guest, <1024px) */
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
 }
 /* =============================================================================
  * TicketCheck shell (tc-*) — navigation, page chrome, portal overrides
@@ -10931,7 +10931,7 @@ aside.portal-help-tip {
 	display: block;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
 	.tc-tickets-list-bar {
 		flex-direction: column;
 		align-items: stretch;
@@ -11687,15 +11687,15 @@ aside.portal-help-tip {
 }
 
 .tc-select-combobox__native {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
-	white-space: nowrap;
-	border: 0;
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
 }
 
 .tc-select-combobox__results {
@@ -11890,15 +11890,15 @@ button.tc-select-combobox__option:focus-visible {
 }
 
 .tc-filter-picker__native {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
-	white-space: nowrap;
-	border: 0;
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
 }
 
 .tc-filter-picker .tc-select-combobox__results,
@@ -12856,6 +12856,7 @@ body.tc-modal-open {
 	border-radius: var(--tc-radius-sm);
 	box-shadow: var(--tc-shadow-sm);
 	display: flex;
+	flex-wrap: wrap;
 	gap: var(--tc-space-2);
 	align-items: center;
 }
@@ -12866,7 +12867,9 @@ body.tc-modal-open {
    an untyped "Error: …" must not render as a success toast. */
 .tc-toast--info { border-left-color: var(--color-primary-element, #0082c9); }
 .tc-toast__text {
+	flex: 1 1 auto;
 	min-width: 0;
+	overflow-wrap: anywhere;
 }
 /* “Report this problem” mailto self-attached by common/messaging.js on
    error toasts (app-feedback wrapper hook is a dead path for tc-* toasts). */
@@ -14070,7 +14073,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	opacity: 1;
 	color: var(--color-primary-element, #0082c9);
 }
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
 	#app-content.tc-app .portal-ticket-row__body {
 		flex-direction: column;
 		align-items: stretch;
@@ -15394,7 +15397,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	text-align: center;
 	gap: var(--tc-space-3);
 }
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
 	#app-content.tc-app--kb .tc-kb-search__row {
 		flex-direction: column;
 	}
@@ -15664,7 +15667,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	font-size: var(--tc-fs-sm);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
 	#app-content.tc-app .tc-table-wrap { display: none; }
 	/* Form-bearing tables (editable rows, no card mirror) keep the
 	   horizontal-scroll wrap instead of being hidden. */
@@ -15971,7 +15974,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 #app-content.tc-app .tc-text-sm {
 	font-size: var(--tc-fs-sm);
 }
-@media (max-width: 1024px) {
+@media (max-width: 1023.98px) {
 	#app-content.tc-app .tc-kanban {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
@@ -16338,7 +16341,7 @@ body.guest-user .tc-dashboard-kpis > .helpdesk-card + .helpdesk-card, body#body-
 body.guest-user .portal-shortcuts__list > .helpdesk-card + .helpdesk-card , body#body-login:has([data-tc-nav-mode="guest"]) .portal-shortcuts__list > .helpdesk-card + .helpdesk-card {
 	margin-top: 0;
 }
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
 	#content[class*="app-ticketcheck"] {
 		flex-direction: column;
 	}
@@ -16920,7 +16923,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 	opacity: 0.6;
 	pointer-events: none;
 }
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
 	/* Phones: side-by-side full-size touch targets — the compact arrow
 	   stack is too small for reliable touch (<44px). */
 	#app-content.tc-app--settings .tc-category-item__move {
@@ -17172,7 +17175,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 #app-content.tc-app--settings .settings-app-access-preview__trunc {
 	margin: var(--tc-space-2, 0.5rem) 0 0;
 }
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
 	#app-content.tc-app--settings .settings-app-access-preview-card__header {
 		flex-direction: column;
 		align-items: stretch;
@@ -17887,7 +17890,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .helpdesk-deletion-modal {
         padding: var(--helpdesk-spacing-sm);
     }
@@ -18611,7 +18614,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
     font-family: var(--font-face, monospace);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     #app-content.tc-app--export .tc-export {
         max-width: none;
     }
@@ -19038,7 +19041,7 @@ body.guest-user footer.guest-box , body#body-login:has([data-tc-nav-mode="guest"
 	border: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
 	.tc-support-us__options {
 		grid-template-columns: 1fr;
 	}
@@ -19198,7 +19201,7 @@ body.guest-user footer.guest-box , body#body-login:has([data-tc-nav-mode="guest"
 	outline: 3px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 60%, transparent);
 	outline-offset: 2px;
 }
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
 	.tc-settings-nav {
 		flex-direction: column;
 	}

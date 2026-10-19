@@ -2,7 +2,6 @@ OC.L10N.register(
 	"ticketcheck",
 	{
 	"%1$s (%2$s)" : "%1$s (%2$s)",
-	"%n article in %s" : "%n artikel i %s",
 	"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:" : "%s forbliver gratis (AGPL) på Nextcloud. Fejlrapporter og idéer på GitHub er velkomne — det er gratis open source-support. Hvis organisationen har brug for fakturerbar hjælp — eller officielle mobile licenser — vælg en mulighed nedenfor:",
 	"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:" : "%s forbliver gratis (AGPL) på Nextcloud. Fejlrapporter og idéer på GitHub er velkomne — det er gratis open source-support. Hvis organisationen har brug for fakturerbar hjælp, vælg en mulighed nedenfor:",
 	"(opens in a new tab)" : "(åbner i en ny fane)",
@@ -176,6 +175,7 @@ OC.L10N.register(
 	"article_statistics" : "Artikelstatistik",
 	"articles" : "Artikler",
 	"articles_in_category" : "%n artikel i %s",
+	"articles_in_category_plural" : "%n artikler i %s",
 	"Ask about setup or training" : "Spørg om opsætning eller træning",
 	"Ask for a license" : "Anmod om en licens",
 	"Ask for a partner offer" : "Anmod om et partner-tilbud",
@@ -2221,5 +2221,6 @@ OC.L10N.register(
 	"your_support_tickets" : "Dine supportsager",
 	"your_tickets" : "Dine sager",
 	"{used} of {total} seats used" : "{used} af {total} brugte sæder"
-	}
+	},
+	"nplurals=2; plural=(n != 1);"
 );

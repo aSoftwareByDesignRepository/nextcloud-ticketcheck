@@ -1319,7 +1319,7 @@ class SettingsController extends Controller
             $rule->setAction($action);
         }
         if ($this->request->getParam('is_active') !== null) {
-            $rule->setIsActive((int)(bool)$this->request->getParam('is_active'));
+            $rule->setIsActive((int)filter_var($this->request->getParam('is_active'), FILTER_VALIDATE_BOOLEAN));
         }
 
         try {

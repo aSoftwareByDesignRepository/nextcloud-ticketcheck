@@ -319,6 +319,50 @@ class KnowledgeBaseServiceTest extends TestCase
         $this->service->addComment(1, '   ', 'user1', 'User One', 'user@example.com');
     }
 
+    public function testUpdateArticleParsesFormEncodedBoolStrings(): void
+    {
+        // Form-encoded posts send the literal string "false" — a naive
+        // `(bool)` cast flips it to true. reqBool must keep flags off.
+        $article = $this->createArticle(7, 'T', 'General', true);
+        $article->setPinned(true);
+        $article->setAllowComments(true);
+        $this->articleMapper->method('find')->with(7)->willReturn($article);
+        $this->htmlSanitizerService->method('sanitize')->willReturnArgument(0);
+        $this->articleMapper->expects($this->once())
+            ->method('update')
+            ->with($this->callback(static function (KBArticle $a): bool {
+                return $a->getPublished() === false
+                    && $a->getPinned() === false
+                    && $a->getAllowComments() === false;
+            }))
+            ->willReturn($article);
+
+        $this->service->updateArticle(7, [
+            'published' => 'false',
+            'pinned' => '0',
+            'allow_comments' => false,
+        ]);
+    }
+
+    public function testUpdateArticleKeepsFlagsWhenParamsAbsent(): void
+    {
+        $article = $this->createArticle(8, 'T', 'General', true);
+        $article->setPinned(true);
+        $article->setAllowComments(true);
+        $this->articleMapper->method('find')->with(8)->willReturn($article);
+        $this->htmlSanitizerService->method('sanitize')->willReturnArgument(0);
+        $this->articleMapper->expects($this->once())
+            ->method('update')
+            ->with($this->callback(static function (KBArticle $a): bool {
+                return $a->getPublished() === true
+                    && $a->getPinned() === true
+                    && $a->getAllowComments() === true;
+            }))
+            ->willReturn($article);
+
+        $this->service->updateArticle(8, []);
+    }
+
     private function createArticle(int $id, string $title, string $category, bool $published): KBArticle
     {
         $article = new KBArticle();

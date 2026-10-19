@@ -167,9 +167,9 @@ class KnowledgeBaseService
         $article->setTitle($this->requireTitle($params['title'] ?? ''));
         $article->setContent($this->htmlSanitizerService->sanitize((string)($params['content'] ?? '')));
         $article->setCategory($category);
-        $article->setPublished((bool)($params['published'] ?? false));
-        $article->setPinned((bool)($params['pinned'] ?? false));
-        $article->setAllowComments((bool)($params['allow_comments'] ?? false));
+        $article->setPublished(self::reqBool($params['published'] ?? null, false));
+        $article->setPinned(self::reqBool($params['pinned'] ?? null, false));
+        $article->setAllowComments(self::reqBool($params['allow_comments'] ?? null, false));
         $article->setViews(0);
         $article->setHelpfulCount(0);
         $article->setCreatedBy($userId);
@@ -199,9 +199,9 @@ class KnowledgeBaseService
         $oldContent = (string) $article->getContent();
         $article->setContent($this->htmlSanitizerService->sanitize((string)($params['content'] ?? $article->getContent())));
         $article->setCategory($this->resolveCategoryFromParams($params) ?: $article->getCategory());
-        $article->setPublished((bool)($params['published'] ?? $article->getPublished()));
-        $article->setPinned((bool)($params['pinned'] ?? $article->getPinned()));
-        $article->setAllowComments((bool)($params['allow_comments'] ?? $article->getAllowComments()));
+        $article->setPublished(self::reqBool($params['published'] ?? null, (bool)$article->getPublished()));
+        $article->setPinned(self::reqBool($params['pinned'] ?? null, (bool)$article->getPinned()));
+        $article->setAllowComments(self::reqBool($params['allow_comments'] ?? null, (bool)$article->getAllowComments()));
         $article->setUpdatedAt(new \DateTime());
 
         $this->kbArticleMapper->update($article);
@@ -498,6 +498,22 @@ class KnowledgeBaseService
     /**
      * Portal callers must not learn about unpublished drafts (uniform not-found).
      */
+    /**
+     * Form-encoded checkboxes arrive as the literal strings "false"/"0" —
+     * `(bool)` on either is wrong ("false" is truthy). Parse explicitly:
+     * real bools pass through, strings need an affirmative token.
+     */
+    private static function reqBool(mixed $value, bool $fallback): bool
+    {
+        if ($value === null) {
+            return $fallback;
+        }
+        if (is_bool($value)) {
+            return $value;
+        }
+        return in_array(strtolower(trim((string)$value)), ['1', 'true', 'on', 'yes'], true);
+    }
+
     private function assertPublishedWhenRequired(KBArticle $article, bool $publishedOnly): void
     {
         if ($publishedOnly && !$article->isPublished()) {
