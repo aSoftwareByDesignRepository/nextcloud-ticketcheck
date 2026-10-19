@@ -1,10 +1,40 @@
 # Changelog
 
-## 2.4.0 - 2026-11-01
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## 2.5.0 - 2026-10-19
 
 ### Added
-- Inbound email via IMAP polling: connect an existing support mailbox (password or XOAUTH2 for Google/Microsoft) so incoming mail creates tickets or comments without a webhook provider.
-- Auto-create tickets from unknown senders with a configurable policy (create/ignore) and per-sender + global daily caps.
+
+- **Dynamic ticket categories:** categories are now managed entities (DB-backed, editable in settings) instead of a fixed list — administrators can create, rename, and reorder them per workspace.
+- **Token-bound thread anchoring for inbound replies:** outgoing ticket mail now stamps HMAC-bound `Message-ID`/`References` roots, so replies whose plus-tag or subject were mangled in transit (gateways, Exchange rewriting, forward-then-reply) still land on the right ticket — while a fabricated `In-Reply-To` is classified `ignored_bad_token`, never a comment.
+
+### Security
+
+- **SSRF TOCTOU on mail dialers:** IMAP/SMTP connections now validate the peer IP after dialing, and private-host dial-out stays behind the explicit opt-in on all dial sites.
+- **Strict integer route params:** all 84 integer-id route parameters carry `\d+` requirements — malformed ids (`9x`, `2e3`, `3.5`, `%209`, …) are rejected at routing with 404 instead of reaching int-typed controller params.
+- **CSV formula guard completed:** the export guard now also covers the VT (`\x0B`) lead marker, completing the `= + - @ TAB CR VT` set.
+
+### Fixed
+
+- **Inbound mail save→test→enable orchestration:** a stored `tls` vocabulary now maps to STARTTLS on connect (previously detected endpoints were persistable but undialable); the truncation marker survives quote/signature stripping; the UID cursor is preserved on re-enable when `UIDVALIDITY` is unchanged; enable is gated on a test that covers the saved config.
+- **Write-failure honesty:** settings rename inputs now revert and announce failure on 422/500 instead of leaving stale text behind; same hardening for KB category rename/reorder.
+- **Uniform API error envelope:** `/api*` and `/companion/api*` return a consistent JSON error envelope on 500 instead of an HTML error page.
+- License "valid until" dates now resolve to the local calendar day.
+- Portal-home tickets table no longer clips at the screen edge.
+- shared e2e instance-lock harness
+- app-feedback footer parity + contract test sync
+- e2e: self-healing fixture for inbound-mail settings spec
+- close verify:ui gate debt + 414px matrix coverage
+- nh-04: token-bound thread anchoring for inbound replies
+- atlas round2: atomic stale-claim reclaim + mobile routing table + flake hardening
+- a11y: wrap inbound routing table in tc-table-wrap + add section to a11y matrix
+- inbound-mail: close critic advisories + align e2e origin
+- pin int-id route params \d+; CSV guard covers VT
+
 - Tokenized Reply-To (`+{ticket}-{token}@`) binds replies to the ticket's customer address; replies from other addresses are triaged, not merged.
 - Inbound attachment ingestion with size/count/type validation, wire-size accounting, and quarantine reporting in the ticket body.
 - Outbound mail through the configured mailbox SMTP (AUTH LOGIN / XOAUTH2, STARTTLS/SMTPS) when enabled — replies then land back in the watched mailbox.
