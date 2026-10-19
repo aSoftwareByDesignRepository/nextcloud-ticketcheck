@@ -370,12 +370,12 @@ button.helpdesk-project-detail-role-badge {
 
 .helpdesk-project-detail-guest-avatar {
     background: var(--color-primary-element-light);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-project-detail-guest-badge {
     background: var(--color-primary-element-light);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 /* Customer detail cleanup (replace inline styles) */
@@ -1049,7 +1049,7 @@ body.tc-attachment-lightbox-open {
 
 .ticket-detail-linked-anchor {
     flex: 1;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     text-decoration: none;
     min-width: 0;
 }
@@ -1337,13 +1337,13 @@ body.tc-attachment-lightbox-open {
 .ticket-detail-upload-dropzone-icon {
     width: 28px;
     height: 28px;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .ticket-detail-upload-dropzone-title {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .ticket-detail-upload-dropzone-subtitle {
@@ -1706,7 +1706,7 @@ button.ticket-detail-merge-option,
     font-size: 0.75rem;
     line-height: 1.3;
     font-weight: 600;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     font-variant-numeric: tabular-nums;
 }
 
@@ -2036,7 +2036,7 @@ body.helpdesk-nav-open {
 
 .helpdesk-nav__link:hover {
     background: var(--color-primary-element-light);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     transform: translateX(2px);
 }
 
@@ -2108,7 +2108,7 @@ body.helpdesk-nav-open {
 .helpdesk-page-header__title svg {
     width: var(--helpdesk-icon-xl);
     height: var(--helpdesk-icon-xl);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-page-header__subtitle {
@@ -2356,7 +2356,7 @@ body.helpdesk-nav-open {
     color: var(--color-text-maxcontrast);
 }
 .helpdesk-dashboard-metric-icon--neutral.helpdesk-dashboard-metric-icon--accent {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 .helpdesk-dashboard-metric-row {
     display: flex;
@@ -2554,7 +2554,7 @@ a.helpdesk-quick-action-card > .helpdesk-card__body {
 	border-radius: var(--helpdesk-border-radius-md, 8px);
 	border: 1px solid color-mix(in srgb, var(--color-primary-element) 22%, var(--color-border));
 	background: color-mix(in srgb, var(--color-primary-element) 14%, var(--color-main-background));
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-quick-action-card .helpdesk-dashboard-metric-icon svg {
@@ -2592,7 +2592,7 @@ a.helpdesk-quick-action-card > .helpdesk-card__body {
 .helpdesk-quick-action-card--primary .helpdesk-dashboard-metric-icon {
 	background: color-mix(in srgb, var(--color-primary-element) 22%, var(--color-main-background));
 	border-color: color-mix(in srgb, var(--color-primary-element) 40%, var(--color-border));
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .tc-quick-action-grid > a.helpdesk-quick-action-card:hover,
@@ -2904,7 +2904,7 @@ a.helpdesk-btn--ghost:hover {
 button.helpdesk-btn--text,
 a.helpdesk-btn--text {
     background: transparent;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     border-color: transparent;
     text-decoration: underline;
     text-underline-offset: 0.2em;
@@ -3215,13 +3215,13 @@ select.helpdesk-form-control:focus-visible {
 .helpdesk-upload-dropzone__icon {
     width: 32px;
     height: 32px;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-upload-dropzone__title {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-upload-dropzone__subtitle {
@@ -3445,7 +3445,7 @@ textarea.helpdesk-form-control {
 }
 
 .helpdesk-comment__author {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     font-weight: 600;
 }
 
@@ -3889,7 +3889,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 .helpdesk-empty__icon svg {
     width: var(--helpdesk-icon-xl);
     height: var(--helpdesk-icon-xl);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-empty__title {
@@ -4105,7 +4105,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 .helpdesk-filter-toggle:hover {
     background: var(--color-primary-element-light);
     border-color: var(--color-primary-element);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-filter-toggle--active {
@@ -4201,7 +4201,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 
 .helpdesk-ticket-card__category-badge {
     background: var(--color-primary-element-light);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     font-size: var(--helpdesk-text-xs);
     padding: 2px 6px;
     border-radius: 10px;
@@ -4293,7 +4293,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 
 .helpdesk-project-card__title-link:hover,
 .helpdesk-project-card__title-link:focus-visible {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-project-card__customer {
@@ -4418,7 +4418,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 
 .helpdesk-customer-card__title-link:hover,
 .helpdesk-customer-card__title-link:focus-visible {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-customer-card__contact-list {
@@ -4439,7 +4439,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     width: 16px;
     height: 16px;
     flex-shrink: 0;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-customer-card__contact-text {
@@ -4951,7 +4951,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 /* Guest Badge */
 .helpdesk-badge--guest {
     background: var(--color-primary-element-light);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     font-size: var(--helpdesk-text-xs);
     font-weight: 600;
     padding: 2px 8px;
@@ -5093,7 +5093,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     align-items: center;
     gap: var(--helpdesk-spacing-xs);
     background: var(--color-primary-element-light);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     padding: 4px 8px;
     border-radius: 12px;
     font-size: var(--helpdesk-text-xs);
@@ -5419,12 +5419,12 @@ div.tc-field--checkbox > .helpdesk-form-help,
 }
 
 .helpdesk-value a {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     text-decoration: none;
 }
 
 .helpdesk-value a:hover {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 /* ==============================================
@@ -5566,7 +5566,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 .kb-category-section .helpdesk-card__title svg:first-of-type {
     width: 24px;
     height: 24px;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     flex-shrink: 0;
 }
 
@@ -6016,7 +6016,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 .kb-filter-bar__label svg {
     width: var(--helpdesk-icon-sm);
     height: var(--helpdesk-icon-sm);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 /* Filter Pills Container */
@@ -6052,7 +6052,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 .kb-filter-pill:hover {
     background: var(--color-primary-element-light);
     border-color: var(--color-primary-element);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     box-shadow: var(--helpdesk-shadow-sm);
 }
 
@@ -6111,7 +6111,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 .kb-filter-pill--show-all {
     background: var(--color-main-background);
     border: 2px solid var(--color-primary-element);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     font-weight: 600;
 }
 
@@ -6138,7 +6138,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 .kb-filter-state__icon {
     width: var(--helpdesk-icon-sm);
     height: var(--helpdesk-icon-sm);
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 /* Filter Clear Button (icon chip on top of helpdesk-btn--icon) */
@@ -6324,7 +6324,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 }
 
 .helpdesk-text-primary {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 .helpdesk-text-error {
@@ -7588,7 +7588,7 @@ body.guest-user .helpdesk-btn--ghost:hover , body#body-login:has([data-tc-nav-mo
 
 body.guest-user .helpdesk-btn--text , body#body-login:has([data-tc-nav-mode="guest"]) .helpdesk-btn--text {
     background: transparent;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     border-color: transparent;
     text-decoration: underline;
     text-underline-offset: 0.2em;
@@ -8739,13 +8739,13 @@ body.guest-user [data-attachment-dropzone="portal-ticket-reply"]:focus-visible ,
 body.guest-user .helpdesk-upload-dropzone__icon , body#body-login:has([data-tc-nav-mode="guest"]) .helpdesk-upload-dropzone__icon {
     width: 36px;
     height: 36px;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 body.guest-user .helpdesk-upload-dropzone__title , body#body-login:has([data-tc-nav-mode="guest"]) .helpdesk-upload-dropzone__title {
     font-size: var(--helpdesk-text-lg);
     font-weight: 700;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 body.guest-user .helpdesk-upload-dropzone__subtitle , body#body-login:has([data-tc-nav-mode="guest"]) .helpdesk-upload-dropzone__subtitle {
@@ -8824,7 +8824,7 @@ body.guest-user .portal-kb-hero__icon-wrap , body#body-login:has([data-tc-nav-mo
     height: 80px;
     background: var(--color-main-background);
     border: 1px solid var(--tc-border, var(--color-border));
-    color: var(--color-primary-element, #0082c9);
+    color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -8920,7 +8920,7 @@ body.guest-user .portal-ticket-assignee-card , body#body-login:has([data-tc-nav-
 }
 
 body.guest-user .portal-ticket-assignee-name , body#body-login:has([data-tc-nav-mode="guest"]) .portal-ticket-assignee-name {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 body.guest-user .portal-ticket-assignee-icon , body#body-login:has([data-tc-nav-mode="guest"]) .portal-ticket-assignee-icon {
@@ -8950,7 +8950,7 @@ body.guest-user .portal-ticket-link-item , body#body-login:has([data-tc-nav-mode
 }
 
 body.guest-user .portal-ticket-link-anchor , body#body-login:has([data-tc-nav-mode="guest"]) .portal-ticket-link-anchor {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     text-decoration: none;
 }
 
@@ -8977,7 +8977,7 @@ body.guest-user .portal-ticket-attachment-content , body#body-login:has([data-tc
 }
 
 body.guest-user .portal-ticket-attachment-download , body#body-login:has([data-tc-nav-mode="guest"]) .portal-ticket-attachment-download {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 body.guest-user .portal-ticket-comments , body#body-login:has([data-tc-nav-mode="guest"]) .portal-ticket-comments {
@@ -9126,7 +9126,7 @@ body.guest-user .portal-sidebar__stat-value , body#body-login:has([data-tc-nav-m
     font-weight: 700;
 }
 body.guest-user .portal-sidebar__stat-value--primary , body#body-login:has([data-tc-nav-mode="guest"]) .portal-sidebar__stat-value--primary {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 body.guest-user .portal-sidebar__stat-value--success , body#body-login:has([data-tc-nav-mode="guest"]) .portal-sidebar__stat-value--success {
     color: var(--hd-color-success-accent, var(--tc-success-element));
@@ -9182,7 +9182,7 @@ body.guest-user .portal-my-tickets__meta-row , body#body-login:has([data-tc-nav-
     margin-bottom: var(--helpdesk-spacing-sm);
 }
 body.guest-user .portal-kb-article__back-link , body#body-login:has([data-tc-nav-mode="guest"]) .portal-kb-article__back-link {
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
     text-decoration: none;
     font-size: var(--helpdesk-text-sm);
 }
@@ -9418,7 +9418,7 @@ body.guest-user .portal-kb__filter-clear-icon , body#body-login:has([data-tc-nav
 	justify-content: center;
 	width: 0.875rem;
 	height: 0.875rem;
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 	line-height: 0;
 }
 #app-content.tc-app--portal-kb .portal-kb__article-meta-icon svg {
@@ -9611,7 +9611,7 @@ body.guest-user .portal-kb__category-icon , body#body-login:has([data-tc-nav-mod
     justify-content: center;
     flex-shrink: 0;
     line-height: 0;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 body.guest-user .portal-kb__category-badge , body#body-login:has([data-tc-nav-mode="guest"]) .portal-kb__category-badge {
     background: var(--color-background-hover);
@@ -9694,7 +9694,7 @@ body.guest-user #app-content.tc-app--portal-password .portal-password__alert .he
 }
 #app-content.tc-app--portal-password .portal-password__success-link {
 	font-weight: 600;
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 	text-decoration: underline;
 	text-underline-offset: 0.15em;
 }
@@ -10635,7 +10635,7 @@ aside.portal-help-tip {
 }
 .tc-breadcrumb__brand:hover,
 .tc-breadcrumb__brand:focus-visible {
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 	text-decoration: none;
 }
 .tc-breadcrumb__current { font-weight: 500; color: var(--color-main-text, #1d1d1d); }
@@ -10656,7 +10656,7 @@ aside.portal-help-tip {
 	height: 56px;
 	border-radius: var(--tc-radius-md);
 	background: var(--tc-tint-info);
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 }
 .tc-page-header__icon-svg { width: 28px; height: 28px; }
 .tc-page-header__text h1 {
@@ -10694,7 +10694,7 @@ aside.portal-help-tip {
 .portal-stat-card__icon.tc-stat-card__icon svg {
 	width: 28px;
 	height: 28px;
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 }
 .portal-stat-card__body {
 	display: flex;
@@ -11085,7 +11085,7 @@ aside.portal-help-tip {
 	border-color: var(--color-primary-element, #0082c9);
 }
 .tc-link {
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 	text-decoration: none;
 	font-weight: 600;
 }
@@ -12058,7 +12058,7 @@ body.guest-user .tc-nav__user-avatar , body#body-login:has([data-tc-nav-mode="gu
 	font-weight: 700;
 	font-size: var(--tc-fs-sm, 0.875rem);
 	background: color-mix(in srgb, var(--color-primary-element) 18%, var(--color-main-background));
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 }
 body.guest-user .tc-nav__user-details , body#body-login:has([data-tc-nav-mode="guest"]) .tc-nav__user-details {
 	min-width: 0;
@@ -12107,7 +12107,7 @@ body.guest-user .tc-nav__guest-stat-value , body#body-login:has([data-tc-nav-mod
 	color: var(--color-main-text);
 }
 body.guest-user .tc-nav__guest-stat-value--open , body#body-login:has([data-tc-nav-mode="guest"]) .tc-nav__guest-stat-value--open {
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 }
 body.guest-user .tc-nav__guest-stat-label , body#body-login:has([data-tc-nav-mode="guest"]) .tc-nav__guest-stat-label {
 	font-size: var(--tc-fs-xs, 0.75rem);
@@ -12672,7 +12672,7 @@ button.tc-nav-toggle {
 	color: var(--color-main-text, #1d1d1d);
 }
 .tc-workspace-card__favorite.is-active {
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 	background: var(--tc-tint-info);
 	border-color: color-mix(in srgb, var(--color-primary-element, #0082c9) 30%, var(--tc-border) 70%);
 }
@@ -12878,7 +12878,7 @@ body.tc-modal-open {
 	align-self: center;
 	font-size: var(--tc-fs-sm);
 	font-weight: 600;
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 	text-decoration: underline;
 	text-underline-offset: 2px;
 	white-space: nowrap;
@@ -13218,7 +13218,7 @@ body.tc-modal-open {
 	justify-content: center;
 	width: var(--tc-touch-min);
 	height: var(--tc-touch-min);
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 }
 .tc-banner__icon svg {
 	width: 1.25rem;
@@ -13403,13 +13403,13 @@ body:has(#app-content.tc-app) {
 #app-content.tc-app--portal-home .tc-dashboard-kpi__icon--primary {
 	background: color-mix(in srgb, var(--color-primary-element) 16%, var(--color-main-background));
 	border-color: color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 }
 #app-content.tc-app--dashboard .tc-dashboard-kpi__icon--accent,
 #app-content.tc-app--portal-home .tc-dashboard-kpi__icon--accent {
 	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
 	border-color: color-mix(in srgb, var(--color-primary-element) 22%, var(--color-border));
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 }
 #app-content.tc-app--dashboard .tc-dashboard-kpi__icon--success,
 #app-content.tc-app--portal-home .tc-dashboard-kpi__icon--success {
@@ -13577,7 +13577,7 @@ body:has(#app-content.tc-app) {
 	height: 2.5rem;
 	border-radius: var(--tc-radius-sm);
 	background: var(--tc-tint-info);
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 }
 .tc-stat-card__icon svg {
 	width: 1.25rem;
@@ -13704,14 +13704,14 @@ body.guest-user .portal-shortcut__icon , body#body-login:has([data-tc-nav-mode="
 	border-radius: var(--helpdesk-border-radius-md, 8px);
 	background: color-mix(in srgb, var(--color-primary-element) 14%, var(--color-main-background));
 	border: 1px solid color-mix(in srgb, var(--color-primary-element) 22%, var(--color-border));
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 }
 #app-content.tc-app--portal-home .portal-shortcut__icon--primary,
 #body-guest .portal-shortcut__icon--primary,
 body.guest-user .portal-shortcut__icon--primary , body#body-login:has([data-tc-nav-mode="guest"]) .portal-shortcut__icon--primary {
 	background: color-mix(in srgb, var(--color-primary-element) 22%, var(--color-main-background));
 	border-color: color-mix(in srgb, var(--color-primary-element) 40%, var(--color-border));
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 }
 #app-content.tc-app--portal-home .portal-shortcut__icon svg,
 #body-guest .portal-shortcut__icon svg,
@@ -13981,7 +13981,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	gap: var(--tc-space-1);
 }
 #app-content.tc-app .portal-ticket-row__ticket-icon {
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 }
 #app-content.tc-app .portal-ticket-row__ticket-icon svg {
 	width: 1.5rem;
@@ -13991,7 +13991,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 #app-content.tc-app .portal-ticket-row__num {
 	font-weight: 700;
 	font-size: var(--tc-fs-md);
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 	font-variant-numeric: tabular-nums;
 }
 #app-content.tc-app .portal-ticket-row__main {
@@ -14028,7 +14028,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	width: 0.875rem;
 	height: 0.875rem;
 	display: block;
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 }
 #app-content.tc-app .portal-ticket-row__meta-icon--neutral svg {
 	color: var(--tc-muted);
@@ -14057,7 +14057,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 }
 #app-content.tc-app .portal-ticket-row__cat-badge {
 	background: var(--tc-tint-info);
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 	font-size: var(--tc-fs-xs);
 }
 #app-content.tc-app .portal-ticket-row__chevron svg {
@@ -14071,7 +14071,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 #app-content.tc-app a.portal-ticket-row:hover .portal-ticket-row__chevron svg,
 #app-content.tc-app a.portal-ticket-row:focus-visible .portal-ticket-row__chevron svg {
 	opacity: 1;
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 }
 @media (max-width: 639.98px) {
 	#app-content.tc-app .portal-ticket-row__body {
@@ -14204,7 +14204,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 }
 #app-content.tc-app .helpdesk-saved-views__load:hover,
 #app-content.tc-app .helpdesk-saved-views__load:focus-visible {
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 	outline: 2px solid var(--color-primary-element);
 	outline-offset: 2px;
 }
@@ -14309,7 +14309,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 #app-content.tc-app .helpdesk-customer-card__title-link:focus-visible,
 #app-content.tc-app .helpdesk-project-card__title-link:hover,
 #app-content.tc-app .helpdesk-project-card__title-link:focus-visible {
-	color: var(--color-primary-element, var(--tc-primary));
+	color: var(--tc-accent-ink, var(--color-primary-element, var(--tc-primary)));
 }
 #app-content.tc-app a.tc-list-row__name:focus-visible,
 #app-content.tc-app .helpdesk-customer-card__title-link:focus-visible,
@@ -14457,7 +14457,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 }
 #app-content.tc-app--tickets table.tc-tickets-table .tc-tickets-table__title-link:hover,
 #app-content.tc-app--tickets table.tc-tickets-table .tc-tickets-table__title-link:focus-visible {
-	color: var(--color-primary-element, var(--tc-primary));
+	color: var(--tc-accent-ink, var(--color-primary-element, var(--tc-primary)));
 	outline: none;
 }
 #app-content.tc-app--tickets table.tc-tickets-table .tc-tickets-table__title-link:focus-visible {
@@ -14517,7 +14517,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 }
 #app-content.tc-app--tickets .helpdesk-ticket-card__title-link:hover,
 #app-content.tc-app--tickets .helpdesk-ticket-card__title-link:focus-visible {
-	color: var(--color-primary-element, var(--tc-primary));
+	color: var(--tc-accent-ink, var(--color-primary-element, var(--tc-primary)));
 }
 #app-content.tc-app--tickets .helpdesk-ticket-card__title-link:focus-visible {
 	outline: 2px solid var(--color-primary-element, var(--tc-primary));
@@ -14624,7 +14624,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 }
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal .tc-tickets-table__title-link:hover,
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal .tc-tickets-table__title-link:focus-visible {
-	color: var(--color-primary-element, var(--tc-primary));
+	color: var(--tc-accent-ink, var(--color-primary-element, var(--tc-primary)));
 }
 #app-content.tc-app--portal-tickets table.tc-tickets-table--portal .tc-tickets-table__title-link:focus-visible {
 	outline: 2px solid var(--color-primary-element, var(--tc-primary));
@@ -14742,7 +14742,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 }
 #app-content.tc-app--portal-tickets .tc-card-list .helpdesk-ticket-card__title-link:hover,
 #app-content.tc-app--portal-tickets .tc-card-list .helpdesk-ticket-card__title-link:focus-visible {
-	color: var(--color-primary-element, var(--tc-primary));
+	color: var(--tc-accent-ink, var(--color-primary-element, var(--tc-primary)));
 }
 #app-content.tc-app--portal-tickets .tc-card-list .helpdesk-ticket-card__title-link:focus-visible {
 	outline: 2px solid var(--color-primary-element, var(--tc-primary));
@@ -15220,7 +15220,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	border-radius: 50%;
 	background: var(--color-main-background);
 	border: 1px solid var(--tc-border);
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -15452,7 +15452,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	color: var(--color-main-text, var(--tc-text));
 }
 #app-content.tc-app--kb-article .tc-kb-article__prose a {
-	color: var(--color-primary-element, var(--tc-accent));
+	color: var(--tc-accent-ink, var(--color-primary-element, var(--tc-accent)));
 	text-decoration: underline;
 }
 #app-content.tc-app--kb-article .tc-kb-article__prose img {
@@ -16082,7 +16082,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 #app-content.tc-app--tickets-kanban .tc-tickets-filters__active-hint {
 	font-size: var(--tc-fs-xs);
 	font-weight: 600;
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
 }
@@ -17202,7 +17202,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 #app-content.tc-app .tc-portal-rate-limit__hero-svg {
 	width: 3.5rem;
 	height: 3.5rem;
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 }
 #app-content.tc-app .tc-portal-rate-limit__card {
 	border: 1px solid var(--tc-border);
@@ -17456,7 +17456,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 	width: 1.25rem;
 	height: 1.25rem;
 	flex-shrink: 0;
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 }
 #app-content.tc-app--ticket-form .tc-ticket-form-existing-thumb-btn {
 	padding: 0;
@@ -18146,7 +18146,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 
 #app-content.tc-app--export .tc-export__type-icon {
     display: inline-flex;
-    color: var(--color-primary-element);
+    color: var(--tc-accent-ink, var(--color-primary-element));
 }
 
 #app-content.tc-app--export .tc-export__type-label {
@@ -19193,7 +19193,7 @@ body.guest-user footer.guest-box , body#body-login:has([data-tc-nav-mode="guest"
 	font-weight: 700;
 }
 .tc-inline-link {
-	color: var(--color-primary-element, #0082c9);
+	color: var(--tc-accent-ink, var(--color-primary-element, #0082c9));
 	text-decoration: underline;
 	text-underline-offset: 2px;
 }

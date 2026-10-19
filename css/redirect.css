@@ -38,7 +38,7 @@ html.redirect-interstitial body {
 	margin: 0;
 }
 .redirect-interstitial__link {
-	color: var(--color-primary-element);
+	color: var(--tc-accent-ink, var(--color-primary-element));
 	word-break: break-word;
 }
 .redirect-interstitial__link:focus-visible {
