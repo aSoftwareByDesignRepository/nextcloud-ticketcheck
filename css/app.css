@@ -7090,7 +7090,8 @@ body.guest-user , body#body-login:has([data-tc-nav-mode="guest"]) {
 
     /*
      * Semantic surfaces: mix status hues into main background (not transparent rgba).
-     * Body copy uses --color-main-text; status hue is border/icon/accent only.
+     * Warning, info, and success copy stay --color-main-text.
+     * Error copy uses --color-error-text (same ink as required asterisks).
      */
     --hd-color-warning-bg: color-mix(in srgb, var(--tc-warning-element, #a37200) 10%, var(--color-main-background, #fff));
     --hd-color-warning-border: color-mix(in srgb, var(--tc-warning-element, #a37200) 45%, var(--color-border, #dbdbdb));
@@ -7107,7 +7108,7 @@ body.guest-user , body#body-login:has([data-tc-nav-mode="guest"]) {
     --hd-color-error-bg: color-mix(in srgb, var(--tc-error-element, #db0606) 8%, var(--color-main-background, #fff));
     --hd-color-error-border: color-mix(in srgb, var(--tc-error-element, #db0606) 45%, var(--color-border, #dbdbdb));
     --hd-color-error-accent: var(--tc-error-element, #db0606);
-    --hd-color-error-text: var(--color-main-text, #222);
+    --hd-color-error-text: var(--color-error-text, #222);
 
     /* Badges / spacing / radius: inherit from tokens.css (do not reintroduce 6px gaps). */
     --helpdesk-spacing-2xl: var(--tc-space-7);
