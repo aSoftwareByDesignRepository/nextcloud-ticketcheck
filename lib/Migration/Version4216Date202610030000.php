@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * Create helpdesk_inbound_msgs — dedupe/audit/checkpoint for inbound mail
- * (IMAP polling + webhook). Spec: planning/ticketcheck-imap-inbound-2026-10.
+ * (IMAP polling + webhook). Spec: planning/features/ticketcheck/imap-inbound-2026-10.
  *
  * @copyright Copyright (c) 2026, Nextcloud GmbH
  * @license AGPL-3.0-or-later

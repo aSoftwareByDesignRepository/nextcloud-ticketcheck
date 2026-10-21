@@ -2220,7 +2220,8 @@ OC.L10N.register(
 	"your_projects" : "Seus projetos",
 	"your_support_tickets" : "Seus tickets de suporte",
 	"your_tickets" : "Seus tickets",
-	"{used} of {total} seats used" : "{used} de {total} assentos usados"
+	"{used} of {total} seats used" : "{used} de {total} assentos usados",
+	"Funding code: %s" : "Código de financiamento: %s"
 	},
 	"nplurals=2; plural=(n > 1);"
 );

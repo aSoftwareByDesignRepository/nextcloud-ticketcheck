@@ -53,7 +53,7 @@ final class AboutProjectLinksTest extends TestCase {
 
 	public function testForLocalePayloadIsComplete(): void {
 		$de = (new AboutProjectLinks())->forLocale('de');
-		foreach (['grantProjectName', 'fundingProgramme', 'fundingPeriod', 'licenseId',
+		foreach (['grantProjectName', 'fundingProgramme', 'fundingPeriod', 'fundingReference', 'licenseId',
 			'prototypeFundUrl', 'bmftrUrl', 'repositoryUrl', 'issuesUrl', 'licenseUrl'] as $key) {
 			self::assertNotSame('', (string) $de[$key], "payload key {$key} must be non-empty");
 		}

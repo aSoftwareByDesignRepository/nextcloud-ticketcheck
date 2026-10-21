@@ -50,6 +50,9 @@ final class AboutProjectLinks
 	public const FUNDING_PERIOD_EN = 'June to November 2026';
 	public const FUNDING_PERIOD_DE = 'Juni bis November 2026';
 
+	/** Förderkennzeichen per the BMFTR Zuwendungsbescheid. */
+	public const FUNDING_REFERENCE = '16IS26S24';
+
 	public function isGermanLocale(string $languageCode): bool
 	{
 		$lang = strtolower(str_replace('_', '-', trim($languageCode)));
@@ -98,6 +101,7 @@ final class AboutProjectLinks
 	 *   grantProjectName: string,
 	 *   fundingProgramme: string,
 	 *   fundingPeriod: string,
+	 *   fundingReference: string,
 	 *   licenseId: string,
 	 *   prototypeFundUrl: string,
 	 *   bmftrUrl: string,
@@ -115,6 +119,7 @@ final class AboutProjectLinks
 			'grantProjectName' => self::GRANT_PROJECT_NAME,
 			'fundingProgramme' => self::FUNDING_PROGRAMME,
 			'fundingPeriod' => $isGerman ? self::FUNDING_PERIOD_DE : self::FUNDING_PERIOD_EN,
+			'fundingReference' => self::FUNDING_REFERENCE,
 			'licenseId' => self::LICENSE_ID,
 			'prototypeFundUrl' => self::PROTOTYPE_FUND_URL,
 			'bmftrUrl' => self::BMFTR_URL,

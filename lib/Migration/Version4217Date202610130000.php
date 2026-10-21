@@ -7,7 +7,7 @@ declare(strict_types=1);
  * categories with per-locale labels. Seeds the five builtin keys that
  * used to be a hardcoded enum in {@see \OCA\Ticketcheck\Db\Ticket}.
  *
- * Spec: planning/ticketcheck-category-labels-2026-10/SPEC.md
+ * Spec: planning/features/ticketcheck/category-labels-2026-10/SPEC.md
  *
  * @copyright Copyright (c) 2026, Lara Raffel, Alexander Mäule and Hauke Klünder
  * @license AGPL-3.0-or-later

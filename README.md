@@ -275,11 +275,11 @@ For support and questions:
 ## Funding
 
 <a href="https://www.bmftr.bund.de/"><img src="img/funding/BMFTR_de_Web_RGB_gef_durch.svg" alt="Gefördert vom Bundesministerium für Forschung, Technologie und Raumfahrt" width="300" align="middle"></a>&nbsp;&nbsp;&nbsp;
-<a href="https://www.prototypefund.de/"><img src="img/funding/prototype-fund-logo.svg" alt="Prototype Fund" width="180" align="middle"></a>
+<span>Unterstützt durch:<br><a href="https://www.prototypefund.de/"><img src="img/funding/prototype-fund-logo.svg" alt="Prototype Fund" width="180" align="middle"></a></span>
 
-TicketCheck (grant project **NEXTICK**) is funded by the German Federal Ministry of Research, Technology and Space (BMFTR) through the [Prototype Fund](https://www.prototypefund.de/) programme — funding measure "Software Sprint – Förderung von Open Source Entwicklerinnen und Entwicklern" ([BAnz vom 15.11.2024](https://www.bmftr.bund.de/SharedDocs/Bekanntmachungen/DE/2024/11/2024-11-15-bekanntmachung-software-sprint.html)), round 2, funding period June to November 2026.
+TicketCheck (grant project **NEXTICK**) is funded by the German Federal Ministry of Research, Technology and Space (BMFTR) through the [Prototype Fund](https://www.prototypefund.de/) programme — funding measure "Software Sprint – Förderung von Open Source Entwicklerinnen und Entwicklern" ([BAnz vom 15.11.2024](https://www.bmftr.bund.de/SharedDocs/Bekanntmachungen/DE/2024/11/2024-11-15-bekanntmachung-software-sprint.html)), round 2, funding period June to November 2026 (Förderkennzeichen: 16IS26S24).
 
-*TicketCheck (Förderprojekt NEXTICK) wird vom Bundesministerium für Forschung, Technologie und Raumfahrt (BMFTR) im Förderprogramm Prototype Fund gefördert — Fördermaßnahme „Software Sprint – Förderung von Open Source Entwicklerinnen und Entwicklern" (BAnz vom 15.11.2024), 2. Jahrgang, Förderzeitraum Juni bis November 2026.*
+*TicketCheck (Förderprojekt NEXTICK) wird vom Bundesministerium für Forschung, Technologie und Raumfahrt (BMFTR) im Förderprogramm Prototype Fund gefördert — Fördermaßnahme „Software Sprint – Förderung von Open Source Entwicklerinnen und Entwicklern" (BAnz vom 15.11.2024), 2. Jahrgang, Förderzeitraum Juni bis November 2026 (Förderkennzeichen: 16IS26S24).*
 
 TicketCheck is free and open-source software, released under the [AGPL-3.0-or-later](LICENSE) license. The complete source code is public — that is a condition of the funding.
 

@@ -609,13 +609,36 @@
 			return enrichTemporalHtmlLang(normalizeLang(localeOverride || currentLocale()));
 		}
 
-		function pickerSvg() {
-			// Inline calendar glyph — engine-independent affordance.
-			return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">'
-				+ '<rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/>'
-				+ '<line x1="1.5" y1="6" x2="14.5" y2="6"/>'
-				+ '<line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/>'
-				+ '</svg>';
+		function mountPickerSvg(btn) {
+			// Inline calendar glyph — engine-independent affordance. Built via
+			// createElementNS, not innerHTML (consumer lint forbids it).
+			const NS = 'http://www.w3.org/2000/svg';
+			const svg = document.createElementNS(NS, 'svg');
+			svg.setAttribute('width', '16');
+			svg.setAttribute('height', '16');
+			svg.setAttribute('viewBox', '0 0 16 16');
+			svg.setAttribute('fill', 'none');
+			svg.setAttribute('stroke', 'currentColor');
+			svg.setAttribute('stroke-width', '1.5');
+			svg.setAttribute('aria-hidden', 'true');
+			svg.setAttribute('focusable', 'false');
+			const rect = document.createElementNS(NS, 'rect');
+			rect.setAttribute('x', '1.5');
+			rect.setAttribute('y', '2.5');
+			rect.setAttribute('width', '13');
+			rect.setAttribute('height', '12');
+			rect.setAttribute('rx', '1.5');
+			svg.appendChild(rect);
+			const lines = [[1.5, 6, 14.5, 6], [5, 1, 5, 4], [11, 1, 11, 4]];
+			for (const [x1, y1, x2, y2] of lines) {
+				const line = document.createElementNS(NS, 'line');
+				line.setAttribute('x1', String(x1));
+				line.setAttribute('y1', String(y1));
+				line.setAttribute('x2', String(x2));
+				line.setAttribute('y2', String(y2));
+				svg.appendChild(line);
+			}
+			btn.appendChild(svg);
 		}
 
 		function ensureDateChrome(input, dateLang, pickerLabel) {
@@ -653,7 +676,7 @@
 				btn = document.createElement('button');
 				btn.type = 'button';
 				btn.className = prefix + '-date-picker';
-				btn.innerHTML = pickerSvg();
+				mountPickerSvg(btn);
 				btn.setAttribute('aria-label', pickerLabel || 'Choose date');
 				btn.addEventListener('click', (event) => {
 					event.preventDefault();

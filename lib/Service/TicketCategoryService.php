@@ -11,7 +11,7 @@ declare(strict_types=1);
  * stored in `tickets.category`, inbound routing rules, and facade calls;
  * labels are display-only.
  *
- * Spec: planning/ticketcheck-category-labels-2026-10/SPEC.md
+ * Spec: planning/features/ticketcheck/category-labels-2026-10/SPEC.md
  *
  * @copyright Copyright (c) 2026, Lara Raffel, Alexander Mäule and Hauke Klünder
  * @license AGPL-3.0-or-later

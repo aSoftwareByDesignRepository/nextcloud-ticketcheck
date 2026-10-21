@@ -972,6 +972,7 @@ OC.L10N.register(
 	"from_name_label" : "Absendername",
 	"full_name" : "Vollständiger Name",
 	"Funded by the Federal Ministry of Research, Technology and Space (BMFTR)" : "Gefördert vom Bundesministerium für Forschung, Technologie und Raumfahrt (BMFTR)",
+	"Funding code: %s" : "Förderkennzeichen: %s",
 	"gdpr_save_failed_hint" : "Ihre Auswahl wurde auf diesem Gerät gespeichert, konnte aber nicht mit dem Server synchronisiert werden. Auf einem anderen Gerät kann der Hinweis erneut erscheinen.",
 	"General" : "Allgemein",
 	"general" : "Allgemein",

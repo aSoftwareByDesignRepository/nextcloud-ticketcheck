@@ -64,6 +64,12 @@ $newTab = $l->t('(opens in a new tab)');
 					[(string)$aboutLinks['grantProjectName'], (string)$aboutLinks['fundingPeriod']]
 				)); ?>
 			</p>
+			<p class="tc-about__text">
+				<?php p($l->t(
+					'Funding code: %s',
+					[(string)$aboutLinks['fundingReference']]
+				)); ?>
+			</p>
 			<p class="tc-about__text tc-about__ptf-row">
 				<a class="tc-about__logo-link" href="<?php p((string)$aboutLinks['prototypeFundUrl']); ?>" target="_blank" rel="noopener noreferrer">
 					<?php if ($aboutPfLogoUrl !== ''): ?>
