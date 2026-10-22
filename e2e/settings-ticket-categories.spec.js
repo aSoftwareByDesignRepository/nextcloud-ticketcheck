@@ -244,6 +244,78 @@ test.describe('Settings ticket categories', () => {
 		await expect(row).toHaveCount(0);
 	});
 
+	test('delete reassignment cancel hides the confirm area and keeps the row', async ({ page }) => {
+		const deleteCalls = [];
+		let probed = false;
+		await page.route('**/apps/ticketcheck/api/settings/ticket-categories/**', async (route) => {
+			const req = route.request();
+			if (req.method() !== 'DELETE') {
+				await route.fallback();
+				return;
+			}
+			deleteCalls.push(req.url());
+			if (!probed) {
+				probed = true;
+				await route.fulfill({
+					status: 422,
+					contentType: 'application/json',
+					body: JSON.stringify({
+						success: false,
+						reassignRequired: true,
+						ticketCount: 4,
+						routingCount: 1,
+						fields: { reassign_to: 'reassign_required' },
+					}),
+				});
+				return;
+			}
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ success: true }),
+			});
+		});
+
+		// Seed a disposable custom category through the in-page API client —
+		// it carries the CSRF token that page.request lacks.
+		const seededKey = await page.evaluate(async () => {
+			try {
+				const r = await window.TicketCheckApi.post('/apps/ticketcheck/api/settings/ticket-categories', {
+					labels: { en: 'E2E Cancel Keep' },
+				});
+				return r && r.category ? r.category.key : null;
+			} catch (e) {
+				return null;
+			}
+		});
+		test.skip(!seededKey, 'could not seed a deletable custom category');
+		await page.reload({ waitUntil: 'domcontentloaded' });
+
+		const row = page.locator(`#tc-category-list li[data-key="${seededKey}"]`);
+		await expect(row).toBeVisible();
+
+		await row.locator('.tc-category-delete-btn').click();
+		// Probe returned 422 + reassignRequired → confirm area opens.
+		await expect(row.locator('.tc-category-item__delete-confirm')).toBeVisible();
+
+		await row.locator('.tc-category-delete-cancel-btn').click();
+		await expect(row.locator('.tc-category-item__delete-confirm')).toBeHidden();
+		// Row kept; cancel refocuses the delete button.
+		await expect(row).toBeVisible();
+		await expect(row.locator('.tc-category-delete-btn')).toBeFocused();
+		// Only the probe DELETE fired — cancel never emits the mutating delete.
+		expect(deleteCalls).toHaveLength(1);
+
+		// Teardown: real delete against the live API (unroute first so the
+		// request reaches the server and no seeded row is orphaned).
+		await page.unroute('**/apps/ticketcheck/api/settings/ticket-categories/**');
+		await page.evaluate(async (key) => {
+			try {
+				await window.TicketCheckApi.del(`/apps/ticketcheck/api/settings/ticket-categories/${encodeURIComponent(key)}`);
+			} catch (e) { /* best-effort cleanup */ }
+		}, seededKey);
+	});
+
 	test('add category posts labels and reloads', async ({ page }) => {
 		let postBody = null;
 		await page.route('**/apps/ticketcheck/api/settings/ticket-categories', async (route) => {

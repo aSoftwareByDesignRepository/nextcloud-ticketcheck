@@ -517,11 +517,24 @@ body:has(#app-navigation.helpdesk-nav) #app-content {
     justify-content: space-between;
     align-items: flex-start;
     gap: var(--helpdesk-spacing-md);
+    flex-wrap: wrap;
 }
 
 .ticket-detail-header__main {
     flex: 1;
     min-width: 0;
+}
+
+/* >=768: floor the meta column at its min-content (widest badge / longest
+   title word) so badges always fit inside it — when the floor plus the
+   action row no longer fit the container, flex-wrap drops the actions below
+   instead of crushing the badges under the buttons (learned:
+   detail_meta_actions_bounds_overlap). <=767.98 uses the stacked layout
+   below (items stretch full-width, no floor needed). */
+@media (min-width: 768px) {
+    .ticket-detail-header__main {
+        min-width: min-content;
+    }
 }
 
 .ticket-detail-header__title {

@@ -142,6 +142,73 @@ test.describe('Guest admin: lifecycle persistence', () => {
 		await expect(anyRow).toHaveCount(0, { timeout: 15_000 });
 	});
 
+	test('reset-password confirm dialog: cancel, close, Escape and backdrop all abort', async ({ page }, testInfo) => {
+		const stamp = `${Date.now()}-${testInfo.workerIndex}-${Math.random().toString(36).slice(2, 8)}`;
+		const email = `atlas-guest-${stamp}@example.invalid`;
+
+		// Seed a guest via the real create form (same flow as the lifecycle test).
+		await page.goto(CREATE_URL);
+		await page.locator('#guest-name').fill(`Atlas Guest ${stamp}`);
+		await page.locator('#guest-email').fill(email);
+		const createResp = page.waitForResponse(
+			(r) => r.url().includes('/api/guests') && r.request().method() === 'POST',
+		);
+		await page.locator('#guest-form [type="submit"]').click();
+		expect((await createResp).ok()).toBeTruthy();
+		await page.waitForURL(/\/guests(?:\?|$)/, { timeout: 30_000 });
+
+		const userId = await openGuestEdit(page, email);
+		expect(userId).toBeTruthy();
+
+		let resetPosts = 0;
+		page.on('request', (r) => {
+			if (r.url().includes('/reset-password') && r.method() === 'POST') {
+				resetPosts += 1;
+			}
+		});
+
+		const modal = page.locator('.tc-modal');
+		const dialog = page.locator('.tc-modal__dialog');
+		const open = async () => {
+			await page.locator('#guest-reset-password').click();
+			await expect(dialog).toBeVisible();
+		};
+		const closed = async () => {
+			await expect(modal).toHaveCount(0);
+		};
+
+		// Leg 1: ghost Cancel button resolves close(false).
+		await open();
+		await dialog.locator('.helpdesk-btn--ghost').click();
+		await closed();
+
+		// Leg 2: header × close control resolves close(false).
+		await open();
+		await dialog.locator('.tc-modal__close').click();
+		await closed();
+
+		// Leg 3: Escape — focus sits inside the dialog on open, keydown bubbles.
+		await open();
+		await page.keyboard.press('Escape');
+		await closed();
+
+		// Leg 4: click-on-backdrop cancels (overlay corner, outside the dialog).
+		await open();
+		await page.locator('.tc-modal').click({ position: { x: 8, y: 8 } });
+		await closed();
+
+		// Not one reset-password POST across all four dismiss legs.
+		expect(resetPosts).toBe(0);
+		await expect(page.locator('#guest-reset-password')).toBeVisible();
+
+		// Teardown: delete the seeded guest via the app's own API client.
+		await page.evaluate(async (uid) => {
+			try {
+				await window.TicketCheckApi.del(`/apps/ticketcheck/api/guests/${encodeURIComponent(uid)}`);
+			} catch (e) { /* best-effort cleanup */ }
+		}, userId);
+	});
+
 	test('create guest without required fields shows inline errors', async ({ page }) => {
 		await page.goto(CREATE_URL);
 		await page.locator('#guest-form [type="submit"]').click();
