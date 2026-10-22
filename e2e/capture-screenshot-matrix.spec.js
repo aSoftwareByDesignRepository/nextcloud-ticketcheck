@@ -30,7 +30,6 @@ const { test, expect, devices } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const { ensureAuthenticated } = require('./helpers/auth-guard');
-const { setUserTheme, resetUserTheme } = require('./helpers/theming');
 const { resolveGuestStorageState } = require('./helpers/guest-storage');
 
 const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://127.0.0.1:8081').replace(/\/$/, '');
@@ -62,6 +61,43 @@ const READY = {
 };
 
 const capturedFiles = [];
+
+/**
+ * Apply a user theme client-side (theme--* / data-theme-* / color-scheme) —
+ * the same mechanism Nextcloud emits for a user-pinned theme, so computed
+ * pixels are identical but the shared dev instance's per-account preference
+ * is not mutated (same approach as helpers/atlas-contrast-probe.mjs and
+ * craft/web/capture-web-craft.cjs). The OCS theming API is not available on
+ * this instance (405) — client-side application is the honest equivalent.
+ */
+async function applyTheme(page, themeId) {
+	await page.evaluate((id) => {
+		const body = document.body;
+		['theme--light', 'theme--dark', 'theme--dark-highcontrast', 'theme--light-highcontrast']
+			.forEach((c) => body.classList.remove(c));
+		['data-theme-default', 'data-theme-light', 'data-theme-dark', 'data-theme-dark-highcontrast', 'data-theme-light-highcontrast']
+			.forEach((a) => body.removeAttribute(a));
+		if (id === 'light') {
+			body.classList.add('theme--light');
+			body.setAttribute('data-theme-light', 'true');
+			body.setAttribute('data-themes', 'default');
+		} else if (id === 'dark') {
+			body.classList.add('theme--dark');
+			body.setAttribute('data-theme-dark', 'true');
+			body.setAttribute('data-themes', 'dark');
+		} else if (id === 'light-highcontrast') {
+			body.classList.add('theme--light', 'theme--light-highcontrast');
+			body.setAttribute('data-theme-light-highcontrast', 'true');
+			body.setAttribute('data-themes', 'light-highcontrast');
+		} else {
+			body.classList.add('theme--dark', 'theme--dark-highcontrast');
+			body.setAttribute('data-theme-dark-highcontrast', 'true');
+			body.setAttribute('data-themes', 'dark-highcontrast');
+		}
+		document.documentElement.style.colorScheme = id.includes('dark') ? 'dark' : 'light';
+	}, themeId);
+	await page.waitForTimeout(150);
+}
 
 /** Empty-driver URL: the surface's own search param returns zero rows. */
 function surfaceUrl(surface, state) {
@@ -127,11 +163,7 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 	});
 
 	test.afterAll(async () => {
-		try {
-			if (staffPage && !staffPage.isClosed()) {
-				await resetUserTheme(staffPage).catch(() => {});
-			}
-		} finally {
+		{
 			fs.mkdirSync(OUT, { recursive: true });
 			fs.writeFileSync(
 				path.join(OUT, '_screenshot-matrix-manifest.json'),
@@ -180,36 +212,21 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 	}
 
 	test('dark cells — desktop', async () => {
-		await staffPage.setViewportSize({ width: 1280, height: 800 });
-		// Theme is a per-account preference — set it on every role that has a
-		// dark-declared surface, and restore all of them below.
-		const themedPages = [staffPage];
-		if (guestPage && MANIFEST.surfaces.some((s) => s.dark && s.role === 'guest')) {
-			themedPages.push(guestPage);
-		}
-		for (const p of themedPages) {
-			await p.setViewportSize({ width: 1280, height: 800 });
-			await setUserTheme(p, 'dark');
-		}
-		try {
-			for (const surface of MANIFEST.surfaces.filter((s) => s.dark)) {
-				const page = surface.role === 'guest' ? guestPage : staffPage;
-				const firstState = (surface.states || ['current'])[0];
-				const url = surface._resolved || `${APP}${surface.path}`;
-				const ready = (READY[surface.id] || {})[firstState] || '.tc-shell, #app-content';
-				await page.setViewportSize({ width: 1280, height: 800 });
-				await page.goto(`${BASE}${url}`, { waitUntil: 'domcontentloaded' });
-				await page.waitForSelector(ready, { state: 'attached', timeout: 30_000 });
-				await shot(
-					page,
-					`${MANIFEST.prefix}-${surface.id}-${firstState}-desktop-dark.png`,
-					{ surface: surface.id, state: firstState, viewport: 'desktop', theme: 'dark' },
-				);
-			}
-		} finally {
-			for (const p of themedPages) {
-				await resetUserTheme(p).catch(() => {});
-			}
+		for (const surface of MANIFEST.surfaces.filter((s) => s.dark)) {
+			const page = surface.role === 'guest' ? guestPage : staffPage;
+			const firstState = (surface.states || ['current'])[0];
+			const url = surface._resolved || `${APP}${surface.path}`;
+			const ready = (READY[surface.id] || {})[firstState] || '.tc-shell, #app-content';
+			await page.setViewportSize({ width: 1280, height: 800 });
+			await page.goto(`${BASE}${url}`, { waitUntil: 'domcontentloaded' });
+			await page.waitForSelector(ready, { state: 'attached', timeout: 30_000 });
+			// Client-side dark after load — body attrs reset on navigation.
+			await applyTheme(page, 'dark');
+			await shot(
+				page,
+				`${MANIFEST.prefix}-${surface.id}-${firstState}-desktop-dark.png`,
+				{ surface: surface.id, state: firstState, viewport: 'desktop', theme: 'dark' },
+			);
 		}
 	});
 });
