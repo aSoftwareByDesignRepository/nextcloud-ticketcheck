@@ -2301,6 +2301,10 @@ body.helpdesk-nav-open {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    /* actions wrap below the title instead of overflowing the card edge at
+       phone widths (learned: clipped_control_text_at_screen_edge — 320px
+       /tickets/create clipped 'Create Customer'/'Create Project' mid-word) */
+    flex-wrap: wrap;
     gap: var(--helpdesk-spacing-md);
     padding: var(--helpdesk-spacing-md);
     padding-bottom: var(--helpdesk-spacing-sm);
@@ -2314,6 +2318,13 @@ body.helpdesk-nav-open {
     margin: 0;
     color: var(--color-main-text);
     line-height: 1.3;
+}
+
+.helpdesk-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--helpdesk-spacing-sm);
+    margin-left: auto;
 }
 
 .helpdesk-card__body {
@@ -9563,6 +9574,11 @@ body.guest-user .portal-kb__filter-clear-icon , body#body-login:has([data-tc-nav
 	align-items: center;
 	justify-content: center;
 	gap: var(--tc-space-2, 0.5rem);
+	/* lg CTA wraps its label to a second line inside the pill rather than
+	   clipping at the 320px card edge (clipped_control_text_at_screen_edge) */
+	max-width: 100%;
+	white-space: normal;
+	text-align: center;
 }
 #app-content.tc-app--portal-kb .portal-kb__help-footer-body .helpdesk-btn svg {
 	width: 1.125rem;
@@ -15167,6 +15183,27 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 }
 #app-content.tc-app--guests .tc-guests-project-access__item {
 	margin: 0;
+	min-width: 0;
+}
+#app-content.tc-app--guests .tc-guests-project-access__item .helpdesk-badge {
+	/* long project names wrap to a second line inside the badge instead of
+	   clipping mid-word at the card edge (clipped_control_text_at_screen_edge —
+	   badge base rule is white-space:nowrap) */
+	max-width: 100%;
+	white-space: normal;
+	text-align: left;
+}
+#app-content.tc-app--guests .tc-guests-card__projects {
+	/* minmax(0, …): the badge list may shrink below its longest item so the
+	   value column never pushes the card wider than the viewport */
+	grid-template-columns: minmax(5rem, 35%) minmax(0, 1fr);
+}
+@media (max-width: 480px) {
+	/* phone: a ~90px value column can only render clipped or unreadably tall
+	   chips — stack label over the badge list so badges get the full row */
+	#app-content.tc-app--guests .tc-guests-card__projects {
+		grid-template-columns: 1fr;
+	}
 }
 #app-content.tc-app--guests .tc-guests-table__projects {
 	min-width: 10rem;
