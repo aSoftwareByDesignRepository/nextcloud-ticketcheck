@@ -5,7 +5,7 @@ OC.L10N.register(
 	"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:" : "%s förblir gratis (AGPL) på Nextcloud. Felrapporter och idéer på GitHub är välkomna — det är gratis open source-stöd. Om organisationen behöver fakturerbar hjälp — eller officiella mobila licenser — välj ett alternativ nedan:",
 	"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:" : "%s förblir gratis (AGPL) på Nextcloud. Felrapporter och idéer på GitHub är välkomna — det är gratis open source-stöd. Om organisationen behöver fakturerbar hjälp, välj ett alternativ nedan:",
 	"(opens in a new tab)" : "(öppnas i en ny flik)",
-	"_%n ticket total_::_%n tickets total_" : "[%n ärende totalt, %n ärenden totalt]",
+	"_%n ticket total_::_%n tickets total_" : ["%n ärende totalt","%n ärenden totalt"],
 	"A public comment was added. Open TicketCheck to respond." : "En offentlig kommentar lades till. Öppna TicketCheck för att svara.",
 	"A scoped change with acceptance criteria and a delivery date — billed as project work." : "En avgränsad ändring med acceptanskriterier och leveransdatum — faktureras som projektarbete.",
 	"A yearly pack of hours you can book with us, plus priority email replies for your organisation. This is invoiceable service — not a donation." : "En årlig timbank som ni kan boka hos oss, plus prioriterade e-postsvar för er organisation. Det är en fakturerbar tjänst — inte en donation.",
