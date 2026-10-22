@@ -531,7 +531,7 @@ body:has(#app-navigation.helpdesk-nav) #app-content {
    instead of crushing the badges under the buttons (learned:
    detail_meta_actions_bounds_overlap). <=767.98 uses the stacked layout
    below (items stretch full-width, no floor needed). */
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .ticket-detail-header__main {
         min-width: min-content;
     }
@@ -580,7 +580,7 @@ body:has(#app-navigation.helpdesk-nav) #app-content {
 
 /* Phones: badges above, then full-width stacked action buttons (feedback:
    buttons overlapped content and ran past the screen edge). */
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
     .ticket-detail-header__row {
         flex-direction: column;
         align-items: stretch;
@@ -1431,7 +1431,7 @@ dialog.helpdesk-dialog.ticket-detail-dialog[open]::backdrop {
 	background: color-mix(in srgb, var(--color-background-dark) 45%, transparent);
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	dialog.helpdesk-dialog.ticket-detail-dialog[open] {
 		width: min(96vw, 560px);
 		max-height: min(92vh, 760px);
@@ -2503,7 +2503,7 @@ body.helpdesk-nav-open {
 	align-items: stretch;
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	.tc-quick-action-grid,
 	.helpdesk-dashboard-setup__actions,
 	.tc-quick-start__steps {
@@ -2741,7 +2741,7 @@ a.helpdesk-quick-action-card > .helpdesk-card__body {
 }
 
 /* iPad portrait and similar tablets: tighter visual rhythm */
-@media (min-width: 768px) and (max-width: 1023.98px) {
+@media (min-width: 769px) and (max-width: 1023.98px) {
     .helpdesk-tickets-page .helpdesk-filter-bar--quick {
         padding: 6px 10px;
         gap: 6px;
@@ -4763,7 +4763,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 }
 
 /* Mobile */
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
     :root,
     body {
         --helpdesk-nav-width: 0px;
@@ -5167,7 +5167,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 }
 
 /* Responsive Design for Guest Access */
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
     .helpdesk-modal {
         padding: var(--helpdesk-spacing-sm);
     }
@@ -6210,7 +6210,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 }
 
 /* Mobile Responsive */
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
     .kb-filter-bar {
         position: static;
         padding: var(--helpdesk-spacing-sm);
@@ -6944,7 +6944,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     }
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
     .helpdesk-nav-toggle.helpdesk-nav-toggle--active {
         left: calc(env(safe-area-inset-left, 0px) + 6px) !important;
         top: calc(50px + env(safe-area-inset-top, 0px) + 6px) !important;
@@ -7041,7 +7041,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     color: color-mix(in srgb, var(--helpdesk-text-secondary) 86%, black 14%);
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
     .helpdesk-tickets-page .helpdesk-filters-advanced__content {
         padding: var(--helpdesk-spacing-sm);
     }
@@ -9926,7 +9926,7 @@ body.guest-user #app-content.tc-app--portal-password .portal-password__actions.h
 #app-content.tc-app--portal-password .portal-password__actions .helpdesk-btn--lg {
 	min-height: var(--tc-touch-min, 44px);
 }
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	#app-content.tc-app--portal-password .portal-password__card-body {
 		padding: var(--tc-space-4, 1rem);
 	}
@@ -10407,7 +10407,7 @@ body.guest-user .portal-ticket-survey-card .helpdesk-card__title , body#body-log
 
 /* Mobile drawer positioning: see tc-nav-toggle block (staff + guest, <1024px) */
 
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 }
 /* =============================================================================
  * TicketCheck shell (tc-*) — navigation, page chrome, portal overrides
@@ -12467,7 +12467,7 @@ button.tc-nav-toggle {
 
 /* Phones: stack the page header — menu, breadcrumb, title, actions — in one
    column so wide action buttons are never cut off (feedback: all pages). */
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	#app-content.tc-app .tc-page-header,
 	.tc-page-header {
 		display: flex;
@@ -13359,7 +13359,7 @@ body:has(#app-content.tc-app) {
 	grid-auto-rows: 1fr;
 	align-items: stretch;
 }
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	#app-content.tc-app--dashboard .tc-quick-start__steps {
 		grid-template-columns: 1fr;
 		grid-auto-rows: auto;
@@ -13382,7 +13382,7 @@ body:has(#app-content.tc-app) {
 	align-self: stretch;
 	box-sizing: border-box;
 }
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	#app-content.tc-app--dashboard .tc-dashboard-kpis,
 	#app-content.tc-app--portal-home .tc-dashboard-kpis {
 		grid-template-columns: 1fr;
@@ -16051,7 +16051,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 		min-width: min(100%, 34rem);
 	}
 }
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	#app-content.tc-app .tc-kanban {
 		grid-template-columns: 1fr;
 	}
@@ -16410,7 +16410,7 @@ body.guest-user .tc-dashboard-kpis > .helpdesk-card + .helpdesk-card, body#body-
 body.guest-user .portal-shortcuts__list > .helpdesk-card + .helpdesk-card , body#body-login:has([data-tc-nav-mode="guest"]) .portal-shortcuts__list > .helpdesk-card + .helpdesk-card {
 	margin-top: 0;
 }
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	#content[class*="app-ticketcheck"] {
 		flex-direction: column;
 	}
@@ -17959,7 +17959,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 }
 
 /* Responsive Design */
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
     .helpdesk-deletion-modal {
         padding: var(--helpdesk-spacing-sm);
     }
@@ -18682,7 +18682,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
     font-family: var(--font-face, monospace);
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
     #app-content.tc-app--export .tc-export {
         max-width: none;
     }
@@ -19109,7 +19109,7 @@ body.guest-user footer.guest-box , body#body-login:has([data-tc-nav-mode="guest"
 	border: 0;
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	.tc-support-us__options {
 		grid-template-columns: 1fr;
 	}
