@@ -1,0 +1,64 @@
+# sv target-lexicon allowlist — reviewed 2026-10-22
+# Legit Swedish vocabulary, loanwords and verbatim literals the flat
+# sv_SE wordlist misses. Markers are required so entries are reviewed
+# exceptions, not donor-laundering.
+api # abbrev — 'API:er'
+csv # abbrev — file format
+json # abbrev — file format
+imap # abbrev — IMAP protocol
+tls # abbrev — TLS
+sla # abbrev — SLA
+gif # abbrev — image format
+jpg # abbrev — image format
+png # abbrev — image format
+webp # abbrev — image format
+zip # abbrev — archive format
+url # abbrev — URL
+nextcloud # proper — platform name
+libreoffice # proper — office suite name
+word # proper — Microsoft Word app name
+workspace # proper — Google Workspace
+mailgun # proper — email provider name
+sendgrid # proper — email provider name
+corporation # proper — example company-name suffix
+helpdesk # proper — group id prefix helpdesk_*
+admins # proper — group id helpdesk_admins
+agents # proper — group id helpdesk_agents
+customers # proper — group id helpdesk_customers
+delete # proper — keyboard key name
+enter # proper — keyboard key name
+reply # proper — 'Reply-To' header name
+domain # proper — literal example domain in support+{ticketId}@domain
+mail # proper — literal hostname prefix (imap./mail./domain)
+occ # proper — occ CLI name
+inbound # proper — occ config key prefix
+email # proper — occ config key name
+signing # proper — occ config key name
+secret # proper — occ config key name
+provider # proper — occ config key name
+generic # proper — occ config value
+linked # proper — API field name linked_ticket_id
+ticket # proper — API field name linked_ticket_id
+webhook # loanword — IT term
+webhooken # loanword — webhook + definite suffix
+token # loanword — IT term
+kanban # loanword — kanban board
+otilldelad # shared — o+tilldelad negated participle
+otilldelade # shared — compound plural
+omtilldelning # shared — om+tilldelning compound
+omtilldelningen # shared — compound definite
+routning # loanword — routing
+postroutning # shared — post+routning compound
+routningsregel # shared — compound
+routningsregler # shared — routning+regler compound
+routningstabellen # shared — compound definite
+routningsnyckel # shared — compound
+routningsnycklar # shared — compound plural
+postlådeåtgärder # shared — postlåda+åtgärder compound
+postlådebehandling # shared — compound
+postlådekonfiguration # shared — compound
+postlådemapp # shared — postlåda+mapp compound
+postlådemappen # shared — compound definite
+postlådesökningen # shared — compound
+postlådestatus # shared — compound
+arbetsytetypen # shared — arbetsyta+typ compound

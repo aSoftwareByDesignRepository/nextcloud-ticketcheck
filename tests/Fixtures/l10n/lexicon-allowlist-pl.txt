@@ -1,0 +1,39 @@
+# pl target-lexicon allowlist — reviewed 2026-10-22
+# Legit Polish vocabulary, loanwords and verbatim literals the flat
+# pl_PL wordlist misses. Markers are required so entries are reviewed
+# exceptions, not donor-laundering.
+api # abbrev — 'API'
+csv # abbrev — file format
+json # abbrev — file format
+imap # abbrev — IMAP protocol
+tls # abbrev — TLS
+sla # abbrev — SLA
+url # abbrev — URL
+gif # abbrev — image format
+jpg # abbrev — image format
+png # abbrev — image format
+webp # abbrev — image format
+faq # abbrev — 'FAQ'
+ticketcheck # proper — product name
+nextcloud # proper — platform name
+workspace # proper — Google Workspace
+mailgun # proper — email provider name
+sendgrid # proper — email provider name
+helpdesk # proper — group id prefix helpdesk_*
+admins # proper — group id helpdesk_admins
+agents # proper — group id helpdesk_agents
+customers # proper — group id helpdesk_customers
+reply # proper — 'Reply-To' header name
+inbox # proper — IMAP folder name
+occ # proper — occ CLI name
+inbound # proper — occ config key prefix
+email # proper — occ config key name
+signing # proper — occ config key name
+secret # proper — occ config key name
+provider # proper — occ config key name
+generic # proper — occ config value
+linked # proper — API field name linked_ticket_id
+ticket # proper — API field name linked_ticket_id
+webhook # loanword — IT term
+token # loanword — IT term
+source # loanword — 'open source'

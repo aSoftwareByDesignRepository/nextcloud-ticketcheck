@@ -1,0 +1,56 @@
+# nb target-lexicon allowlist — reviewed 2026-10-22
+# Legit Bokmål vocabulary, loanwords and verbatim literals the flat
+# nb_NO wordlist misses. Markers are required so entries are reviewed
+# exceptions, not donor-laundering.
+api # abbrev — 'API-er'
+apis # abbrev — API plural
+csv # abbrev — file format
+json # abbrev — file format
+imap # abbrev — IMAP protocol
+tls # abbrev — TLS
+sla # abbrev — SLA
+gif # abbrev — image format
+jpg # abbrev — image format
+png # abbrev — image format
+webp # abbrev — image format
+zip # abbrev — archive format
+url # abbrev — URL
+nextcloud # proper — platform name
+ticketcheck # proper — product name
+libreoffice # proper — office suite name
+word # proper — Microsoft Word app name
+excel # proper — Microsoft Excel app name
+powerpoint # proper — Microsoft PowerPoint app name
+gmail # proper — Google mail service
+outlook # proper — Microsoft mail service
+workspace # proper — Google Workspace
+mailgun # proper — email provider name
+sendgrid # proper — email provider name
+corporation # proper — example company-name suffix
+helpdesk # proper — group id prefix helpdesk_*
+admins # proper — group id helpdesk_admins
+agents # proper — group id helpdesk_agents
+customers # proper — group id helpdesk_customers
+reply # proper — 'Reply-To' header name
+inbox # proper — IMAP folder name
+domain # proper — literal example domain in support+{ticketId}@domain
+strong # proper — HTML tag used in value
+occ # proper — occ CLI name
+generic # proper — occ config value
+inbound # proper — occ config key prefix
+email # proper — occ config key name
+signing # proper — occ config key name
+secret # proper — occ config key name
+provider # proper — occ config key name
+linked # proper — API field name linked_ticket_id
+ticket # proper — API field name linked_ticket_id
+webhook # loanword — IT term
+token # loanword — IT term
+kanban # loanword — kanban board
+utildelt # shared — u+tildelt negated participle
+utildelte # shared — compound plural
+deaktivert # shared — de+aktivert (disabled)
+avmarkere # shared — av+markere (unselect)
+sakstoken # shared — sak+token compound
+administratørrapport # shared — administrator+rapport compound
+taggadresse # shared — tagg+adresse compound (plus-addressing)
