@@ -190,12 +190,12 @@ test('status badges include a leading shape cue (::before)', () => {
 
 test('grids collapse to one column at the design-system md breakpoint (768px)', () => {
 	const source = stripComments(readFileSync(join(cssRoot, 'app.css'), 'utf8'))
-	const mdCollapse = /@media\s*\(\s*max-width:\s*767\.98px\s*\)\s*\{[^}]*\.tc-quick-action-grid[^}]*grid-template-columns:\s*1fr/s
-	assert.match(source, mdCollapse, 'quick-action grid must collapse at ≤767.98px')
+	const mdCollapse = /@media\s*\(\s*max-width:\s*768\.98px\s*\)\s*\{[^}]*\.tc-quick-action-grid[^}]*grid-template-columns:\s*1fr/s
+	assert.match(source, mdCollapse, 'quick-action grid must collapse at ≤768.98px')
 	assert.match(
 		source,
-		/@media\s*\(\s*max-width:\s*767\.98px\s*\)\s*\{[^}]*\.tc-dashboard-kpis[^}]*grid-template-columns:\s*1fr/s,
-		'dashboard KPIs must collapse at ≤767.98px',
+		/@media\s*\(\s*max-width:\s*768\.98px\s*\)\s*\{[^}]*\.tc-dashboard-kpis[^}]*grid-template-columns:\s*1fr/s,
+		'dashboard KPIs must collapse at ≤768.98px',
 	)
 })
 
