@@ -609,6 +609,126 @@
 			return enrichTemporalHtmlLang(normalizeLang(localeOverride || currentLocale()));
 		}
 
+		/* ---------- programmatic-write chrome healing ---------- */
+
+		// input.value = '…' and form.reset() fire NO input/change event —
+		// without these hooks a mounted .{p}-date-display overlay keeps its
+		// stale caption (placeholder or the previous date) while the real
+		// value moved on. Class fix, 2026-10-22 dutycheck intake.
+		const dateChromePaints = new WeakMap();
+		const patchedValueInputs = new WeakSet();
+		const resetWiredForms = new WeakSet();
+		const defer = typeof setTimeout === 'function'
+			? (fn) => setTimeout(fn, 0)
+			: (fn) => fn();
+
+		/** Find the 'value' descriptor on the own → prototype chain. */
+		function valueDescriptor(input) {
+			let holder = input;
+			while (holder) {
+				const desc = Object.getOwnPropertyDescriptor(holder, 'value');
+				if (desc) return desc;
+				holder = Object.getPrototypeOf(holder);
+			}
+			return null;
+		}
+
+		/**
+		 * Shadow input.value so programmatic writes repaint like a user
+		 * edit. The latest paint closure is looked up at call time, so a
+		 * later applyLocaleToTemporalInputs (new locale) re-targets the
+		 * same patch. Non-configurable/exotic hosts simply stay unpatched —
+		 * repaintDateChrome remains the explicit escape hatch.
+		 */
+		function patchProgrammaticValueSet(input) {
+			if (patchedValueInputs.has(input)) return;
+			const desc = valueDescriptor(input);
+			if (!desc || desc.configurable === false) return;
+			const repaint = (el) => {
+				const paint = dateChromePaints.get(el);
+				if (paint) paint();
+			};
+			try {
+				if (typeof desc.set === 'function' && typeof desc.get === 'function') {
+					Object.defineProperty(input, 'value', {
+						configurable: true,
+						enumerable: desc.enumerable === true,
+						get() { return desc.get.call(this); },
+						set(v) { desc.set.call(this, v); repaint(this); },
+					});
+					patchedValueInputs.add(input);
+				} else if (Object.prototype.hasOwnProperty.call(desc, 'value')) {
+					let backing = desc.value;
+					Object.defineProperty(input, 'value', {
+						configurable: true,
+						enumerable: desc.enumerable !== false,
+						get() { return backing; },
+						set(v) { backing = v; repaint(this); },
+					});
+					patchedValueInputs.add(input);
+				}
+			} catch (e) { /* host object refused the shadow — helpers still work */ }
+		}
+
+		/**
+		 * form.reset() reverts every control to its attribute default
+		 * without events. One delegated listener per owning form repaints
+		 * all chromed date inputs after the default action ran.
+		 */
+		function wireFormResetRepaint(input) {
+			const form = input
+				&& (input.form
+					|| (typeof input.closest === 'function' ? input.closest('form') : null));
+			if (!form || resetWiredForms.has(form) || typeof form.addEventListener !== 'function') {
+				return;
+			}
+			resetWiredForms.add(form);
+			form.addEventListener('reset', () => {
+				defer(() => {
+					if (typeof form.querySelectorAll !== 'function') return;
+					form.querySelectorAll('input[type="date"]').forEach((el) => {
+						const paint = dateChromePaints.get(el);
+						if (paint) paint();
+					});
+				});
+			});
+		}
+
+		/**
+		 * Repaint the .{p}-date-display overlay of one date input — the
+		 * explicit fix for any programmatic write path the patches cannot
+		 * see. Mounts chrome when missing, so it is safe on any date input.
+		 */
+		function repaintDateChrome(input, pickerLabel) {
+			if (!input || input.type !== 'date') return;
+			const paint = dateChromePaints.get(input);
+			if (paint) {
+				paint();
+				return;
+			}
+			ensureDateChrome(
+				input,
+				enrichTemporalHtmlLang(currentLanguage() || currentLocale()),
+				pickerLabel,
+			);
+		}
+
+		/** Repaint every date input under root — or root itself when it is one. */
+		function repaintTemporalChrome(root, options) {
+			const scope = root || doc();
+			if (!scope) return;
+			if (scope.nodeType === 1
+				&& String(scope.tagName || '').toUpperCase() === 'INPUT'
+				&& scope.type === 'date') {
+				repaintDateChrome(scope, options && options.pickerLabel);
+				return;
+			}
+			if (typeof scope.querySelectorAll !== 'function') return;
+			scope.querySelectorAll('input[type="date"]').forEach((input) => {
+				repaintDateChrome(input, options && options.pickerLabel);
+			});
+		}
+
 		function mountPickerSvg(btn) {
 			// Inline calendar glyph — engine-independent affordance. Built via
 			// createElementNS, not innerHTML (consumer lint forbids it).
@@ -661,6 +781,9 @@
 					overlay.classList.toggle(prefix + '-date-display--empty', !iso);
 				}
 			};
+			dateChromePaints.set(input, paint);
+			patchProgrammaticValueSet(input);
+			wireFormResetRepaint(input);
 			if (!overlay) {
 				overlay = document.createElement('span');
 				overlay.className = prefix + '-date-display';
@@ -796,6 +919,8 @@
 			dateInputPlaceholder,
 			applyLocaleToTemporalInput,
 			applyLocaleToTemporalInputs,
+			repaintDateChrome,
+			repaintTemporalChrome,
 			// misc
 			compareYearMonth,
 			clampYearMonth,
