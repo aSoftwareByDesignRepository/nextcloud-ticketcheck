@@ -29,6 +29,9 @@ class FrontEndAssetService
 		Util::addScript(Application::APP_ID, 'common/constants');
 		Util::addScript(Application::APP_ID, 'common/icons');
 		Util::addScript(Application::APP_ID, 'common/check-dates');
+		// check-dates ships js+css as a pair: the stylesheet hides the native
+		// input text under the .tc-date-field overlay chrome the js injects.
+		Util::addStyle(Application::APP_ID, 'common/check-dates');
 		Util::addScript(Application::APP_ID, 'common/dates');
 		Util::addScript(Application::APP_ID, 'common/messaging');
 		Util::addScript(Application::APP_ID, 'common/components');

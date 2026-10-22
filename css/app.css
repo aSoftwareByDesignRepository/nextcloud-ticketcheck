@@ -467,7 +467,9 @@ button.helpdesk-project-detail-role-badge {
 
 .helpdesk-customer-detail-row-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--helpdesk-spacing-xs);
+    white-space: normal;
 }
 
 #app-content-wrapper.helpdesk-wrapper {
@@ -4681,6 +4683,9 @@ div.tc-field--checkbox > .helpdesk-form-help,
 .helpdesk-table td {
     padding: var(--helpdesk-spacing-sm) var(--helpdesk-spacing-md);
     border-bottom: 1px solid var(--color-border);
+    /* Cells must be allowed to wrap: a nowrap cell can push row actions
+       behind the .tc-table-wrap horizontal scroll (table_actions_fit). */
+    white-space: normal;
 }
 
 .helpdesk-table tr:hover {
@@ -5390,6 +5395,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 .helpdesk-table td {
     padding: var(--helpdesk-spacing-md);
     border-bottom: 1px solid var(--color-border);
+    white-space: normal;
 }
 
 .helpdesk-table tbody tr:hover {
@@ -14114,6 +14120,9 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	text-align: start;
 	vertical-align: middle;
 }
+#app-content.tc-app table.tc-table td {
+	white-space: normal;
+}
 /* Column headers only — tbody row headers must not inherit thead chrome */
 #app-content.tc-app table.tc-table thead th {
 	font-weight: 600;
@@ -14329,6 +14338,16 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	gap: var(--tc-space-2);
 	align-items: center;
 	justify-content: flex-end;
+}
+/* clipped_control_text_at_screen_edge (carecheck origin): cells inherit NC
+ * core table nowrap, so without an explicit wrap declaration a wide cell
+ * pushes the action group behind the overflow-x wrap. white-space:normal
+ * lets the group shrink to its flex-wrap width instead. */
+#app-content.tc-app .helpdesk-table .tc-list-inline-actions,
+#app-content.tc-app .helpdesk-table .helpdesk-customer-detail-row-actions,
+#app-content.tc-app .tc-table .tc-list-inline-actions,
+#app-content.tc-app .tc-table [class*="-inline-actions"] {
+	white-space: normal;
 }
 #app-content.tc-app .tc-list-inline-actions .helpdesk-btn,
 #app-content.tc-app--customers .tc-customers-inline-actions .helpdesk-btn,
@@ -18316,17 +18335,16 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
     padding-inline-end: 2.75rem;
 }
 
-/* Single calendar affordance: native picker indicator on the right only. */
+/* Single calendar affordance = the canonical .tc-date-picker button from
+   check-dates.js — the native indicator must stay hidden here too or it
+   double-renders over the button (this rule would win on specificity). */
 #app-content.tc-app--export .tc-export-field__input--date-picker::-webkit-calendar-picker-indicator {
+    opacity: 0;
     position: absolute;
-    right: 0;
-    top: 0;
-    width: var(--helpdesk-touch-target, 44px);
-    height: 100%;
+    right: 0.5rem;
+    width: 0;
     margin: 0;
     padding: 0;
-    cursor: pointer;
-    opacity: 1;
 }
 
 #app-content.tc-app--export .tc-export-field__input--date-picker::-webkit-clear-button {
