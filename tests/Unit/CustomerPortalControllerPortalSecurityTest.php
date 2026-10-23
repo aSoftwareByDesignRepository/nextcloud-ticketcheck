@@ -25,6 +25,7 @@ use OCA\Ticketcheck\Service\TicketService;
 use OCA\Ticketcheck\Service\SafeFilenameService;
 use OCA\Ticketcheck\Service\SurveyService;
 use OCA\Ticketcheck\Service\TicketLinkService;
+use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;
 use OCP\IGroupManager;
@@ -55,6 +56,8 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
     /** @var TicketService&MockObject */
     private $ticketService;
     private bool $isGuestForTest = true;
+    /** @var IURLGenerator&MockObject */
+    private $urlGenerator;
 
     protected function setUp(): void
     {
@@ -92,6 +95,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
             }
         );
         $this->ticketService->method('countRecentPortalActionsByUser')->willReturn(0);
+        $this->urlGenerator = $this->createMock(IURLGenerator::class);
 
         $this->controller = new CustomerPortalController(
             'ticketcheck',
@@ -103,7 +107,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
             $this->ticketMapper,
             $this->createMock(KBArticleMapper::class),
             $this->createMock(AttachmentMapper::class),
-            $this->createMock(IURLGenerator::class),
+            $this->urlGenerator,
             $this->createMock(IUserSession::class),
             $this->createMock(IGroupManager::class),
             $this->createMock(IUserManager::class),
@@ -159,6 +163,22 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
             return new TemplateResponse('ticketcheck', $template, $params, 'guest');
         });
         return $stub;
+    }
+
+    public function testCreateTicketRedirectsStaffToTicketCreateRoute(): void
+    {
+        $this->isGuestForTest = false;
+        // 'app.index' never existed — the staff create view is ticket#create
+        // (drift class dead_platform_deeplink, sweep-20261023)
+        $this->urlGenerator->expects($this->once())
+            ->method('linkToRoute')
+            ->with('ticketcheck.ticket.create')
+            ->willReturn('/apps/ticketcheck/tickets/create');
+
+        $response = $this->controller->createTicket();
+
+        $this->assertInstanceOf(RedirectResponse::class, $response);
+        $this->assertSame('/apps/ticketcheck/tickets/create', $response->getRedirectURL());
     }
 
     public function testCreateTicketTemplateOmitsFormWhenGuestCannotCreate(): void

@@ -424,7 +424,7 @@ class CustomerPortalController extends Controller
         // staff create-ticket view instead of a guest template dead end.
         if (!$this->permissionService->isGuest()) {
             return new RedirectResponse(
-                $this->urlGenerator->linkToRoute('ticketcheck.app.index', ['view' => 'ticket-new'])
+                $this->urlGenerator->linkToRoute('ticketcheck.ticket.create')
             );
         }
         // Check rate limit (same unified ceiling as create/reply/attach POSTs)
