@@ -163,8 +163,10 @@ class GuestAccessAllowlistTest extends TestCase
         $this->assertTrue(GuestAccessAllowlist::isPathAllowed('/settings/user'));
         $this->assertTrue(GuestAccessAllowlist::isPathAllowed('/index.php/settings/user'));
         $this->assertTrue(GuestAccessAllowlist::isPathAllowed('/settings/user/ticketcheck'));
-        $this->assertTrue(GuestAccessAllowlist::isPathAllowed('/apps/settings/user'));
-        $this->assertTrue(GuestAccessAllowlist::isPathAllowed('/index.php/apps/settings/user'));
+        // /apps/settings/* never resolves (settings mounts at webroot) — deny,
+        // not pre-allow, if that mount ever materializes.
+        $this->assertFalse(GuestAccessAllowlist::isPathAllowed('/apps/settings/user'));
+        $this->assertFalse(GuestAccessAllowlist::isPathAllowed('/index.php/apps/settings/user'));
         // Segment boundary: personal "user" must not open the admin users list.
         $this->assertFalse(GuestAccessAllowlist::isPathAllowed('/settings/users'));
         $this->assertFalse(GuestAccessAllowlist::isPathAllowed('/index.php/settings/users'));

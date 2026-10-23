@@ -53,10 +53,11 @@ class GuestAccessAllowlist
         '/apps/ticketcheck/img/',
         '/index.php/apps/ticketcheck/img/',
         // Personal settings only (never admin /apps/settings or /settings/admin or /settings/users).
+        // settings mounts at webroot ('root' => ''), so /apps/settings/* never
+        // resolves — dead prefixes are omitted deliberately: if a mount ever
+        // appears there it must be reviewed, not pre-allowed.
         '/index.php/settings/user',
         '/settings/user',
-        '/index.php/apps/settings/user',
-        '/apps/settings/user',
         // Theming assets guests need for layout (never /ajax/ mutations or background POST).
         '/index.php/apps/theming/theme/',
         '/apps/theming/theme/',
