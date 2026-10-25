@@ -14190,7 +14190,10 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 }
 #app-content.tc-app .tc-card-data__row {
 	display: grid;
-	grid-template-columns: minmax(5rem, 35%) 1fr;
+	/* minmax(0, …): the value track may shrink below its longest unbreakable
+	   value so a long email/url never pushes the card wider than the
+	   viewport (clipped_control_text_at_screen_edge — guests card email). */
+	grid-template-columns: minmax(5rem, 35%) minmax(0, 1fr);
 	gap: var(--tc-space-2);
 	align-items: start;
 }
@@ -14203,6 +14206,8 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 #app-content.tc-app .tc-card-data__value {
 	margin: 0;
 	font-size: var(--tc-fs-sm);
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 #app-content.tc-app .tc-card-data__actions {
 	display: flex;
