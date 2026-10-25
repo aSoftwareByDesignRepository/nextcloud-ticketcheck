@@ -26,8 +26,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setCustomerId(int|null $customerId)
  * @method string getStatus()
  * @method void setStatus(string $status)
- * @method bool getActive()
- * @method void setActive(bool $active)
+ * @method int getActive()
+ * @method void setActive(bool|int $active)
  * @method \DateTime getCreatedAt()
  * @method void setCreatedAt(\DateTime $createdAt)
  * @method string getCreatedBy()
@@ -52,7 +52,7 @@ class HelpdeskProject extends Entity
         $this->addType('description', 'string');
         $this->addType('customerId', 'integer');
         $this->addType('status', 'string');
-        $this->addType('active', 'boolean');
+        $this->addType('active', 'integer');
         $this->addType('createdAt', 'datetime');
         $this->addType('createdBy', 'string');
         $this->addType('updatedAt', 'datetime');

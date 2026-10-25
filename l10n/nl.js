@@ -972,6 +972,7 @@ OC.L10N.register(
 	"from_name_label" : "Van naam",
 	"full_name" : "Volledige naam",
 	"Funded by the Federal Ministry of Research, Technology and Space (BMFTR)" : "Gefinancierd door het Duitse federale ministerie van Onderzoek, Technologie en Ruimtevaart (BMFTR)",
+	"Funding code: %s" : "Financieringscode: %s",
 	"gdpr_save_failed_hint" : "Uw keuze werd opgeslagen op dit apparaat, maar kon niet worden gesynchroniseerd naar de server. U kunt de melding weer zien op een ander apparaat.",
 	"General" : "Algemeen",
 	"general" : "Algemeen",
@@ -2220,8 +2221,7 @@ OC.L10N.register(
 	"your_projects" : "Uw projecten",
 	"your_support_tickets" : "Uw support tickets",
 	"your_tickets" : "Uw tickets",
-	"{used} of {total} seats used" : "{used} van {total} stoelen gebruikt",
-	"Funding code: %s" : "Financieringscode: %s"
+	"{used} of {total} seats used" : "{used} van {total} stoelen gebruikt"
 	},
 	"nplurals=2; plural=(n != 1);"
 );

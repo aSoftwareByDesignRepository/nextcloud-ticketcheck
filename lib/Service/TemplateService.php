@@ -38,7 +38,7 @@ class TemplateService
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
             ->from('helpdesk_ticket_templates')
-            ->where($qb->expr()->eq('is_active', $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL)))
+            ->where($qb->expr()->eq('is_active', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)))
             ->orderBy('name', 'ASC');
 
         if ($category) {
@@ -86,7 +86,7 @@ class TemplateService
                 'name' => $qb->createNamedParameter($name),
                 'content' => $qb->createNamedParameter($content),
                 'category' => $qb->createNamedParameter($category),
-                'is_active' => $qb->createNamedParameter(true, IQueryBuilder::PARAM_BOOL),
+                'is_active' => $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT),
                 'created_by' => $qb->createNamedParameter($user->getUID()),
                 'created_at' => $qb->createNamedParameter($now, IQueryBuilder::PARAM_DATE),
                 'updated_at' => $qb->createNamedParameter($now, IQueryBuilder::PARAM_DATE),

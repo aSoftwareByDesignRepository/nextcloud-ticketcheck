@@ -332,8 +332,8 @@ class KnowledgeBaseServiceTest extends TestCase
             ->method('update')
             ->with($this->callback(static function (KBArticle $a): bool {
                 return $a->getPublished() === false
-                    && $a->getPinned() === false
-                    && $a->getAllowComments() === false;
+                    && $a->getPinned() === 0
+                    && $a->getAllowComments() === 0;
             }))
             ->willReturn($article);
 
@@ -355,8 +355,8 @@ class KnowledgeBaseServiceTest extends TestCase
             ->method('update')
             ->with($this->callback(static function (KBArticle $a): bool {
                 return $a->getPublished() === true
-                    && $a->getPinned() === true
-                    && $a->getAllowComments() === true;
+                    && $a->getPinned() === 1
+                    && $a->getAllowComments() === 1;
             }))
             ->willReturn($article);
 

@@ -971,6 +971,7 @@
 		"from_name_label": "Nom",
 		"full_name": "Nom complet",
 		"Funded by the Federal Ministry of Research, Technology and Space (BMFTR)": "Financé par le ministère fédéral allemand de la Recherche, de la Technologie et de l’Espace (BMFTR)",
+		"Funding code: %s": "Code de financement : %s",
 		"gdpr_save_failed_hint": "Votre choix a été enregistré sur cet appareil, mais n'a pas pu être synchronisé avec le serveur. Vous pouvez revoir l'avis sur un autre appareil.",
 		"General": "Général",
 		"general": "Général",
@@ -2219,8 +2220,7 @@
 		"your_projects": "Vos projets",
 		"your_support_tickets": "Vos tickets de soutien",
 		"your_tickets": "Vos tickets",
-		"{used} of {total} seats used": "{used} sièges utilisés sur {total}",
-		"Funding code: %s": "Code de financement : %s"
+		"{used} of {total} seats used": "{used} sièges utilisés sur {total}"
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }

@@ -168,8 +168,8 @@ class KnowledgeBaseService
         $article->setContent($this->htmlSanitizerService->sanitize((string)($params['content'] ?? '')));
         $article->setCategory($category);
         $article->setPublished(self::reqBool($params['published'] ?? null, false));
-        $article->setPinned(self::reqBool($params['pinned'] ?? null, false));
-        $article->setAllowComments(self::reqBool($params['allow_comments'] ?? null, false));
+        $article->setPinned((int)self::reqBool($params['pinned'] ?? null, false));
+        $article->setAllowComments((int)self::reqBool($params['allow_comments'] ?? null, false));
         $article->setViews(0);
         $article->setHelpfulCount(0);
         $article->setCreatedBy($userId);
@@ -200,8 +200,8 @@ class KnowledgeBaseService
         $article->setContent($this->htmlSanitizerService->sanitize((string)($params['content'] ?? $article->getContent())));
         $article->setCategory($this->resolveCategoryFromParams($params) ?: $article->getCategory());
         $article->setPublished(self::reqBool($params['published'] ?? null, (bool)$article->getPublished()));
-        $article->setPinned(self::reqBool($params['pinned'] ?? null, (bool)$article->getPinned()));
-        $article->setAllowComments(self::reqBool($params['allow_comments'] ?? null, (bool)$article->getAllowComments()));
+        $article->setPinned((int)self::reqBool($params['pinned'] ?? null, (bool)$article->getPinned()));
+        $article->setAllowComments((int)self::reqBool($params['allow_comments'] ?? null, (bool)$article->getAllowComments()));
         $article->setUpdatedAt(new \DateTime());
 
         $this->kbArticleMapper->update($article);

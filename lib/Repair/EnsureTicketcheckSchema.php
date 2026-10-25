@@ -34,7 +34,7 @@ final class EnsureTicketcheckSchema implements IRepairStep
 
 		$missingBefore = $this->missingTables();
 		if ($missingBefore === []) {
-			$output->info('Ticketcheck: all ' . count(UninstallDropTables::TABLES) . ' tables are present.');
+			$output->info('Ticketcheck: all ' . count(SchemaTableCatalog::EXPECTED_TABLES) . ' tables are present.');
 			$this->ensureBuiltinTicketCategories($output);
 			return;
 		}
@@ -71,7 +71,7 @@ final class EnsureTicketcheckSchema implements IRepairStep
 	private function ensureBuiltinTicketCategories(IOutput $output): void
 	{
 		$missingBefore = $this->missingTables();
-		if ($missingBefore !== [] || !in_array('helpdesk_ticket_categories', UninstallDropTables::TABLES, true)) {
+		if ($missingBefore !== [] || !in_array('helpdesk_ticket_categories', SchemaTableCatalog::EXPECTED_TABLES, true)) {
 			return;
 		}
 
@@ -92,8 +92,8 @@ final class EnsureTicketcheckSchema implements IRepairStep
 						'cat_key' => $qb->createNamedParameter($key),
 						'labels' => $qb->createNamedParameter(null),
 						'position' => $qb->createNamedParameter($position, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT),
-						'builtin' => $qb->createNamedParameter(1, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT),
-						'is_enabled' => $qb->createNamedParameter(1, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT),
+						'builtin' => $qb->createNamedParameter(true, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_BOOL),
+						'is_enabled' => $qb->createNamedParameter(true, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_BOOL),
 						'created_at' => $qb->createNamedParameter(new \DateTime(), \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_DATETIME_MUTABLE),
 						'updated_at' => $qb->createNamedParameter(new \DateTime(), \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_DATETIME_MUTABLE),
 					])
@@ -114,7 +114,7 @@ final class EnsureTicketcheckSchema implements IRepairStep
 	private function missingTables(): array
 	{
 		$missing = [];
-		foreach (UninstallDropTables::TABLES as $table) {
+		foreach (SchemaTableCatalog::EXPECTED_TABLES as $table) {
 			if (!$this->connection->tableExists($table)) {
 				$missing[] = $table;
 			}

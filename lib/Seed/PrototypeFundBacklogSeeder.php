@@ -192,7 +192,7 @@ class PrototypeFundBacklogSeeder
         $project->setDescription($description);
         $project->setCustomerId($customerId);
         $project->setStatus('active');
-        $project->setActive(true);
+        $project->setActive(1);
         $project->setCreatedAt(new \DateTime());
         $project->setUpdatedAt(new \DateTime());
         $project->setCreatedBy($actorUserId);

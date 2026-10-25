@@ -30,10 +30,10 @@ use OCP\AppFramework\Db\Entity;
  * @method void setHelpfulCount(int $helpfulCount)
  * @method bool getPublished()
  * @method void setPublished(bool $published)
- * @method bool getPinned()
- * @method void setPinned(bool $pinned)
- * @method bool getAllowComments()
- * @method void setAllowComments(bool $allowComments)
+ * @method int getPinned()
+ * @method void setPinned(bool|int $pinned)
+ * @method int getAllowComments()
+ * @method void setAllowComments(bool|int $allowComments)
  * @method string getCreatedBy()
  * @method void setCreatedBy(string $createdBy)
  * @method \DateTime getCreatedAt()
@@ -61,10 +61,10 @@ class KBArticle extends Entity
     /** @var bool */
     protected $published;
 
-    /** @var bool */
+    /** @var int */
     protected $pinned;
 
-    /** @var bool */
+    /** @var int */
     protected $allowComments;
 
     /** @var string */
@@ -87,8 +87,8 @@ class KBArticle extends Entity
         $this->addType('views', 'integer');
         $this->addType('helpfulCount', 'integer');
         $this->addType('published', 'boolean');
-        $this->addType('pinned', 'boolean');
-        $this->addType('allowComments', 'boolean');
+        $this->addType('pinned', 'integer');
+        $this->addType('allowComments', 'integer');
         $this->addType('createdBy', 'string');
         $this->addType('createdAt', 'datetime');
         $this->addType('updatedAt', 'datetime');

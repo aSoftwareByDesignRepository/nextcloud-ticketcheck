@@ -12582,7 +12582,7 @@ button.tc-nav-toggle {
 .tc-switcher__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
 .tc-switcher__link {
 	display: grid;
-	grid-template-columns: 24px 1fr;
+	grid-template-columns: 24px minmax(0, 1fr);
 	gap: var(--tc-space-2);
 	align-items: center;
 	padding: var(--tc-space-2) var(--tc-space-3);
@@ -12601,7 +12601,7 @@ button.tc-nav-toggle {
 .tc-nav__list { list-style: none; padding: var(--tc-space-2); margin: 0; display: flex; flex-direction: column; gap: var(--tc-space-1); }
 .tc-nav__link {
 	display: grid;
-	grid-template-columns: 24px 1fr;
+	grid-template-columns: 24px minmax(0, 1fr);
 	gap: var(--tc-space-2);
 	align-items: center;
 	padding: var(--tc-space-2) var(--tc-space-3);

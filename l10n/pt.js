@@ -972,6 +972,7 @@ OC.L10N.register(
 	"from_name_label" : "Nome do remetente",
 	"full_name" : "Nome completo",
 	"Funded by the Federal Ministry of Research, Technology and Space (BMFTR)" : "Financiado pelo Ministério Federal da Investigação, Tecnologia e Espaço (BMFTR)",
+	"Funding code: %s" : "Código de financiamento: %s",
 	"gdpr_save_failed_hint" : "A sua escolha foi guardada neste dispositivo, mas não foi possível sincronizá-la com o servidor. Poderá ver o aviso novamente noutro dispositivo.",
 	"General" : "Geral",
 	"general" : "Geral",
@@ -2220,8 +2221,7 @@ OC.L10N.register(
 	"your_projects" : "Os seus projetos",
 	"your_support_tickets" : "Os seus tickets de suporte",
 	"your_tickets" : "Os seus tickets",
-	"{used} of {total} seats used" : "{used} de {total} lugares usados",
-	"Funding code: %s" : "Código de financiamento: %s"
+	"{used} of {total} seats used" : "{used} de {total} lugares usados"
 	},
 	"nplurals=2; plural=(n != 1);"
 );
