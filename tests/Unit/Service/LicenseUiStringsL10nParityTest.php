@@ -33,7 +33,7 @@ final class LicenseUiStringsL10nParityTest extends TestCase
 	private function panelExtraMsgids(): array
 	{
 		$panel = (string)file_get_contents($this->root . '/templates/parts/license-panel.php');
-		preg_match_all("/\\\$l->t\\('((?:\\\\'|[^'])*)'\\)/", $panel, $m);
+		preg_match_all("/\\\$l->t\\('((?:\\\\.|[^'\\\\])*)'\\)/", $panel, $m);
 		$out = [];
 		foreach ($m[1] as $raw) {
 			$out[] = str_replace("\\'", "'", $raw);
