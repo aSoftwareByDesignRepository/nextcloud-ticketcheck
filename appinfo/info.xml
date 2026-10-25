@@ -22,7 +22,7 @@
 		- CSV export
 		- SLA monitoring and breach alerts
 		- Daily digest emails for agents
-		- Translations (English, German)
+		- Interface in 11 languages
 
 ## Feedback welcome
 
@@ -48,7 +48,7 @@ Funktionen:
 - CSV-Export
 - SLA-Überwachung und Warnmeldungen bei Verstößen
 - Tägliche Zusammenfassungs-E-Mails für Agenten
-- Übersetzungen (Englisch, Deutsch)
+- Benutzeroberfläche in 11 Sprachen
 
 ## Feedback willkommen
 
@@ -73,7 +73,7 @@ Fonctions :
 - Export CSV
 - Suivi des SLA et alertes en cas de non-respect
 - E-mails récapitulatifs quotidiens pour les agents
-- Traductions (anglais, allemand)
+- Interface disponible en 11 langues
 
 ## Retours bienvenus
 
@@ -98,7 +98,7 @@ Funciones:
 - Exportación CSV
 - Supervisión de SLA y alertas de incumplimiento
 - Correos electrónicos de resumen diarios para los agentes
-- Traducciones (inglés, alemán)
+- Interfaz disponible en 11 idiomas
 
 ## Comentarios bienvenidos
 
@@ -123,7 +123,7 @@ Funktioner:
 - CSV-export
 - SLA-overvågning og alarmer ved brud
 - Daglige opsummerings-e-mails til agenter
-- Oversættelser (engelsk, tysk)
+- Brugerflade på 11 sprog
 
 ## Feedback er velkommen
 
@@ -148,7 +148,7 @@ Functies:
 - Exporteren naar CSV
 - SLA-monitoring en meldingen bij overtredingen
 - Dagelijkse samenvattende e-mails voor agenten
-- Vertalingen (Engels, Duits)
+- Interface in 11 talen
 
 ## Feedback welkom
 
@@ -173,7 +173,7 @@ Funzionalità:
 - Esportazione CSV
 - Monitoraggio SLA e avvisi in caso di violazioni
 - E-mail riepilogative giornaliere per gli agenti
-- Traduzioni (inglese, tedesco)
+- Interfaccia in 11 lingue
 
 ## Feedback benvenuto
 
@@ -198,7 +198,7 @@ Funkcje:
 - Eksport CSV
 - Monitorowanie SLA i alerty o naruszeniach
 - Codzienne wiadomości e-mail podsumowujące dla agentów
-- Tłumaczenia (angielski, niemiecki)
+- Interfejs w 11 językach
 
 ## Feedback mile widziany
 
@@ -223,7 +223,7 @@ Funktioner:
 - Export till CSV
 - SLA-övervakning och varningsmeddelanden vid överträdelser
 - Dagliga sammanfattningsmejl för agenter
-- Översättningar (engelska, tyska)
+- Gränssnitt på 11 språk
 
 ## Feedback välkomnas
 
@@ -248,7 +248,7 @@ Funksjoner:
 - CSV-eksport
 - SLA-overvåking og varsler ved brudd
 - Daglige sammendrags-e-poster for agenter
-- Oversettelser (engelsk, tysk)
+- Grensesnitt på 11 språk
 
 ## Feedback er velkommen
 
@@ -258,6 +258,32 @@ Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer h
 
 TicketCheck (tilskuddsprosjektet NEXTICK) finansieres av det tyske forsknings-, teknologi- og romfartsdepartementet (BMFTR) gjennom Prototype Fund-programmet (https://www.prototypefund.de/) — støttetiltaket "Software Sprint" (kull 2), juni til november 2026 (Förderkennzeichen: 16IS26S24). Hele kildekoden publiseres som fri og åpen programvare under AGPL-3.0-or-later-lisensen.
 ]]></description>
+
+	<description lang="pt"><![CDATA[
+Um helpdesk e sistema de apoio ao cliente completo e autónomo para Nextcloud.
+Funciona de imediato, sem dependências.
+
+Funcionalidades:
+- Controlo de acesso multi-inquilino baseado em projetos
+- Gestão integrada de projetos e clientes
+- Portal de convidados seguro (restrito ao helpdesk)
+- Notificações automáticas por e-mail e tarefas em segundo plano
+- Editor de texto formatado para a base de conhecimento
+- Anexos de ficheiros com pré-visualização de imagens
+- Gráficos visuais e relatórios
+- Exportação CSV
+- Monitorização de SLA e alertas de incumprimento
+- E-mails diários de resumo para agentes
+- Interface em 11 línguas
+
+## O seu feedback é bem-vindo
+
+Melhoramos esta aplicação com a utilização real. Relatórios de erros, arestas e ideias ajudam — abra uma GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). O seu feedback influencia diretamente o que construímos a seguir.
+
+## Financiamento
+
+O TicketCheck (projeto financiado NEXTICK) é financiado pelo Ministério Federal Alemão da Investigação, Tecnologia e Espaço (BMFTR) através do programa Prototype Fund (https://www.prototypefund.de/) — medida de financiamento "Software Sprint" (edição 2), junho a novembro de 2026 (Förderkennzeichen: 16IS26S24). Todo o código-fonte é publicado como software livre e de código aberto sob a licença AGPL-3.0-or-later.
+]]></description>
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/01.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/01.png</screenshot>
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/02.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/02.png</screenshot>
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/03.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/03.png</screenshot>
@@ -265,7 +291,7 @@ TicketCheck (tilskuddsprosjektet NEXTICK) finansieres av det tyske forsknings-, 
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png</screenshot>
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png</screenshot>
 
-	<version>2.5.0</version>
+	<version>2.5.1</version>
 	<licence>agpl</licence>
 	<author>Lara Raffel</author>
 	<author>Alexander Mäule</author>

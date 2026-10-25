@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.5.1 - 2026-10-25
+
+### Fixed
+
+- strip injected ZWSP pairs + doubled tokens from sv/pt_BR catalogs
+- drop unresolvable /apps/settings/* guest allowlist entries
+- staff redirect targets ticket.create, not dead app.index
+- sync check-dates programmatic-write repaint (canonical 2026-10-22)
+- align media-boundary literals with 768.98px migration
+- migrate media boundaries to 769px/768.98px family convention
+- purge donor-language bleed and mangles from sv/nb/pl catalogs
+- card-header actions + atomic controls clipped at 320px
+- plural msgid shipped python-repr strings in 8 catalogs
+- meta pills crushed under action buttons at tablet widths
+- screenshot-matrix spec — client-side theme + attached-state waits
+- post-seal reverify — check-dates style pair, table wrap path, mutation baseline guard
+- dark-theme accent-ink token + e2e user-state reset
+
+### Added
+
+- show BMFTR Förderkennzeichen 16IS26S24 + shared-pack resync
+
+### Changed
+
+- assert intro substitutes %s, never literal (shared pack re-sync)
+- normalize tarball modes + host-side signature audit (GH #47)
+
 ## 2.5.0 - 2026-10-19
 
 ### Added
