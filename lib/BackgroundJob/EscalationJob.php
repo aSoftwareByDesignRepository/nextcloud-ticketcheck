@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace OCA\Ticketcheck\BackgroundJob;
 
 use OCA\Ticketcheck\Service\EscalationService;
+use OCA\Ticketcheck\Service\UpgradeBackupService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\Lock\ILockingProvider;
@@ -48,27 +49,45 @@ class EscalationJob extends TimedJob
      */
     protected function run($argument): void
     {
-        $this->logger->info('Running Escalation Job');
+        // Shared lock on the backup key: an admin restoring an upgrade
+        // snapshot holds it exclusively — the job skips rather than
+        // mutating tickets mid-restore.
         try {
-            try {
-                $this->locking->acquireLock(self::JOB_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE, 'TicketCheck escalation');
-            } catch (LockedException $e) {
-                $this->logger->info('Escalation job already running in another worker, skipping');
-                return;
-            }
+            $this->locking->acquireLock(
+                UpgradeBackupService::LOCK_KEY,
+                ILockingProvider::LOCK_SHARED,
+                'TicketCheck escalation',
+            );
+        } catch (LockedException) {
+            $this->logger->info('TicketCheck: skipping escalation run — upgrade backup/restore in progress');
+            return;
+        }
 
+        try {
+            $this->logger->info('Running Escalation Job');
             try {
-                $this->escalationService->runEscalation();
-                $this->logger->info('Escalation Job completed');
-            } finally {
                 try {
-                    $this->locking->releaseLock(self::JOB_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
-                } catch (\Throwable $e) {
-                    $this->logger->warning('Failed to release escalation job lock', ['exception' => $e]);
+                    $this->locking->acquireLock(self::JOB_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE, 'TicketCheck escalation');
+                } catch (LockedException $e) {
+                    $this->logger->info('Escalation job already running in another worker, skipping');
+                    return;
                 }
+
+                try {
+                    $this->escalationService->runEscalation();
+                    $this->logger->info('Escalation Job completed');
+                } finally {
+                    try {
+                        $this->locking->releaseLock(self::JOB_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+                    } catch (\Throwable $e) {
+                        $this->logger->warning('Failed to release escalation job lock', ['exception' => $e]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                $this->logger->error('Escalation Job failed: ' . $e->getMessage(), ['exception' => $e]);
             }
-        } catch (\Throwable $e) {
-            $this->logger->error('Escalation Job failed: ' . $e->getMessage(), ['exception' => $e]);
+        } finally {
+            $this->locking->releaseLock(UpgradeBackupService::LOCK_KEY, ILockingProvider::LOCK_SHARED);
         }
     }
 }

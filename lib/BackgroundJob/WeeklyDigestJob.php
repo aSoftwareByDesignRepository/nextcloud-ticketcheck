@@ -14,6 +14,7 @@ namespace OCA\Ticketcheck\BackgroundJob;
 use OCA\Ticketcheck\Db\TicketMapper;
 use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\EmailPreferencesService;
+use OCA\Ticketcheck\Service\UpgradeBackupService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IConfig;
@@ -82,41 +83,59 @@ class WeeklyDigestJob extends TimedJob
      */
     protected function run($argument): void
     {
-        $this->logger->info('Running Weekly Digest Job');
-
-        // Only run on Mondays
-        $today = date('N'); // 1 (Monday) through 7 (Sunday)
-        if ($today != 1) {
-            $this->logger->info('Weekly digest only runs on Mondays, today is ' . date('l'));
-            return;
-        }
-
-        // Check if weekly digests are enabled
-        $digestEnabled = $this->config->getAppValue('ticketcheck', 'weekly_digest_enabled', 'yes') === 'yes';
-        if (!$digestEnabled) {
-            $this->logger->info('Weekly digest emails are disabled, skipping');
+        // Shared lock on the backup key: an admin restoring an upgrade
+        // snapshot holds it exclusively — the digest skips rather than
+        // iterating tickets mid-restore.
+        try {
+            $this->locking->acquireLock(
+                UpgradeBackupService::LOCK_KEY,
+                ILockingProvider::LOCK_SHARED,
+                'TicketCheck weekly digest',
+            );
+        } catch (LockedException) {
+            $this->logger->info('TicketCheck: skipping weekly digest — upgrade backup/restore in progress');
             return;
         }
 
         try {
-            try {
-                $this->locking->acquireLock(self::DIGEST_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE, 'TicketCheck weekly digest');
-            } catch (LockedException $e) {
-                $this->logger->info('Weekly digest already running in another worker, skipping');
+            $this->logger->info('Running Weekly Digest Job');
+
+            // Only run on Mondays
+            $today = date('N'); // 1 (Monday) through 7 (Sunday)
+            if ($today != 1) {
+                $this->logger->info('Weekly digest only runs on Mondays, today is ' . date('l'));
+                return;
+            }
+
+            // Check if weekly digests are enabled
+            $digestEnabled = $this->config->getAppValue('ticketcheck', 'weekly_digest_enabled', 'yes') === 'yes';
+            if (!$digestEnabled) {
+                $this->logger->info('Weekly digest emails are disabled, skipping');
                 return;
             }
 
             try {
-                $this->runDigestLocked();
-            } finally {
                 try {
-                    $this->locking->releaseLock(self::DIGEST_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
-                } catch (\Throwable $e) {
-                    $this->logger->warning('Failed to release weekly digest lock', ['exception' => $e]);
+                    $this->locking->acquireLock(self::DIGEST_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE, 'TicketCheck weekly digest');
+                } catch (LockedException $e) {
+                    $this->logger->info('Weekly digest already running in another worker, skipping');
+                    return;
                 }
+
+                try {
+                    $this->runDigestLocked();
+                } finally {
+                    try {
+                        $this->locking->releaseLock(self::DIGEST_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+                    } catch (\Throwable $e) {
+                        $this->logger->warning('Failed to release weekly digest lock', ['exception' => $e]);
+                    }
+                }
+            } catch (\Exception $e) {
+                $this->logger->error('Weekly Digest Job failed: ' . $e->getMessage(), ['exception' => $e]);
             }
-        } catch (\Exception $e) {
-            $this->logger->error('Weekly Digest Job failed: ' . $e->getMessage(), ['exception' => $e]);
+        } finally {
+            $this->locking->releaseLock(UpgradeBackupService::LOCK_KEY, ILockingProvider::LOCK_SHARED);
         }
     }
 

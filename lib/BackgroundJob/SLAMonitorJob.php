@@ -21,6 +21,7 @@ use OCA\Ticketcheck\Service\KnowledgeBaseService;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Service\TicketService;
 use OCA\Ticketcheck\Service\TicketWorkflowLock;
+use OCA\Ticketcheck\Service\UpgradeBackupService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IConfig;
@@ -102,27 +103,45 @@ class SLAMonitorJob extends TimedJob
      */
     protected function run($argument): void
     {
-        $this->logger->info('Running SLA Monitor Job');
+        // Shared lock on the backup key: an admin restoring an upgrade
+        // snapshot holds it exclusively — the monitor skips rather than
+        // writing breach flags mid-restore.
+        try {
+            $this->locking->acquireLock(
+                UpgradeBackupService::LOCK_KEY,
+                ILockingProvider::LOCK_SHARED,
+                'TicketCheck SLA monitor',
+            );
+        } catch (LockedException) {
+            $this->logger->info('TicketCheck: skipping SLA monitor — upgrade backup/restore in progress');
+            return;
+        }
 
         try {
-            try {
-                $this->locking->acquireLock(self::JOB_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE, 'TicketCheck SLA monitor');
-            } catch (LockedException $e) {
-                $this->logger->info('SLA monitor already running in another worker, skipping');
-                return;
-            }
+            $this->logger->info('Running SLA Monitor Job');
 
             try {
-                $this->runLocked();
-            } finally {
                 try {
-                    $this->locking->releaseLock(self::JOB_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
-                } catch (\Throwable $e) {
-                    $this->logger->warning('Failed to release SLA monitor lock', ['exception' => $e]);
+                    $this->locking->acquireLock(self::JOB_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE, 'TicketCheck SLA monitor');
+                } catch (LockedException $e) {
+                    $this->logger->info('SLA monitor already running in another worker, skipping');
+                    return;
                 }
+
+                try {
+                    $this->runLocked();
+                } finally {
+                    try {
+                        $this->locking->releaseLock(self::JOB_LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+                    } catch (\Throwable $e) {
+                        $this->logger->warning('Failed to release SLA monitor lock', ['exception' => $e]);
+                    }
+                }
+            } catch (\Exception $e) {
+                $this->logger->error('SLA Monitor Job failed: ' . $e->getMessage(), ['exception' => $e]);
             }
-        } catch (\Exception $e) {
-            $this->logger->error('SLA Monitor Job failed: ' . $e->getMessage(), ['exception' => $e]);
+        } finally {
+            $this->locking->releaseLock(UpgradeBackupService::LOCK_KEY, ILockingProvider::LOCK_SHARED);
         }
     }
 

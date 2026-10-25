@@ -471,14 +471,16 @@ class Application extends App implements IBootstrap
             return new \OCA\Ticketcheck\BackgroundJob\InboundMailSyncJob(
                 $c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
                 $c->get(\OCA\Ticketcheck\Service\InboundMailSyncService::class),
-                $c->get(\Psr\Log\LoggerInterface::class)
+                $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get(\OCP\Lock\ILockingProvider::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\BackgroundJob\InboundMailRetentionJob::class, function ($c) {
             return new \OCA\Ticketcheck\BackgroundJob\InboundMailRetentionJob(
                 $c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
                 $c->get(\OCA\Ticketcheck\Db\InboundMessageMapper::class),
-                $c->get(\Psr\Log\LoggerInterface::class)
+                $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get(\OCP\Lock\ILockingProvider::class)
             );
         });
 
