@@ -19444,7 +19444,8 @@ textarea {
 	font-size: var(--tc-fs-sm, 0.875rem);
 	line-height: var(--tc-line-base, 1.45);
 	white-space: normal;
-	overflow-wrap: anywhere;
+	/* Menu labels keep normal word breaks — anywhere tears mid-word. */
+	overflow-wrap: break-word;
 }
 
 .tc-nav-footer__menu-item:hover {
