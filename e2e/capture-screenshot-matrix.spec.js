@@ -54,6 +54,7 @@ const READY = {
 	'settings-access': { current: '.helpdesk-card, .tc-shell' },
 	'settings-inbound': { current: '.helpdesk-card, .tc-shell' },
 	'settings-categories': { populated: '.helpdesk-table, .tc-table-wrap, .helpdesk-card' },
+	'settings-resources': { populated: '#tc-resource-list li[data-key], .helpdesk-empty, .helpdesk-card' },
 	'portal': { populated: '.portal-home-tickets, .portal-shortcuts' },
 	'portal-tickets': { populated: '.portal-home-tickets, .helpdesk-table, .portal-shortcuts' },
 	'portal-create': { current: '.portal-create' },

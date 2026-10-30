@@ -263,6 +263,24 @@ class TicketResourceService
 	}
 
 	/**
+	 * Re-check an already-resolved key set — call INSIDE
+	 * withResourceWriteGuard() so a catalog delete/disable racing the
+	 * earlier resolveWriteKeys() cannot land map rows for doomed keys
+	 * (NN-11 / catalog_ref_delete_toctou).
+	 *
+	 * @param list<string> $keys normalized keys from resolveWriteKeys()
+	 * @throws ValidationException fields:{resources}
+	 */
+	public function assertEnabledKeys(array $keys): void
+	{
+		foreach ($keys as $key) {
+			if (!$this->isEnabledKey((string)$key)) {
+				throw new ValidationException(['resources' => 'invalid_resource']);
+			}
+		}
+	}
+
+	/**
 	 * Replace-set write for one ticket — caller MUST already hold
 	 * withResourceWriteGuard() and the enclosing DB transaction so the
 	 * map can never split from the ticket write (NN-08/NN-11).
@@ -585,6 +603,7 @@ class TicketResourceService
 				'name' => (string)$res->getName(),
 				'position' => (int)$res->getPosition(),
 				'enabled' => (bool)$res->getIsEnabled(),
+				'type' => (string)($res->getResType() ?? self::DEFAULT_TYPE),
 			];
 		}
 		return ['version' => 1, 'resources' => $out];
@@ -617,7 +636,13 @@ class TicketResourceService
 				$enabled = !isset($item['enabled']) || $item['enabled'] === true || $item['enabled'] === 1;
 				$key = isset($item['key']) && is_string($item['key'])
 					? strtolower(trim($item['key'])) : '';
-				$existing = null;
+				// A supplied key is the upsert handle: it must be stored
+				// verbatim on insert or a repeat import mints a slug key and
+				// duplicates the row. Reject malformed keys outright —
+				// silently dropping them produced the same duplicate drift.
+				if ($key !== '' && preg_match('/^[a-z0-9][a-z0-9-]{0,' . (self::MAX_KEY_LENGTH - 1) . '}$/', $key) !== 1) {
+					throw new ValidationException(['payload' => 'resource_import_invalid']);
+				}
 				if ($key !== '' && isset($this->map()[$key])) {
 					$existing = $this->map()[$key];
 					$existing->setName($name);
@@ -631,10 +656,11 @@ class TicketResourceService
 						throw new ValidationException(['payload' => 'resource_limit_reached']);
 					}
 					$this->insertResourceLocked(
-						$this->uniqueKey($this->slugify($name)),
+						$key !== '' ? $key : $this->uniqueKey($this->slugify($name)),
 						$name,
 						isset($item['position']) ? (int)$item['position'] : null,
 						$enabled,
+						$type,
 					);
 					$created++;
 				}

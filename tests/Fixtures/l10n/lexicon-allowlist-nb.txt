@@ -54,3 +54,4 @@ avmarkere # shared — av+markere (unselect)
 sakstoken # shared — sak+token compound
 administratørrapport # shared — administrator+rapport compound
 taggadresse # shared — tagg+adresse compound (plus-addressing)
+deaktiver # shared — de+aktiver imperative (deactivate), shared da/nb form

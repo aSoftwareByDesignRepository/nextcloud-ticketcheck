@@ -3463,9 +3463,12 @@ class TicketController extends Controller
         }
         try {
             $prior = $this->ticketResources->keysForTicket($ticketId);
-            $this->ticketResources->withResourceWriteGuard(
-                fn () => $this->ticketResources->setForTicket($ticketId, $keys)
-            );
+            $this->ticketResources->withResourceWriteGuard(function () use ($ticketId, $keys) {
+                // Re-validate inside the guard — a catalog delete/disable
+                // racing resolveResourceParam() must not land doomed keys (NN-11).
+                $this->ticketResources->assertEnabledKeys($keys);
+                $this->ticketResources->setForTicket($ticketId, $keys);
+            });
             $added = array_values(array_diff($keys, $prior));
             $removed = array_values(array_diff($prior, $keys));
             if (($added !== [] || $removed !== []) && $prior !== []) {

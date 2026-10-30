@@ -1,45 +1,173 @@
 {
-	"prefix": "tc",
-	"outDir": "craft/web",
-	"viewports": [
-		{ "name": "mobile", "width": 320, "height": 800 },
-		{ "name": "tablet", "width": 768, "height": 800 },
-		{ "name": "desktop", "width": 1280, "height": 800 }
-	],
-	"surfaces": [
-		{
-			"id": "tickets",
-			"path": "/tickets",
-			"states": ["populated", "empty"],
-			"emptyDriver": "searchNoMatch",
-			"dark": true
-		},
-		{ "id": "ticket-detail", "path": "DYNAMIC_TICKET", "states": ["populated"], "dark": true },
-		{ "id": "create", "path": "/tickets/create", "states": ["current"] },
-		{ "id": "dashboard", "path": "/dashboard", "states": ["populated"], "dark": true },
-		{ "id": "kanban", "path": "/tickets/kanban", "states": ["populated"] },
-		{
-			"id": "projects",
-			"path": "/projects",
-			"states": ["populated", "empty"],
-			"emptyDriver": "searchNoMatch"
-		},
-		{
-			"id": "customers",
-			"path": "/customers",
-			"states": ["populated", "empty"],
-			"emptyDriver": "searchNoMatch"
-		},
-		{ "id": "guests", "path": "/guests", "states": ["populated"] },
-		{ "id": "kb", "path": "/kb", "states": ["populated"], "dark": true },
-		{ "id": "export", "path": "/export", "states": ["current"] },
-		{ "id": "settings-about", "path": "/settings/about", "states": ["current"], "dark": true },
-		{ "id": "settings-access", "path": "/settings/access", "states": ["current"] },
-		{ "id": "settings-inbound", "path": "/settings/inbound-mail", "states": ["current"] },
-		{ "id": "settings-categories", "path": "/settings/categories", "states": ["populated"] },
-		{ "id": "portal", "path": "/portal", "states": ["populated"], "role": "guest", "dark": true },
-		{ "id": "portal-tickets", "path": "/portal/tickets", "states": ["populated"], "role": "guest" },
-		{ "id": "portal-create", "path": "/portal/tickets/create", "states": ["current"], "role": "guest" },
-		{ "id": "portal-kb", "path": "/portal/kb", "states": ["populated"], "role": "guest" }
-	]
+  "prefix": "tc",
+  "outDir": "craft/web",
+  "viewports": [
+    {
+      "name": "mobile",
+      "width": 320,
+      "height": 800
+    },
+    {
+      "name": "tablet",
+      "width": 768,
+      "height": 800
+    },
+    {
+      "name": "desktop",
+      "width": 1280,
+      "height": 800
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "tickets",
+      "path": "/tickets",
+      "states": [
+        "populated",
+        "empty"
+      ],
+      "emptyDriver": "searchNoMatch",
+      "dark": true
+    },
+    {
+      "id": "ticket-detail",
+      "path": "DYNAMIC_TICKET",
+      "states": [
+        "populated"
+      ],
+      "dark": true
+    },
+    {
+      "id": "create",
+      "path": "/tickets/create",
+      "states": [
+        "current"
+      ]
+    },
+    {
+      "id": "dashboard",
+      "path": "/dashboard",
+      "states": [
+        "populated"
+      ],
+      "dark": true
+    },
+    {
+      "id": "kanban",
+      "path": "/tickets/kanban",
+      "states": [
+        "populated"
+      ]
+    },
+    {
+      "id": "projects",
+      "path": "/projects",
+      "states": [
+        "populated",
+        "empty"
+      ],
+      "emptyDriver": "searchNoMatch"
+    },
+    {
+      "id": "customers",
+      "path": "/customers",
+      "states": [
+        "populated",
+        "empty"
+      ],
+      "emptyDriver": "searchNoMatch"
+    },
+    {
+      "id": "guests",
+      "path": "/guests",
+      "states": [
+        "populated"
+      ]
+    },
+    {
+      "id": "kb",
+      "path": "/kb",
+      "states": [
+        "populated"
+      ],
+      "dark": true
+    },
+    {
+      "id": "export",
+      "path": "/export",
+      "states": [
+        "current"
+      ]
+    },
+    {
+      "id": "settings-about",
+      "path": "/settings/about",
+      "states": [
+        "current"
+      ],
+      "dark": true
+    },
+    {
+      "id": "settings-access",
+      "path": "/settings/access",
+      "states": [
+        "current"
+      ]
+    },
+    {
+      "id": "settings-inbound",
+      "path": "/settings/inbound-mail",
+      "states": [
+        "current"
+      ]
+    },
+    {
+      "id": "settings-categories",
+      "path": "/settings/categories",
+      "states": [
+        "populated"
+      ]
+    },
+    {
+      "id": "portal",
+      "path": "/portal",
+      "states": [
+        "populated"
+      ],
+      "role": "guest",
+      "dark": true
+    },
+    {
+      "id": "portal-tickets",
+      "path": "/portal/tickets",
+      "states": [
+        "populated"
+      ],
+      "role": "guest"
+    },
+    {
+      "id": "portal-create",
+      "path": "/portal/tickets/create",
+      "states": [
+        "current"
+      ],
+      "role": "guest"
+    },
+    {
+      "id": "portal-kb",
+      "path": "/portal/kb",
+      "states": [
+        "populated"
+      ],
+      "role": "guest"
+    },
+    {
+      "id": "settings-resources",
+      "path": "/settings/resources",
+      "states": [
+        "populated"
+      ],
+      "dark": true
+    }
+  ]
 }

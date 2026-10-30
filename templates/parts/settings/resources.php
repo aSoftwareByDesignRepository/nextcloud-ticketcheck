@@ -60,7 +60,7 @@ $tcRes = is_array($_['ticketResources'] ?? null) ? $_['ticketResources'] : [];
 								<button type="button" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm" data-action="move-up" aria-label="<?php p($l->t('move_up')); ?>">↑</button>
 								<button type="button" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm" data-action="move-down" aria-label="<?php p($l->t('move_down')); ?>">↓</button>
 								<button type="button" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm tc-resource-delete" data-action="delete" data-count="<?php p((string)(int)($res['ticketCount'] ?? 0)); ?>" aria-label="<?php p($l->t('delete')); ?>">
-									<?php print_unescaped(IconCatalog::render('trash')); ?>
+									<?php print_unescaped(IconCatalog::render('trash-2')); ?>
 								</button>
 							</span>
 							<div class="tc-resource-item__rename" hidden>

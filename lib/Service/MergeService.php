@@ -95,10 +95,6 @@ class MergeService
 	 */
 	private function mergeTicketsLocked(int $sourceId, int $targetId): array
 	{
-        if ($this->ticketResources !== null) {
-            $this->ticketResources->unionForTicket($targetId, $this->ticketResources->keysForTicket($sourceId));
-        }
-
 		$source = $this->ticketMapper->find($sourceId);
 		$target = $this->ticketMapper->find($targetId);
 
@@ -143,6 +139,21 @@ class MergeService
 
 			if (!$this->ticketMapper->markMergedIfUnmerged($sourceId, $targetId)) {
 				throw new \InvalidArgumentException('Source ticket is already merged');
+			}
+
+			// Resource union rides the same transaction — a merge that fails
+			// or is denied must never leave committed map rows on the target
+			// (failed-op residue / catalog_ref_delete_toctou). The shared
+			// guard keeps a concurrent catalog delete/disable from landing
+			// doomed keys between resolve and write (NN-11).
+			if ($this->ticketResources !== null) {
+				$srcKeys = $this->ticketResources->keysForTicket($sourceId);
+				if ($srcKeys !== []) {
+					$this->ticketResources->withResourceWriteGuard(function () use ($targetId, $srcKeys) {
+						$this->ticketResources->assertEnabledKeys($srcKeys);
+						$this->ticketResources->unionForTicket($targetId, $srcKeys);
+					});
+				}
 			}
 
 			$this->db->commit();

@@ -521,4 +521,93 @@ class TicketResourceServiceTest extends TestCase
 		// Dangling key: label falls back to raw key — surfaced, not dropped.
 		self::assertSame('ghost', $pairs[2]['label']);
 	}
+
+	// ---------------------------------------------------------------
+	// import / export
+	// ---------------------------------------------------------------
+
+	public function testExportCarriesTypeForRoundTrip(): void
+	{
+		$room = $this->res('raum-1', 'Raum 1', 0, true);
+		$room->setResType('room');
+		$this->mapper->method('findAll')->willReturn([$room]);
+		$out = $this->service->exportResources();
+		self::assertSame(1, $out['version']);
+		self::assertSame(
+			[['key' => 'raum-1', 'name' => 'Raum 1', 'position' => 0, 'enabled' => true, 'type' => 'room']],
+			$out['resources']
+		);
+	}
+
+	public function testImportKeyedNewRowStoresSuppliedKey(): void
+	{
+		$this->lock();
+		$this->mapper->method('findAll')->willReturn([]);
+		$this->mapper->method('countAll')->willReturn(0);
+		$this->mapper->expects(self::once())
+			->method('insert')
+			->with(self::callback(fn (TicketResource $r) => $r->getResKey() === 'ext-room-7'
+				&& $r->getResType() === 'room'
+				&& $r->getName() === 'Raum 7'))
+			->willReturnCallback(static fn (TicketResource $r): TicketResource => $r);
+
+		$result = $this->service->importResources(
+			['resources' => [['key' => 'ext-room-7', 'name' => 'Raum 7', 'type' => 'room']]],
+			'admin'
+		);
+		self::assertSame(['created' => 1, 'updated' => 0], $result);
+	}
+
+	public function testImportKeyedRepeatUpdatesInsteadOfDuplicating(): void
+	{
+		$this->lock();
+		// Second import of the same file: the supplied key is already in the
+		// map, so the row is updated — never slug-minted into a duplicate.
+		$existing = $this->res('ext-room-7', 'Raum 7', 0, true);
+		$this->mapper->method('findAll')->willReturn([$existing]);
+		$this->mapper->expects(self::never())->method('insert');
+		$this->mapper->expects(self::once())
+			->method('update')
+			->with(self::callback(fn (TicketResource $r) => $r->getResKey() === 'ext-room-7'
+				&& $r->getName() === 'Raum 7b'
+				&& $r->getResType() === 'device'))
+			->willReturnCallback(static fn (TicketResource $r): TicketResource => $r);
+
+		$result = $this->service->importResources(
+			['resources' => [['key' => 'ext-room-7', 'name' => 'Raum 7b', 'type' => 'device', 'enabled' => true]]],
+			'admin'
+		);
+		self::assertSame(['created' => 0, 'updated' => 1], $result);
+	}
+
+	public function testImportRejectsMalformedSuppliedKey(): void
+	{
+		$this->lock();
+		$this->mapper->method('findAll')->willReturn([]);
+		$this->mapper->expects(self::never())->method('insert');
+		$this->expectException(ValidationException::class);
+		$this->service->importResources(
+			['resources' => [['key' => 'Not A Key!', 'name' => 'Raum 1']]],
+			'admin'
+		);
+	}
+
+	public function testImportKeylessRowMintsSlugAndKeepsType(): void
+	{
+		$this->lock();
+		$this->mapper->method('findAll')->willReturn([]);
+		$this->mapper->method('countAll')->willReturn(0);
+		$this->mapper->method('keyExists')->willReturn(false);
+		$this->mapper->expects(self::once())
+			->method('insert')
+			->with(self::callback(fn (TicketResource $r) => $r->getResKey() === 'mobiler-beamer'
+				&& $r->getResType() === 'device'))
+			->willReturnCallback(static fn (TicketResource $r): TicketResource => $r);
+
+		$result = $this->service->importResources(
+			['resources' => [['name' => 'Mobiler Beamer', 'type' => 'device']]],
+			'admin'
+		);
+		self::assertSame(['created' => 1, 'updated' => 0], $result);
+	}
 }

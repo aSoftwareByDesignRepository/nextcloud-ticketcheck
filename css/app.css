@@ -3260,12 +3260,12 @@ select.helpdesk-form-control:focus-visible {
     font-weight: 600;
 }
 
-/* Upload error: ink+surface travel as a pair — --color-error-text is only
-   readable on --color-error (light on dark-theme surfaces, dark on light).
-   Bare-text recolors measured 3.8:1 on the slate canvas in dark theme. */
+/* Upload error: family badge pair — error ink on the app-owned critical
+   tint (same recipe as helpdesk-badge--priority-urgent). Bare-text
+   recolors measured 3.8:1 on the slate canvas in dark theme. */
 .helpdesk-upload-dropzone__subtitle--error {
-    color: var(--color-error-text);
-    background: var(--color-error);
+    color: var(--tc-error-text, var(--color-error-text));
+    background: var(--tc-tint-critical, var(--color-background-hover));
     font-weight: 600;
     padding: var(--helpdesk-spacing-2xs, 2px) var(--helpdesk-spacing-xs);
     border-radius: var(--helpdesk-border-radius-sm);

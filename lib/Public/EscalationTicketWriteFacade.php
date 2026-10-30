@@ -152,9 +152,23 @@ final class EscalationTicketWriteFacade
 					}
 				}
 				if ($resourceKeys !== [] && $this->ticketResources !== null) {
-					$this->ticketResources->withResourceWriteGuard(
-						fn () => $this->ticketResources->setForTicket((int)$ticket->getId(), $resourceKeys)
-					);
+					// Re-validate inside the shared guard (catalog delete/disable
+					// racing the earlier resolve must not land doomed keys, NN-11);
+					// map-write/re-validation failure soft-fails like the web path —
+					// the ticket is real with an honestly empty resource set, and the
+					// idempotent replay returns this result instead of erroring into
+					// a retry that would mint a duplicate ticket.
+					try {
+						$this->ticketResources->withResourceWriteGuard(function () use ($ticket, $resourceKeys) {
+							$this->ticketResources->assertEnabledKeys($resourceKeys);
+							$this->ticketResources->setForTicket((int)$ticket->getId(), $resourceKeys);
+						});
+					} catch (\Throwable $e) {
+						$this->logger->error('EscalationTicketWriteFacade resource attach failed after create', [
+							'exception' => $e,
+							'ticket_id' => $ticket->getId(),
+						]);
+					}
 				}
 				return [
 					'ticketId' => $ticket->getId(),

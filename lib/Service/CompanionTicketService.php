@@ -554,14 +554,30 @@ class CompanionTicketService
 
 		try {
 			$ticket = $this->ticketService->createTicket($data);
-		if ($resourceKeys !== [] && $this->ticketResources !== null) {
-			$this->ticketResources->withResourceWriteGuard(fn () => $this->ticketResources->setForTicket((int)$ticket->getId(), $resourceKeys));
-		}
 		} catch (\Exception $e) {
 			if (str_starts_with($e->getMessage(), 'Validation failed')) {
 				throw new CompanionValidationException('validation_failed', $e->getMessage());
 			}
 			throw $e;
+		}
+		if ($resourceKeys !== [] && $this->ticketResources !== null) {
+			// Re-validate inside the shared guard so a catalog delete/disable
+			// racing the earlier resolve cannot land doomed keys (NN-11).
+			// A map-write or re-validation failure soft-fails like the web
+			// path: the ticket is real, its resource set is honestly empty,
+			// and an idempotent retry replays THIS response — never a 422/500
+			// phantom that would mint a duplicate on retry.
+			try {
+				$this->ticketResources->withResourceWriteGuard(function () use ($ticket, $resourceKeys) {
+					$this->ticketResources->assertEnabledKeys($resourceKeys);
+					$this->ticketResources->setForTicket((int)$ticket->getId(), $resourceKeys);
+				});
+			} catch (\Throwable $e) {
+				$this->logger->error('Companion resource attach failed after create', [
+					'exception' => $e,
+					'ticket_id' => $ticket->getId(),
+				]);
+			}
 		}
 
 		// Web parity: creation email is soft-fail.

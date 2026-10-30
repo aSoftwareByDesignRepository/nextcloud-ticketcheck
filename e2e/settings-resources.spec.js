@@ -50,10 +50,49 @@ test.describe('TicketCheck resources settings UX', () => {
 });
 
 test.describe('TicketCheck staff create-form resource picker', () => {
-	test('resources select is hidden when catalog is empty', async ({ page }) => {
-		await page.goto('/apps/ticketcheck/tickets/new', { waitUntil: 'domcontentloaded' });
+	test('resources select renders options when catalog is populated', async ({ page }) => {
+		await page.goto('/apps/ticketcheck/tickets/create', { waitUntil: 'domcontentloaded' });
 		await ensureAuthenticated(page);
-		// Empty catalog → no dead control rendered (NN-09)
-		await expect(page.locator('select#resources')).toHaveCount(0);
+		// Populated catalog → real select with grouped enabled options.
+		const sel = page.locator('select#resources');
+		await expect(sel).toHaveCount(1, { timeout: 30000 });
+		await expect(sel.locator('option')).not.toHaveCount(0);
+	});
+
+	test('resources select is hidden when catalog has no enabled rows', async ({ page, request }) => {
+		// Shared mutable catalog: only the wide project performs the
+		// disable/restore cycle — parallel projects would race the toggle
+		// window and vacuously skip (shared_fixture_race convention).
+		test.skip((page.viewportSize()?.width ?? 0) < 1000, 'catalog toggle runs on the wide project only');
+		// NN-09 hide is server-rendered — the only honest empty state is a
+		// catalog with zero enabled resources. Disable every row via the
+		// admin API (edges survive disable), assert, restore in finally.
+		const base = '/index.php/apps/ticketcheck/api/settings/ticket-resources';
+		// Session CSRF: API writes need the page's requesttoken header.
+		await page.goto('/apps/ticketcheck/settings/resources', { waitUntil: 'domcontentloaded' });
+		await ensureAuthenticated(page);
+		const rt = await page.evaluate(
+			() => document.querySelector('head[data-requesttoken]')?.getAttribute('data-requesttoken') || '',
+		);
+		expect(rt).not.toBe('');
+		const api = { headers: { requesttoken: rt, 'OCS-APIRequest': 'true' } };
+		const list = await request.get(base, api);
+		expect(list.ok()).toBeTruthy();
+		const rows = await list.json();
+		const enabled = rows.filter((r) => r.enabled).map((r) => r.key);
+		test.skip(enabled.length === 0, 'catalog already empty — nothing to toggle');
+		try {
+			for (const key of enabled) {
+				const res = await request.put(`${base}/${key}`, { ...api, data: { enabled: '0' } });
+				expect(res.ok(), `disable ${key}`).toBeTruthy();
+			}
+			await page.goto('/apps/ticketcheck/tickets/create', { waitUntil: 'domcontentloaded' });
+			await ensureAuthenticated(page);
+			await expect(page.locator('select#resources')).toHaveCount(0);
+		} finally {
+			for (const key of enabled) {
+				await request.put(`${base}/${key}`, { ...api, data: { enabled: '1' } });
+			}
+		}
 	});
 });
