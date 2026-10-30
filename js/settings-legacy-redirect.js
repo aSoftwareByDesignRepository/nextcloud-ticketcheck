@@ -20,6 +20,8 @@
 	const ANCHOR_SECTIONS = Object.freeze({
 		'settings-categories-heading': 'categories',
 		'ticket-categories': 'categories',
+		'ticket-resources': 'resources',
+		'settings-resources-heading': 'resources',
 		'settings-email-heading': 'email',
 		'settings-inbound-mail-heading': 'inbound-mail',
 		'settings-kb-heading': 'knowledge-base',

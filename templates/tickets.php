@@ -211,7 +211,13 @@ $categoryLabel = static function (?string $key) use ($categoryLabelMap): string 
                                                     aria-label="<?php p($l->t('category') . ': ' . $categoryLabel($ticket->getCategory())); ?>">
                                                     <?php p($categoryLabel($ticket->getCategory())); ?>
                                                 </span>
-                                            <?php else: ?>
+                                            <?php endif; ?>
+                                            <?php foreach ((($_['ticketResourceMap'] ?? [])[$ticket->getId()] ?? []) as $tcRp): ?>
+                                                <span class="tc-resource-chip<?php if (empty($tcRp['enabled'])) p(' tc-resource-chip--disabled'); ?>">
+                                                    <?php p($tcRp['label']); ?>
+                                                </span>
+                                            <?php endforeach; ?>
+                                            <?php if (!$ticket->getCategory()): ?>
                                                 <span class="helpdesk-text-muted"><?php p($l->t('none')); ?></span>
                                             <?php endif; ?>
                                         </td>

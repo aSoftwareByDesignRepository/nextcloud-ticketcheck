@@ -33,6 +33,7 @@ class CsvExportService
         'status',
         'priority',
         'category',
+        'resources',
         'customer_id',
         'customer_name',
         'customer_email',
@@ -107,6 +108,8 @@ class CsvExportService
         private ExportFilterParser $filterParser,
         private LoggerInterface $logger,
         private ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories = null,
+        private ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
+        private ?\OCA\Ticketcheck\Db\TicketResourceMapMapper $resourceMapMapper = null,
     ) {
     }
 
@@ -212,6 +215,9 @@ class CsvExportService
         $attachmentCounts = $this->needsTicketColumn($columns, 'attachment_count')
             ? $this->bulkAttachmentCounts(array_map(static fn (Ticket $t) => $t->getId(), $tickets))
             : [];
+        $resourceLabels = $this->needsTicketColumn($columns, 'resources')
+            ? $this->bulkResourceLabels(array_map(static fn (Ticket $t) => $t->getId(), $tickets))
+            : [];
 
         $headers = array_map(fn (string $column) => $this->ticketColumnLabel($column, $l), $columns);
         $rows = [];
@@ -223,6 +229,7 @@ class CsvExportService
                 $assignedNames,
                 $commentCounts,
                 $attachmentCounts,
+                $resourceLabels,
                 $l
             );
         }
@@ -427,6 +434,7 @@ class CsvExportService
         array $assignedNames,
         array $commentCounts,
         array $attachmentCounts,
+        array $resourceLabels,
         IL10N $l,
     ): array {
         $projectId = $ticket->getProjectId();
@@ -441,6 +449,7 @@ class CsvExportService
             'category' => $this->ticketCategories !== null
                 ? $this->ticketCategories->labelFor((string)$ticket->getCategory())
                 : $this->translateToken('category_' . $ticket->getCategory(), $ticket->getCategory(), $l),
+            'resources' => implode('; ', $resourceLabels[$ticket->getId()] ?? []),
             'customer_id' => $ticket->getCustomerId() !== null ? (string)$ticket->getCustomerId() : '',
             'customer_name' => $ticket->getCustomerName(),
             'customer_email' => $ticket->getCustomerEmail(),
@@ -583,6 +592,26 @@ class CsvExportService
      * @param array<string,mixed> $filters
      * @return array<string,mixed>
      */
+    /**
+     * ticketId => display labels — one batched edge read + one catalog
+     * label map (same batch pattern as comment/attachment counts).
+     *
+     * @param list<int> $ticketIds
+     * @return array<int, list<string>>
+     */
+    private function bulkResourceLabels(array $ticketIds): array
+    {
+        if ($ticketIds === [] || $this->ticketResources === null || $this->resourceMapMapper === null) {
+            return [];
+        }
+        $labels = $this->ticketResources->labelMap();
+        $out = [];
+        foreach ($this->resourceMapMapper->keysForTickets($ticketIds) as $tid => $keys) {
+            $out[$tid] = array_map(static fn (string $k): string => $labels[$k] ?? $k, $keys);
+        }
+        return $out;
+    }
+
     private function normalizeTicketDateFilters(array $filters): array
     {
         $dateFrom = isset($filters['date_from']) && is_string($filters['date_from']) ? $filters['date_from'] : null;

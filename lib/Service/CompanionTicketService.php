@@ -52,6 +52,7 @@ class CompanionTicketService
 		private readonly LoggerInterface $logger,
 		private readonly TicketWorkflowLock $workflowLock,
 		private readonly ?TicketCategoryService $ticketCategories = null,
+		private readonly ?TicketResourceService $ticketResources = null,
 	) {
 	}
 
@@ -189,6 +190,7 @@ class CompanionTicketService
 			'priorities' => Ticket::getPriorities(),
 			'statuses' => Ticket::getStatuses(),
 			'categories' => $categories,
+			'resources' => $this->ticketResources !== null ? $this->ticketResources->options() : [],
 			'defaultCategory' => $this->ticketCategories !== null
 				? $this->ticketCategories->defaultKey()
 				: Ticket::CATEGORY_GENERAL,
@@ -464,7 +466,7 @@ class CompanionTicketService
 	 *
 	 * @return array<string, mixed> detail payload of the created ticket
 	 */
-	public function create(string $uid, ?int $projectId, string $title, string $description, string $priority, ?string $category = null): array
+	public function create(string $uid, ?int $projectId, string $title, string $description, string $priority, ?string $category = null, ?array $resources = null): array
 	{
 		if ($projectId === null || $projectId < 1) {
 			throw new CompanionValidationException('project_required', 'projectId is required');
@@ -503,6 +505,14 @@ class CompanionTicketService
 		];
 		if ($category !== null && trim($category) !== '') {
 			$data['category'] = strtolower(trim($category));
+		}
+		$resourceKeys = [];
+		if ($resources !== null && $this->ticketResources !== null) {
+			try {
+				$resourceKeys = $this->ticketResources->resolveWriteKeys($resources);
+			} catch (\Throwable) {
+				throw new CompanionValidationException('invalid_resource', 'Unknown resource');
+			}
 		}
 
 		$project = null;
@@ -544,6 +554,9 @@ class CompanionTicketService
 
 		try {
 			$ticket = $this->ticketService->createTicket($data);
+		if ($resourceKeys !== [] && $this->ticketResources !== null) {
+			$this->ticketResources->withResourceWriteGuard(fn () => $this->ticketResources->setForTicket((int)$ticket->getId(), $resourceKeys));
+		}
 		} catch (\Exception $e) {
 			if (str_starts_with($e->getMessage(), 'Validation failed')) {
 				throw new CompanionValidationException('validation_failed', $e->getMessage());
@@ -778,6 +791,7 @@ class CompanionTicketService
 			'priority' => $ticket->getPriority(),
 			'category' => (string)$ticket->getCategory(),
 			'categoryLabel' => $this->categoryLabel($ticket->getCategory()),
+			'resources' => $this->resourcePairs((int)$ticket->getId()),
 			'projectId' => $ticket->getProjectId(),
 			'projectName' => $this->projectName($ticket->getProjectId()),
 			'assignedTo' => $ticket->getAssignedTo(),
@@ -805,6 +819,7 @@ class CompanionTicketService
 			'priority' => $ticket->getPriority(),
 			'category' => (string)$ticket->getCategory(),
 			'categoryLabel' => $this->categoryLabel($ticket->getCategory()),
+			'resources' => $this->resourcePairs((int)$ticket->getId()),
 			'projectId' => $ticket->getProjectId(),
 			'projectName' => $this->projectName($ticket->getProjectId()),
 			'assignedTo' => $ticket->getAssignedTo(),
@@ -905,4 +920,20 @@ class CompanionTicketService
 		}
 		return ['updatedAt' => $updatedAt, 'id' => (int)$id];
 	}
+    /**
+     * [{key,label}] pairs for the ticket's resource set — resolved labels,
+     * never raw keys only.
+     */
+    private function resourcePairs(int $ticketId): array
+    {
+        if ($this->ticketResources === null) {
+            return [];
+        }
+        $out = [];
+        foreach ($this->ticketResources->pairsForTicket($ticketId) as $p) {
+            $out[] = ['key' => $p['key'], 'label' => $p['label']];
+        }
+        return $out;
+    }
+
 }

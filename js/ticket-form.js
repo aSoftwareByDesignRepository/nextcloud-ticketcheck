@@ -187,6 +187,14 @@ document.addEventListener('DOMContentLoaded', function () {
             if (descEl) descEl.value = d.description || '';
             const catEl = document.getElementById('category');
             if (catEl) catEl.value = d.category || '';
+            if (window.tcResourcePicker && Array.isArray(d.resources)) {
+                window.tcResourcePicker.setValues(d.resources);
+            } else {
+                const resEl = document.getElementById('resources');
+                if (resEl && Array.isArray(d.resources)) {
+                    Array.from(resEl.options).forEach((o) => { o.selected = d.resources.includes(o.value); });
+                }
+            }
             const priEl = document.getElementById('priority');
             if (priEl) priEl.value = d.priority || '';
             const stEl = document.getElementById('status');
@@ -341,13 +349,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const hasFiles = selectedFiles.length > 0;
         fileCountText.classList.toggle('helpdesk-upload-dropzone__subtitle--has-files', hasFiles);
         if (!hasFiles) {
-            fileCountText.style.color = '';
-            fileCountText.style.fontWeight = '';
+            fileCountText.classList.remove('helpdesk-upload-dropzone__subtitle--error');
             fileCountText.textContent = tSafe('or_drag_drop_here', 'or drag and drop here');
             return;
         }
-        fileCountText.style.color = '';
-        fileCountText.style.fontWeight = '';
+        fileCountText.classList.remove('helpdesk-upload-dropzone__subtitle--error');
         fileCountText.textContent = tFormat('files_selected_count', '{count} file(s) selected', { count: String(selectedFiles.length) });
     }
 
@@ -425,8 +431,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (fileCountText) {
             fileCountText.classList.remove('helpdesk-upload-dropzone__subtitle--has-files');
             fileCountText.textContent = message;
-            fileCountText.style.color = 'var(--color-error-text, var(--tc-danger-ink, var(--color-error)))';
-            fileCountText.style.fontWeight = '600';
+            fileCountText.classList.add('helpdesk-upload-dropzone__subtitle--error');
         }
         if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
             OC.Notification.showTemporary(message, { type: 'error' });
@@ -460,8 +465,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (lastError && fileCountText) {
             fileCountText.classList.remove('helpdesk-upload-dropzone__subtitle--has-files');
             fileCountText.textContent = lastError;
-            fileCountText.style.color = 'var(--color-error-text, var(--tc-danger-ink, var(--color-error)))';
-            fileCountText.style.fontWeight = '600';
+            fileCountText.classList.add('helpdesk-upload-dropzone__subtitle--error');
         }
     }
 
@@ -566,6 +570,10 @@ document.addEventListener('DOMContentLoaded', function () {
             title: titleEl ? titleEl.value : '',
             description: descEl ? descEl.value : '',
             category: catEl ? catEl.value : '',
+            resources: (function () {
+                const resSel = document.getElementById('resources');
+                return resSel ? Array.from(resSel.selectedOptions).map((o) => o.value) : [];
+            })(),
             priority: priEl ? priEl.value : '',
             status: stEl ? stEl.value : '',
             assigned_to: asEl ? asEl.value : '',

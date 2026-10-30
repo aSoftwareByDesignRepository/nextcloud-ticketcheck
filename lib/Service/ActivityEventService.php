@@ -65,6 +65,22 @@ class ActivityEventService
     /**
      * @param array<string, string> $extra
      */
+    /**
+     * Resource set changed on a ticket — internal-staff channel only:
+     * resource names are internal inventory (spec NN-01), never routed to
+     * guest recipients.
+     *
+     * @param list<string> $added
+     * @param list<string> $removed
+     */
+    public function logTicketResourcesChanged(string $actorUserId, Ticket $ticket, array $added, array $removed): void
+    {
+        $this->publish($actorUserId, $ticket, 'ticket_resources_changed', [
+            'added' => $added,
+            'removed' => $removed,
+        ], true);
+    }
+
     private function publish(string $actorUserId, Ticket $ticket, string $subject, array $extra, bool $internalStaffOnly): void
     {
         if (!$this->appManager->isInstalled('activity')) {

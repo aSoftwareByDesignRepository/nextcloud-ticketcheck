@@ -33,6 +33,7 @@ final class SettingsSectionCatalog
 	public const SECTIONS = [
 		'access',
 		'categories',
+		'resources',
 		'email',
 		'inbound-mail',
 		'knowledge-base',
@@ -72,6 +73,8 @@ final class SettingsSectionCatalog
 	public const LEGACY_ANCHORS = [
 		'settings-categories-heading' => 'categories',
 		'ticket-categories' => 'categories',
+		'ticket-resources' => 'resources',
+		'settings-resources-heading' => 'resources',
 		'settings-email-heading' => 'email',
 		'settings-inbound-mail-heading' => 'inbound-mail',
 		'settings-kb-heading' => 'knowledge-base',
@@ -131,6 +134,7 @@ final class SettingsSectionCatalog
 		return match ($section) {
 			'access' => $l->t('Access control'),
 			'categories' => $l->t('Ticket categories'),
+			'resources' => $l->t('Ticket resources'),
 			'email' => $l->t('Email notifications'),
 			'inbound-mail' => $l->t('Inbound email (IMAP)'),
 			'knowledge-base' => $l->t('Knowledge base settings'),
@@ -151,6 +155,7 @@ final class SettingsSectionCatalog
 		return match ($section) {
 			'access' => $l->t('Access'),
 			'categories' => $l->t('Categories'),
+			'resources' => $l->t('Resources'),
 			'email' => $l->t('Email'),
 			'inbound-mail' => $l->t('Inbound mail'),
 			'knowledge-base' => $l->t('Knowledge base'),
@@ -176,6 +181,7 @@ final class SettingsSectionCatalog
 		return match ($section) {
 			'access' => $l->t('settings_app_access_lead'),
 			'categories' => $l->t('settings_categories_lead'),
+			'resources' => $l->t('settings_resources_lead'),
 			'email' => $l->t('settings_email_lead'),
 			'inbound-mail' => $l->t('settings_inbound_mail_lead'),
 			'knowledge-base' => $l->t('settings_kb_lead'),

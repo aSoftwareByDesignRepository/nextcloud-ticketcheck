@@ -2,5 +2,94 @@
   "schemaVersion": 1,
   "appId": "ticketcheck",
   "companionDir": "mobile/ticketcheck",
-  "contracts": []
+  "contracts": [
+    {
+      "id": "ticket-resources-select",
+      "param": "resources",
+      "description": "Optional multi-select of enabled resource keys on staff ticket create/edit and companion create. Server validates every key exists+enabled (uniform 422 `fields:{resources}`); portal never binds the param.",
+      "errorCodes": [
+        "invalid_resource",
+        "too_many_resources",
+        "invalid_resources"
+      ],
+      "server": [
+        {
+          "file": "lib/Service/TicketResourceService.php",
+          "needles": [
+            "resolveWriteKeys",
+            "invalid_resource",
+            "too_many_resources"
+          ]
+        },
+        {
+          "file": "lib/Controller/TicketController.php",
+          "needles": [
+            "resolveResourceParam",
+            "assignTicketResources"
+          ]
+        },
+        {
+          "file": "lib/Service/CompanionTicketService.php",
+          "needles": [
+            "resolveWriteKeys",
+            "invalid_resource",
+            "'resources'"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/ticket-form.php",
+          "needles": [
+            "name=\"resources[]\"",
+            "resources"
+          ]
+        },
+        {
+          "file": "js/ticket-resources-picker.js",
+          "needles": [
+            "resources[]",
+            "tc-res-listbox",
+            "setValues"
+          ]
+        },
+        {
+          "file": "templates/parts/settings/resources.php",
+          "needles": [
+            "ticket-resources",
+            "ticketResources"
+          ]
+        },
+        {
+          "file": "js/settings-resources.js",
+          "needles": [
+            "api/settings/ticket-resources",
+            "requesttoken"
+          ]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/CreateTicketScreen.tsx",
+          "needles": [
+            "create.resources",
+            "resources",
+            "options?.resources"
+          ]
+        },
+        {
+          "file": "src/api/client.ts",
+          "needles": [
+            "resources"
+          ]
+        },
+        {
+          "file": "src/types.ts",
+          "needles": [
+            "resources"
+          ]
+        }
+      ]
+    }
+  ]
 }

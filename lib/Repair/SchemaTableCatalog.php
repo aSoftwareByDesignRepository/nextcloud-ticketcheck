@@ -36,6 +36,8 @@ final class SchemaTableCatalog
 		'helpdesk_projects',
 		'helpdesk_ticket_categories',
 		'helpdesk_ticket_links',
+		'helpdesk_ticket_res_map',
+		'helpdesk_ticket_resources',
 		'helpdesk_ticket_surveys',
 		'helpdesk_ticket_templates',
 		'helpdesk_ticket_watchers',

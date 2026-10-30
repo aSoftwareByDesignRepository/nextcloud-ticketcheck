@@ -26,6 +26,7 @@ class SplitService
         private readonly LoggerInterface $logger,
         private readonly IDBConnection $db,
         private readonly TicketWorkflowLock $workflowLock,
+		private ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
     ) {
     }
 
@@ -104,7 +105,11 @@ class SplitService
                     'assigned_to' => null,
                     'created_by_guest' => $sourceFresh->getCreatedByGuest(),
                 ];
-                $created[] = $this->ticketService->createTicket($data);
+                $newTicket = $this->ticketService->createTicket($data);
+                if ($this->ticketResources !== null) {
+                    $this->ticketResources->setForTicket((int)$newTicket->getId(), $this->ticketResources->keysForTicket($sourceTicketId));
+                }
+                $created[] = $newTicket;
             }
 
             $lockIds = [$sourceTicketId];

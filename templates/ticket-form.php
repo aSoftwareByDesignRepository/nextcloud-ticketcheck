@@ -250,6 +250,47 @@ foreach ($categoryOptions as $opt) {
                                 </select>
                             </div>
 
+                            <?php
+                            // Resources picker: hidden entirely when no enabled
+                            // resources exist AND the ticket carries none (NN-09).
+                            $tcResOptions = is_array($_['resources'] ?? null) ? $_['resources'] : [];
+                            $tcResPairs = is_array($_['ticketResources'] ?? null) ? $_['ticketResources'] : [];
+                            $tcResCurrent = array_map(static fn (array $p): string => (string)$p['key'], $tcResPairs);
+                            $tcResShow = $tcResOptions !== [] || $tcResPairs !== [];
+                            ?>
+                            <?php if ($tcResShow): ?>
+                            <div class="helpdesk-form-group tc-field">
+                                <label for="resources" class="helpdesk-form-label"><?php p($l->t('resources')); ?></label>
+                                <select id="resources" name="resources[]" class="helpdesk-form-control" multiple size="<?php p((string)min(6, max(2, count($tcResOptions) + count($tcResPairs)))); ?>">
+                                    <?php
+                                    $tcResGrouped = [];
+                                    foreach ($tcResOptions as $opt) {
+                                        // Unknown server-side types (newer catalog versions)
+                                        // must still render — bucket them under 'other',
+                                        // never silently drop a selectable resource.
+                                        $tcResG = (string)($opt['type'] ?? 'other');
+                                        if (!in_array($tcResG, ['room', 'device', 'other'], true)) {
+                                            $tcResG = 'other';
+                                        }
+                                        $tcResGrouped[$tcResG][] = $opt;
+                                    }
+                                    foreach (['room', 'device', 'other'] as $tcResType):
+                                        if (empty($tcResGrouped[$tcResType])) continue; ?>
+                                        <optgroup label="<?php p($l->t('resource_type_' . $tcResType)); ?>">
+                                            <?php foreach ($tcResGrouped[$tcResType] as $opt): ?>
+                                                <option value="<?php p($opt['key']); ?>" <?php if (in_array($opt['key'], $tcResCurrent, true)) p('selected'); ?>><?php p($opt['label']); ?></option>
+                                            <?php endforeach; ?>
+                                        </optgroup>
+                                    <?php endforeach; ?>
+                                    <?php foreach ($tcResPairs as $p):
+                                        if (empty($p['enabled'])): ?>
+                                        <option value="<?php p($p['key']); ?>" selected><?php p($p['label']); ?> (<?php p($l->t('disabled_label')); ?>)</option>
+                                        <?php endif; endforeach; ?>
+                                </select>
+                            </div>
+                            <?php endif; ?>
+                            <?php \OCP\Util::addScript('ticketcheck', 'ticket-resources-picker'); ?>
+
                             <div class="helpdesk-form-group tc-field">
                                 <label for="priority" class="helpdesk-form-label"><?php p($l->t('priority_label')); ?></label>
                                 <select id="priority" name="priority" class="helpdesk-form-control">

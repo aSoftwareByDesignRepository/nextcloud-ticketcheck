@@ -3260,6 +3260,17 @@ select.helpdesk-form-control:focus-visible {
     font-weight: 600;
 }
 
+/* Upload error: ink+surface travel as a pair — --color-error-text is only
+   readable on --color-error (light on dark-theme surfaces, dark on light).
+   Bare-text recolors measured 3.8:1 on the slate canvas in dark theme. */
+.helpdesk-upload-dropzone__subtitle--error {
+    color: var(--color-error-text);
+    background: var(--color-error);
+    font-weight: 600;
+    padding: var(--helpdesk-spacing-2xs, 2px) var(--helpdesk-spacing-xs);
+    border-radius: var(--helpdesk-border-radius-sm);
+}
+
 /* Textarea */
 textarea.helpdesk-form-control {
     min-height: 120px;
@@ -19587,4 +19598,111 @@ textarea {
 :is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) button:not(.primary, .error, .warning, .success, .danger, .button-vue, .helpdesk-btn--primary, .helpdesk-btn--danger, .helpdesk-btn--success, .helpdesk-btn--warning, .helpdesk-btn--ghost, .helpdesk-btn--text, .helpdesk-btn--icon, .tc-btn--primary, .tc-btn--danger),
 :is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) .button:not(.primary, .error, .warning, .success, .danger) {
 	border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
+}
+
+/* Ticket resources picker + chips (resources-2026-10)
+   Visual language mirrors .tc-chip — same tokens, same touch targets. */
+
+.tc-resource-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--tc-space-2);
+	align-items: center;
+}
+.tc-resource-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--tc-space-1);
+	padding: var(--tc-space-1) var(--tc-space-2);
+	border-radius: var(--tc-radius-sm);
+	background: var(--tc-bg-stripe);
+	border: 1px solid var(--tc-border);
+	font-size: var(--tc-fs-sm);
+	word-break: break-all;
+}
+.tc-resource-chip--disabled {
+	opacity: 0.65;
+	font-style: italic;
+}
+.tc-resource-chip__remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+	color: var(--tc-muted);
+	padding: var(--tc-space-1);
+	min-width: 44px;
+	min-height: 44px;
+	margin: calc(-1 * var(--tc-space-1));
+	border-radius: var(--tc-radius-sm);
+	line-height: 1;
+	font-size: 1.25rem;
+}
+.tc-resource-chip__remove:hover {
+	color: var(--color-main-text, #1d1d1d);
+	background: color-mix(in srgb, var(--color-main-text, #1d1d1d) 8%, transparent);
+}
+.tc-resource-chip__remove:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 60%, transparent);
+	outline-offset: 1px;
+}
+
+.tc-res-picker {
+	display: flex;
+	flex-direction: column;
+	gap: var(--tc-space-2);
+}
+.tc-res-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--tc-space-2);
+}
+.tc-res-combobox {
+	position: relative;
+}
+.tc-res-listbox {
+	position: absolute;
+	z-index: 100;
+	top: calc(100% + 2px);
+	left: 0;
+	right: 0;
+	margin: 0;
+	padding: var(--tc-space-1);
+	list-style: none;
+	background: var(--tc-bg-card);
+	border: 1px solid var(--tc-border-strong);
+	border-radius: var(--tc-radius-md);
+	box-shadow: 0 4px 14px color-mix(in srgb, var(--color-main-text, #000) 18%, transparent);
+	max-height: 16rem;
+	overflow-y: auto;
+}
+.tc-res-listbox li[role='option'] {
+	padding: var(--tc-space-2) var(--tc-space-3);
+	border-radius: var(--tc-radius-sm);
+	cursor: pointer;
+	min-height: 2.75rem;
+	display: flex;
+	align-items: center;
+}
+.tc-res-listbox li[role='option'].is-active,
+.tc-res-listbox li[role='option']:hover {
+	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 12%, transparent);
+}
+.tc-res-group {
+	padding: var(--tc-space-1) var(--tc-space-3);
+	font-size: var(--tc-fs-small, .8125rem);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: .03em;
+	color: var(--tc-muted);
+	cursor: default;
+}
+.tc-res-empty {
+	padding: var(--tc-space-2) var(--tc-space-3);
+	color: var(--tc-muted);
+}
+.tc-resource-item--disabled .settings-kb-category-item__name {
+	opacity: 0.65;
 }

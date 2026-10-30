@@ -59,6 +59,7 @@ final class EscalationTicketWriteFacade
 		// back to the builtin enum — reachable only in hand-built instances;
 		// the DI container always injects the service.
 		private readonly ?TicketCategoryService $ticketCategories = null,
+		private readonly ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
 	) {
 	}
 
@@ -101,6 +102,14 @@ final class EscalationTicketWriteFacade
 		if (!$categoryOk) {
 			return FacadeResult::failure('validation_failed', 'Unknown category', ['fields' => ['category']]);
 		}
+		$resourceKeys = [];
+		if ($req->resources !== null && $this->ticketResources !== null) {
+			try {
+				$resourceKeys = $this->ticketResources->resolveWriteKeys($req->resources);
+			} catch (\Throwable) {
+				return FacadeResult::failure('validation_failed', 'Unknown resource', ['fields' => ['resources']]);
+			}
+		}
 		if (!in_array($req->priority, Ticket::getPriorities(), true)) {
 			return FacadeResult::failure('validation_failed', 'Unknown priority', ['fields' => ['priority']]);
 		}
@@ -141,6 +150,11 @@ final class EscalationTicketWriteFacade
 					if ($impersonated) {
 						$this->userSession->setUser(null);
 					}
+				}
+				if ($resourceKeys !== [] && $this->ticketResources !== null) {
+					$this->ticketResources->withResourceWriteGuard(
+						fn () => $this->ticketResources->setForTicket((int)$ticket->getId(), $resourceKeys)
+					);
 				}
 				return [
 					'ticketId' => $ticket->getId(),

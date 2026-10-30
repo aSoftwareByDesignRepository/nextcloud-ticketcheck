@@ -28,6 +28,8 @@ final class EscalationTicketWriteRequest
 		public readonly string $category = 'general',
 		public readonly string $priority = 'normal',
 		public readonly ?string $idempotencyKey = null,
+		/** @var list<string>|null optional resource keys */
+		public readonly ?array $resources = null,
 	) {
 	}
 
@@ -43,6 +45,8 @@ final class EscalationTicketWriteRequest
 			category: trim((string)($input['category'] ?? 'general')),
 			priority: trim((string)($input['priority'] ?? 'normal')),
 			idempotencyKey: self::nullableString($input['idempotencyKey'] ?? null),
+			resources: isset($input['resources']) && is_array($input['resources'])
+				? array_values(array_map('strval', $input['resources'])) : null,
 		);
 	}
 

@@ -62,7 +62,7 @@ final class SettingsSectionCatalogTest extends TestCase
 		}
 		// Routable = SECTIONS minus HIDDEN, order preserved.
 		self::assertSame(
-			['access', 'categories', 'email', 'inbound-mail', 'knowledge-base', 'kb-categories', 'escalation', 'about'],
+			['access', 'categories', 'resources', 'email', 'inbound-mail', 'knowledge-base', 'kb-categories', 'escalation', 'about'],
 			SettingsSectionCatalog::routableSections(),
 		);
 	}
@@ -163,6 +163,7 @@ final class SettingsSectionCatalogTest extends TestCase
 		$expected = [
 			'access' => 'T:Access control',
 			'categories' => 'T:Ticket categories',
+			'resources' => 'T:Ticket resources',
 			'email' => 'T:Email notifications',
 			'inbound-mail' => 'T:Inbound email (IMAP)',
 			'knowledge-base' => 'T:Knowledge base settings',
@@ -184,6 +185,7 @@ final class SettingsSectionCatalogTest extends TestCase
 		$expected = [
 			'access' => 'T:Access',
 			'categories' => 'T:Categories',
+			'resources' => 'T:Resources',
 			'email' => 'T:Email',
 			'inbound-mail' => 'T:Inbound mail',
 			'knowledge-base' => 'T:Knowledge base',
@@ -219,6 +221,7 @@ final class SettingsSectionCatalogTest extends TestCase
 		$fingerprints = [
 			'access' => 'settings_app_access_lead',
 			'categories' => 'settings_categories_lead',
+			'resources' => 'settings_resources_lead',
 			'email' => 'settings_email_lead',
 			'knowledge-base' => 'settings_kb_lead',
 			'kb-categories' => 'settings_kb_categories_lead',

@@ -30,6 +30,7 @@ class MergeService
 		private readonly LoggerInterface $logger,
 		private readonly IDBConnection $db,
 		private readonly TicketWorkflowLock $workflowLock,
+		private ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
 	) {
 	}
 
@@ -94,6 +95,10 @@ class MergeService
 	 */
 	private function mergeTicketsLocked(int $sourceId, int $targetId): array
 	{
+        if ($this->ticketResources !== null) {
+            $this->ticketResources->unionForTicket($targetId, $this->ticketResources->keysForTicket($sourceId));
+        }
+
 		$source = $this->ticketMapper->find($sourceId);
 		$target = $this->ticketMapper->find($targetId);
 

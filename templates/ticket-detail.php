@@ -415,6 +415,19 @@ $localeFormat = $_['localeFormat'] ?? null;
                                     p($catMap[$catKey] ?? $catKey);
                                 ?></strong>
                             </div>
+                            <?php $tcResPairs = is_array($_['ticketResources'] ?? null) ? $_['ticketResources'] : []; ?>
+                            <?php if ($tcResPairs !== []): ?>
+                            <div>
+                                <div class="helpdesk-text-muted ticket-detail-info-label"><?php p($l->t('resources')); ?></div>
+                                <div class="tc-resource-chips">
+                                    <?php foreach ($tcResPairs as $rp): ?>
+                                        <span class="tc-resource-chip<?php if (empty($rp['enabled'])) p(' tc-resource-chip--disabled'); ?>">
+                                            <?php p($rp['label']); ?><?php if (empty($rp['enabled'])) p(' (' . $l->t('disabled_label') . ')'); ?>
+                                        </span>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                             <div>
                                 <div class="helpdesk-text-muted ticket-detail-info-label"><?php p($l->t('Created')); ?></div>
                                 <strong><?php

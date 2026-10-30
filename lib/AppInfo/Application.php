@@ -180,6 +180,25 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Service\InboundMailConfigService::class),
             );
         });
+        $context->registerService(\OCA\Ticketcheck\Db\TicketResourceMapper::class, function ($c) {
+            return new \OCA\Ticketcheck\Db\TicketResourceMapper(
+                $c->get(\OCP\IDBConnection::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Db\TicketResourceMapMapper::class, function ($c) {
+            return new \OCA\Ticketcheck\Db\TicketResourceMapMapper(
+                $c->get(\OCP\IDBConnection::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\TicketResourceService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\TicketResourceService(
+                $c->get(\OCA\Ticketcheck\Db\TicketResourceMapper::class),
+                $c->get(\OCA\Ticketcheck\Db\TicketResourceMapMapper::class),
+                $c->get(\OCP\IDBConnection::class),
+                $c->get(\OCP\Lock\ILockingProvider::class),
+                $c->get(\Psr\Log\LoggerInterface::class),
+            );
+        });
 
         // Register services
         $context->registerService('TicketService', function ($c) {
@@ -198,6 +217,7 @@ class Application extends App implements IBootstrap
                 $c->get(\Psr\Log\LoggerInterface::class),
                 $c->get(\OCP\IDBConnection::class),
                 $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketResourceService::class),
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\TicketService::class, function ($c) {
@@ -283,6 +303,7 @@ class Application extends App implements IBootstrap
                 $c->get(\Psr\Log\LoggerInterface::class),
                 $c->get(\OCP\IDBConnection::class),
                 $c->get(\OCA\Ticketcheck\Service\TicketWorkflowLock::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketResourceService::class),
             );
         });
 
@@ -312,6 +333,7 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Service\IdempotencyService::class),
                 $c->get(\Psr\Log\LoggerInterface::class),
                 $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketResourceService::class),
             );
         });
 
@@ -376,6 +398,7 @@ class Application extends App implements IBootstrap
                 $c->get(\Psr\Log\LoggerInterface::class),
                 $c->get(\OCP\IDBConnection::class),
                 $c->get(\OCA\Ticketcheck\Service\TicketWorkflowLock::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketResourceService::class),
             );
         });
 
@@ -464,7 +487,8 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Db\HelpdeskCustomerMapper::class),
                 $c->get(\OCA\Ticketcheck\Db\HelpdeskProjectMapper::class),
                 $c->get(\OCP\L10N\IFactory::class),
-                $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class)
+                $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketResourceService::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\BackgroundJob\InboundMailSyncJob::class, function ($c) {

@@ -180,6 +180,11 @@ $kanbanColumnClass = static function (string $columnStatus): string {
                                                             <?php p($categoryLabel($item->getCategory())); ?>
                                                         </span>
                                                     <?php endif; ?>
+                                                    <?php foreach ((($_['ticketResourceMap'] ?? [])[$item->getId()] ?? []) as $tcRp): ?>
+                                                        <span class="tc-resource-chip<?php if (empty($tcRp['enabled'])) p(' tc-resource-chip--disabled'); ?>">
+                                                            <?php p($tcRp['label']); ?>
+                                                        </span>
+                                                    <?php endforeach; ?>
                                                 </div>
                                             </div>
                                         </a>

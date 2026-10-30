@@ -92,6 +92,7 @@ class SettingsController extends Controller
     private ?InboundMailOAuthService $inboundMailOAuth;
     private ?ProjectService $projectService;
     private ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories;
+    private ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources;
 
     public function __construct(
         string $appName,
@@ -119,6 +120,7 @@ class SettingsController extends Controller
         ?InboundMailOAuthService $inboundMailOAuth = null,
         ?ProjectService $projectService = null,
         ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories = null,
+        ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
     ) {
         parent::__construct($appName, $request);
         $this->permissionService = $permissionService;
@@ -144,6 +146,7 @@ class SettingsController extends Controller
         $this->inboundMailOAuth = $inboundMailOAuth;
         $this->projectService = $projectService;
         $this->ticketCategories = $ticketCategories;
+        $this->ticketResources = $ticketResources;
     }
 
     protected function getFrontEndAssetService(): FrontEndAssetService
@@ -281,6 +284,7 @@ class SettingsController extends Controller
         return match ($section) {
             'access' => $this->accessSettingsExtras(),
             'categories' => $this->ticketCategorySettingsExtras(),
+            'resources' => $this->ticketResourceSettingsExtras(),
             'email' => ['emailSettings' => $this->emailSettingsPayload()],
             'inbound-mail' => $this->inboundMailSettingsExtras(),
             'knowledge-base' => ['knowledgeBaseSettings' => $this->knowledgeBaseSettingsPayload()],
@@ -2232,4 +2236,203 @@ class SettingsController extends Controller
         }
         return in_array($normalized, Ticket::getStatuses(), true) ? $normalized : null;
     }
+    /**
+     * Settings extras for the resources section.
+     */
+    private function ticketResourceSettingsExtras(): array
+    {
+        return [
+            'ticketResources' => $this->ticketResources !== null
+                ? $this->ticketResources->listArrays() : [],
+        ];
+    }
+
+    private function ticketResourceNotFound(IL10N $l): JSONResponse
+    {
+        return new JSONResponse(['success' => false, 'error' => $l->t('resource_not_found')], 404);
+    }
+
+    private function ticketResourceBusy(IL10N $l): JSONResponse
+    {
+        return new JSONResponse(['success' => false, 'error' => $l->t('resource_busy')], 409);
+    }
+
+    #[NoAdminRequired]
+    public function listTicketResources(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketResources === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        return new JSONResponse($this->ticketResources->listArrays());
+    }
+
+    #[NoAdminRequired]
+    public function createTicketResource(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketResources === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        try {
+            $typeParam = $this->request->getParam('type');
+            $created = $this->ticketResources->create(
+                (string)$this->request->getParam('name', ''),
+                $this->ticketCategoryActorUid(),
+                is_string($typeParam) ? $typeParam : null,
+            );
+            return new JSONResponse(['success' => true, 'resource' => $this->ticketResources->toArray($created)], 201);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('resource_validation_failed'), 'fields' => $e->getErrors()], 422);
+        } catch (LockedException) {
+            return $this->ticketResourceBusy($l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Settings operation failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+    }
+
+    #[NoAdminRequired]
+    public function updateTicketResource(string $key): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketResources === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        $name = $this->request->getParam('name');
+        $position = $this->request->getParam('position');
+        $enabled = $this->request->getParam('enabled');
+        $type = $this->request->getParam('type');
+        try {
+            $updated = $this->ticketResources->update(
+                $key,
+                $name !== null ? (string)$name : null,
+                $position !== null ? (int)$position : null,
+                $enabled !== null ? in_array(strtolower((string)$enabled), ['1', 'true', 'yes'], true) : null,
+                $this->ticketCategoryActorUid(),
+                is_string($type) ? $type : null,
+            );
+            return new JSONResponse(['success' => true, 'resource' => $this->ticketResources->toArray($updated)]);
+        } catch (DoesNotExistException) {
+            return $this->ticketResourceNotFound($l);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('resource_validation_failed'), 'fields' => $e->getErrors()], 422);
+        } catch (LockedException) {
+            return $this->ticketResourceBusy($l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Settings operation failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+    }
+
+    #[NoAdminRequired]
+    public function deleteTicketResource(string $key): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketResources === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        $replaceWith = $this->request->getParam('replace_with');
+        try {
+            $result = $this->ticketResources->delete(
+                $key,
+                $this->ticketCategoryActorUid(),
+                is_string($replaceWith) && trim($replaceWith) !== '' ? trim($replaceWith) : null,
+            );
+            return new JSONResponse(['success' => true] + $result);
+        } catch (DoesNotExistException) {
+            return $this->ticketResourceNotFound($l);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('resource_validation_failed'), 'fields' => $e->getErrors()], 422);
+        } catch (LockedException) {
+            return $this->ticketResourceBusy($l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Settings operation failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+    }
+
+    #[NoAdminRequired]
+    public function reorderTicketResources(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketResources === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        $keys = $this->request->getParam('keys', []);
+        if (!is_array($keys)) {
+            return new JSONResponse(['error' => $l->t('resource_validation_failed'), 'fields' => ['order' => 'invalid_resource_order']], 422);
+        }
+        try {
+            $this->ticketResources->reorder($keys, $this->ticketCategoryActorUid());
+            return new JSONResponse(['success' => true]);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('resource_validation_failed'), 'fields' => $e->getErrors()], 422);
+        } catch (LockedException) {
+            return $this->ticketResourceBusy($l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Settings operation failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 400);
+        }
+    }
+
+    #[NoAdminRequired]
+    public function exportTicketResources(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketResources === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        return new JSONResponse($this->ticketResources->exportResources());
+    }
+
+    #[NoAdminRequired]
+    public function importTicketResources(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        if ($this->ticketResources === null) {
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
+        }
+        $payload = $this->request->getParam('payload');
+        if (is_string($payload)) {
+            $decoded = json_decode($payload, true);
+            $payload = is_array($decoded) ? $decoded : null;
+        }
+        if (!is_array($payload)) {
+            return new JSONResponse(['error' => $l->t('resource_import_invalid')], 422);
+        }
+        try {
+            $result = $this->ticketResources->importResources($payload, $this->ticketCategoryActorUid());
+            return new JSONResponse(['success' => true] + $result);
+        } catch (ValidationException $e) {
+            return new JSONResponse(['error' => $l->t('resource_validation_failed'), 'fields' => $e->getErrors()], 422);
+        } catch (LockedException) {
+            return $this->ticketResourceBusy($l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Settings operation failed', ['exception' => $e]);
+            return new JSONResponse(['error' => $l->t('an_error_occurred')], 400);
+        }
+    }
+
 }

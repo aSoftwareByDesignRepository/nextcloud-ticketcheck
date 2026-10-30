@@ -1011,6 +1011,15 @@ class TicketMapper extends QBMapper
         if (isset($filters['category'])) {
             $qb->andWhere($qb->expr()->eq('category', $qb->createNamedParameter($filters['category'])));
         }
+        // Resource filter resolves to an id set upstream — an empty set must
+        // yield no rows, not an unfiltered list.
+        if (array_key_exists('ticket_ids_in', $filters)) {
+            if ($filters['ticket_ids_in'] === []) {
+                $qb->andWhere($qb->expr()->eq('id', $qb->createNamedParameter(-1, IQueryBuilder::PARAM_INT)));
+            } else {
+                $qb->andWhere($qb->expr()->in('id', $qb->createNamedParameter($filters['ticket_ids_in'], IQueryBuilder::PARAM_INT_ARRAY)));
+            }
+        }
         if (isset($filters['assigned_to'])) {
             $this->applyAssignedToFilter($qb, (string)$filters['assigned_to']);
         }

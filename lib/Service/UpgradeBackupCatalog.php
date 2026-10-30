@@ -51,6 +51,8 @@ final class UpgradeBackupCatalog
 		'helpdesk_projects',
 		'helpdesk_ticket_categories',
 		'helpdesk_ticket_links',
+		'helpdesk_ticket_res_map',
+		'helpdesk_ticket_resources',
 		'helpdesk_ticket_surveys',
 		'helpdesk_ticket_templates',
 		'helpdesk_ticket_watchers',
@@ -82,6 +84,9 @@ final class UpgradeBackupCatalog
 		'helpdesk_ticket_templates',
 		'helpdesk_ticket_watchers',
 		'helpdesk_tickets',
+		// Edges restore after both parents: map needs tickets + catalog rows.
+		'helpdesk_ticket_resources',
+		'helpdesk_ticket_res_map',
 		'helpdesk_whitelist',
 		'tc_idempotency',
 		'tc_license_state',

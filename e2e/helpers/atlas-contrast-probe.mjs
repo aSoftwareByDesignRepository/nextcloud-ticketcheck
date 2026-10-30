@@ -506,19 +506,17 @@ async function measureUploadErrorInk(page, theme) {
 	return page.evaluate(() => {
 		const el = document.getElementById('file-count-text')
 		if (!el) return { skipped: 'no #file-count-text on create form' }
-		const prev = { color: el.style.color, weight: el.style.fontWeight }
-		// Mirror of notifyUploadError()/appendFiles() inline style in
-		// js/ticket-form.js (post-fix recipe: -text token with legacy fallback).
-		el.style.color = 'var(--color-error-text, var(--tc-danger-ink, var(--color-error)))'
-		el.style.fontWeight = '600'
+		const prev = { cls: el.className }
+		// Mirror of notifyUploadError()/appendFiles() in js/ticket-form.js —
+		// post-fix recipe: error chip class (ink+surface pair, no inline style).
+		el.classList.add('helpdesk-upload-dropzone__subtitle--error')
 		const cs = getComputedStyle(el)
 		const out = {
 			fg: cs.color,
 			bg: window.__tcProbe.effBg(el),
 			textRatio: window.__tcProbe.ratio(cs.color, window.__tcProbe.effBg(el)),
 		}
-		el.style.color = prev.color
-		el.style.fontWeight = prev.weight
+		el.className = prev.cls
 		return out
 	})
 }

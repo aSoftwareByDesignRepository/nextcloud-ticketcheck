@@ -15,6 +15,8 @@ use OCA\Ticketcheck\Service\FrontEndAssetService;
 use OCA\Ticketcheck\Service\LocaleFormatService;
 use OCA\Ticketcheck\Service\NavigationContextService;
 use OCA\Ticketcheck\Service\TicketCategoryService;
+use OCA\Ticketcheck\Service\TicketResourceService;
+use OCA\Ticketcheck\Exception\ValidationException;
 use OCA\Ticketcheck\Service\TicketService;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Service\EmailService;
@@ -85,6 +87,7 @@ class TicketController extends Controller
     private FrontEndAssetService $frontEndAssets;
     private AttachmentDeliveryService $attachmentDelivery;
     private ?TicketCategoryService $ticketCategories;
+    private ?TicketResourceService $ticketResources;
 
     public function __construct(
         string $appName,
@@ -115,6 +118,7 @@ class TicketController extends Controller
         FrontEndAssetService $frontEndAssets,
         AttachmentDeliveryService $attachmentDelivery,
         ?TicketCategoryService $ticketCategories = null,
+        ?TicketResourceService $ticketResources = null,
     ) {
         parent::__construct($appName, $request);
         $this->ticketService = $ticketService;
@@ -143,6 +147,7 @@ class TicketController extends Controller
         $this->frontEndAssets = $frontEndAssets;
         $this->attachmentDelivery = $attachmentDelivery;
         $this->ticketCategories = $ticketCategories;
+        $this->ticketResources = $ticketResources;
     }
 
     /**
@@ -234,6 +239,7 @@ class TicketController extends Controller
         $status = (string) $this->request->getParam('status', '');
         $priority = (string) $this->request->getParam('priority', '');
         $category = (string) $this->request->getParam('category', '');
+        $resource = (string) $this->request->getParam('resource', '');
         $assignedTo = (string) $this->request->getParam('assigned_to', '');
         $projectId = (string) $this->request->getParam('project_id', '');
         $customerId = (string) $this->request->getParam('customer_id', '');
@@ -279,6 +285,14 @@ class TicketController extends Controller
         if ($category !== '') {
             $filters['category'] = $category;
         }
+        if ($resource !== '') {
+            $rk = strtolower(trim($resource));
+            if ($rk !== '' && $this->ticketResources !== null) {
+                // Filter resolves to an id set — includes disabled/deleted
+                // keys' historic tickets via the map table itself.
+                $filters['ticket_ids_in'] = $this->ticketResources->ticketIdsUsing($rk);
+            }
+        }
         if ($assignedTo !== '') {
             $filters['assigned_to'] = $assignedTo;
         }
@@ -313,6 +327,7 @@ class TicketController extends Controller
                 'status' => $status,
                 'priority' => $priority,
                 'category' => $category,
+                'resource' => $resource,
                 'assigned_to' => $assignedTo,
                 'project_id' => $projectId,
                 'customer_id' => $customerId,
@@ -351,10 +366,14 @@ class TicketController extends Controller
 
         $params = [
             'tickets' => $tickets,
+            'ticketResourceMap' => $this->ticketResources !== null
+                ? $this->ticketResources->pairsMapForTickets(array_map(static fn (\OCA\Ticketcheck\Db\Ticket $t) => (int)$t->getId(), $tickets))
+                : [],
             'statuses' => Ticket::getStatuses(),
             'priorities' => Ticket::getPriorities(),
             // Filters include disabled categories — historic tickets stay filterable.
             ...$this->categoryTemplateParams(true),
+                    ...$this->resourceTemplateParams($ticket ?? null),
             'projects' => $projectsAndCustomers['projects'],
             'customers' => $projectsAndCustomers['customers'],
             'currentUser' => $this->userSession->getUser(),
@@ -669,6 +688,7 @@ class TicketController extends Controller
                     'ticket' => $ticket,
                     'priorities' => Ticket::getPriorities(),
                     ...$this->categoryTemplateParams(true),
+                    ...$this->resourceTemplateParams($ticket ?? null),
                     'comments' => $comments,
                     'commentsWithAttachments' => $commentsWithAttachments,
                     'attachments' => $attachments,
@@ -759,6 +779,7 @@ class TicketController extends Controller
                 'customers' => $customers,
                 'priorities' => Ticket::getPriorities(),
                 ...$this->categoryTemplateParams(),
+                    ...$this->resourceTemplateParams($ticket ?? null),
                 'availableAgents' => $availableAgents,
                 'isEdit' => false,
             ],
@@ -920,6 +941,7 @@ class TicketController extends Controller
                     'customers' => $customers,
                     'priorities' => Ticket::getPriorities(),
                     ...$this->categoryTemplateParams(),
+                    ...$this->resourceTemplateParams($ticket ?? null),
                     'availableAgents' => $availableAgents,
                     'attachments' => $ticketAttachments,
                     'isEdit' => true,
@@ -1230,7 +1252,12 @@ class TicketController extends Controller
             }
             $pendingAttachmentCount = $this->countPendingAttachmentUploads();
 
+            $resourceKeys = $this->resolveResourceParam();
+            if ($resourceKeys instanceof JSONResponse) {
+                return $resourceKeys;
+            }
             $ticket = $this->ticketService->createTicket($data);
+            $this->assignTicketResources((int)$ticket->getId(), $resourceKeys);
 
             $uploadedFiles = [];
             if ($pendingAttachmentCount > 0) {
@@ -1371,6 +1398,11 @@ class TicketController extends Controller
                 $data,
                 $this->buildTicketUpdateAuthzAssert($projectId)
             );
+            $updKeys = $this->resolveResourceParam();
+            if ($updKeys instanceof JSONResponse) {
+                return $updKeys;
+            }
+            $this->assignTicketResources($activeId ?? $id, $updKeys);
 
             // Soft-fail notifications: never turn a successful update into a false 400.
             try {
@@ -1496,6 +1528,11 @@ class TicketController extends Controller
                     $data,
                     $this->buildTicketUpdateAuthzAssert($projectId)
                 );
+            $updKeys = $this->resolveResourceParam();
+            if ($updKeys instanceof JSONResponse) {
+                return $updKeys;
+            }
+            $this->assignTicketResources($activeId ?? $id, $updKeys);
             } catch (\InvalidArgumentException $e) {
                 return new JSONResponse([
                     'success' => false,
@@ -3391,4 +3428,84 @@ class TicketController extends Controller
 
         return $active;
     }
+    /**
+     * Resolve the `resources` request param to a validated key set.
+     * Returns a 422 JSONResponse on violation (uniform, no oracle).
+     *
+     * @return list<string>|JSONResponse
+     */
+    private function resolveResourceParam(): array|JSONResponse
+    {
+        if ($this->ticketResources === null) {
+            return [];
+        }
+        try {
+            return $this->ticketResources->resolveWriteKeys($this->request->getParam('resources'));
+        } catch (ValidationException $e) {
+            return new JSONResponse([
+                'error' => $this->l10nFactory->get('ticketcheck')->t('resource_validation_failed'),
+                'fields' => $e->getErrors(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Write the ticket's resource edge set under the shared write guard.
+     * A failure here leaves the ticket with an empty/prior set — never a
+     * dangling edge; logged and editable afterwards.
+     *
+     * @param list<string> $keys
+     */
+    private function assignTicketResources(int $ticketId, array $keys): void
+    {
+        if ($this->ticketResources === null) {
+            return;
+        }
+        try {
+            $prior = $this->ticketResources->keysForTicket($ticketId);
+            $this->ticketResources->withResourceWriteGuard(
+                fn () => $this->ticketResources->setForTicket($ticketId, $keys)
+            );
+            $added = array_values(array_diff($keys, $prior));
+            $removed = array_values(array_diff($prior, $keys));
+            if (($added !== [] || $removed !== []) && $prior !== []) {
+                // Activity is best-effort: a publish failure must never
+                // roll back an already-consistent edge set.
+                try {
+                    $ticket = $this->ticketMapper->find($ticketId);
+                    $this->activityEventService->logTicketResourcesChanged(
+                        (string)($this->userSession->getUser()?->getUID() ?? ''),
+                        $ticket,
+                        $added,
+                        $removed,
+                    );
+                } catch (\Throwable $ae) {
+                    $this->logger->warning('ticketcheck: resource activity emit failed', ['exception' => $ae]);
+                }
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error('ticketcheck: resource map write failed', [
+                'exception' => $e,
+                'ticket' => $ticketId,
+            ]);
+        }
+    }
+
+    /**
+     * Resource picker payload for templates: enabled options, full label
+     * map, and the ticket's current pairs (incl. disabled/deleted markers).
+     */
+    private function resourceTemplateParams(?\OCA\Ticketcheck\Db\Ticket $ticket = null): array
+    {
+        $out = ['resources' => [], 'resourceLabelMap' => [], 'ticketResources' => []];
+        if ($this->ticketResources !== null) {
+            $out['resources'] = $this->ticketResources->options();
+            $out['resourceLabelMap'] = $this->ticketResources->labelMap();
+            if ($ticket !== null) {
+                $out['ticketResources'] = $this->ticketResources->pairsForTicket((int)$ticket->getId());
+            }
+        }
+        return $out;
+    }
+
 }

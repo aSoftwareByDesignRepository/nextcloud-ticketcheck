@@ -67,8 +67,9 @@ class DeletionService
         TicketRelationService $ticketRelationService,
         TicketWorkflowLock $workflowLock,
         TemplateService $templateService,
-        IUserManager $userManager
-    ) {
+        IUserManager $userManager,
+		private ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
+	) {
         $this->db = $db;
         $this->ticketMapper = $ticketMapper;
         $this->commentMapper = $commentMapper;
@@ -679,6 +680,8 @@ class DeletionService
                 $deletedCounts[$key] = $count;
             }
         }
+
+        $this->ticketResources?->detachForTicket($ticketId);
 
         $this->ticketMapper->delete($ticket);
 

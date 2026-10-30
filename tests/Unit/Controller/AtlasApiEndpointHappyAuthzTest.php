@@ -137,6 +137,7 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 		// Needs a JSON `payload` body beyond dummy args; the happy path is
 		// exercised by TicketCategoryServiceTest-driven endpoint coverage.
 		'SettingsController::importTicketCategories',
+		'SettingsController::importTicketResources',
 	];
 
 	/**
@@ -208,6 +209,8 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			'listTicketCategories', 'createTicketCategory', 'updateTicketCategory',
 			'deleteTicketCategory', 'reorderTicketCategories',
 			'exportTicketCategories', 'importTicketCategories', 'setDefaultTicketCategory',
+			'listTicketResources', 'createTicketResource', 'updateTicketResource',
+			'deleteTicketResource', 'reorderTicketResources', 'exportTicketResources', 'importTicketResources',
 		],
 		ProjectController::class => ['create', 'store', 'update', 'delete', 'show', 'edit'],
 		ProjectMemberController::class => ['addMember', 'removeMember', 'updateRole', 'bulkAdd', 'getMembers', 'getAvailableUsers'],

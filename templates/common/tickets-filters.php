@@ -26,7 +26,7 @@ $ticketFilterLink = static function (array $params = []) use ($filterBareUrl): s
 $cfTickets = $_['currentFilters'] ?? [];
 $ticketsListHasActiveFilters = (($cfTickets['hide_done'] ?? '1') === '0');
 if (!$ticketsListHasActiveFilters) {
-	foreach (['status', 'priority', 'category', 'assigned_to', 'project_id', 'customer_id', 'search'] as $k) {
+	foreach (['status', 'priority', 'category', 'resource', 'assigned_to', 'project_id', 'customer_id', 'search'] as $k) {
 		$v = $cfTickets[$k] ?? '';
 		if ($v !== null && $v !== '') {
 			$ticketsListHasActiveFilters = true;
@@ -176,6 +176,23 @@ $allActive = empty($cfTickets['assigned_to'])
 							<?php endforeach; ?>
 						</select>
 					</div>
+
+					<?php $tcFilterResources = is_array($_['resources'] ?? null) ? $_['resources'] : []; ?>
+					<?php if ($tcFilterResources !== []): ?>
+					<div class="tc-filter-field">
+						<label for="filter-resource" class="tc-filter-field__label"><?php p($l->t('resource')); ?></label>
+						<select name="resource" id="filter-resource" class="tc-filter-field__control">
+							<option value=""><?php p($l->t('all_resources_option')); ?></option>
+							<?php foreach ($tcFilterResources as $res): ?>
+								<option value="<?php p($res['key']); ?>" <?php if (($cfTickets['resource'] ?? '') === $res['key']) {
+									p('selected');
+								} ?>>
+									<?php p($res['label']); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+					</div>
+					<?php endif; ?>
 
 					<div class="tc-filter-field tc-filter-picker tc-select-combobox">
 						<label for="filter-project-search" class="tc-filter-field__label"><?php p($l->t('project')); ?></label>

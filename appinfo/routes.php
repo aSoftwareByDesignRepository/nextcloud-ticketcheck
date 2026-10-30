@@ -142,7 +142,7 @@ return [
         // Keep the requirement literal (route files load without the app autoloader).
         // tests/Unit/Controller/SettingsPagesContractTest pins it to SettingsSectionCatalog::routeRequirement().
         ['name' => 'settings#section', 'url' => '/settings/{section}', 'verb' => 'GET',
-            'requirements' => ['section' => 'access|categories|email|inbound-mail|knowledge-base|kb-categories|escalation|about']],
+            'requirements' => ['section' => 'access|categories|resources|email|inbound-mail|knowledge-base|kb-categories|escalation|about']],
         ['name' => 'settings#listTicketCategories', 'url' => '/api/settings/ticket-categories', 'verb' => 'GET'],
         ['name' => 'settings#createTicketCategory', 'url' => '/api/settings/ticket-categories', 'verb' => 'POST'],
         ['name' => 'settings#updateTicketCategory', 'url' => '/api/settings/ticket-categories/{key}', 'verb' => 'PUT', 'requirements' => ['key' => '[a-z0-9-]+']],
@@ -151,6 +151,13 @@ return [
         ['name' => 'settings#exportTicketCategories', 'url' => '/api/settings/ticket-categories/export', 'verb' => 'GET'],
         ['name' => 'settings#importTicketCategories', 'url' => '/api/settings/ticket-categories/import', 'verb' => 'POST'],
         ['name' => 'settings#setDefaultTicketCategory', 'url' => '/api/settings/ticket-categories/default', 'verb' => 'POST'],
+        ['name' => 'settings#listTicketResources', 'url' => '/api/settings/ticket-resources', 'verb' => 'GET'],
+        ['name' => 'settings#createTicketResource', 'url' => '/api/settings/ticket-resources', 'verb' => 'POST'],
+        ['name' => 'settings#updateTicketResource', 'url' => '/api/settings/ticket-resources/{key}', 'verb' => 'PUT', 'requirements' => ['key' => '[a-z0-9-]+']],
+        ['name' => 'settings#deleteTicketResource', 'url' => '/api/settings/ticket-resources/{key}', 'verb' => 'DELETE', 'requirements' => ['key' => '[a-z0-9-]+']],
+        ['name' => 'settings#reorderTicketResources', 'url' => '/api/settings/ticket-resources/reorder', 'verb' => 'POST'],
+        ['name' => 'settings#exportTicketResources', 'url' => '/api/settings/ticket-resources/export', 'verb' => 'GET'],
+        ['name' => 'settings#importTicketResources', 'url' => '/api/settings/ticket-resources/import', 'verb' => 'POST'],
         ['name' => 'settings#updateEmail', 'url' => '/settings/email', 'verb' => 'POST'],
         ['name' => 'settings#updateKnowledgeBase', 'url' => '/settings/knowledge-base', 'verb' => 'POST'],
         ['name' => 'settings#updateAppAccess', 'url' => '/settings/app-access', 'verb' => 'POST'],
