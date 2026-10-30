@@ -21,13 +21,13 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $demo = [
-	'Raum 101',
-	'Raum 104',
-	'Raum 204',
-	'Tabletwagen 1',
-	'Tabletwagen 2',
-	'Mobiler Beamer',
-	'Konferenzkamera',
+	'Raum 101' => 'room',
+	'Raum 104' => 'room',
+	'Raum 204' => 'room',
+	'Tabletwagen 1' => 'device',
+	'Tabletwagen 2' => 'device',
+	'Mobiler Beamer' => 'device',
+	'Konferenzkamera' => 'device',
 ];
 
 $db = \OC::$server->get(\OCP\IDBConnection::class);
@@ -39,8 +39,14 @@ $svc = new \OCA\Ticketcheck\Service\TicketResourceService(
 	\OC::$server->get(\Psr\Log\LoggerInterface::class),
 );
 
-foreach ($demo as $name) {
-	$res = $svc->create($name, 'seed');
-	echo "  {$res->getResKey()}\t{$res->getName()}\n";
+foreach ($demo as $name => $type) {
+	$res = $svc->create($name, 'seed', $type);
+	// create() dedupes by natural key and returns the pre-existing row
+	// untouched — rows seeded before types existed stay 'other' unless
+	// reconciled here.
+	if ((string)$res->getResType() !== $type) {
+		$res = $svc->update($res->getResKey(), null, null, null, 'seed', $type);
+	}
+	echo "  {$res->getResKey()}\t{$res->getName()}\t{$res->getResType()}\n";
 }
 echo 'seeded ' . count($svc->listResources()) . " resource(s)\n";
