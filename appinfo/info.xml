@@ -284,6 +284,32 @@ Melhoramos esta aplicação com a utilização real. Relatórios de erros, arest
 
 O TicketCheck (projeto financiado NEXTICK) é financiado pelo Ministério Federal Alemão da Investigação, Tecnologia e Espaço (BMFTR) através do programa Prototype Fund (https://www.prototypefund.de/) — medida de financiamento "Software Sprint" (edição 2), junho a novembro de 2026 (Förderkennzeichen: 16IS26S24). Todo o código-fonte é publicado como software livre e de código aberto sob a licença AGPL-3.0-or-later.
 ]]></description>
+
+	<description lang="tr"><![CDATA[
+Nextcloud için eksiksiz ve bağımsız bir yardım masası ve müşteri destek sistemi.
+Kurulduğu anda çalışır, başka bir uygulamaya ihtiyaç duymaz.
+
+Özellikler:
+- Projelere dayalı, çok kiracılı erişim denetimi
+- Yerleşik proje ve müşteri yönetimi
+- Güvenli konuk portalı (yalnız yardım masasıyla sınırlı)
+- Otomatik e-posta bildirimleri ve arka plan işleri
+- Bilgi bankası için zengin metin düzenleyici
+- Görsel önizlemeli ek dosyalar
+- Grafikler ve raporlar
+- CSV dışa aktarma
+- SLA izleme ve ihlal uyarıları
+- Destek temsilcilerine günlük özet e-postaları
+- Türkçe dahil birçok dilde arayüz
+
+## Geri bildirim
+
+Bu uygulamayı gerçek kullanımdan öğrenerek geliştiriyoruz. Hata bildirimleri, pürüzler ve fikirler işimize yarar. GitHub'da bir issue açın (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Görüşleriniz sıradaki işlerimizi doğrudan belirler.
+
+## Destek
+
+Almanya Federal Araştırma, Teknoloji ve Uzay Bakanlığı (BMFTR) TicketCheck'i (NEXTICK hibe projesi) Prototype Fund programıyla (https://www.prototypefund.de/) destekliyor. Destek "Software Sprint" önleminin ikinci turunda, Haziran–Kasım 2026 arasında veriliyor (Förderkennzeichen: 16IS26S24). Kaynak kodun tamamı AGPL-3.0-or-later lisansıyla özgür ve açık kaynaklı yazılım olarak yayımlandı.
+]]></description>
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/01.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/01.png</screenshot>
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/02.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/02.png</screenshot>
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/03.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/03.png</screenshot>

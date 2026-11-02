@@ -586,6 +586,7 @@
 
 		function dateInputPlaceholder(localeOverride) {
 			const tag = String(localeOverride || enrichTemporalHtmlLang(currentLanguage()) || 'en').toLowerCase().replace('_', '-');
+			if (tag.indexOf('tr') === 0) return 'GG.AA.YYYY';
 			if (['de', 'nl', 'da', 'nb', 'sv', 'pl', 'it', 'es', 'fr', 'pt', 'fi', 'cs'].some((p) => tag.indexOf(p) === 0)) {
 				return 'TT.MM.JJJJ';
 			}
