@@ -7,6 +7,7 @@ namespace OCA\Ticketcheck\Tests\Unit\Service;
 use OCA\Ticketcheck\Db\Ticket;
 use OCA\Ticketcheck\Db\TicketWatcherMapper;
 use OCA\Ticketcheck\Service\CompanionNotificationService;
+use OCA\Ticketcheck\Service\CompanionPushService;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCP\App\IAppManager;
 use OCP\IGroupManager;
@@ -107,6 +108,120 @@ final class CompanionNotificationServiceTest extends TestCase
 		$this->notifications->expects(self::once())->method('notify')->with($n);
 
 		$this->service->notifyPublicComment($ticket, 'guest1');
+	}
+
+	public function testNotifyAssignedEnqueuesPushIntent(): void
+	{
+		$ticket = $this->ticket(7, 'bob', 'TK-7', 'Hello');
+		$user = $this->createMock(IUser::class);
+		$this->userManager->method('get')->with('bob')->willReturn($user);
+		$this->groupManager->method('isInGroup')->willReturn(false);
+
+		$n = $this->createMock(INotification::class);
+		$n->method('setApp')->willReturnSelf();
+		$n->method('setUser')->willReturnSelf();
+		$n->method('setObject')->willReturnSelf();
+		$n->method('setSubject')->willReturnSelf();
+		$n->method('setDateTime')->willReturnSelf();
+		$n->method('setLink')->willReturnSelf();
+		$this->notifications->method('createNotification')->willReturn($n);
+
+		$push = $this->createMock(CompanionPushService::class);
+		$push->expects(self::once())->method('enqueue')->with(
+			'bob',
+			CompanionPushService::INTENT_ASSIGNED,
+			['ticketId' => 7, 'number' => 'TK-7'],
+		);
+
+		$service = $this->serviceWithPush($push);
+		$service->notifyAssigned($ticket, 'alice');
+	}
+
+	public function testPushStillFiresWhenNotificationsAppDisabled(): void
+	{
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('isEnabledForUser')->with('notifications')->willReturn(false);
+		$ticket = $this->ticket(7, 'bob', 'TK-7', 'Hello');
+		$user = $this->createMock(IUser::class);
+		$this->userManager->method('get')->with('bob')->willReturn($user);
+		$this->groupManager->method('isInGroup')->willReturn(false);
+
+		$this->notifications->expects(self::never())->method('createNotification');
+
+		$push = $this->createMock(CompanionPushService::class);
+		$push->expects(self::once())->method('enqueue')->with('bob', CompanionPushService::INTENT_ASSIGNED);
+
+		$service = $this->serviceWithPush($push, $appManager);
+		$service->notifyAssigned($ticket, 'alice');
+	}
+
+	public function testGuestRecipientNeverReceivesPush(): void
+	{
+		$ticket = $this->ticket(7, 'bob', 'TK-7', 'Hello');
+		$this->groupManager->method('isInGroup')->willReturnCallback(
+			static function (string $uid, string $group): bool {
+				if ($uid === 'guest1' && $group === PermissionService::GROUP_HELPDESK_CUSTOMERS) {
+					return true;
+				}
+				if ($uid === 'bob') {
+					return true; // bob is a guest → filtered from recipients
+				}
+				return false;
+			}
+		);
+
+		$push = $this->createMock(CompanionPushService::class);
+		$push->expects(self::never())->method('enqueue');
+		$this->notifications->expects(self::never())->method('createNotification');
+
+		$service = $this->serviceWithPush($push);
+		$service->notifyAssigned($ticket, 'alice');
+	}
+
+	public function testWaitingStatusEnqueuesWaitingIntent(): void
+	{
+		$ticket = $this->ticket(7, 'bob', 'TK-7', 'Hello');
+		$ticket->setStatus(Ticket::STATUS_WAITING);
+		$user = $this->createMock(IUser::class);
+		$this->userManager->method('get')->with('bob')->willReturn($user);
+		$this->groupManager->method('isInGroup')->willReturn(false);
+
+		$n = $this->createMock(INotification::class);
+		$n->method('setApp')->willReturnSelf();
+		$n->method('setUser')->willReturnSelf();
+		$n->method('setObject')->willReturnSelf();
+		$n->method('setSubject')->willReturnSelf();
+		$n->method('setDateTime')->willReturnSelf();
+		$n->method('setLink')->willReturnSelf();
+		$this->notifications->method('createNotification')->willReturn($n);
+
+		$push = $this->createMock(CompanionPushService::class);
+		$push->expects(self::once())->method('enqueue')->with(
+			'bob',
+			CompanionPushService::INTENT_WAITING,
+			['ticketId' => 7, 'number' => 'TK-7'],
+		);
+
+		$service = $this->serviceWithPush($push);
+		$service->notifyStatusChanged($ticket, 'alice', Ticket::STATUS_IN_PROGRESS, Ticket::STATUS_WAITING);
+	}
+
+	private function serviceWithPush(CompanionPushService $push, ?IAppManager $appManager = null): CompanionNotificationService
+	{
+		$url = $this->createMock(IURLGenerator::class);
+		$url->method('linkToRouteAbsolute')->willReturn('https://nc.example/ticket/1');
+		$watchers = $this->createMock(TicketWatcherMapper::class);
+		$watchers->method('findByTicketId')->willReturn([]);
+		return new CompanionNotificationService(
+			$this->notifications,
+			$url,
+			$watchers,
+			$this->groupManager,
+			$this->userManager,
+			$appManager ?? $this->appManager,
+			new NullLogger(),
+			$push,
+		);
 	}
 
 	private function ticket(int $id, string $assignee, string $number, string $title): Ticket

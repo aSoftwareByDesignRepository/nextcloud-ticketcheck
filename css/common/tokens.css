@@ -25,6 +25,7 @@
 	--tc-radius-pill: 999px;
 
 	--tc-fs-xs: 0.75rem;
+	--tc-fs-small: 0.8125rem;
 	--tc-fs-sm: 0.875rem;
 	--tc-fs-md: 1rem;
 	--tc-fs-lg: 1.125rem;
@@ -135,6 +136,7 @@ dialog.helpdesk-dialog,
 	--tc-on-fill-ink: color-mix(in srgb, var(--color-main-text, #1d1d1d) 20%, transparent);
 
 	/* Legacy helpdesk-* aliases → design-system scale (4px grid) */
+	--helpdesk-spacing-2xs: calc(var(--tc-space-1) / 2);
 	--helpdesk-spacing-xs: var(--tc-space-2);
 	--helpdesk-spacing-sm: var(--tc-space-4);
 	--helpdesk-spacing-md: var(--tc-space-5);

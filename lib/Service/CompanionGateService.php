@@ -30,8 +30,8 @@ class CompanionGateService
 		'comments',
 		'status',
 		'assign',
-		// Device push delivery is not shipped yet — do not advertise `push`.
-		// Clients use unread + pull-to-refresh (AF11) until a real NC push path lands.
+		// `push` is appended dynamically when CompanionPushService::isFeatureEnabled()
+		// (ops flag + Expo access token) — never advertise delivery that cannot run.
 		'attachments',
 		'filters',
 		'sla',
@@ -39,6 +39,8 @@ class CompanionGateService
 		'create',
 		'bulk',
 		'offlineRead',
+		// G-KB (WP-113): read-only agent KB search + article view.
+		'kb',
 	];
 
 	public function __construct(
@@ -48,6 +50,7 @@ class CompanionGateService
 		private readonly IGroupManager $groupManager,
 		private readonly IConfig $config,
 		private readonly ?IAppManager $appManager = null,
+		private readonly ?CompanionPushService $push = null,
 	) {
 	}
 
@@ -91,6 +94,12 @@ class CompanionGateService
 			$maxAttachment = 10 * 1024 * 1024;
 		}
 
+		$pushEnabled = $this->push?->isFeatureEnabled() ?? false;
+		$features = self::FEATURES;
+		if ($pushEnabled) {
+			$features[] = 'push';
+		}
+
 		return [
 			'ok' => true,
 			'server' => [
@@ -118,10 +127,11 @@ class CompanionGateService
 			],
 			'capabilities' => [
 				'companionMin' => self::COMPANION_MIN,
-				'features' => self::FEATURES,
-				// Honest: Notifications app may exist for web, but companion has no
-				// device-token push path yet. Never claim pushAvailable=true.
-				'pushAvailable' => false,
+				'features' => $features,
+				// Honest: true only when the ops flag AND the Expo access token
+				// are configured — registered tokens without delivery stay
+				// `delivery: deferred` (CompanionController::pushRegister).
+				'pushAvailable' => $pushEnabled,
 			],
 		];
 	}

@@ -28,6 +28,7 @@ class CompanionNotificationService
 		private readonly IUserManager $userManager,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
+		private readonly ?CompanionPushService $push = null,
 	) {
 	}
 
@@ -82,10 +83,14 @@ class CompanionNotificationService
 	 */
 	private function notifyUsers(array $uids, Ticket $ticket, string $subject, array $params): void
 	{
-		if (!$this->appManager->isEnabledForUser('notifications')) {
+		$ncNotifyEnabled = $this->appManager->isEnabledForUser('notifications');
+		$pushIntent = $this->pushIntentFor($subject);
+		if (!$ncNotifyEnabled && ($pushIntent === null || $this->push === null)) {
 			return;
 		}
-		$link = $this->urlGenerator->linkToRouteAbsolute('ticketcheck.ticket.show', ['id' => $ticket->getId()]);
+		$link = $ncNotifyEnabled
+			? $this->urlGenerator->linkToRouteAbsolute('ticketcheck.ticket.show', ['id' => $ticket->getId()])
+			: '';
 		foreach (array_unique($uids) as $uid) {
 			if ($uid === '' || $this->groupManager->isInGroup($uid, PermissionService::GROUP_HELPDESK_CUSTOMERS)) {
 				continue;
@@ -93,24 +98,53 @@ class CompanionNotificationService
 			if ($this->userManager->get($uid) === null) {
 				continue;
 			}
-			try {
-				$n = $this->notifications->createNotification();
-				$n->setApp(Application::APP_ID)
-					->setUser($uid)
-					->setObject('ticket', (string)$ticket->getId())
-					->setSubject($subject, $params)
-					->setDateTime(new \DateTime())
-					->setLink($link);
-				$this->notifications->notify($n);
-			} catch (\Throwable $e) {
-				$this->logger->warning('TicketCheck companion notification failed', [
-					'subject' => $subject,
-					'uid' => $uid,
-					'ticket_id' => $ticket->getId(),
-					'exception' => $e,
-				]);
+			if ($ncNotifyEnabled) {
+				try {
+					$n = $this->notifications->createNotification();
+					$n->setApp(Application::APP_ID)
+						->setUser($uid)
+						->setObject('ticket', (string)$ticket->getId())
+						->setSubject($subject, $params)
+						->setDateTime(new \DateTime())
+						->setLink($link);
+					$this->notifications->notify($n);
+				} catch (\Throwable $e) {
+					$this->logger->warning('TicketCheck companion notification failed', [
+						'subject' => $subject,
+						'uid' => $uid,
+						'ticket_id' => $ticket->getId(),
+						'exception' => $e,
+					]);
+				}
+			}
+			if ($pushIntent !== null && $this->push !== null) {
+				try {
+					// Device push carries the id + number only — never the ticket
+					// title or comment body (lock-screen data minimization).
+					$this->push->enqueue($uid, $pushIntent, [
+						'ticketId' => $ticket->getId(),
+						'number' => $ticket->getTicketNumber(),
+					]);
+				} catch (\Throwable $e) {
+					$this->logger->warning('TicketCheck companion push enqueue failed', [
+						'intent' => $pushIntent,
+						'uid' => $uid,
+						'ticket_id' => $ticket->getId(),
+						'exception' => $e,
+					]);
+				}
 			}
 		}
+	}
+
+	private function pushIntentFor(string $subject): ?string
+	{
+		return match ($subject) {
+			'ticket_assigned' => CompanionPushService::INTENT_ASSIGNED,
+			'ticket_public_comment' => CompanionPushService::INTENT_PUBLIC_COMMENT,
+			'ticket_waiting' => CompanionPushService::INTENT_WAITING,
+			default => null,
+		};
 	}
 
 	/**

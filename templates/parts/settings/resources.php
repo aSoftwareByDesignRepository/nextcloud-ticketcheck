@@ -96,4 +96,3 @@ $tcRes = is_array($_['ticketResources'] ?? null) ? $_['ticketResources'] : [];
 		</div>
 	</div>
 </section>
-<?php \OCP\Util::addScript('ticketcheck', 'settings-resources'); ?>

@@ -7,13 +7,16 @@ namespace OCA\Ticketcheck\Controller;
 use OCA\Ticketcheck\AppInfo\Application;
 use OCA\Ticketcheck\Exception\CompanionConflictException;
 use OCA\Ticketcheck\Exception\CompanionNotFoundException;
+use OCA\Ticketcheck\Exception\ArticleNotFoundException;
 use OCA\Ticketcheck\Exception\CompanionUnauthorizedException;
 use OCA\Ticketcheck\Exception\CompanionValidationException;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\CompanionGateService;
+use OCA\Ticketcheck\Service\CompanionPushService;
 use OCA\Ticketcheck\Service\CompanionTicketService;
 use OCA\Ticketcheck\Service\IdempotencyService;
+use OCA\Ticketcheck\Service\KnowledgeBaseService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -39,6 +42,8 @@ class CompanionController extends Controller
 		private readonly AttachmentUploadService $attachmentUpload,
 		private readonly AttachmentDeliveryService $attachmentDelivery,
 		private readonly IdempotencyService $idempotency,
+		private readonly CompanionPushService $push,
+		private readonly KnowledgeBaseService $knowledgeBase,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -333,20 +338,112 @@ class CompanionController extends Controller
 		}
 	}
 
+	/**
+	 * WP-113 (Gate G-KB): read-only agent KB. Search over published articles
+	 * (or all when the agent may manage KB — same rule as the web surface).
+	 * No CRUD, no comments, no portal KB.
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function kbSearch(): JSONResponse
+	{
+		$this->requireUid();
+		$query = (string)$this->request->getParam('q', '');
+		$category = (string)$this->request->getParam('category', '');
+		$data = $this->knowledgeBase->getSearchData($query, $category);
+		$articles = is_array($data['articles'] ?? null) ? $data['articles'] : [];
+		$items = array_map(
+			static function (\OCA\Ticketcheck\Db\KBArticle $a): array {
+				return [
+					'id' => $a->getId(),
+					'title' => $a->getTitle(),
+					'category' => $a->getCategory() ?: 'General',
+					'excerpt' => self::excerpt($a->getContent()),
+					'pinned' => (bool)$a->getPinned(),
+					'updatedAt' => $a->getUpdatedAt() instanceof \DateTimeInterface
+						? $a->getUpdatedAt()->format('c')
+						: null,
+				];
+			},
+			$articles,
+		);
+		return new JSONResponse([
+			'ok' => true,
+			'items' => $items,
+			'categories' => array_keys(is_array($data['categories'] ?? null) ? $data['categories'] : []),
+		]);
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function kbArticle(int $id): JSONResponse
+	{
+		$this->requireUid();
+		try {
+			$article = $this->knowledgeBase->getArticleForView($id);
+		} catch (ArticleNotFoundException) {
+			// Uniform 404 — no existence oracle (same rule as ticket_not_found).
+			return $this->error('kb_article_not_found', Http::STATUS_NOT_FOUND);
+		}
+		return new JSONResponse([
+			'ok' => true,
+			'article' => [
+				'id' => $article->getId(),
+				'title' => $article->getTitle(),
+				'category' => $article->getCategory() ?: 'General',
+				'content' => $article->getContent(),
+				'pinned' => (bool)$article->getPinned(),
+				'views' => $article->getViews(),
+				'updatedAt' => $article->getUpdatedAt() instanceof \DateTimeInterface
+					? $article->getUpdatedAt()->format('c')
+					: null,
+			],
+		]);
+	}
+
+	private static function excerpt(string $content, int $max = 160): string
+	{
+		$text = trim((string)preg_replace('/\s+/u', ' ', strip_tags($content)));
+		if ($text === '') {
+			return '';
+		}
+		if (mb_strlen($text) <= $max) {
+			return $text;
+		}
+		return rtrim(mb_substr($text, 0, $max)) . '…';
+	}
+
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function pushRegister(): JSONResponse
 	{
-		$this->requireUid();
+		$uid = $this->requireUid();
+		$pushToken = trim((string)$this->request->getParam('pushToken', ''));
+		$platform = (string)$this->request->getParam('platform', '');
 		$deviceId = trim((string)$this->request->getParam('deviceId', ''));
-		if ($deviceId === '' || strlen($deviceId) > 255) {
-			return $this->error('invalid_device', Http::STATUS_UNPROCESSABLE_ENTITY);
+		if ($pushToken === '') {
+			// Legacy clients send deviceId only for correlation. Without a push
+			// token there is nothing to register — answer honestly instead of
+			// claiming success (capabilities.pushAvailable stays the source of
+			// truth for whether delivery is enabled).
+			if ($deviceId === '' || strlen($deviceId) > 255) {
+				return $this->error('invalid_device', Http::STATUS_UNPROCESSABLE_ENTITY);
+			}
+			return new JSONResponse([
+				'ok' => true,
+				'registered' => false,
+				'reason' => 'push_token_required',
+			]);
 		}
-		// Device-token push is deferred (capabilities.pushAvailable=false). Do not claim success.
+		try {
+			$this->push->register($uid, $pushToken, $platform, $deviceId);
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		}
 		return new JSONResponse([
 			'ok' => true,
-			'registered' => false,
-			'reason' => 'push_unavailable',
+			'registered' => true,
+			'delivery' => $this->push->isFeatureEnabled() ? 'enabled' : 'deferred',
 		]);
 	}
 
@@ -355,8 +452,8 @@ class CompanionController extends Controller
 	public function pushUnregister(): JSONResponse
 	{
 		$uid = $this->requireUid();
-		$this->config->deleteUserValue($uid, Application::APP_ID, 'companion_push_device');
-		$this->config->deleteUserValue($uid, Application::APP_ID, 'companion_push_at');
+		$pushToken = $this->request->getParam('pushToken');
+		$this->push->unregister($uid, is_string($pushToken) ? $pushToken : null);
 		return new JSONResponse(['ok' => true, 'registered' => false]);
 	}
 

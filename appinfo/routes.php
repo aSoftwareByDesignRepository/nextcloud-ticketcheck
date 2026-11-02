@@ -278,6 +278,8 @@ return [
         ['name' => 'companion#watch', 'url' => '/companion/api/v1/tickets/{id}/watch', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
         ['name' => 'companion#downloadAttachment', 'url' => '/companion/api/v1/tickets/{id}/attachments/{attachmentId}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+', 'attachmentId' => '\\d+']],
         ['name' => 'companion#uploadAttachment', 'url' => '/companion/api/v1/tickets/{id}/attachments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'companion#kbSearch', 'url' => '/companion/api/v1/kb/search', 'verb' => 'GET'],
+        ['name' => 'companion#kbArticle', 'url' => '/companion/api/v1/kb/articles/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
         ['name' => 'companion#pushRegister', 'url' => '/companion/api/v1/push/register', 'verb' => 'POST'],
         ['name' => 'companion#pushUnregister', 'url' => '/companion/api/v1/push/unregister', 'verb' => 'POST'],
     ],

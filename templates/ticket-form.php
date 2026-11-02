@@ -289,7 +289,6 @@ foreach ($categoryOptions as $opt) {
                                 </select>
                             </div>
                             <?php endif; ?>
-                            <?php \OCP\Util::addScript('ticketcheck', 'ticket-resources-picker'); ?>
 
                             <div class="helpdesk-form-group tc-field">
                                 <label for="priority" class="helpdesk-form-label"><?php p($l->t('priority_label')); ?></label>

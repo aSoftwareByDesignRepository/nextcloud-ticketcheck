@@ -170,10 +170,19 @@ class FrontEndAssetService
 			if ($settingsSection === 'categories') {
 				Util::addScript(Application::APP_ID, 'settings-categories');
 			}
+			if ($settingsSection === 'resources') {
+				Util::addScript(Application::APP_ID, 'settings-resources');
+			}
 		}
 
 		if (in_array($pageScript, ['ticket-detail', 'customer-detail', 'project-detail', 'customers', 'projects'], true)) {
 			Util::addScript(Application::APP_ID, 'deletion-modal');
+		}
+
+		if ($pageScript === 'ticket-form') {
+			// Enhances the resources multi-select on create/edit (ARCH-04: page
+			// assets live here, not via Util::addScript inside templates).
+			Util::addScript(Application::APP_ID, 'ticket-resources-picker');
 		}
 
 		if ($pageScript === 'portal-ticket-detail') {

@@ -114,6 +114,20 @@ $mutations = [
 		'replace' => '',
 	],
 	[
+		'label' => 'pushAvailable hardcoded true (claims delivery that cannot run)',
+		'file' => $gateTarget,
+		'original' => $gateOriginal,
+		'search' => "'pushAvailable' => \$pushEnabled,",
+		'replace' => "'pushAvailable' => true,",
+	],
+	[
+		'label' => 'features.push advertised without delivery enabled',
+		'file' => $gateTarget,
+		'original' => $gateOriginal,
+		'search' => "if (\$pushEnabled) {\n\t\t\t\$features[] = 'push';\n\t\t}",
+		'replace' => "\$features[] = 'push';",
+	],
+	[
 		'label' => 'Guest role gate returns agent',
 		'file' => $gateTarget,
 		'original' => $gateOriginal,

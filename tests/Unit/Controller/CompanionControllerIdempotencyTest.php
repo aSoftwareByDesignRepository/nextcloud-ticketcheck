@@ -8,8 +8,10 @@ use OCA\Ticketcheck\Controller\CompanionController;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\CompanionGateService;
+use OCA\Ticketcheck\Service\CompanionPushService;
 use OCA\Ticketcheck\Service\CompanionTicketService;
 use OCA\Ticketcheck\Service\IdempotencyService;
+use OCA\Ticketcheck\Service\KnowledgeBaseService;
 use OCP\AppFramework\Http;
 use OCP\IConfig;
 use OCP\IRequest;
@@ -83,6 +85,8 @@ final class CompanionControllerIdempotencyTest extends TestCase
 				$this->createMock(AttachmentUploadService::class),
 				$this->createMock(AttachmentDeliveryService::class),
 				$idempotency,
+				$this->createMock(CompanionPushService::class),
+				$this->createMock(KnowledgeBaseService::class),
 			),
 			$tickets,
 		];
@@ -226,6 +230,8 @@ final class CompanionControllerIdempotencyTest extends TestCase
 				$this->createMock(AttachmentUploadService::class),
 				$this->createMock(AttachmentDeliveryService::class),
 				$idempotency,
+				$this->createMock(CompanionPushService::class),
+				$this->createMock(KnowledgeBaseService::class),
 			), $tickets];
 		};
 

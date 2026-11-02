@@ -11,8 +11,10 @@ use OCA\Ticketcheck\Exception\CompanionValidationException;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\CompanionGateService;
+use OCA\Ticketcheck\Service\CompanionPushService;
 use OCA\Ticketcheck\Service\CompanionTicketService;
 use OCA\Ticketcheck\Service\IdempotencyService;
+use OCA\Ticketcheck\Service\KnowledgeBaseService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
@@ -36,6 +38,10 @@ final class CompanionControllerSurfaceTest extends TestCase
 	private IdempotencyService $idempotency;
 	/** @var IConfig&MockObject */
 	private IConfig $config;
+	/** @var CompanionPushService&MockObject */
+	private CompanionPushService $push;
+	/** @var KnowledgeBaseService&MockObject */
+	private KnowledgeBaseService $kb;
 
 	private CompanionController $controller;
 
@@ -61,6 +67,8 @@ final class CompanionControllerSurfaceTest extends TestCase
 		// Pass-through stub: persistence/locking is IdempotencyServiceTest's job;
 		// the surface suite only needs the operation to run.
 		$this->idempotency = $this->createMock(IdempotencyService::class);
+		$this->push = $this->createMock(CompanionPushService::class);
+		$this->kb = $this->createMock(KnowledgeBaseService::class);
 		$this->idempotency->method('run')->willReturnCallback(
 			static fn (string $u, string $s, ?string $k, callable $op) => $op()
 		);
@@ -75,6 +83,8 @@ final class CompanionControllerSurfaceTest extends TestCase
 			$this->upload,
 			$this->delivery,
 			$this->idempotency,
+			$this->push,
+			$this->kb,
 		);
 	}
 
@@ -387,5 +397,190 @@ final class CompanionControllerSurfaceTest extends TestCase
 		self::assertTrue($ref->hasMethod('requireVersion'));
 		$require = $ref->getMethod('requireVersion');
 		self::assertTrue($require->isPrivate());
+	}
+
+	public function testPushRegisterWithTokenRegistersAndReportsDelivery(): void
+	{
+		$this->params = [
+			'pushToken' => 'ExponentPushToken[abc]',
+			'platform' => 'android',
+			'deviceId' => 'tkc-device-1',
+		];
+		$this->push->expects(self::once())
+			->method('register')
+			->with('alice', 'ExponentPushToken[abc]', 'android', 'tkc-device-1');
+		$this->push->method('isFeatureEnabled')->willReturn(true);
+
+		$response = $this->controller->pushRegister();
+		$data = self::envelope($response);
+
+		self::assertTrue($data['ok']);
+		self::assertTrue($data['registered']);
+		self::assertSame('enabled', $data['delivery']);
+	}
+
+	public function testPushRegisterWithTokenReportsDeferredWhenFlagOff(): void
+	{
+		$this->params = ['pushToken' => 'ExponentPushToken[abc]', 'platform' => 'ios'];
+		$this->push->expects(self::once())->method('register');
+		$this->push->method('isFeatureEnabled')->willReturn(false);
+
+		$data = self::envelope($this->controller->pushRegister());
+
+		self::assertTrue($data['ok']);
+		self::assertTrue($data['registered']);
+		self::assertSame('deferred', $data['delivery']);
+	}
+
+	public function testPushRegisterDeviceIdOnlyIsHonestNotRegistered(): void
+	{
+		$this->params = ['deviceId' => 'tkc-device-1'];
+		$this->push->expects(self::never())->method('register');
+
+		$data = self::envelope($this->controller->pushRegister());
+
+		self::assertTrue($data['ok']);
+		self::assertFalse($data['registered']);
+		self::assertSame('push_token_required', $data['reason']);
+	}
+
+	public function testPushRegisterWithoutAnythingIs422(): void
+	{
+		$this->params = [];
+		$this->push->expects(self::never())->method('register');
+
+		$response = $this->controller->pushRegister();
+		$data = self::envelope($response);
+
+		self::assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+		self::assertSame('invalid_device', $data['error']['code']);
+	}
+
+	public function testPushRegisterValidationErrorIs422(): void
+	{
+		$this->params = ['pushToken' => 'bad', 'platform' => 'windows'];
+		$this->push->method('register')
+			->willThrowException(new CompanionValidationException('invalid_platform'));
+
+		$response = $this->controller->pushRegister();
+		$data = self::envelope($response);
+
+		self::assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+		self::assertSame('invalid_platform', $data['error']['code']);
+	}
+
+	public function testPushUnregisterDelegatesToken(): void
+	{
+		$this->params = ['pushToken' => 'ExponentPushToken[abc]'];
+		$this->push->expects(self::once())
+			->method('unregister')
+			->with('alice', 'ExponentPushToken[abc]');
+
+		$data = self::envelope($this->controller->pushUnregister());
+
+		self::assertTrue($data['ok']);
+		self::assertFalse($data['registered']);
+	}
+
+	public function testPushUnregisterWithoutTokenClears(): void
+	{
+		$this->params = [];
+		$this->push->expects(self::once())
+			->method('unregister')
+			->with('alice', null);
+
+		$data = self::envelope($this->controller->pushUnregister());
+
+		self::assertTrue($data['ok']);
+	}
+
+	public function testKbSearchReturnsItemsAndCategories(): void
+	{
+		$article = new \OCA\Ticketcheck\Db\KBArticle();
+		$article->setId(3);
+		$article->setTitle('VPN reset');
+		$article->setCategory('Network');
+		$article->setContent('<p>Restart the <b>concentrator</b> first.</p>');
+		$article->setPinned(1);
+		$article->setUpdatedAt(new \DateTime('2026-11-01T10:00:00+00:00'));
+
+		$this->params = ['q' => 'vpn', 'category' => 'Network'];
+		$this->kb->expects(self::once())
+			->method('getSearchData')
+			->with('vpn', 'Network')
+			->willReturn([
+				'query' => 'vpn',
+				'articles' => [$article],
+				'categories' => ['Network' => 1],
+				'categoryFilter' => 'Network',
+				'canManage' => false,
+				'isAdmin' => false,
+			]);
+
+		$data = self::envelope($this->controller->kbSearch());
+
+		self::assertTrue($data['ok']);
+		self::assertCount(1, $data['items']);
+		self::assertSame(3, $data['items'][0]['id']);
+		self::assertSame('VPN reset', $data['items'][0]['title']);
+		self::assertSame('Network', $data['items'][0]['category']);
+		self::assertSame('Restart the concentrator first.', $data['items'][0]['excerpt']);
+		self::assertTrue($data['items'][0]['pinned']);
+		self::assertSame('2026-11-01T10:00:00+00:00', $data['items'][0]['updatedAt']);
+		self::assertSame(['Network'], $data['categories']);
+	}
+
+	public function testKbArticleReturnsContentOr404(): void
+	{
+		$article = new \OCA\Ticketcheck\Db\KBArticle();
+		$article->setId(7);
+		$article->setTitle('Reset flow');
+		$article->setCategory('General');
+		$article->setContent('<p>Steps</p>');
+		$article->setViews(41);
+		$article->setUpdatedAt(new \DateTime('2026-10-01T09:00:00+00:00'));
+
+		$this->kb->expects(self::once())
+			->method('getArticleForView')
+			->with(7)
+			->willReturn($article);
+
+		$data = self::envelope($this->controller->kbArticle(7));
+		self::assertTrue($data['ok']);
+		self::assertSame('Reset flow', $data['article']['title']);
+		self::assertSame('<p>Steps</p>', $data['article']['content']);
+		self::assertSame(41, $data['article']['views']);
+
+		$kb2 = $this->createMock(KnowledgeBaseService::class);
+		$kb2->method('getArticleForView')
+			->willThrowException(new \OCA\Ticketcheck\Exception\ArticleNotFoundException(99));
+
+		$controller = new CompanionController(
+			'ticketcheck',
+			$this->request,
+			$this->sessionOf('alice'),
+			$this->createMock(CompanionGateService::class),
+			$this->tickets,
+			$this->config,
+			$this->upload,
+			$this->delivery,
+			$this->idempotency,
+			$this->push,
+			$kb2,
+		);
+		$response = $controller->kbArticle(99);
+		$data = self::envelope($response);
+		self::assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		self::assertSame('kb_article_not_found', $data['error']['code']);
+	}
+
+	/** Minimal session stub for secondary controller instances. */
+	private function sessionOf(string $uid): IUserSession
+	{
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($uid);
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		return $session;
 	}
 }
