@@ -39,6 +39,7 @@ final class SettingsSectionCatalog
 		'knowledge-base',
 		'kb-categories',
 		'escalation',
+		'sla',
 		'license',
 		'support',
 		'about',
@@ -85,6 +86,7 @@ final class SettingsSectionCatalog
 		'settings-kb-categories-heading' => 'kb-categories',
 		'escalation-rules' => 'escalation',
 		'settings-escalation-heading' => 'escalation',
+		'settings-sla-heading' => 'sla',
 		'settings-about-heading' => 'about',
 	];
 
@@ -140,6 +142,7 @@ final class SettingsSectionCatalog
 			'knowledge-base' => $l->t('Knowledge base settings'),
 			'kb-categories' => $l->t('Knowledge base categories'),
 			'escalation' => $l->t('Escalation rules'),
+			'sla' => $l->t('SLA targets'),
 			'license' => $l->t('Mobile license'),
 			'support' => $l->t('Support & us'),
 			'about' => $l->t('About this project'),
@@ -161,6 +164,7 @@ final class SettingsSectionCatalog
 			'knowledge-base' => $l->t('Knowledge base'),
 			'kb-categories' => $l->t('KB categories'),
 			'escalation' => $l->t('Escalation'),
+			'sla' => $l->t('SLA'),
 			'license' => $l->t('License'),
 			'support' => $l->t('Support us'),
 			// Intentionally the same string as label(): a bare "Über" reads
@@ -187,6 +191,7 @@ final class SettingsSectionCatalog
 			'knowledge-base' => $l->t('settings_kb_lead'),
 			'kb-categories' => $l->t('settings_kb_categories_lead'),
 			'escalation' => $l->t('settings_escalation_lead'),
+			'sla' => $l->t('settings_sla_lead'),
 			'about' => $l->t('settings_about_lead'),
 			default => '',
 		};

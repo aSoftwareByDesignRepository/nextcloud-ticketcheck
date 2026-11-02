@@ -256,7 +256,7 @@ final class SettingsTemplateRenderTest extends TestCase
 				return '<script>alert(1)</script>';
 			}
 		};
-		foreach (['access', 'email', 'knowledge-base'] as $section) {
+		foreach (['access', 'email', 'knowledge-base', 'sla'] as $section) {
 			$vars = match ($section) {
 				'access' => [
 					'appAccessSettings' => [

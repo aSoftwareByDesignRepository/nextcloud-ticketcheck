@@ -62,7 +62,7 @@ final class SettingsSectionCatalogTest extends TestCase
 		}
 		// Routable = SECTIONS minus HIDDEN, order preserved.
 		self::assertSame(
-			['access', 'categories', 'resources', 'email', 'inbound-mail', 'knowledge-base', 'kb-categories', 'escalation', 'about'],
+			['access', 'categories', 'resources', 'email', 'inbound-mail', 'knowledge-base', 'kb-categories', 'escalation', 'sla', 'about'],
 			SettingsSectionCatalog::routableSections(),
 		);
 	}
@@ -169,6 +169,7 @@ final class SettingsSectionCatalogTest extends TestCase
 			'knowledge-base' => 'T:Knowledge base settings',
 			'kb-categories' => 'T:Knowledge base categories',
 			'escalation' => 'T:Escalation rules',
+			'sla' => 'T:SLA targets',
 			'license' => 'T:Mobile license',
 			'support' => 'T:Support & us',
 			'about' => 'T:About this project',
@@ -191,6 +192,7 @@ final class SettingsSectionCatalogTest extends TestCase
 			'knowledge-base' => 'T:Knowledge base',
 			'kb-categories' => 'T:KB categories',
 			'escalation' => 'T:Escalation',
+			'sla' => 'T:SLA',
 			'license' => 'T:License',
 			'support' => 'T:Support us',
 			'about' => 'T:About this project',
@@ -226,6 +228,7 @@ final class SettingsSectionCatalogTest extends TestCase
 			'knowledge-base' => 'settings_kb_lead',
 			'kb-categories' => 'settings_kb_categories_lead',
 			'escalation' => 'settings_escalation_lead',
+			'sla' => 'settings_sla_lead',
 			'about' => 'settings_about_lead',
 		];
 		$seen = [];
