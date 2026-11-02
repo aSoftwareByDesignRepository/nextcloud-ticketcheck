@@ -26,6 +26,7 @@ $tcSettingsSectionFiles = [
 	'knowledge-base' => 'knowledge-base.php',
 	'kb-categories' => 'kb-categories.php',
 	'escalation' => 'escalation.php',
+	'sla' => 'sla.php',
 	'about' => 'about.php',
 ];
 $tcRequestedSection = (string) ($_['settingsSection'] ?? '');

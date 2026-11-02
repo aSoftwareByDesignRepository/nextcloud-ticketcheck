@@ -310,6 +310,7 @@ final class SettingsPagesContractTest extends TestCase
 			'settings#updateAppAccess',
 			'settings#createKBCategory',
 			'settings#createEscalationRule',
+			'settings#updateSla',
 		] as $name) {
 			self::assertContains($name, $names, "POST API route {$name} must remain registered");
 		}
