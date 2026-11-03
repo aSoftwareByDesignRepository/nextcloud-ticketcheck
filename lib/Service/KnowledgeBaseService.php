@@ -568,8 +568,9 @@ class KnowledgeBaseService
             try {
                 $created = $this->categoryService->create($category);
                 return $created->getName();
-            } catch (\Throwable) {
-                // ignore, use name as-is
+            } catch (\Throwable $e) {
+                // non-fatal: category auto-create is best-effort — the article keeps 'General' below.
+                $this->logger->warning('KB category auto-create failed; falling back to General', ['exception' => $e]);
             }
         }
 

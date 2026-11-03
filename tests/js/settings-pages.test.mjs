@@ -25,6 +25,7 @@ function loadModule() {
 const SECTION_URLS = Object.freeze({
 	access: '/apps/ticketcheck/settings/access',
 	categories: '/apps/ticketcheck/settings/categories',
+	resources: '/apps/ticketcheck/settings/resources',
 	email: '/apps/ticketcheck/settings/email',
 	'inbound-mail': '/apps/ticketcheck/settings/inbound-mail',
 	'knowledge-base': '/apps/ticketcheck/settings/knowledge-base',

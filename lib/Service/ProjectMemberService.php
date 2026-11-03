@@ -508,7 +508,8 @@ class ProjectMemberService
             $qb->executeStatement();
             return;
         } catch (\Throwable $e) {
-            // Backward-compatible fallback for older schemas using added_* columns.
+            // non-fatal: retried below with legacy added_* columns (older schema compat).
+            $this->logger->debug('insertProjectMemberRow: modern-column insert failed, retry with legacy columns', ['exception' => $e]);
         }
 
         $qb = $this->db->getQueryBuilder();

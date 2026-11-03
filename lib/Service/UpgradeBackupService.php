@@ -412,7 +412,9 @@ class UpgradeBackupService
 	{
 		try {
 			$this->getSnapshotFolder($snapshotId)->delete();
-		} catch (\Throwable) {
+		} catch (\Throwable $e) {
+			// cleanup only: snapshot folder may not exist or be unreadable — delete is best-effort.
+			$this->logger->debug('TicketCheck: snapshot folder delete skipped (missing or unreadable)', ['exception' => $e]);
 		}
 	}
 
@@ -616,7 +618,9 @@ class UpgradeBackupService
 		$destPath = $this->getAppDataPath($folderName);
 		try {
 			$this->rootFolder->get($destPath)->delete();
-		} catch (NotFoundException) {
+		} catch (NotFoundException $e) {
+			// cleanup only: no existing appdata folder to replace during restore — nothing to delete.
+			$this->logger->debug('TicketCheck: no existing appdata folder to replace during restore', ['exception' => $e]);
 		}
 
 		try {

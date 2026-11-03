@@ -99,8 +99,9 @@ final class EnsureTicketcheckSchema implements IRepairStep
 					])
 					->executeStatement();
 				$missingKeys++;
-			} catch (\Throwable) {
-				// Concurrent seed won the unique index — nothing to do.
+			} catch (\Throwable $e) {
+				// best-effort: concurrent seed won the unique index — nothing to do.
+				$output->info('Ticketcheck: builtin category "' . $key . '" seed skipped: ' . $e->getMessage());
 			}
 		}
 		if ($missingKeys > 0) {
