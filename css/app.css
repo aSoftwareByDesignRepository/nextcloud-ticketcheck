@@ -1523,7 +1523,7 @@ dialog.helpdesk-dialog.ticket-detail-dialog[open]::backdrop {
     padding: var(--helpdesk-spacing-sm) var(--helpdesk-spacing-md);
     border: 0;
     border-radius: 0;
-    background: transparent;
+    background-color: transparent;
     box-shadow: none;
     color: var(--color-main-text);
     font: inherit;
@@ -3033,7 +3033,7 @@ select.helpdesk-form-control {
     font-size: var(--helpdesk-text-base);
     line-height: 1.5;
     color: var(--color-main-text);
-    background: var(--color-main-background);
+    background-color: var(--color-main-background);
     border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     transition: border-color var(--helpdesk-transition-fast), box-shadow var(--helpdesk-transition-fast);
@@ -3054,7 +3054,7 @@ input[type="file"].helpdesk-form-control::file-selector-button {
     margin-right: var(--helpdesk-spacing-sm);
     border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
-    background: var(--color-background-hover);
+    background-color: var(--color-background-hover);
     color: var(--color-main-text);
     cursor: pointer;
     display: inline-flex;
@@ -3063,7 +3063,7 @@ input[type="file"].helpdesk-form-control::file-selector-button {
 }
 
 input[type="file"].helpdesk-form-control::file-selector-button:hover {
-    background: var(--color-primary-element-light);
+    background-color: var(--color-primary-element-light);
     border-color: var(--color-primary-element);
 }
 
@@ -3116,7 +3116,7 @@ select.helpdesk-form-control:focus-visible {
 }
 
 .helpdesk-form-control:disabled {
-    background: var(--color-background-hover);
+    background-color: var(--color-background-hover);
     color: var(--color-text-maxcontrast);
     cursor: not-allowed;
 }
@@ -7417,7 +7417,7 @@ body.guest-user .kb-filter-clear:hover , body#body-login:has([data-tc-nav-mode="
 /* Search input styling for guest portal - only in hero section */
 body.guest-user #app-content.tc-app form .helpdesk-form-control , body#body-login:has([data-tc-nav-mode="guest"]) #app-content.tc-app form .helpdesk-form-control {
     color: var(--color-main-text);
-    background: var(--color-main-background);
+    background-color: var(--color-main-background);
     border: 1px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     box-shadow: var(--color-box-shadow, none);
 }
@@ -7451,7 +7451,7 @@ body.guest-user[data-theme-dark-highcontrast] #app-content.tc-app form .helpdesk
 html[data-theme="dark"] body.guest-user #app-content.tc-app form .helpdesk-form-control, html[data-theme="dark"] body#body-login:has([data-tc-nav-mode="guest"]) #app-content.tc-app form .helpdesk-form-control,
 html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app form .helpdesk-form-control , html[data-theme="dark-highcontrast"] body#body-login:has([data-tc-nav-mode="guest"]) #app-content.tc-app form .helpdesk-form-control {
     color: var(--color-main-text);
-    background: var(--color-main-background);
+    background-color: var(--color-main-background);
     border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
@@ -7731,7 +7731,7 @@ body.guest-user .helpdesk-form-control , body#body-login:has([data-tc-nav-mode="
     font-size: var(--helpdesk-text-base);
     line-height: 1.5;
     color: var(--color-main-text, #222);
-    background: var(--color-main-background, #fff);
+    background-color: var(--color-main-background, #fff);
     border: 2px solid var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--helpdesk-border-radius-md);
     transition: all var(--helpdesk-transition-base);
@@ -7749,7 +7749,7 @@ body.guest-user .helpdesk-form-control:focus , body#body-login:has([data-tc-nav-
 }
 
 body.guest-user .helpdesk-form-control:disabled , body#body-login:has([data-tc-nav-mode="guest"]) .helpdesk-form-control:disabled {
-    background: var(--color-background-hover);
+    background-color: var(--color-background-hover);
     color: var(--color-text-maxcontrast);
     cursor: not-allowed;
 }
@@ -11755,7 +11755,7 @@ aside.portal-help-tip {
 	overflow-y: auto;
 	border: 1px solid var(--color-border, var(--tc-border));
 	border-radius: var(--tc-radius-md);
-	background: var(--color-main-background, #fff);
+	background-color: var(--color-main-background, #fff);
 	box-shadow: var(--tc-shadow-md);
 	z-index: 20;
 }
@@ -11775,7 +11775,6 @@ button.tc-select-combobox__option {
 	margin: 0;
 	border: 0;
 	border-radius: var(--tc-radius-sm);
-	background: transparent;
 	background-color: transparent;
 	color: var(--color-main-text, #1d1d1d);
 	font: inherit;
@@ -11786,13 +11785,11 @@ button.tc-select-combobox__option {
 
 .tc-select-combobox__results .tc-select-combobox__option:hover,
 button.tc-select-combobox__option:hover {
-	background: var(--color-background-hover, #f0f0f0);
 	background-color: var(--color-background-hover, #f0f0f0);
 }
 
 .tc-select-combobox__results .tc-select-combobox__option[aria-selected="true"],
 button.tc-select-combobox__option[aria-selected="true"] {
-	background: var(--color-background-dark, #ebebeb);
 	background-color: var(--color-background-dark, #ebebeb);
 	color: var(--color-main-text, #1d1d1d);
 	font-weight: 500;
@@ -11996,7 +11993,7 @@ button.tc-select-combobox__option:focus-visible {
 	padding: var(--tc-space-2) var(--tc-space-3);
 	border: 1px solid var(--color-border, var(--tc-border));
 	border-radius: var(--tc-radius-md, 8px);
-	background: var(--color-main-background, #fff);
+	background-color: var(--color-main-background, #fff);
 	color: var(--color-main-text, var(--tc-text));
 	font: inherit;
 	font-size: var(--tc-fs-base, 1rem);
@@ -15344,7 +15341,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 #app-content.tc-app--kb .tc-kb-search__row .helpdesk-form-control {
 	flex: 1 1 12rem;
 	min-height: var(--tc-touch-min, 44px);
-	background: var(--color-main-background);
+	background-color: var(--color-main-background);
 	color: var(--color-main-text);
 }
 #app-content.tc-app--kb .tc-kb-search__submit {
@@ -15826,7 +15823,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	#app-content.tc-app .tc-kanban__card-controls,
 	#app-content.tc-app .tc-kanban__status-select,
 	#app-content.tc-app .tc-kanban__status-select:hover {
-		background: var(--color-main-background);
+		background-color: var(--color-main-background);
 	}
 }
 #app-content.tc-app .tc-kanban__column-header {
@@ -15988,7 +15985,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 	padding: 0.35rem 2rem 0.35rem 1.7rem;
 	border: 1px solid color-mix(in srgb, var(--tc-kanban-accent) 38%, var(--tc-border, var(--color-border)));
 	border-radius: var(--tc-radius-pill, 999px);
-	background: color-mix(in srgb, var(--tc-kanban-accent) 9%, var(--color-main-background));
+	background-color: color-mix(in srgb, var(--tc-kanban-accent) 9%, var(--color-main-background));
 	color: var(--color-main-text, #1d1d1d);
 	font-size: var(--tc-fs-xs, 0.75rem);
 	font-weight: 600;
@@ -15998,7 +15995,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 }
 #app-content.tc-app .tc-kanban__status-select:hover {
 	border-color: color-mix(in srgb, var(--tc-kanban-accent) 60%, var(--tc-border, var(--color-border)));
-	background: color-mix(in srgb, var(--tc-kanban-accent) 13%, var(--color-main-background));
+	background-color: color-mix(in srgb, var(--tc-kanban-accent) 13%, var(--color-main-background));
 }
 #app-content.tc-app .tc-kanban__status-select:focus-visible {
 	outline: 2px solid var(--color-primary-element, #0082c9);
@@ -18372,7 +18369,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
     width: 100%;
     margin: 0;
     border: 0;
-    background: transparent;
+    background-color: transparent;
     font: inherit;
     font-size: var(--helpdesk-text-base, 1rem);
     color: var(--color-main-text);
@@ -18550,7 +18547,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
     padding: var(--tc-space-2, 0.5rem) var(--tc-space-3, 0.75rem);
     border: 0;
     border-radius: var(--helpdesk-border-radius-sm, 4px);
-    background: transparent;
+    background-color: transparent;
     color: var(--color-main-text);
     font: inherit;
     font-size: var(--helpdesk-text-sm, 0.875rem);
@@ -18577,7 +18574,7 @@ html[data-theme="dark-highcontrast"] body.guest-user #app-content.tc-app--portal
 #app-content.tc-app--export .tc-export-field__results .tc-export-field__option[aria-selected="true"],
 #app-content.tc-app--export .tc-export-field__results .tc-select-combobox__option:hover,
 #app-content.tc-app--export .tc-export-field__results .tc-select-combobox__option[aria-selected="true"] {
-    background: var(--color-background-hover);
+    background-color: var(--color-background-hover);
 }
 
 #app-content.tc-app--export .tc-export-field__results .tc-export-field__option:focus-visible,
