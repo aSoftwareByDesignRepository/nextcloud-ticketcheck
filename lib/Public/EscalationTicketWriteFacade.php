@@ -128,7 +128,7 @@ final class EscalationTicketWriteFacade
 		}
 
 		try {
-			$payload = $this->runIdempotent($actorUid, $req->idempotencyKey, function () use ($req, $user, $sessionUid, $email, $name): array {
+			$payload = $this->runIdempotent($actorUid, $req->idempotencyKey, function () use ($req, $user, $sessionUid, $email, $name, $resourceKeys): array {
 				// TicketService requires a session user. Web calls already have
 				// one (== actorUid); server-to-server calls bind actorUid here
 				// and restore the previous binding even when creation throws.

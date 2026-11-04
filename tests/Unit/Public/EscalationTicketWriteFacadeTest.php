@@ -343,4 +343,84 @@ class EscalationTicketWriteFacadeTest extends TestCase
 		$this->assertFalse($r->ok);
 		$this->assertSame('internal_error', $r->code);
 	}
+
+	/**
+	 * Regression for the 2026-11-04 wchk cross-app seed: the runIdempotent
+	 * closure's use-list omitted $resourceKeys — the attach branch always ran
+	 * on an undefined var (null !== [] is true), assertEnabledKeys(null) threw
+	 * a swallowed TypeError, and resolved keys never attached.
+	 */
+	public function testResolvedResourceKeysAttachToCreatedTicket(): void
+	{
+		$u = $this->actorOk();
+		$this->sessionUser($u);
+		$this->idemPassthrough();
+		$this->tickets->expects($this->once())
+			->method('createTicket')
+			->willReturn($this->ticket());
+
+		$resources = $this->createMock(\OCA\Ticketcheck\Service\TicketResourceService::class);
+		$resources->expects($this->once())
+			->method('resolveWriteKeys')
+			->with(['room-a'])
+			->willReturn(['room-a']);
+		$resources->expects($this->once())
+			->method('withResourceWriteGuard')
+			->willReturnCallback(static fn (callable $fn): mixed => $fn());
+		$resources->expects($this->once())
+			->method('assertEnabledKeys')
+			->with(['room-a']);
+		$resources->expects($this->once())
+			->method('setForTicket')
+			->with(7, ['room-a']);
+
+		$facade = new EscalationTicketWriteFacade(
+			$this->tickets,
+			$this->session,
+			$this->users,
+			$this->groups,
+			$this->idem,
+			$this->createMock(LoggerInterface::class),
+			null,
+			$resources,
+		);
+
+		$r = $facade->createTicket($this->req(['resources' => ['room-a']]));
+
+		$this->assertTrue($r->ok);
+		$this->assertSame(7, $r->data['ticketId']);
+	}
+
+	public function testNoResourcesSkipsAttachBranch(): void
+	{
+		$u = $this->actorOk();
+		$this->sessionUser($u);
+		$this->idemPassthrough();
+		$this->tickets->expects($this->once())
+			->method('createTicket')
+			->willReturn($this->ticket());
+
+		$resources = $this->createMock(\OCA\Ticketcheck\Service\TicketResourceService::class);
+		$resources->expects($this->never())->method('resolveWriteKeys');
+		$resources->expects($this->never())->method('assertEnabledKeys');
+		$resources->expects($this->never())->method('setForTicket');
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->never())->method('error');
+
+		$facade = new EscalationTicketWriteFacade(
+			$this->tickets,
+			$this->session,
+			$this->users,
+			$this->groups,
+			$this->idem,
+			$logger,
+			null,
+			$resources,
+		);
+
+		$r = $facade->createTicket($this->req());
+
+		$this->assertTrue($r->ok);
+	}
 }
