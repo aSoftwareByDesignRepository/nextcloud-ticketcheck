@@ -298,6 +298,12 @@ class ProjectService
 
     /**
      * Create customer
+     *
+     * unique-conflict:ok raw insert into UNIQUE-indexed helpdesk_customers
+     * (hd_cust_name_uq, hd_cust_email_idx) — conflict handling is delegated
+     * to callers by contract: CustomerController::store/update pre-check +
+     * REASON_UNIQUE catch → 409; CrmHelpdeskWriteFacade::createCustomer
+     * duplicate_name failure. New callers MUST implement one of these paths.
      */
     public function createCustomer(string $name, ?string $email, ?string $company, ?string $phone, ?string $notes, string $createdBy): int
     {
