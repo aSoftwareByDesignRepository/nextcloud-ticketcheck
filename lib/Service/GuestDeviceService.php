@@ -31,17 +31,28 @@ class GuestDeviceService
     /** @return array{0:string,1:GuestDevice} plaintext device token + row */
     public function pair(int $identityId, string $label): array
     {
-        [$token, $hash] = $this->tokens->mint();
-        $now = new \DateTime();
-        $d = new GuestDevice();
-        $d->setIdentityId($identityId);
-        $d->setTokenHash($hash);
-        $d->setLabel(mb_substr(trim($label), 0, 190));
-        $d->setCreatedAt($now);
-        $d->setLastSeenAt(clone $now);
-        $d->setExpiresAt((clone $now)->modify('+' . self::DAYS . ' days'));
-        $this->devices->insert($d);
-        return [$token, $d];
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            [$token, $hash] = $this->tokens->mint();
+            $now = new \DateTime();
+            $d = new GuestDevice();
+            $d->setIdentityId($identityId);
+            $d->setTokenHash($hash);
+            $d->setLabel(mb_substr(trim($label), 0, 190));
+            $d->setCreatedAt($now);
+            $d->setLastSeenAt(clone $now);
+            $d->setExpiresAt((clone $now)->modify('+' . self::DAYS . ' days'));
+            try {
+                $this->devices->insert($d);
+                return [$token, $d];
+            } catch (\OCP\DB\Exception $e) {
+                if ($e->getReason() !== \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION
+                    || $attempt === 2) {
+                    throw $e;
+                }
+                // token-hash collision — re-mint and retry
+            }
+        }
+        throw new \LogicException('unreachable');
     }
 
     /** Resolve a presented device token → live row or null; slides last_seen. */

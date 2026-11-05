@@ -2262,6 +2262,12 @@ class CustomerPortalController extends Controller
             }
 
             return new JSONResponse(['success' => true]);
+        } catch (\OCP\DB\Exception $e) {
+            if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                return new JSONResponse(['success' => false, 'error' => $l->t('an_error_occurred')], 409);
+            }
+            $this->logger->error('Portal save preferences failed', ['exception' => $e]);
+            return new JSONResponse(['success' => false, 'error' => $l->t('an_error_occurred')], 500);
         } catch (\Exception $e) {
             $this->logger->error('Portal save preferences failed', ['exception' => $e]);
             return new JSONResponse(['success' => false, 'error' => $l->t('an_error_occurred')], 500);

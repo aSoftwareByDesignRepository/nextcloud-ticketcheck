@@ -189,10 +189,15 @@ class GuestIdentityService
 
     public function requireIdentity(int $id): GuestIdentity
     {
-        $i = $this->identities->find($id);
+        $i = $this->findIdentity($id);
         if ($i === null) {
             throw new \InvalidArgumentException('identity_not_found');
         }
         return $i;
+    }
+
+    public function findIdentity(int $id): ?GuestIdentity
+    {
+        return $this->identities->find($id);
     }
 }

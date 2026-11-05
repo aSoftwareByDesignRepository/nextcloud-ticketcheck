@@ -38,23 +38,34 @@ class PortalSessionService
      */
     public function create(int $identityId, string $ip, string $ua): array
     {
-        [$token, $hash] = $this->tokens->mint();
-        [$csrf, $csrfHash] = $this->tokens->mint();
-        $now = new \DateTime();
         $days = min($this->authConfig->sessionDays(), self::ABS_CAP_DAYS);
-        $s = new PortalSession();
-        $s->setTokenHash($hash);
-        $s->setCsrfHash($csrfHash);
-        $s->setIdentityId($identityId);
-        $s->setIpHash(hash('sha256', $ip));
-        $s->setUaHash(hash('sha256', $ua));
-        $s->setUaShort(mb_substr($ua, 0, 190));
-        $s->setCreatedAt($now);
-        $s->setLastSeenAt(clone $now);
-        $s->setExpiresAt((clone $now)->modify('+' . $days . ' days'));
-        $s->setAbsExpiresAt((clone $now)->modify('+' . self::ABS_CAP_DAYS . ' days'));
-        $this->sessions->insert($s);
-        return [$token, $csrf, $s];
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            [$token, $hash] = $this->tokens->mint();
+            [$csrf, $csrfHash] = $this->tokens->mint();
+            $now = new \DateTime();
+            $s = new PortalSession();
+            $s->setTokenHash($hash);
+            $s->setCsrfHash($csrfHash);
+            $s->setIdentityId($identityId);
+            $s->setIpHash(hash('sha256', $ip));
+            $s->setUaHash(hash('sha256', $ua));
+            $s->setUaShort(mb_substr($ua, 0, 190));
+            $s->setCreatedAt($now);
+            $s->setLastSeenAt(clone $now);
+            $s->setExpiresAt((clone $now)->modify('+' . $days . ' days'));
+            $s->setAbsExpiresAt((clone $now)->modify('+' . self::ABS_CAP_DAYS . ' days'));
+            try {
+                $this->sessions->insert($s);
+                return [$token, $csrf, $s];
+            } catch (\OCP\DB\Exception $e) {
+                if ($e->getReason() !== \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION
+                    || $attempt === 2) {
+                    throw $e;
+                }
+                // token-hash collision — re-mint and retry
+            }
+        }
+        throw new \LogicException('unreachable');
     }
 
     /**

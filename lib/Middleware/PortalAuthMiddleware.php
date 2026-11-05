@@ -119,7 +119,7 @@ class PortalAuthMiddleware extends Middleware
     private function restPath(): ?string
     {
         $path = (string)($this->request->getPathInfo() ?: '');
-        foreach (['/index.php/apps/ticketcheck', '/apps/ticketcheck'] as $p) {
+        foreach (['/index.php/apps/ticketcheck', '/apps/ticketcheck'] as $p) { // urlgate:ok — path matching, not URL emission
             if (str_starts_with($path, $p)) {
                 return substr($path, strlen($p));
             }

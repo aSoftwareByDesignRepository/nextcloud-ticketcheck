@@ -62,7 +62,7 @@ class PortalSessionMapper extends QBMapper
     public function revokeByIdentity(int $identityId): void
     {
         $qb = $this->db->getQueryBuilder();
-        $qb->update($this->getTableName())
+        $qb->update('helpdesk_portal_session')
             ->set('revoked_at', $qb->createNamedParameter(new \DateTime(), 'datetime'))
             ->where($qb->expr()->eq('identity_id', $qb->createNamedParameter($identityId)))
             ->andWhere($qb->expr()->isNull('revoked_at'));

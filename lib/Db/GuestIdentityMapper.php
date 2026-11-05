@@ -51,7 +51,7 @@ class GuestIdentityMapper extends QBMapper
     public function touchLogin(int $id, \DateTime $when): void
     {
         $qb = $this->db->getQueryBuilder();
-        $qb->update($this->getTableName())
+        $qb->update('helpdesk_guest_identity')
             ->set('last_login_at', $qb->createNamedParameter($when, 'datetime'))
             ->where($qb->expr()->eq('id', $qb->createNamedParameter($id)));
         $qb->executeStatement();

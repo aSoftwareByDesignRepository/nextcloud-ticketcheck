@@ -93,7 +93,11 @@ class GuestIdentityController extends Controller
         $name = trim((string)$this->request->getParam('display_name', ''));
         $email = trim((string)$this->request->getParam('email', ''));
         $locale = trim((string)$this->request->getParam('locale', ''));
-        $old = $this->identities->requireIdentity($id);
+        try {
+            $old = $this->identities->requireIdentity($id);
+        } catch (\InvalidArgumentException) {
+            return new JSONResponse(['success' => false, 'error' => 'not_found'], 404);
+        }
         $oldEmail = (string)$old->getEmail();
         try {
             $i = $this->identities->update($id, $name !== '' ? $name : (string)$old->getDisplayName(), $email !== '' ? $email : null, $locale !== '' ? $locale : null);
@@ -119,6 +123,9 @@ class GuestIdentityController extends Controller
             return $d;
         }
         $status = (string)$this->request->getParam('status', '');
+        if ($this->identities->findIdentity($id) === null) {
+            return new JSONResponse(['success' => false, 'error' => 'not_found'], 404);
+        }
         try {
             $this->identities->setStatus($id, $status, $this->actor());
         } catch (\InvalidArgumentException) {
@@ -153,6 +160,9 @@ class GuestIdentityController extends Controller
         if (($d = $this->deny()) !== null) {
             return $d;
         }
+        if ($this->identities->findIdentity($id) === null) {
+            return new JSONResponse(['success' => false, 'error' => 'not_found'], 404);
+        }
         return new JSONResponse(['success' => true, 'invite_sent' => $this->sendInvite($id)]);
     }
 
@@ -162,7 +172,11 @@ class GuestIdentityController extends Controller
         if (($d = $this->deny()) !== null) {
             return $d;
         }
-        $this->identities->grantProjects($id, [$projectId], null, $this->actor());
+        try {
+            $this->identities->grantProjects($id, [$projectId], null, $this->actor());
+        } catch (\InvalidArgumentException) {
+            return new JSONResponse(['success' => false, 'error' => 'not_found'], 404);
+        }
         return new JSONResponse(['success' => true]);
     }
 
@@ -172,7 +186,11 @@ class GuestIdentityController extends Controller
         if (($d = $this->deny()) !== null) {
             return $d;
         }
-        $this->identities->revokeProject($id, $projectId, $this->actor());
+        try {
+            $this->identities->revokeProject($id, $projectId, $this->actor());
+        } catch (\InvalidArgumentException) {
+            return new JSONResponse(['success' => false, 'error' => 'not_found'], 404);
+        }
         return new JSONResponse(['success' => true]);
     }
 

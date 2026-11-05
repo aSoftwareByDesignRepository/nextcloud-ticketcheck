@@ -12,7 +12,7 @@
 	const ack = () => { const c = document.getElementById('tc-ack'); return c && c.checked ? 'yes' : 'no'; };
 	const reload = () => window.location.reload();
 
-	const confirm = (body, danger) =>
+	const confirmAction = (body, danger) =>
 		C.confirmAction(body, { danger: !!danger, confirmLabel: t('ticketcheck', 'Confirm') });
 
 	const abandonReason = (uid) => new Promise((resolve) => {
@@ -55,7 +55,7 @@
 				reload();
 			} else if (btn.hasAttribute('data-tc-rollback')) {
 				const uid = btn.getAttribute('data-tc-rollback');
-				if (!(await confirm(t('ticketcheck', 'rollback_confirm') + ' (' + uid + ')'))) { return; }
+				if (!(await confirmAction(t('ticketcheck', 'rollback_confirm') + ' (' + uid + ')'))) { return; }
 				await TicketCheckApi.post('/api/guests/migration/rollback', { uid });
 				reload();
 			} else if (btn.hasAttribute('data-tc-merge')) {
@@ -65,7 +65,7 @@
 				const identityId = sel ? sel.value : '';
 				if (!identityId) { say(t('ticketcheck', 'pick_identity')); return; }
 				const email = sel.options[sel.selectedIndex].text;
-				if (!(await confirm(t('ticketcheck', 'merge_confirm') + ' ' + uid + ' → ' + email, true))) { return; }
+				if (!(await confirmAction(t('ticketcheck', 'merge_confirm') + ' ' + uid + ' → ' + email, true))) { return; }
 				await TicketCheckApi.post('/api/guests/migration/merge', { uid, identity_id: identityId, confirm: 'merge' });
 				reload();
 			} else if (btn.hasAttribute('data-tc-refresh')) {
@@ -74,16 +74,16 @@
 				const r = await TicketCheckApi.get('/api/guests/migration/status');
 				say(JSON.stringify(r.buckets));
 			} else if (btn.hasAttribute('data-tc-run')) {
-				if (!(await confirm(t('ticketcheck', 'run_confirm')))) { return; }
+				if (!(await confirmAction(t('ticketcheck', 'run_confirm')))) { return; }
 				const r = await TicketCheckApi.post('/api/guests/migration/run', { confirm: 'run' });
 				say(JSON.stringify(r.results || r)); reload();
 			} else if (btn.hasAttribute('data-tc-disable')) {
-				if (!(await confirm(t('ticketcheck', 'disable_nc_confirm'), true))) { return; }
+				if (!(await confirmAction(t('ticketcheck', 'disable_nc_confirm'), true))) { return; }
 				const r = await TicketCheckApi.post('/api/guests/migration/disable-nc', { confirm: 'disable' });
 				say('disabled: ' + (r.disabled || 0)); reload();
 			} else if (btn.hasAttribute('data-tc-door')) {
 				const target = btn.getAttribute('data-current') === 'allowed' ? 'refused' : 'allowed';
-				if (target === 'refused' && !(await confirm(t('ticketcheck', 'close_door_confirm'), true))) { return; }
+				if (target === 'refused' && !(await confirmAction(t('ticketcheck', 'close_door_confirm'), true))) { return; }
 				const r = await TicketCheckApi.post('/api/guests/migration/door', { door: target, acknowledged: ack() });
 				say('door: ' + (r.door || 'error')); reload();
 			}

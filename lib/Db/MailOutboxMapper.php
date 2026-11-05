@@ -82,7 +82,7 @@ class MailOutboxMapper extends QBMapper
             $qb->expr()->isNull('next_try_at'),
             $qb->expr()->lte('next_try_at', $qb->createNamedParameter($now, 'datetime'))
         );
-        $qb->update($this->getTableName())
+        $qb->update('helpdesk_mail_outbox')
             ->set('status', $qb->createNamedParameter('sending'))
             ->set('next_try_at', $qb->createNamedParameter($lease, 'datetime'))
             ->set('attempts', $qb->createFunction('attempts + 1'))
@@ -104,7 +104,7 @@ class MailOutboxMapper extends QBMapper
     public function markSent(int $id, int $epoch): void
     {
         $qb = $this->db->getQueryBuilder();
-        $qb->update($this->getTableName())
+        $qb->update('helpdesk_mail_outbox')
             ->set('status', $qb->createNamedParameter('sent'))
             ->set('sent_at', $qb->createNamedParameter(new \DateTime(), 'datetime'))
             ->where($qb->expr()->eq('id', $qb->createNamedParameter($id)))
@@ -116,7 +116,7 @@ class MailOutboxMapper extends QBMapper
     public function markFailed(int $id, int $epoch, bool $dead, string $errorCode = ''): void
     {
         $qb = $this->db->getQueryBuilder();
-        $qb->update($this->getTableName())
+        $qb->update('helpdesk_mail_outbox')
             ->set('status', $qb->createNamedParameter($dead ? 'failed' : 'pending'))
             ->set('error_code', $qb->createNamedParameter($errorCode !== '' ? $errorCode : null))
             ->set('next_try_at', $qb->createNamedParameter(

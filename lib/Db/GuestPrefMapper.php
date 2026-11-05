@@ -41,7 +41,7 @@ class GuestPrefMapper extends QBMapper
     {
         $now = new \DateTime();
         $qb = $this->db->getQueryBuilder();
-        $qb->update($this->getTableName())
+        $qb->update('helpdesk_guest_prefs')
             ->set('pref_value', $qb->createNamedParameter($value))
             ->where($qb->expr()->eq('identity_id', $qb->createNamedParameter($identityId)))
             ->andWhere($qb->expr()->eq('pref_key', $qb->createNamedParameter($key)));
