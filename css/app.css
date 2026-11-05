@@ -282,7 +282,7 @@ body:has(#app-content.tc-app) {
 
 .helpdesk-project-detail-legend-body {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
 }
 
@@ -290,6 +290,12 @@ body:has(#app-content.tc-app) {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+}
+
+.helpdesk-project-detail-legend-row .helpdesk-text-muted {
+    min-width: 0;
+    overflow-wrap: break-word;
 }
 
 .helpdesk-project-detail-form-actions {
@@ -4809,7 +4815,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
     .helpdesk-grid--2,
     .helpdesk-grid--3,
     .helpdesk-grid--4 {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .helpdesk-filter-bar {
@@ -6421,8 +6427,10 @@ div.tc-field--checkbox > .helpdesk-form-help,
    ============================================== */
 .helpdesk-member-card {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
+    gap: var(--helpdesk-spacing-xs);
     padding: var(--helpdesk-spacing-sm);
     background: var(--color-background-hover);
     border: 1px solid var(--color-border);
@@ -6466,12 +6474,16 @@ div.tc-field--checkbox > .helpdesk-form-help,
 .helpdesk-member-name {
     font-weight: 600;
     line-height: 1.2;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .helpdesk-member-topline {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
+    min-width: 0;
 }
 
 /* Ensure role badge aligns nicely with text in topline */
@@ -6610,17 +6622,17 @@ div.tc-field--checkbox > .helpdesk-form-help,
 
     /* Grid adjustments */
     .helpdesk-grid--3 {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: var(--helpdesk-spacing-md);
     }
 
     .helpdesk-grid--4 {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: var(--helpdesk-spacing-md);
     }
 
     .helpdesk-grid--2 {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: var(--helpdesk-spacing-md);
     }
 
@@ -6831,7 +6843,7 @@ div.tc-field--checkbox > .helpdesk-form-help,
 
     /* Single column everything */
     .helpdesk-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: minmax(0, 1fr) !important;
     }
 
     /* Compact typography */
@@ -14952,7 +14964,7 @@ body.guest-user a.portal-ticket-row:focus-visible , body#body-login:has([data-tc
 }
 @media (max-width: 899.98px) {
 	#app-content.tc-app--project-detail .tc-project-detail-team {
-		grid-template-columns: 1fr;
+		grid-template-columns: minmax(0, 1fr);
 	}
 	#app-content.tc-app--project-detail .helpdesk-project-detail-guest-info-content {
 		flex-direction: column;

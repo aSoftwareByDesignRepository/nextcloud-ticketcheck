@@ -46,4 +46,35 @@ test.describe('Project members — no silent dead end', () => {
       await expect(infoHint.first()).toBeVisible();
     }
   });
+
+  test('project detail has no horizontal overflow at phone width', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto(PROJECTS_URL, { waitUntil: 'domcontentloaded' });
+    await skipIfLoginPage(page);
+
+    const detailLink = await page.locator('a[href*="/apps/ticketcheck/projects/"]').evaluateAll(
+      (anchors) => anchors.map((a) => a.getAttribute('href')).find((h) => /\/projects\/\d+/.test(h || ''))
+    );
+    if (!detailLink) {
+      test.skip(true, 'no projects visible for this user');
+      return;
+    }
+    await page.goto(detailLink, { waitUntil: 'domcontentloaded' });
+    await skipIfLoginPage(page);
+    await expect(page.locator('.helpdesk-card').first()).toBeVisible();
+
+    const overflow = await page.evaluate(() => {
+      const ac = document.querySelector('#app-content');
+      const offenders = [];
+      ac.querySelectorAll('*').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top > 0 && r.right > ac.clientWidth + 1) {
+          offenders.push(`${el.tagName}.${(el.className || '').toString().split(' ')[0]}@${Math.round(r.right)}`);
+        }
+      });
+      return { scrollOverflow: ac.scrollWidth - ac.clientWidth, offenders: offenders.slice(0, 5) };
+    });
+    expect(overflow.scrollOverflow, `app-content h-scroll ${JSON.stringify(overflow.offenders)}`).toBeLessThanOrEqual(1);
+    expect(overflow.offenders, 'elements extending past the app-content edge').toEqual([]);
+  });
 });
