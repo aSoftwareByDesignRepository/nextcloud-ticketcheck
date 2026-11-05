@@ -22,7 +22,7 @@ $ncEra = (bool)($_['ncLoginEra'] ?? false);
 		</form>
 	</div>
 
-	<div id="tc-login-code-block" class="tc-hidden" aria-live="polite" <?php if (!$sent) { p('hidden'); } ?>>
+	<div id="tc-login-code-block" aria-live="polite" <?php if (!$sent) { p('hidden'); } ?>>
 		<p class="tc-notice tc-notice--success"><?php p($l->t('portal_check_mail')); ?></p>
 		<form method="post" action="#" data-tc-portal-verify>
 			<label for="tc-login-code" class="tc-label"><?php p($l->t('portal_code_label')); ?></label>

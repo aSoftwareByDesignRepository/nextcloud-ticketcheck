@@ -18,7 +18,7 @@
 				await TicketCheckApi.post('/portal/auth/otp', { email });
 			} catch (_e) { /* uniform response — errors still reveal nothing */ }
 			if (reqBlock) { reqBlock.hidden = true; }
-			if (codeBlock) { codeBlock.hidden = false; const c = codeBlock.querySelector('[name="code"]'); if (c) { c.focus(); } }
+			if (codeBlock) { codeBlock.hidden = false; codeBlock.classList.remove('tc-hidden'); const c = codeBlock.querySelector('[name="code"]'); if (c) { c.focus(); } }
 		});
 	}
 	if (verifyForm) {
