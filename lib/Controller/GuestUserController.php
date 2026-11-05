@@ -53,6 +53,10 @@ class GuestUserController extends Controller
     private FrontEndAssetService $frontEndAssets;
     private GuestPasswordPolicyService $guestPasswordPolicy;
     private TicketWorkflowLock $workflowLock;
+    private ?\OCA\Ticketcheck\Service\GuestAuthConfig $guestAuthConfig;
+    private ?\OCA\Ticketcheck\Service\GuestIdentityService $guestIdentities;
+    private ?\OCA\Ticketcheck\Service\PortalOtpService $portalOtp;
+    private ?\OCA\Ticketcheck\Service\GuestMailOutboxService $mailOutbox;
 
     public function __construct(
         string $appName,
@@ -74,8 +78,16 @@ class GuestUserController extends Controller
         FrontEndAssetService $frontEndAssets,
         GuestPasswordPolicyService $guestPasswordPolicy,
         TicketWorkflowLock $workflowLock,
+        ?\OCA\Ticketcheck\Service\GuestAuthConfig $guestAuthConfig = null,
+        ?\OCA\Ticketcheck\Service\GuestIdentityService $guestIdentities = null,
+        ?\OCA\Ticketcheck\Service\PortalOtpService $portalOtp = null,
+        ?\OCA\Ticketcheck\Service\GuestMailOutboxService $mailOutbox = null,
     ) {
         parent::__construct($appName, $request);
+        $this->guestAuthConfig = $guestAuthConfig;
+        $this->guestIdentities = $guestIdentities;
+        $this->portalOtp = $portalOtp;
+        $this->mailOutbox = $mailOutbox;
         $this->permissionService = $permissionService;
         $this->projectService = $projectService;
         $this->urlGenerator = $urlGenerator;
@@ -160,9 +172,31 @@ class GuestUserController extends Controller
         }
 
         $l = $this->l10nFactory->get('ticketcheck');
+        // Passwordless era: identity rows are shown alongside legacy guests
+        // so staff always sees the full guest surface in one place.
+        $identities = [];
+        if ($this->guestIdentities !== null) {
+            foreach ($this->guestIdentities->listAll() as $identity) {
+                try {
+                    $identities[] = [
+                        'id' => (int)$identity->getId(),
+                        'email' => (string)$identity->getEmail(),
+                        'display_name' => (string)$identity->getDisplayName(),
+                        'status' => (string)$identity->getStatus(),
+                        'last_login' => $identity->getLastLoginAt()?->format('Y-m-d H:i'),
+                    ];
+                } catch (\Throwable) {
+                    continue; // defensive: skip rows the entity can't decode
+                }
+            }
+        }
         $response = $this->renderAppPage(
             'guests/index',
-            ['guests' => $guests],
+            [
+                'guests' => $guests,
+                'identities' => $identities,
+                'identityProvisioning' => $this->guestAuthConfig !== null && $this->guestAuthConfig->isIdentityProvisioning(),
+            ],
             'guests',
             $l->t('guest_users_page_title'),
             $l->t('guest_users_subtitle'),
@@ -321,6 +355,27 @@ class GuestUserController extends Controller
                 return new JSONResponse(['success' => false, 'error' => $l->t('invalid_project_id')], 422);
             }
 
+            if ($this->guestAuthConfig !== null && $this->guestAuthConfig->isIdentityProvisioning()
+                && $this->guestIdentities !== null && $this->portalOtp !== null && $this->mailOutbox !== null) {
+                // Passwordless mode: create/reuse a portal identity + grants,
+                // invite mail is a magic link — never a password (US-T03).
+                $identity = $this->guestIdentities->findOrCreate($email, $displayName,
+                    (string)($this->permissionService->getCurrentUserId() ?? 'staff'));
+                $this->guestIdentities->grantProjects((int)$identity->getId(), $projectIds, null,
+                    (string)($this->permissionService->getCurrentUserId() ?? 'staff'));
+                [, $magic, $otpId] = $this->portalOtp->issue($email, (int)$identity->getId(), 'staff-invite');
+                $sent = $this->mailOutbox->enqueue('invite:' . $otpId, $email,
+                    \OCA\Ticketcheck\Service\GuestMailOutboxService::TPL_INVITE, [
+                        'display_name' => $displayName,
+                        'magic_url' => $this->urlGenerator->linkToRouteAbsolute('ticketcheck.portalAuth.magic', ['token' => $magic]),
+                    ], capped: false) !== null;
+                return new JSONResponse([
+                    'success' => true,
+                    'message' => $sent ? $l->t('guest_identity_created_invite_sent', [$email]) : $l->t('guest_user_created_email_failed', [$email]),
+                    'identity_id' => (int)$identity->getId(),
+                    'email_sent' => $sent,
+                ]);
+            }
             $emailLockKey = $this->guestEmailLockKey($email);
             try {
                 $created = $this->workflowLock->withExclusiveKey(

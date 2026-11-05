@@ -57,6 +57,13 @@ class ClientLicenseMiddleware extends Middleware
 			return;
 		}
 
+		// Client-role device endpoints (§10.7) authenticate via
+		// X-TicketCheck-Device inside the controller — no staff session, no
+		// Basic app-password. Scoped to the exact /client/ prefix only.
+		if (str_starts_with($path, '/companion/api/v1/client/')) {
+			return;
+		}
+
 		$this->enforceExplicitBasicIdentity();
 
 		if (!$this->usesAppPasswordAuth()) {

@@ -291,7 +291,7 @@ O TicketCheck (projeto financiado NEXTICK) é financiado pelo Ministério Federa
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png</screenshot>
 	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png</screenshot>
 
-	<version>2.5.2</version>
+	<version>2.6.0</version>
 	<licence>agpl</licence>
 	<author>Lara Raffel</author>
 	<author>Alexander Mäule</author>
@@ -320,6 +320,8 @@ O TicketCheck (projeto financiado NEXTICK) é financiado pelo Ministério Federa
 		<job>OCA\Ticketcheck\BackgroundJob\IdempotencyPurgeJob</job>
 		<job>OCA\Ticketcheck\BackgroundJob\InboundMailSyncJob</job>
 		<job>OCA\Ticketcheck\BackgroundJob\InboundMailRetentionJob</job>
+		<job>OCA\Ticketcheck\BackgroundJob\PortalMailOutboxJob</job>
+		<job>OCA\Ticketcheck\BackgroundJob\PortalRetentionJob</job>
 	</background-jobs>
 
 	<keywords>
@@ -358,6 +360,9 @@ O TicketCheck (projeto financiado NEXTICK) é financiado pelo Ministério Federa
 		</platforms>
 	</release>	<commands>
 		<command>OCA\Ticketcheck\Command\UpgradeBackupCommand</command>
+		<command>OCA\Ticketcheck\Command\GuestsMigrateCommand</command>
+		<command>OCA\Ticketcheck\Command\GuestsRollbackCommand</command>
+		<command>OCA\Ticketcheck\Command\GuestsPurgeDisabledCommand</command>
 	</commands>
 
 	<repair-steps>
@@ -367,6 +372,7 @@ O TicketCheck (projeto financiado NEXTICK) é financiado pelo Ministério Federa
 		<post-migration>
 			<step>OCA\Ticketcheck\Repair\EnsureTicketcheckSchema</step>
 			<step>OCA\Ticketcheck\Repair\CleanupDanglingMergeShells</step>
+			<step>OCA\Ticketcheck\Repair\EnforceGuestMigrationGate</step>
 		</post-migration>
 		<uninstall>
 			<step>OCA\Ticketcheck\Repair\UninstallDropTables</step>

@@ -33,6 +33,8 @@ class GuestLayoutParamsProvider
         private readonly string $themeColor = self::DEFAULT_THEME_COLOR,
         /** @var list<string> */
         private readonly array $enabledThemes = [],
+        private readonly ?\OCA\Ticketcheck\Service\PortalActorResolver $actorResolver = null,
+        private readonly ?\OCA\Ticketcheck\Db\GuestPrefMapper $guestPrefs = null,
     ) {
     }
 
@@ -52,6 +54,12 @@ class GuestLayoutParamsProvider
                 self::USER_CONFIG_GDPR_PORTAL_ACK,
                 '',
             ) !== '';
+        } elseif ($this->actorResolver !== null && $this->guestPrefs !== null) {
+            // Identity sessions persist the ack per identity, not per browser.
+            $identity = $this->actorResolver->currentIdentity();
+            if ($identity !== null) {
+                $gdprDismissed = ($this->guestPrefs->mapForIdentity((int)$identity->getId())['gdpr_portal_ack'] ?? 'no') === 'yes';
+            }
         }
 
         return [
@@ -60,7 +68,10 @@ class GuestLayoutParamsProvider
             'plural_form' => self::DEFAULT_PLURAL_FORM,
             'enabledThemes' => $this->enabledThemes,
             'l' => $l,
-            'user_display_name' => $user !== null ? $user->getDisplayName() : 'Guest',
+            'user_display_name' => $user !== null ? $user->getDisplayName()
+                : ($this->actorResolver?->currentIdentity()?->getDisplayName() ?? 'Guest'),
+            'user_display_email' => $user !== null ? (string)$user->getEMailAddress()
+                : (string)($this->actorResolver?->currentIdentity()?->getEmail() ?? ''),
             'gdpr_notice_dismissed' => $gdprDismissed,
         ];
     }

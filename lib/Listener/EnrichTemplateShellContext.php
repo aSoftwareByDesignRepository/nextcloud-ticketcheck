@@ -83,7 +83,10 @@ class EnrichTemplateShellContext implements IEventListener
 			return;
 		}
 
-		if (!$event->isLoggedIn()) {
+		// Portal templates render for identity sessions too — those are
+		// anonymous to NC (isLoggedIn() is false) but are real guests.
+		$isPortalRender = str_starts_with($template, 'portal/');
+		if (!$event->isLoggedIn() && !$isPortalRender) {
 			return;
 		}
 

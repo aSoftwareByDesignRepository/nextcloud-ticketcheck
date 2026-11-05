@@ -90,6 +90,15 @@ class NavigationContextService
 		if (str_starts_with($path, '/portal/rate-limit')) {
 			return 'rate-limit';
 		}
+		if (str_starts_with($path, '/guests/migration')) {
+			return 'guests-migration';
+		}
+		if (str_starts_with($path, '/portal/login') || str_starts_with($path, '/portal/auth/')) {
+			return 'portal-login';
+		}
+		if (str_starts_with($path, '/portal/sign-in')) {
+			return 'portal-signin';
+		}
 		if (str_starts_with($path, '/portal/change-password')) {
 			return 'portal-password';
 		}
@@ -198,6 +207,9 @@ class NavigationContextService
 			'portal-kb' => [$l->t('knowledge_base'), ''],
 			'portal-kb-article' => [$l->t('kb_article'), ''],
 			'portal-password' => [$l->t('change_password'), $l->t('portal_password_intro')],
+			'portal-signin' => [$l->t('portal_signin_title'), $l->t('portal_signin_page_lead')],
+			'portal-login' => [$l->t('portal_sign_in'), $l->t('portal_login_lead')],
+			'guests-migration' => [$l->t('guest_migration_title'), $l->t('guest_migration_lead')],
 			'portal-email-prefs' => [$l->t('email_preferences_portal_title'), $l->t('email_preferences_intro')],
 			'access-denied' => [$l->t('access_denied'), ''],
 			'error' => [$l->t('error'), ''],
@@ -238,6 +250,8 @@ class NavigationContextService
 			'portalCreate' => $urlGenerator->linkToRoute('ticketcheck.customerPortal.createTicket'),
 			'portalKb' => $urlGenerator->linkToRoute('ticketcheck.customerPortal.knowledgeBase'),
 			'portalPassword' => $urlGenerator->linkToRoute('ticketcheck.customerPortal.changePassword'),
+			'portalSignIn' => $urlGenerator->linkToRoute('ticketcheck.portalAuth.signIn'),
+			'portalLogin' => $urlGenerator->linkToRoute('ticketcheck.portalAuth.login'),
 			'portalEmailPrefs' => $urlGenerator->linkToRoute('ticketcheck.customerPortal.emailPreferences'),
 			'portalLogout' => $urlGenerator->linkToRoute('ticketcheck.customerPortal.logout'),
 			'guestLanguage' => $urlGenerator->linkToRoute('ticketcheck.customerPortal.setLanguage'),
@@ -536,8 +550,14 @@ class NavigationContextService
 			$groups[] = ['group' => $l->t('nav_group_help'), 'items' => $this->navItemsFromDefs($help, $currentPageId)];
 		}
 
+		// Passwordless identities have no password — the account section links
+		// the sign-in/sessions page instead (D-T13: no dead link, no hidden page).
+		$accountItem = ($perm->isGuest() && $perm->getCurrentUserId() !== null
+				&& PortalActorResolver::isIdentityActor($perm->getCurrentUserId()))
+			? ['id' => 'portal-signin', 'label' => $l->t('portal_signin_title'), 'icon' => 'lock', 'url' => $urls['portalSignIn'], 'hint' => $l->t('portal_signin_nav_hint')]
+			: ['id' => 'portal-password', 'label' => $l->t('change_password'), 'icon' => 'lock', 'url' => $urls['portalPassword'], 'hint' => $l->t('portal_password_nav_hint')];
 		$account = [
-			['id' => 'portal-password', 'label' => $l->t('change_password'), 'icon' => 'lock', 'url' => $urls['portalPassword'], 'hint' => $l->t('portal_password_nav_hint')],
+			$accountItem,
 			['id' => 'portal-email-prefs', 'label' => $l->t('email_preferences'), 'icon' => 'mail', 'url' => $urls['portalEmailPrefs'], 'hint' => $l->t('portal_email_nav_hint')],
 		];
 		$groups[] = ['group' => $l->t('nav_group_account'), 'items' => $this->navItemsFromDefs($account, $currentPageId)];

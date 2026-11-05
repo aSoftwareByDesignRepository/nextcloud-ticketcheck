@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace OCA\Ticketcheck\Service;
 
+use OCA\Ticketcheck\Db\GuestPrefMapper;
 use OCP\IConfig;
 
 /**
@@ -63,7 +64,8 @@ class EmailPreferencesService
     private const DEFAULT_VALUE = 'yes';
 
     public function __construct(
-        private IConfig $config
+        private IConfig $config,
+        private ?GuestPrefMapper $guestPrefs = null
     ) {
     }
 
@@ -106,6 +108,15 @@ class EmailPreferencesService
             return false;
         }
 
+        $identityId = PortalActorResolver::identityIdForActor($userId);
+        if ($identityId !== null) {
+            if ($this->guestPrefs === null) {
+                return true; // mapper unwired (tests) — keep legacy default
+            }
+            $map = $this->guestPrefs->mapForIdentity($identityId);
+            return ($map[$preferenceKey] ?? self::DEFAULT_VALUE) === 'yes';
+        }
+
         $value = $this->config->getUserValue($userId, self::APP_ID, $preferenceKey, self::DEFAULT_VALUE);
         return $value === 'yes';
     }
@@ -121,6 +132,15 @@ class EmailPreferencesService
     public function getUserPreferences(string $userId, bool $includeGuestPrefs = false): array
     {
         $keys = $includeGuestPrefs ? self::getAllValidKeys() : self::VALID_KEYS;
+        $identityId = PortalActorResolver::identityIdForActor($userId);
+        if ($identityId !== null) {
+            $map = $this->guestPrefs?->mapForIdentity($identityId) ?? [];
+            $prefs = [];
+            foreach (self::GUEST_VALID_KEYS as $key) {
+                $prefs[$key] = $map[$key] ?? self::DEFAULT_VALUE;
+            }
+            return $prefs;
+        }
         $prefs = [];
         foreach ($keys as $key) {
             $prefs[$key] = $this->config->getUserValue($userId, self::APP_ID, $key, self::DEFAULT_VALUE);
@@ -150,6 +170,11 @@ class EmailPreferencesService
             throw new \InvalidArgumentException('Invalid preference key: ' . $key);
         }
         $normalized = ($value === 'yes' || $value === '1' || $value === true) ? 'yes' : 'no';
+        $identityId = PortalActorResolver::identityIdForActor($userId);
+        if ($identityId !== null) {
+            $this->guestPrefs?->upsert($identityId, $key, $normalized);
+            return;
+        }
         $this->config->setUserValue($userId, self::APP_ID, $key, $normalized);
     }
 

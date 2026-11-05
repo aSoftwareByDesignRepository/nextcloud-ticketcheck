@@ -25,6 +25,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\NotFoundResponse;
@@ -392,8 +393,10 @@ class KnowledgeBaseController extends Controller
         }
     }
 
+    #[PublicPage]
     #[NoAdminRequired]
-    public function portalMarkHelpful(int $id): JSONResponse
+    #[NoCSRFRequired]
+        public function portalMarkHelpful(int $id): JSONResponse
     {
         if (!$this->permissionService->isGuest()) {
             return $this->markHelpful($id, true);
@@ -546,8 +549,10 @@ class KnowledgeBaseController extends Controller
         }
     }
 
+    #[PublicPage]
     #[NoAdminRequired]
-    public function portalAddComment(int $id): JSONResponse
+    #[NoCSRFRequired]
+        public function portalAddComment(int $id): JSONResponse
     {
         if (!$this->permissionService->isGuest()) {
             return $this->addComment($id, true);
@@ -585,6 +590,7 @@ class KnowledgeBaseController extends Controller
         }
     }
 
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function portalGetComments(int $id): JSONResponse

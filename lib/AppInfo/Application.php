@@ -18,6 +18,7 @@ use OCA\Ticketcheck\Service\UpgradeBackupService;
 use OCA\Ticketcheck\Repair\BackupBeforeUpdate;
 use OCA\Ticketcheck\Repair\EnsureTicketcheckSchema;
 use OCA\Ticketcheck\Repair\CleanupDanglingMergeShells;
+use OCA\Ticketcheck\Repair\EnforceGuestMigrationGate;
 use OCA\Ticketcheck\Repair\UninstallDropTables;
 use OCA\Ticketcheck\Service\GuestAccessAllowlist;
 use OCA\Ticketcheck\Service\PermissionService;
@@ -53,6 +54,8 @@ class Application extends App implements IBootstrap
         // typed middleware still handles its own exceptions first).
         $context->registerMiddleware(\OCA\Ticketcheck\Middleware\ApiExceptionMiddleware::class);
         $context->registerMiddleware(\OCA\Ticketcheck\Middleware\GuestSecurityMiddleware::class);
+        // Passwordless portal: identity-session gate + S3 NC-login door on /portal/**.
+        $context->registerMiddleware(\OCA\Ticketcheck\Middleware\PortalAuthMiddleware::class);
         $context->registerMiddleware(\OCA\Ticketcheck\Middleware\AppAccessMiddleware::class);
         // Companion TKC2 seat gate (Basic auth only; never gates browser session)
         $context->registerMiddleware(\OCA\Ticketcheck\Middleware\ClientLicenseMiddleware::class);
@@ -72,6 +75,7 @@ class Application extends App implements IBootstrap
                 $c->get(\OCP\IRequest::class),
                 $c->get(\OCP\IUserSession::class),
                 $c->get(\OCA\Ticketcheck\Service\CsrfTokenValidator::class),
+                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
             );
         });
         $context->registerMiddleware(\OCA\Ticketcheck\Middleware\SessionCsrfMiddleware::class);
@@ -128,6 +132,14 @@ class Application extends App implements IBootstrap
 		$context->registerService(BackupBeforeUpdate::class, function ($c): BackupBeforeUpdate {
 			return new BackupBeforeUpdate(
 				$c->get(UpgradeBackupService::class),
+			);
+		});
+
+		$context->registerService(EnforceGuestMigrationGate::class, function ($c): EnforceGuestMigrationGate {
+			return new EnforceGuestMigrationGate(
+				$c->get(\OCP\IDBConnection::class),
+				$c->get(\OCP\IConfig::class),
+				$c->get(\OCP\IGroupManager::class),
 			);
 		});
 
@@ -217,7 +229,7 @@ class Application extends App implements IBootstrap
                 $c->get(\Psr\Log\LoggerInterface::class),
                 $c->get(\OCP\IDBConnection::class),
                 $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class),
-                $c->get(\OCA\Ticketcheck\Service\TicketResourceService::class),
+                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\TicketService::class, function ($c) {
@@ -230,7 +242,8 @@ class Application extends App implements IBootstrap
                 $c->get(\OCP\IGroupManager::class),
                 $c->get(\OCP\IConfig::class),
                 $c->get(\OCA\Ticketcheck\Db\GuestProjectAccessMapper::class),
-                $c->get(\OCP\IDBConnection::class)
+                $c->get(\OCP\IDBConnection::class),
+                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\PermissionService::class, function ($c) {
@@ -252,7 +265,8 @@ class Application extends App implements IBootstrap
                 $c->get(\OCP\IUserManager::class),
                 $c->get(\OCP\IGroupManager::class),
                 $c->get(\OCA\Ticketcheck\Db\TicketWatcherMapper::class),
-                $c->get(\OCA\Ticketcheck\Service\InboundSmtpSendService::class)
+                $c->get(\OCA\Ticketcheck\Service\InboundSmtpSendService::class),
+                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\ActivityEventService::class, function ($c) {
@@ -721,7 +735,9 @@ class Application extends App implements IBootstrap
                 $c->get(\OCP\L10N\IFactory::class),
                 $c->get(\OCP\IConfig::class),
                 $themeColor,
-                $enabledThemes
+                $enabledThemes,
+                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
+                $c->get(\OCA\Ticketcheck\Db\GuestPrefMapper::class)
             );
         });
 

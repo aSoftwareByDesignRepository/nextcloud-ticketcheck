@@ -61,6 +61,16 @@ final class UpgradeBackupCatalog
 		'tc_idempotency',
 		'tc_license_state',
 		'tc_mobile_seats',
+		// Passwordless guest portal (identity first, dependents after).
+		'helpdesk_guest_identity',
+		'helpdesk_guest_alias',
+		'helpdesk_portal_otp',
+		'helpdesk_portal_session',
+		'helpdesk_mail_outbox',
+		'helpdesk_guest_prefs',
+		'helpdesk_guest_miglog',
+		'helpdesk_guest_device',
+		'helpdesk_guest_audit',
 	];
 
 	/** @var list<string> */
@@ -90,6 +100,16 @@ final class UpgradeBackupCatalog
 		'helpdesk_whitelist',
 		'tc_idempotency',
 		'tc_license_state',
+		// Passwordless guest portal: identity before alias/prefs/device rows.
+		'helpdesk_guest_identity',
+		'helpdesk_guest_alias',
+		'helpdesk_portal_otp',
+		'helpdesk_portal_session',
+		'helpdesk_mail_outbox',
+		'helpdesk_guest_prefs',
+		'helpdesk_guest_miglog',
+		'helpdesk_guest_device',
+		'helpdesk_guest_audit',
 		'tc_mobile_seats',
 	];
 

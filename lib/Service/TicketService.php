@@ -45,6 +45,7 @@ class TicketService
     private IDBConnection $db;
     private LoggerInterface $logger;
     private ?TicketCategoryService $ticketCategories;
+    private ?PortalActorResolver $actorResolver = null;
 
     public function __construct(
         TicketMapper $ticketMapper,
@@ -61,7 +62,9 @@ class TicketService
         LoggerInterface $logger,
         IDBConnection $db,
         ?TicketCategoryService $ticketCategories = null,
+        ?PortalActorResolver $actorResolver = null,
     ) {
+        $this->actorResolver = $actorResolver;
         $this->ticketMapper = $ticketMapper;
         $this->commentMapper = $commentMapper;
         $this->attachmentMapper = $attachmentMapper;
@@ -76,6 +79,34 @@ class TicketService
         $this->logger = $logger;
         $this->db = $db;
         $this->ticketCategories = $ticketCategories;
+    }
+
+    /**
+     * Actor triple for write paths (spec D-T10): [uid, displayName, email].
+     * NC sessions map to the user's uid; `tkc_portal` identity sessions map
+     * to `portal:<id>` with the identity's name/e-mail — no IUser required.
+     *
+     * @return array{0:string,1:string,2:?string}|null
+     */
+    private function actorTriple(): ?array
+    {
+        $user = $this->userSession->getUser();
+        if ($user !== null) {
+            return [$user->getUID(), (string)$user->getDisplayName(), $user->getEMailAddress()];
+        }
+        if ($this->actorResolver !== null && $this->actorResolver->isGuest()) {
+            $actor = $this->actorResolver->currentActor();
+            if ($actor === null) {
+                return null;
+            }
+            $identity = $this->actorResolver->currentIdentity();
+            return [
+                $actor,
+                $identity !== null ? (string)$identity->getDisplayName() : $actor,
+                $identity !== null ? (string)$identity->getEmail() : null,
+            ];
+        }
+        return null;
     }
 
     /**
@@ -135,18 +166,19 @@ class TicketService
      */
     private function doCreateTicket(array $data): Ticket
     {
-        $user = $this->userSession->getUser();
-        if (!$user) {
+        $actor = $this->actorTriple();
+        if ($actor === null) {
             throw new \Exception('User not authenticated');
         }
+        [$actorUid, $actorName, $actorEmail] = $actor;
 
         $ticket = new Ticket();
         $ticket->setTicketNumber($this->generateUniqueTicketNumber());
         $ticket->setTitle($data['title'] ?? '');
         $ticket->setDescription($data['description'] ?? '');
         $ticket->setCustomerId($data['customer_id'] ?? null);
-        $ticket->setCustomerEmail($data['customer_email'] ?? $user->getEMailAddress());
-        $ticket->setCustomerName($data['customer_name'] ?? $user->getDisplayName());
+        $ticket->setCustomerEmail($data['customer_email'] ?? $actorEmail);
+        $ticket->setCustomerName($data['customer_name'] ?? $actorName);
         $ticket->setProjectId($data['project_id'] ?? null);
         $ticket->setCategory($this->resolveWriteCategory($data['category'] ?? null));
         $ticket->setPriority($data['priority'] ?? Ticket::PRIORITY_NORMAL);
@@ -164,7 +196,7 @@ class TicketService
         }
         $ticket->setCreatedAt(new \DateTime());
         $ticket->setUpdatedAt(Ticket::nextUpdatedAt($ticket->getUpdatedAt()));
-        $ticket->setCreatedBy($user->getUID());
+        $ticket->setCreatedBy($actorUid);
         $ticket->setCreatedByGuest($data['created_by_guest'] ?? false);
 
         // Calculate SLA due dates
@@ -514,9 +546,9 @@ class TicketService
 
         try {
             $saved = $this->persistUnmergedOrFail($ticket, 'Failed to assign ticket');
-            $actor = $this->userSession->getUser()?->getUID();
-            if (is_string($actor) && $actor !== '') {
-                $this->companionNotifications->notifyAssigned($saved, $actor);
+            $notifyActor = $this->actorTriple()[0] ?? null;
+            if (is_string($notifyActor) && $notifyActor !== '') {
+                $this->companionNotifications->notifyAssigned($saved, $notifyActor);
             }
             return $saved;
         } catch (\Exception $e) {
@@ -689,8 +721,8 @@ class TicketService
         bool $requireOpen = false,
         ?callable $assertAuthorized = null
     ): Comment {
-        $user = $this->userSession->getUser();
-        if (!$user) {
+        $actor = $this->actorTriple();
+        if ($actor === null) {
             throw new \Exception('User not authenticated');
         }
 
@@ -701,7 +733,7 @@ class TicketService
                     $ticketId,
                     $content,
                     $isInternal,
-                    $user,
+                    $actor,
                     $requireOpen,
                     $assertAuthorized
                 ),
@@ -716,14 +748,19 @@ class TicketService
      * @param \OCP\IUser $user
      * @param null|callable(Ticket):void $assertAuthorized
      */
+    /**
+     * @param array{0:string,1:string,2:?string} $actor [uid, displayName, email]
+     * @param null|callable(Ticket):void $assertAuthorized
+     */
     private function addCommentLocked(
         int $ticketId,
         string $content,
         bool $isInternal,
-        $user,
+        array $actor,
         bool $requireOpen = false,
         ?callable $assertAuthorized = null
     ): Comment {
+        [$actorUid, $actorName, $actorEmail] = $actor;
         // Callers must authorize the surviving ticket and pass its id.
         // Silent merge-chain hops here would re-open IDOR if authz ran on the source.
         try {
@@ -741,16 +778,16 @@ class TicketService
 
         $comment = new Comment();
         $comment->setTicketId($ticketId);
-        $comment->setUserId($user->getUID());
+        $comment->setUserId($actorUid);
 
         // Get display name - fallback to UID if display name is empty
-        $displayName = $user->getDisplayName();
-        if (empty($displayName) || trim($displayName) === '') {
-            $displayName = $user->getUID();
+        $displayName = $actorName;
+        if (trim($displayName) === '') {
+            $displayName = $actorUid;
         }
         $comment->setAuthorName($displayName);
 
-        $comment->setAuthorEmail($user->getEMailAddress());
+        $comment->setAuthorEmail($actorEmail);
         $comment->setContent($content);
         $comment->setIsInternal($isInternal);
         $comment->setCreatedAt(new \DateTime());
@@ -847,7 +884,7 @@ class TicketService
 
                         $comment = new Comment();
                         $comment->setTicketId($lockedId);
-                        $comment->setUserId(null);
+                        $comment->setUserId($this->inboundActorForEmail($authorEmail));
                         $comment->setAuthorName(trim($authorName) !== '' ? trim($authorName) : $authorEmail);
                         $comment->setAuthorEmail($authorEmail);
                         $comment->setContent($content);
@@ -896,6 +933,22 @@ class TicketService
         }
 
         throw $lastError ?? new \Exception('Failed to add comment');
+    }
+
+    /** Inbound comment actor: identity e-mail → portal:<id>, else null (spec US-T06). */
+    private function inboundActorForEmail(string $email): ?string
+    {
+        try {
+            $qb = $this->db->getQueryBuilder();
+            $qb->select('id')->from('helpdesk_guest_identity')
+                ->where($qb->expr()->eq('email', $qb->createNamedParameter(strtolower(trim($email)))))
+                ->andWhere($qb->expr()->eq('status', $qb->createNamedParameter('active')))
+                ->setMaxResults(1);
+            $row = $qb->executeQuery()->fetch();
+            return $row !== false ? 'portal:' . (int)$row['id'] : null;
+        } catch (\Throwable) {
+            return null; // table may not exist on legacy schema — keep email-only actor
+        }
     }
 
     /**
@@ -1049,8 +1102,8 @@ class TicketService
         ?callable $assertAuthorized = null,
         bool $rejectInternalComments = false
     ): \OCA\Ticketcheck\Db\Attachment {
-        $user = $this->userSession->getUser();
-        if (!$user) {
+        $actor = $this->actorTriple();
+        if ($actor === null) {
             throw new \Exception('User not authenticated');
         }
 
@@ -1064,7 +1117,7 @@ class TicketService
                     $fileSize,
                     $mimeType,
                     $commentId,
-                    $user,
+                    $actor[0],
                     $requireOpen,
                     $assertAuthorized,
                     $rejectInternalComments
@@ -1093,10 +1146,11 @@ class TicketService
         ?callable $assertAuthorized = null,
         bool $rejectInternalComments = false
     ): Attachment {
-        $user = $this->userSession->getUser();
-        if (!$user) {
+        $actor = $this->actorTriple();
+        if ($actor === null) {
             throw new \Exception('User not authenticated');
         }
+        $actorUid = $actor[0];
 
         try {
             return $this->workflowLock->withTicketLocks(
@@ -1108,7 +1162,7 @@ class TicketService
                     $fileSize,
                     $mimeType,
                     $commentId,
-                    $user,
+                    $actorUid,
                     $requireOpen,
                     $assertAuthorized,
                     $rejectInternalComments
@@ -1148,7 +1202,7 @@ class TicketService
                             $fileSize,
                             $mimeType,
                             $boundCommentId,
-                            $user->getUID()
+                            $actorUid
                         );
                     } catch (\Throwable $e) {
                         $this->attachmentUploadService->deletePersistedFile($ticketId, $storedName);
@@ -1233,7 +1287,7 @@ class TicketService
         int $fileSize,
         string $mimeType,
         ?int $commentId,
-        $user,
+        string $actorUid,
         bool $requireOpen = false,
         ?callable $assertAuthorized = null,
         bool $rejectInternalComments = false
@@ -1263,7 +1317,7 @@ class TicketService
             $fileSize,
             $mimeType,
             $boundCommentId,
-            $user->getUID()
+            $actorUid
         );
     }
 

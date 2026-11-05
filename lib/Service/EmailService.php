@@ -14,6 +14,7 @@ namespace OCA\Ticketcheck\Service;
 use OCA\Ticketcheck\Db\Ticket;
 use OCA\Ticketcheck\Db\GuestProjectAccessMapper;
 use OCA\Ticketcheck\Db\TicketWatcherMapper;
+use OCA\Ticketcheck\Service\PortalActorResolver;
 use OCA\Ticketcheck\Service\ProjectService;
 use OCP\Mail\IMailer;
 use OCP\IConfig;
@@ -45,6 +46,7 @@ class EmailService
     private IGroupManager $groupManager;
     private ?TicketWatcherMapper $watcherMapper;
     private ?InboundSmtpSendService $inboundSmtp;
+    private ?PortalActorResolver $actorResolver;
 
     public function __construct(
         IMailer $mailer,
@@ -60,8 +62,10 @@ class EmailService
         IUserManager $userManager,
         IGroupManager $groupManager,
         ?TicketWatcherMapper $watcherMapper = null,
-        ?InboundSmtpSendService $inboundSmtp = null
+        ?InboundSmtpSendService $inboundSmtp = null,
+        ?PortalActorResolver $actorResolver = null
     ) {
+        $this->actorResolver = $actorResolver;
         $this->mailer = $mailer;
         $this->config = $config;
         $this->urlGenerator = $urlGenerator;
@@ -114,6 +118,10 @@ class EmailService
     {
         if ($userId === null || trim($userId) === '') {
             return null;
+        }
+        $identityLocale = $this->actorResolver?->localeForActor($userId);
+        if ($identityLocale !== null && $identityLocale !== '') {
+            return $identityLocale;
         }
         $language = trim((string)$this->config->getUserValue($userId, 'core', 'lang', ''));
         if ($language !== '') {
@@ -370,11 +378,9 @@ class EmailService
                 continue;
             }
             $user = $this->userManager->get($userId);
-            if (!$user) {
-                continue;
-            }
-            $email = $user->getEMailAddress();
-            $name = $user->getDisplayName() ?: $userId;
+            $email = $user !== null ? $user->getEMailAddress() : $this->actorResolver?->emailForActor($userId);
+            $name = $user !== null ? ($user->getDisplayName() ?: $userId)
+                : $this->actorResolver?->displayNameForActor($userId, $userId);
             if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 continue;
             }
@@ -660,11 +666,9 @@ class EmailService
                 continue;
             }
             $user = $this->userManager->get($userId);
-            if (!$user) {
-                continue;
-            }
-            $email = $user->getEMailAddress();
-            $name = $user->getDisplayName() ?: $userId;
+            $email = $user !== null ? $user->getEMailAddress() : $this->actorResolver?->emailForActor($userId);
+            $name = $user !== null ? ($user->getDisplayName() ?: $userId)
+                : $this->actorResolver?->displayNameForActor($userId, $userId);
             if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 continue;
             }
@@ -1116,9 +1120,15 @@ class EmailService
                 $this->logger->debug('Skipping notification to comment author: ' . $guestUserId);
                 continue;
             }
-            
+
+            $identityEmail = null;
+            $identityName = null;
+            if ($this->actorResolver !== null && PortalActorResolver::isIdentityActor($guestUserId)) {
+                $identityEmail = $this->actorResolver->emailForActor($guestUserId);
+                $identityName = $this->actorResolver->displayNameForActor($guestUserId, $guestUserId);
+            }
             $user = $this->userManager->get($guestUserId);
-            if (!$user) {
+            if (!$user && $identityEmail === null) {
                 continue;
             }
 
@@ -1128,8 +1138,8 @@ class EmailService
                 continue;
             }
 
-            $email = $user->getEMailAddress();
-            $name = $user->getDisplayName() ?: $guestUserId;
+            $email = $identityEmail ?? ($user !== null ? $user->getEMailAddress() : null);
+            $name = $identityName ?? ($user !== null ? ($user->getDisplayName() ?: $guestUserId) : $guestUserId);
 
             if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 continue;

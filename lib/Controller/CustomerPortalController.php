@@ -46,6 +46,7 @@ use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\Util;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\RedirectResponse;
@@ -97,6 +98,8 @@ class CustomerPortalController extends Controller
     private PortalTicketListFilterService $portalTicketListFilter;
     private AttachmentDeliveryService $attachmentDelivery;
     private ?TicketCategoryService $ticketCategories;
+    private ?\OCA\Ticketcheck\Service\PortalSessionService $portalSessions = null;
+    private ?\OCA\Ticketcheck\Db\GuestIdentityMapper $guestIdentities = null;
 
     /** Maximum tickets loaded for guest list pages (email-scoped). */
     private const PORTAL_TICKET_LIST_LIMIT = 500;
@@ -134,7 +137,11 @@ class CustomerPortalController extends Controller
         PortalTicketListFilterService $portalTicketListFilter,
         AttachmentDeliveryService $attachmentDelivery,
         ?TicketCategoryService $ticketCategories = null,
+        ?\OCA\Ticketcheck\Service\PortalSessionService $portalSessions = null,
+        ?\OCA\Ticketcheck\Db\GuestIdentityMapper $guestIdentities = null,
     ) {
+        $this->portalSessions = $portalSessions;
+        $this->guestIdentities = $guestIdentities;
         parent::__construct($appName, $request);
         $this->ticketService = $ticketService;
         $this->permissionService = $permissionService;
@@ -240,6 +247,7 @@ class CustomerPortalController extends Controller
     /**
      * Portal index (show tickets)
      */
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function index(): TemplateResponse
@@ -326,6 +334,7 @@ class CustomerPortalController extends Controller
      * Show my tickets
      *
      */
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function myTickets(): TemplateResponse
@@ -352,6 +361,7 @@ class CustomerPortalController extends Controller
      * Show tickets for a specific project
      *
      */
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function projectTickets(int $projectId): TemplateResponse
@@ -416,6 +426,7 @@ class CustomerPortalController extends Controller
      * Show create ticket form
      *
      */
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function createTicket(): TemplateResponse|RedirectResponse
@@ -487,8 +498,10 @@ class CustomerPortalController extends Controller
     /**
      * Store new ticket
      */
+    #[PublicPage]
     #[NoAdminRequired]
-    public function storeTicket(): JSONResponse
+    #[NoCSRFRequired]
+        public function storeTicket(): JSONResponse
     {
         try {
             $l = $this->l10nFactory->get($this->appName);
@@ -922,6 +935,7 @@ class CustomerPortalController extends Controller
      * View ticket
      *
      */
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function viewTicket(int $id): TemplateResponse|RedirectResponse
@@ -1098,8 +1112,10 @@ class CustomerPortalController extends Controller
     /**
      * Submit satisfaction survey for a ticket
      */
+    #[PublicPage]
     #[NoAdminRequired]
-    public function submitSurvey(int $id): JSONResponse
+    #[NoCSRFRequired]
+        public function submitSurvey(int $id): JSONResponse
     {
         $l = $this->l10nFactory->get($this->appName);
         try {
@@ -1196,6 +1212,7 @@ class CustomerPortalController extends Controller
     /**
      * Get ticket links for portal (guests can view linked tickets they have access to)
      */
+    #[PublicPage]
     #[NoAdminRequired]
     public function getTicketLinks(int $id): JSONResponse
     {
@@ -1238,8 +1255,10 @@ class CustomerPortalController extends Controller
     /**
      * Add reply to ticket (guest portal — sole comment endpoint; route: POST /portal/tickets/{id}/reply).
      */
+    #[PublicPage]
     #[NoAdminRequired]
-    public function addReply(int $id): JSONResponse
+    #[NoCSRFRequired]
+        public function addReply(int $id): JSONResponse
     {
         $l = $this->l10nFactory->get('ticketcheck');
         try {
@@ -1477,8 +1496,10 @@ class CustomerPortalController extends Controller
     /**
      * Upload attachment to ticket (guest portal)
      */
+    #[PublicPage]
     #[NoAdminRequired]
-    public function uploadAttachment(int $id): JSONResponse
+    #[NoCSRFRequired]
+        public function uploadAttachment(int $id): JSONResponse
     {
         $l = $this->l10nFactory->get('ticketcheck');
         try {
@@ -1693,6 +1714,7 @@ class CustomerPortalController extends Controller
     /**
      * Whether the guest may still create/reply/upload (no exact counters — avoids quota probing).
      */
+    #[PublicPage]
     #[NoAdminRequired]
     public function checkRateLimitStatus(): JSONResponse
     {
@@ -1728,6 +1750,7 @@ class CustomerPortalController extends Controller
      * View knowledge base (with integrated search)
      *
      */
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function knowledgeBase(): TemplateResponse
@@ -1786,6 +1809,7 @@ class CustomerPortalController extends Controller
         }
     }
 
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function kpKnowledgeBase(): TemplateResponse
@@ -1798,6 +1822,7 @@ class CustomerPortalController extends Controller
      * View knowledge base article
      *
      */
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function kbArticle(int $id): TemplateResponse
@@ -1844,6 +1869,7 @@ class CustomerPortalController extends Controller
         }
     }
 
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function kpArticle(int $id): TemplateResponse
@@ -1855,10 +1881,16 @@ class CustomerPortalController extends Controller
      * Show password change page
      *
      */
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
-    public function changePassword(): TemplateResponse
+    public function changePassword(): TemplateResponse|RedirectResponse
     {
+        // Passwordless identities have no password — D-T13 routes them to the
+        // sign-in/sessions page; the old page stays for NC-era guests only.
+        if (\OCA\Ticketcheck\Service\PortalActorResolver::isIdentityActor($this->permissionService->getCurrentUserId())) {
+            return new RedirectResponse($this->urlGenerator->linkToRoute('ticketcheck.portalAuth.signIn'));
+        }
         return $this->renderPortalPage(
             'portal/change-password',
             'portal-password',
@@ -1868,12 +1900,13 @@ class CustomerPortalController extends Controller
     /**
      * Email preferences page for guests (portal)
      */
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function emailPreferences(): TemplateResponse
     {
-        $user = $this->userSession->getUser();
-        $prefs = $user ? $this->emailPreferences->getUserPreferences($user->getUID(), true) : [];
+        $actor = (string)($this->permissionService->getCurrentUserId() ?? '');
+        $prefs = $actor !== '' ? $this->emailPreferences->getUserPreferences($actor, true) : [];
 
         return $this->renderPortalPage(
             'portal/email-preferences',
@@ -1889,11 +1922,14 @@ class CustomerPortalController extends Controller
     /**
      * Update password
      */
+    #[PublicPage]
     #[NoAdminRequired]
-    public function updatePassword(): JSONResponse
+    #[NoCSRFRequired]
+        public function updatePassword(): JSONResponse
     {
         $l = $this->l10nFactory->get('ticketcheck');
-        if (!$this->permissionService->isGuest()) {
+        if (!$this->permissionService->isGuest()
+            || \OCA\Ticketcheck\Service\PortalActorResolver::isIdentityActor($this->permissionService->getCurrentUserId())) {
             return new JSONResponse(['success' => false, 'error' => $l->t('permission_denied')], 403);
         }
         try {
@@ -2013,22 +2049,33 @@ class CustomerPortalController extends Controller
     /**
      * Request account deletion (for guest users)
      */
+    #[PublicPage]
     #[NoAdminRequired]
-    public function requestAccountDeletion(): JSONResponse
+    #[NoCSRFRequired]
+        public function requestAccountDeletion(): JSONResponse
     {
         $l = $this->l10nFactory->get('ticketcheck');
         try {
             $user = $this->userSession->getUser();
+            $identity = null;
             if (!$user) {
-                return new JSONResponse(['success' => false, 'error' => $l->t('not_logged_in')], 401);
+                $actor = (string)($this->permissionService->getCurrentUserId() ?? '');
+                $identityId = \OCA\Ticketcheck\Service\PortalActorResolver::identityIdForActor($actor);
+                if ($identityId !== null && $this->guestIdentities !== null) {
+                    $identity = $this->guestIdentities->find($identityId);
+                }
+                if ($identity === null) {
+                    return new JSONResponse(['success' => false, 'error' => $l->t('not_logged_in')], 401);
+                }
             }
 
-            $userId = $user->getUID();
-            $displayName = $user->getDisplayName();
-            $email = $user->getEMailAddress();
+            $userId = $user !== null ? $user->getUID()
+                : \OCA\Ticketcheck\Service\PortalActorResolver::actorForIdentity((int)$identity->getId());
+            $displayName = $user !== null ? $user->getDisplayName() : (string)$identity->getDisplayName();
+            $email = $user !== null ? $user->getEMailAddress() : (string)$identity->getEmail();
 
-            // Verify user is a guest
-            if (!$this->groupManager->isInGroup($userId, 'helpdesk_customers')) {
+            // Verify actor is a guest (NC group or portal identity)
+            if ($user !== null && !$this->groupManager->isInGroup($userId, 'helpdesk_customers')) {
                 return new JSONResponse(['success' => false, 'error' => $l->t('only_guest_users_can_request_account_deletion')], 403);
             }
 
@@ -2152,8 +2199,10 @@ class CustomerPortalController extends Controller
     /**
      * Persist portal privacy notice acknowledgement (guest API; same storage as staff route).
      */
+    #[PublicPage]
     #[NoAdminRequired]
-    public function dismissPortalPrivacyNotice(): JSONResponse
+    #[NoCSRFRequired]
+        public function dismissPortalPrivacyNotice(): JSONResponse
     {
         $l = $this->l10nFactory->get('ticketcheck');
         $user = $this->userSession->getUser();
@@ -2176,8 +2225,10 @@ class CustomerPortalController extends Controller
      *
      * @UseSession
      */
+    #[PublicPage]
     #[NoAdminRequired]
-    public function setLanguage(): JSONResponse
+    #[NoCSRFRequired]
+        public function setLanguage(): JSONResponse
     {
         $l = $this->l10nFactory->get('ticketcheck');
         try {
@@ -2198,6 +2249,18 @@ class CustomerPortalController extends Controller
                 $config->setUserValue($user->getUID(), 'core', 'lang', $language);
             }
 
+            // Identity sessions: the language lives on the identity row
+            // (US-T09 — per identity, not per browser).
+            $identityId = \OCA\Ticketcheck\Service\PortalActorResolver::identityIdForActor($this->permissionService->getCurrentUserId());
+            if ($identityId !== null && $this->guestIdentities !== null) {
+                $identity = $this->guestIdentities->find($identityId);
+                if ($identity !== null) {
+                    $identity->setLocale($language);
+                    $identity->setUpdatedAt(new \DateTime());
+                    $this->guestIdentities->update($identity);
+                }
+            }
+
             return new JSONResponse(['success' => true]);
         } catch (\Exception $e) {
             $this->logger->error('Portal save preferences failed', ['exception' => $e]);
@@ -2208,6 +2271,7 @@ class CustomerPortalController extends Controller
     /**
      * Download attachment (portal) – guests use this so the request stays under /portal/
      */
+    #[PublicPage]
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function downloadAttachment(int $id, int $attachmentId): \OCP\AppFramework\Http\Response
@@ -2278,8 +2342,10 @@ class CustomerPortalController extends Controller
      *
      * @UseSession
      */
+    #[PublicPage]
     #[NoAdminRequired]
-    public function logout(): \OCP\AppFramework\Http\RedirectResponse
+    #[NoCSRFRequired]
+        public function logout(): \OCP\AppFramework\Http\RedirectResponse
     {
         // Log the guest user logout
         $logger = $this->logger;
@@ -2292,13 +2358,27 @@ class CustomerPortalController extends Controller
             ]);
         }
 
+        // Revoke the app-owned portal session + clear both portal cookies
+        // (US-T02 AC-5). NC session logout stays as before.
+        $portalToken = $this->request->getCookie(\OCA\Ticketcheck\Service\PortalSessionService::COOKIE);
+        if (is_string($portalToken) && $portalToken !== '' && $this->portalSessions !== null) {
+            $this->portalSessions->revoke($portalToken);
+        }
+
         // Log the user out
         $this->userSession->logout();
 
-        // Redirect to login page with clear parameter
+        // Redirect to the portal login page (identity era) or NC login
+        $isIdentityActor = \OCA\Ticketcheck\Service\PortalActorResolver::isIdentityActor($this->permissionService->getCurrentUserId());
         $response = new \OCP\AppFramework\Http\RedirectResponse(
-            $this->urlGenerator->linkToRouteAbsolute('core.login.showLoginForm', ['clear' => true])
+            $isIdentityActor || $portalToken
+                ? $this->urlGenerator->linkToRoute('ticketcheck.portalAuth.login')
+                : $this->urlGenerator->linkToRouteAbsolute('core.login.showLoginForm', ['clear' => true])
         );
+        if (is_string($portalToken) && $portalToken !== '') {
+            $response->addCookie(\OCA\Ticketcheck\Service\PortalSessionService::COOKIE, '', new \DateTime('-1 hour'), 'lax');
+            $response->addCookie(\OCA\Ticketcheck\Service\PortalSessionService::CSRF_COOKIE, '', new \DateTime('-1 hour'), 'lax');
+        }
 
         return $response;
     }
@@ -2502,6 +2582,16 @@ class CustomerPortalController extends Controller
 
         $userId = $comment->getUserId();
         if ($userId) {
+            // portal:<id> actors resolve via the identity table — never leak
+            // the raw actor string into the UI (spec §9.3 display model).
+            if (\OCA\Ticketcheck\Service\PortalActorResolver::isIdentityActor($userId)
+                && $this->guestIdentities !== null) {
+                $identityId = \OCA\Ticketcheck\Service\PortalActorResolver::identityIdForActor($userId);
+                $identity = $identityId !== null ? $this->guestIdentities->find($identityId) : null;
+                if ($identity !== null) {
+                    return (string)$identity->getDisplayName();
+                }
+            }
             $user = $this->userManager->get($userId);
             if ($user !== null) {
                 $display = (string)($user->getDisplayName() ?? '');

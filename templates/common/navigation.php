@@ -22,7 +22,7 @@ $urlGenerator = $_['urlGenerator'] ?? null;
 /** @var \OCP\IUser|null $currentUser */
 $currentUser = $_['currentUser'] ?? null;
 $guestUserName = $currentUser !== null ? $currentUser->getDisplayName() : (string)($_['user_display_name'] ?? $l->t('guest'));
-$guestUserEmail = $currentUser !== null ? (string)($currentUser->getEMailAddress() ?? '') : '';
+$guestUserEmail = $currentUser !== null ? (string)($currentUser->getEMailAddress() ?? '') : (string)($_['user_display_email'] ?? '');
 $guestAvatarInitial = $guestUserName !== '' ? strtoupper(substr($guestUserName, 0, 1)) : '?';
 $requesttoken = (string)($_['requesttoken'] ?? '');
 $logoutUrl = (string)($urls['portalLogout'] ?? '');
@@ -132,6 +132,9 @@ if ($navMode === 'guest' && $urlGenerator instanceof \OCP\IURLGenerator) {
 		<div class="tc-nav__logout">
 			<form method="post" action="<?php p($logoutUrl); ?>" class="tc-nav__logout-form" data-tc-guest-logout-form>
 				<input type="hidden" name="requesttoken" value="<?php p($requesttoken); ?>" data-tc-logout-requesttoken>
+				<?php if ($requesttoken === ''): // identity session — double-submit token lives in the tkc_csrf cookie, mirrored here by JS ?>
+				<input type="hidden" name="tkc_csrf" value="" data-tc-csrf-mirror>
+				<?php endif; ?>
 				<button type="submit" class="tc-nav__logout-btn">
 					<span class="tc-nav__icon" aria-hidden="true"><?php print_unescaped(IconCatalog::render('log-out')); ?></span>
 					<span><?php p($l->t('logout')); ?></span>

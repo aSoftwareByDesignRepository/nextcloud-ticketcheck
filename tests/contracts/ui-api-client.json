@@ -1,95 +1,364 @@
 {
-  "schemaVersion": 1,
-  "appId": "ticketcheck",
-  "companionDir": "mobile/ticketcheck",
-  "contracts": [
+ "schemaVersion": 1,
+ "appId": "ticketcheck",
+ "companionDir": "mobile/ticketcheck",
+ "contracts": [
+  {
+   "id": "ticket-resources-select",
+   "param": "resources",
+   "description": "Optional multi-select of enabled resource keys on staff ticket create/edit and companion create. Server validates every key exists+enabled (uniform 422 `fields:{resources}`); portal never binds the param.",
+   "errorCodes": [
+    "invalid_resource",
+    "too_many_resources",
+    "invalid_resources"
+   ],
+   "server": [
     {
-      "id": "ticket-resources-select",
-      "param": "resources",
-      "description": "Optional multi-select of enabled resource keys on staff ticket create/edit and companion create. Server validates every key exists+enabled (uniform 422 `fields:{resources}`); portal never binds the param.",
-      "errorCodes": [
-        "invalid_resource",
-        "too_many_resources",
-        "invalid_resources"
-      ],
-      "server": [
-        {
-          "file": "lib/Service/TicketResourceService.php",
-          "needles": [
-            "resolveWriteKeys",
-            "invalid_resource",
-            "too_many_resources"
-          ]
-        },
-        {
-          "file": "lib/Controller/TicketController.php",
-          "needles": [
-            "resolveResourceParam",
-            "assignTicketResources"
-          ]
-        },
-        {
-          "file": "lib/Service/CompanionTicketService.php",
-          "needles": [
-            "resolveWriteKeys",
-            "invalid_resource",
-            "'resources'"
-          ]
-        }
-      ],
-      "web": [
-        {
-          "file": "templates/ticket-form.php",
-          "needles": [
-            "name=\"resources[]\"",
-            "resources"
-          ]
-        },
-        {
-          "file": "js/ticket-resources-picker.js",
-          "needles": [
-            "resources[]",
-            "tc-res-listbox",
-            "setValues"
-          ]
-        },
-        {
-          "file": "templates/parts/settings/resources.php",
-          "needles": [
-            "ticket-resources",
-            "ticketResources"
-          ]
-        },
-        {
-          "file": "js/settings-resources.js",
-          "needles": [
-            "api/settings/ticket-resources",
-            "requesttoken"
-          ]
-        }
-      ],
-      "mobile": [
-        {
-          "file": "src/screens/CreateTicketScreen.tsx",
-          "needles": [
-            "create.resources",
-            "resources",
-            "options?.resources"
-          ]
-        },
-        {
-          "file": "src/api/client.ts",
-          "needles": [
-            "resources"
-          ]
-        },
-        {
-          "file": "src/types.ts",
-          "needles": [
-            "resources"
-          ]
-        }
-      ]
+     "file": "lib/Service/TicketResourceService.php",
+     "needles": [
+      "resolveWriteKeys",
+      "invalid_resource",
+      "too_many_resources"
+     ]
+    },
+    {
+     "file": "lib/Controller/TicketController.php",
+     "needles": [
+      "resolveResourceParam",
+      "assignTicketResources"
+     ]
+    },
+    {
+     "file": "lib/Service/CompanionTicketService.php",
+     "needles": [
+      "resolveWriteKeys",
+      "invalid_resource",
+      "'resources'"
+     ]
     }
-  ]
+   ],
+   "web": [
+    {
+     "file": "templates/ticket-form.php",
+     "needles": [
+      "name=\"resources[]\"",
+      "resources"
+     ]
+    },
+    {
+     "file": "js/ticket-resources-picker.js",
+     "needles": [
+      "resources[]",
+      "tc-res-listbox",
+      "setValues"
+     ]
+    },
+    {
+     "file": "templates/parts/settings/resources.php",
+     "needles": [
+      "ticket-resources",
+      "ticketResources"
+     ]
+    },
+    {
+     "file": "js/settings-resources.js",
+     "needles": [
+      "api/settings/ticket-resources",
+      "requesttoken"
+     ]
+    }
+   ],
+   "mobile": [
+    {
+     "file": "src/screens/CreateTicketScreen.tsx",
+     "needles": [
+      "create.resources",
+      "resources",
+      "options?.resources"
+     ]
+    },
+    {
+     "file": "src/api/client.ts",
+     "needles": [
+      "resources"
+     ]
+    },
+    {
+     "file": "src/types.ts",
+     "needles": [
+      "resources"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "portal-otp-request",
+   "param": "email",
+   "description": "Public passwordless OTP request + verify: server requires a valid email (uniform 202, never an oracle) and a 6-digit code (uniform INVALID_CODE). Web login page collects both.",
+   "errorCodes": [
+    "INVALID_CODE"
+   ],
+   "server": [
+    {
+     "file": "lib/Controller/PortalAuthController.php",
+     "needles": [
+      "getParam('email'",
+      "getParam('code'",
+      "invalidCode"
+     ]
+    }
+   ],
+   "web": [
+    {
+     "file": "templates/portal/login.php",
+     "needles": [
+      "name=\"email\"",
+      "name=\"code\"",
+      "data-tc-portal-send",
+      "data-tc-portal-verify"
+     ]
+    },
+    {
+     "file": "js/portal-login.js",
+     "needles": [
+      "/portal/auth/otp",
+      "/portal/auth/verify",
+      "email",
+      "code"
+     ]
+    }
+   ],
+   "mobile": null
+  },
+  {
+   "id": "guest-migration-door",
+   "param": "door",
+   "description": "S3 door flip: server requires door in {allowed,refused} + acknowledged=yes + fresh dry-run before refusing NC guest login. Migration wizard provides the acknowledgement checkbox + door button.",
+   "errorCodes": [],
+   "server": [
+    {
+     "file": "lib/Controller/GuestMigrationController.php",
+     "needles": [
+      "getParam('door'",
+      "migration_dryrun_required",
+      "setDoor"
+     ]
+    }
+   ],
+   "web": [
+    {
+     "file": "templates/guests/migration.php",
+     "needles": [
+      "tc-ack",
+      "data-tc-door",
+      "migration_ack"
+     ]
+    },
+    {
+     "file": "js/guest-migration.js",
+     "needles": [
+      "/api/guests/migration/door",
+      "acknowledged",
+      "door"
+     ]
+    }
+   ],
+   "mobile": null
+  },
+  {
+   "id": "guest-migration-exempt",
+   "param": "uid+exempt",
+   "description": "NC-fallback exemption toggle (US-T05): server requires uid, blocks portal: actors; exempt=1/0. Wizard per-uid exempt/unexempt buttons send both fields.",
+   "errorCodes": [],
+   "server": [
+    {
+     "file": "lib/Controller/GuestMigrationController.php",
+     "needles": [
+      "getParam('uid'",
+      "getParam('exempt'",
+      "exempt"
+     ]
+    }
+   ],
+   "web": [
+    {
+     "file": "templates/guests/migration.php",
+     "needles": [
+      "data-tc-exempt",
+      "data-tc-unexempt"
+     ]
+    },
+    {
+     "file": "js/guest-migration.js",
+     "needles": [
+      "/api/guests/migration/exempt",
+      "uid",
+      "exempt"
+     ]
+    }
+   ],
+   "mobile": null
+  },
+  {
+   "id": "guest-migration-resolve",
+   "param": "uid+resolution+reason",
+   "description": "S5 resolution: resolution=abandon records abandoned uid with optional reason; resolution=migrate re-runs the single-guest path. Wizard abandon dialog collects reason.",
+   "errorCodes": [],
+   "server": [
+    {
+     "file": "lib/Controller/GuestMigrationController.php",
+     "needles": [
+      "getParam('resolution'",
+      "markAbandoned",
+      "getParam('reason'"
+     ]
+    }
+   ],
+   "web": [
+    {
+     "file": "templates/guests/migration.php",
+     "needles": [
+      "data-tc-abandon"
+     ]
+    },
+    {
+     "file": "js/guest-migration.js",
+     "needles": [
+      "/api/guests/migration/resolve",
+      "resolution",
+      "reason"
+     ]
+    }
+   ],
+   "mobile": null
+  },
+  {
+   "id": "guest-migration-rollback",
+   "param": "uid",
+   "description": "Per-uid rollback to the migrated NC account (audited, restores access rows + deletes alias). Wizard rollback button.",
+   "errorCodes": [],
+   "server": [
+    {
+     "file": "lib/Controller/GuestMigrationController.php",
+     "needles": [
+      "getParam('uid'",
+      "rollbackOne"
+     ]
+    }
+   ],
+   "web": [
+    {
+     "file": "templates/guests/migration.php",
+     "needles": [
+      "data-tc-rollback"
+     ]
+    },
+    {
+     "file": "js/guest-migration.js",
+     "needles": [
+      "/api/guests/migration/rollback",
+      "uid"
+     ]
+    }
+   ],
+   "mobile": null
+  },
+  {
+   "id": "guest-migration-merge",
+   "param": "uid+identity_id+confirm",
+   "description": "NH-T01 merge tool: attach a blocked uid's access to a chosen identity. Server requires confirm=merge; wizard merge picker collects identity_id.",
+   "errorCodes": [],
+   "server": [
+    {
+     "file": "lib/Controller/GuestMigrationController.php",
+     "needles": [
+      "getParam('identity_id'",
+      "'merge'",
+      "getParam('confirm'"
+     ]
+    }
+   ],
+   "web": [
+    {
+     "file": "templates/guests/migration.php",
+     "needles": [
+      "data-tc-merge",
+      "data-tc-merge-target"
+     ]
+    },
+    {
+     "file": "js/guest-migration.js",
+     "needles": [
+      "/api/guests/migration/merge",
+      "identity_id",
+      "merge"
+     ]
+    }
+   ],
+   "mobile": null
+  },
+  {
+   "id": "guest-migration-run",
+   "param": "confirm",
+   "description": "S2 run: server requires confirm=run; wizard run button posts after modal confirm.",
+   "errorCodes": [],
+   "server": [
+    {
+     "file": "lib/Controller/GuestMigrationController.php",
+     "needles": [
+      "getParam('confirm'",
+      "'run'"
+     ]
+    }
+   ],
+   "web": [
+    {
+     "file": "templates/guests/migration.php",
+     "needles": [
+      "data-tc-run"
+     ]
+    },
+    {
+     "file": "js/guest-migration.js",
+     "needles": [
+      "/api/guests/migration/run",
+      "confirm"
+     ]
+    }
+   ],
+   "mobile": null
+  },
+  {
+   "id": "guest-migration-disable-nc",
+   "param": "confirm",
+   "description": "S4 disable: server requires confirm=disable; wizard disable button posts after modal confirm (reversible via occ user:enable).",
+   "errorCodes": [],
+   "server": [
+    {
+     "file": "lib/Controller/GuestMigrationController.php",
+     "needles": [
+      "getParam('confirm'",
+      "'disable'",
+      "disableMigratedAccounts"
+     ]
+    }
+   ],
+   "web": [
+    {
+     "file": "templates/guests/migration.php",
+     "needles": [
+      "data-tc-disable"
+     ]
+    },
+    {
+     "file": "js/guest-migration.js",
+     "needles": [
+      "/api/guests/migration/disable-nc",
+      "confirm"
+     ]
+    }
+   ],
+   "mobile": null
+  }
+ ]
 }

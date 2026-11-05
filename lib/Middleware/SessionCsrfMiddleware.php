@@ -6,6 +6,8 @@ namespace OCA\Ticketcheck\Middleware;
 
 use OCA\Ticketcheck\Exception\SessionCsrfException;
 use OCA\Ticketcheck\Service\CsrfTokenValidator;
+use OCA\Ticketcheck\Service\PortalActorResolver;
+use OCA\Ticketcheck\Service\PortalSessionService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Middleware;
@@ -39,6 +41,7 @@ class SessionCsrfMiddleware extends Middleware
 		private IRequest $request,
 		private IUserSession $userSession,
 		private CsrfTokenValidator $csrfTokenValidator,
+		private ?PortalActorResolver $actorResolver = null,
 	) {
 	}
 
@@ -56,13 +59,35 @@ class SessionCsrfMiddleware extends Middleware
 		if (str_starts_with($auth, 'basic ')) {
 			return;
 		}
-		// No logged-in session → nothing ambient to protect; auth middleware rejects anyway.
+		// No logged-in session → a `tkc_portal` identity session is ambient
+		// authority for portal routes: it must prove the bound double-submit
+		// token (tkc_csrf cookie + X-TKC-CSRF header / hidden field, MH-T05).
 		if ($this->userSession->getUser() === null) {
+			if ($this->actorResolver !== null && $this->actorResolver->kind() === 'identity') {
+				$session = $this->actorResolver->currentSession();
+				$presented = $this->request->getHeader(PortalSessionService::CSRF_HEADER);
+				if ($presented === '') {
+					$presented = (string)($this->request->getParam('tkc_csrf') ?? '');
+				}
+				$cookie = (string)$this->request->getCookie(PortalSessionService::CSRF_COOKIE);
+				if ($session === null || $presented === '' || $cookie === '' || $presented !== $cookie) {
+					throw new SessionCsrfException();
+				}
+				$resolver = $this->actorResolver;
+				if (!$this->sessionCsrfValid($session, $presented)) {
+					throw new SessionCsrfException();
+				}
+			}
 			return;
 		}
 		if (!$this->hasValidToken()) {
 			throw new SessionCsrfException();
 		}
+	}
+
+	private function sessionCsrfValid(\OCA\Ticketcheck\Db\PortalSession $session, string $presented): bool
+	{
+		return hash_equals((string)$session->getCsrfHash(), hash('sha256', $presented));
 	}
 
 	private function hasValidToken(): bool

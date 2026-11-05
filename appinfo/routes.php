@@ -221,6 +221,40 @@ return [
         ['name' => 'guestUser#grantProjectAccess', 'url' => '/api/guests/{userId}/projects/{projectId}', 'verb' => 'POST', 'requirements' => ['projectId' => '\\d+']],
         ['name' => 'guestUser#revokeProjectAccess', 'url' => '/api/guests/{userId}/projects/{projectId}', 'verb' => 'DELETE', 'requirements' => ['projectId' => '\\d+']],
 
+        // Passwordless portal auth (spec §10.3) — public, dual-auth era safe
+        ['name' => 'portalAuth#login', 'url' => '/portal/login', 'verb' => 'GET'],
+        ['name' => 'portalAuth#sendOtp', 'url' => '/portal/auth/otp', 'verb' => 'POST'],
+        ['name' => 'portalAuth#verifyOtp', 'url' => '/portal/auth/verify', 'verb' => 'POST'],
+        ['name' => 'portalAuth#magic', 'url' => '/portal/auth/magic/{token}', 'verb' => 'GET'],
+        ['name' => 'portalAuth#magicConsume', 'url' => '/portal/auth/magic/{token}', 'verb' => 'POST'],
+        ['name' => 'portalAuth#signIn', 'url' => '/portal/sign-in', 'verb' => 'GET'],
+        ['name' => 'portalAuth#revokeSession', 'url' => '/portal/sessions/{id}/revoke', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'portalAuth#revokeAllSessions', 'url' => '/portal/sessions/revoke-all', 'verb' => 'POST'],
+        ['name' => 'portalAuth#resendMagic', 'url' => '/portal/auth/resend', 'verb' => 'POST'],
+        // Companion client (guest device tokens, spec §10.7)
+        ['name' => 'guestDevice#pair', 'url' => '/companion/api/v1/client/pair', 'verb' => 'POST'],
+        ['name' => 'guestDevice#bootstrap', 'url' => '/companion/api/v1/client/bootstrap', 'verb' => 'GET'],
+        ['name' => 'guestDevice#revoke', 'url' => '/companion/api/v1/client/revoke', 'verb' => 'POST'],
+
+        // Identity administration + migration wizard (staff)
+        ['name' => 'guestIdentity#store', 'url' => '/api/identities', 'verb' => 'POST'],
+        ['name' => 'guestIdentity#update', 'url' => '/api/identities/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'guestIdentity#setStatus', 'url' => '/api/identities/{id}/status', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'guestIdentity#erase', 'url' => '/api/identities/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'guestIdentity#invite', 'url' => '/api/identities/{id}/invite', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'guestIdentity#grantProject', 'url' => '/api/identities/{id}/projects/{projectId}', 'verb' => 'POST', 'requirements' => ['id' => '\\d+', 'projectId' => '\\d+']],
+        ['name' => 'guestIdentity#revokeProject', 'url' => '/api/identities/{id}/projects/{projectId}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+', 'projectId' => '\\d+']],
+        ['name' => 'guestMigration#wizard', 'url' => '/guests/migration', 'verb' => 'GET'],
+        ['name' => 'guestMigration#status', 'url' => '/api/guests/migration/status', 'verb' => 'GET'],
+        ['name' => 'guestMigration#run', 'url' => '/api/guests/migration/run', 'verb' => 'POST'],
+        ['name' => 'guestMigration#rollback', 'url' => '/api/guests/migration/rollback', 'verb' => 'POST'],
+        ['name' => 'guestMigration#exempt', 'url' => '/api/guests/migration/exempt', 'verb' => 'POST'],
+        ['name' => 'guestMigration#resolve', 'url' => '/api/guests/migration/resolve', 'verb' => 'POST'],
+        ['name' => 'guestMigration#merge', 'url' => '/api/guests/migration/merge', 'verb' => 'POST'],
+        ['name' => 'guestMigration#disableNc', 'url' => '/api/guests/migration/disable-nc', 'verb' => 'POST'],
+        ['name' => 'guestMigration#setDoor', 'url' => '/api/guests/migration/door', 'verb' => 'POST'],
+        ['name' => 'guestMigration#invite', 'url' => '/api/guests/{id}/invite', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+
         // Guest self-service routes (for guest users to manage their own account)
         ['name' => 'customerPortal#changePassword', 'url' => '/portal/change-password', 'verb' => 'GET'],
         ['name' => 'customerPortal#updatePassword', 'url' => '/portal/change-password', 'verb' => 'POST'],

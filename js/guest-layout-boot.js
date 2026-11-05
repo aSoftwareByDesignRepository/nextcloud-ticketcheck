@@ -63,3 +63,26 @@
 		announceToScreenReader: announceToScreenReader,
 	};
 })();
+
+// Carry the double-submit token on every form POST (MH-T05): identity
+// sessions have no NC requesttoken, so `tkc_csrf` is injected into each
+// submitting form (cookie already mirrored into the logout field).
+(function () {
+	'use strict';
+	const m = document.cookie.match(/(?:^|;\s*)tkc_csrf=([^;]+)/);
+	if (!m) { return; }
+	const v = decodeURIComponent(m[1]);
+	document.querySelectorAll('input[data-tc-csrf-mirror]').forEach(function (i) { i.value = v; });
+	document.addEventListener('submit', function (e) {
+		const form = e.target;
+		if (!(form instanceof HTMLFormElement)) { return; }
+		if ((form.method || '').toUpperCase() !== 'POST') { return; }
+		if (!form.querySelector('input[name="tkc_csrf"]')) {
+			const input = document.createElement('input');
+			input.type = 'hidden';
+			input.name = 'tkc_csrf';
+			input.value = v;
+			form.appendChild(input);
+		}
+	}, true);
+})();

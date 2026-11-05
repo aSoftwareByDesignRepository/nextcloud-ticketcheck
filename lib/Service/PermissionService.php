@@ -42,6 +42,7 @@ class PermissionService
     private IConfig $config;
     private GuestProjectAccessMapper $guestProjectAccessMapper;
     private IDBConnection $db;
+    private ?PortalActorResolver $actorResolver;
 
     /** @var array<string, bool> Per-request group-membership cache (key: "userId:groupId") */
     private array $groupCache = [];
@@ -55,8 +56,10 @@ class PermissionService
         IGroupManager $groupManager,
         IConfig $config,
         GuestProjectAccessMapper $guestProjectAccessMapper,
-        IDBConnection $db
+        IDBConnection $db,
+        ?PortalActorResolver $actorResolver = null
     ) {
+        $this->actorResolver = $actorResolver;
         $this->userSession = $userSession;
         $this->groupManager = $groupManager;
         $this->config = $config;
@@ -98,6 +101,14 @@ class PermissionService
      */
     public function getCurrentUserId(): ?string
     {
+        // Canonical actor string: 'portal:<id>' for identity sessions and for
+        // migrated NC guests (alias canonicalization, spec §9.2).
+        if ($this->actorResolver !== null) {
+            $actor = $this->actorResolver->currentActor();
+            if ($actor !== null) {
+                return $actor;
+            }
+        }
         $user = $this->userSession->getUser();
         return $user ? $user->getUID() : null;
     }
@@ -109,6 +120,10 @@ class PermissionService
      */
     public function isGuest(): bool
     {
+        // Identity sessions are guests even though NC sees no logged-in user.
+        if ($this->actorResolver !== null && $this->actorResolver->kind() === 'identity') {
+            return true;
+        }
         $userId = $this->getCurrentUserId();
         if (!$userId) {
             return false;
@@ -605,6 +620,13 @@ class PermissionService
      */
     public function getCurrentUserEmail(): ?string
     {
+        if ($this->actorResolver !== null) {
+            $identity = $this->actorResolver->currentIdentity();
+            if ($identity !== null) {
+                $email = (string)$identity->getEmail();
+                return $email !== '' ? $email : null;
+            }
+        }
         $user = $this->userSession->getUser();
         if (!$user) {
             return null;
@@ -619,6 +641,12 @@ class PermissionService
      */
     public function getCurrentUserDisplayName(): ?string
     {
+        if ($this->actorResolver !== null) {
+            $identity = $this->actorResolver->currentIdentity();
+            if ($identity !== null) {
+                return (string)$identity->getDisplayName();
+            }
+        }
         $user = $this->userSession->getUser();
         if (!$user) {
             return null;
@@ -799,6 +827,12 @@ class PermissionService
     {
         if ($userId === '') {
             return false;
+        }
+
+        // Portal identities have no NC user behind them — the customers door
+        // is the only rule that applies (E-T17): fail closed when it is off.
+        if (PortalActorResolver::isIdentityActor($userId)) {
+            return !empty($settings['allow_helpdesk_customers']);
         }
 
         // Nextcloud admins always have access — fail-safe against lockout.

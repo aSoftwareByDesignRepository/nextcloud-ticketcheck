@@ -219,4 +219,37 @@ $formatGuestDate = static function ($raw) use ($localeFormat, $l): string {
                 <?php endif; ?>
             </section>
 
+            <?php $identityList = is_array($_['identities'] ?? null) ? $_['identities'] : []; ?>
+            <?php if ($identityList !== [] || !empty($_['identityProvisioning'])): ?>
+            <section class="tc-section" aria-labelledby="identities-list-heading">
+                <h2 id="identities-list-heading" class="tc-section__title"><?php p($l->t('guest_identities')); ?></h2>
+                <?php if ($identityList === []): ?>
+                    <p class="helpdesk-text-muted"><?php p($l->t('no_guest_identities_yet')); ?></p>
+                <?php else: ?>
+                    <div class="tc-table-wrap">
+                        <table class="helpdesk-table tc-table tc-identities-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col"><?php p($l->t('name')); ?></th>
+                                    <th scope="col"><?php p($l->t('email')); ?></th>
+                                    <th scope="col"><?php p($l->t('status')); ?></th>
+                                    <th scope="col"><?php p($l->t('last_login')); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($identityList as $row): ?>
+                                    <tr>
+                                        <td><?php p((string)$row['display_name']); ?></td>
+                                        <td><?php p((string)$row['email']); ?></td>
+                                        <td><span class="tc-badge"><?php p((string)$row['status']); ?></span></td>
+                                        <td><?php p((string)($row['last_login'] ?? '—')); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </section>
+            <?php endif; ?>
+
 <?php include __DIR__ . '/../common/page-end.php'; ?>

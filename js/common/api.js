@@ -70,14 +70,22 @@
 
 	function attachCsrfToken(headers, method) {
 		const token = csrfToken();
+		const tkcEarly = document.cookie.match(/(?:^|;\s*)tkc_csrf=([^;]+)/);
 		if (!token) {
-			if (MUTATION_METHODS.has(method)) {
+			if (tkcEarly) {
+				headers['X-TKC-CSRF'] = decodeURIComponent(tkcEarly[1]);
+			}
+			if (MUTATION_METHODS.has(method) && !tkcEarly) {
 				throw new Error(t('ticketcheck', 'Missing CSRF request token.'));
 			}
 			return;
 		}
 		// Nextcloud validates requesttoken on GET API routes too (App Framework SecurityMiddleware).
 		headers.requesttoken = token;
+		const tkc = document.cookie.match(/(?:^|;\s*)tkc_csrf=([^;]+)/);
+		if (tkc) {
+			headers['X-TKC-CSRF'] = decodeURIComponent(tkc[1]);
+		}
 	}
 
 	async function request(path, options) {

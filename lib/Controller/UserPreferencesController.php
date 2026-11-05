@@ -35,6 +35,8 @@ class UserPreferencesController extends Controller
         private IGroupManager $groupManager,
         private LoggerInterface $logger,
         private IConfig $config,
+        private ?\OCA\Ticketcheck\Service\PermissionService $permissionService = null,
+        private ?\OCA\Ticketcheck\Service\GuestIdentityService $guestIdentities = null,
     ) {
         parent::__construct($appName, $request);
     }
@@ -48,11 +50,14 @@ class UserPreferencesController extends Controller
     {
         $l = $this->l10nFactory->get('ticketcheck');
         $user = $this->userSession->getUser();
-        if (!$user) {
+        $actorId = (string)($this->permissionService?->getCurrentUserId() ?? '');
+        if (!$user && $actorId === '') {
             return new JSONResponse(['error' => $l->t('not_authenticated')], 401);
         }
 
-        $prefs = $this->emailPreferences->getUserPreferences($user->getUID());
+        $uid = $user !== null ? $user->getUID() : $actorId;
+        $isGuest = \OCA\Ticketcheck\Service\PortalActorResolver::isIdentityActor($actorId);
+        $prefs = $this->emailPreferences->getUserPreferences($uid, $isGuest);
         return new JSONResponse(['preferences' => $prefs]);
     }
 
@@ -65,13 +70,18 @@ class UserPreferencesController extends Controller
     {
         $l = $this->l10nFactory->get('ticketcheck');
         $user = $this->userSession->getUser();
-        if (!$user) {
+        // Identity sessions carry no NC user — the canonical actor is
+        // 'portal:<id>' and prefs persist in helpdesk_guest_prefs.
+        $actorId = (string)($this->permissionService?->getCurrentUserId() ?? '');
+        if (!$user && $actorId === '') {
             return new JSONResponse(['error' => $l->t('not_authenticated')], 401);
         }
 
-        $userId = $user->getUID();
+        $userId = $user !== null ? $user->getUID() : $actorId;
 
-        $isGuest = $this->groupManager->isInGroup($userId, 'helpdesk_customers');
+        $isGuest = $user !== null
+            ? $this->groupManager->isInGroup($userId, 'helpdesk_customers')
+            : \OCA\Ticketcheck\Service\PortalActorResolver::isIdentityActor($actorId);
         $validKeys = $isGuest
             ? EmailPreferencesService::getGuestValidKeys()
             : EmailPreferencesService::getValidKeys(false);
@@ -110,6 +120,14 @@ class UserPreferencesController extends Controller
         $user = $this->userSession->getUser();
         if (!$user) {
             return new JSONResponse(['error' => $l->t('not_authenticated')], 401);
+        }
+
+        // Identity sessions persist the ack per identity, not per browser.
+        $actorId = (string)($this->permissionService->getCurrentUserId() ?? '');
+        $identityId = \OCA\Ticketcheck\Service\PortalActorResolver::identityIdForActor($actorId);
+        if ($identityId !== null && $this->guestIdentities !== null) {
+            $this->guestIdentities->setPref($identityId, 'gdpr_portal_ack', true);
+            return new JSONResponse(['success' => true]);
         }
 
         $this->config->setUserValue(

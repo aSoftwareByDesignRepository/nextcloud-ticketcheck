@@ -76,6 +76,10 @@ class GuestPortalPageService
 			'navMode' => 'guest',
 			'urlGenerator' => $this->urlGenerator,
 			'currentUser' => $this->userSession->getUser(),
+			// Identity sessions have no IUser — the nav template falls back to
+			// these for the avatar/name/email (spec §9.3 display model).
+			'user_display_name' => $this->permission->getCurrentUserDisplayName() ?? 'Guest',
+			'user_display_email' => $this->permission->getCurrentUserEmail() ?? '',
 			'requesttoken' => $requesttoken,
 			'canCreateTicket' => $this->navigation->canGuestCreateTicket(),
 			'showKnowledgeBase' => $this->permission->isKnowledgeBasePortalContentEnabled(),
