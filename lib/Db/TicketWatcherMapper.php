@@ -115,8 +115,20 @@ class TicketWatcherMapper extends QBMapper
                 continue;
             }
             $watcher->setTicketId($targetId);
-            $this->update($watcher);
-            $moved++;
+            try {
+                $this->update($watcher);
+                $moved++;
+            } catch (\OCP\DB\Exception $e) {
+                // isWatching()→update is check-then-act: a concurrent add of
+                // the same user on the target wins the unique index — that
+                // makes this source row redundant, so it is a drop, not a 500.
+                if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                    $this->delete($watcher);
+                    $dropped++;
+                    continue;
+                }
+                throw $e;
+            }
         }
 
         return ['moved' => $moved, 'dropped' => $dropped];

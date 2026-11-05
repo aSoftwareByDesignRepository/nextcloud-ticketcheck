@@ -178,8 +178,20 @@ class TicketLinkMapper extends QBMapper
 
             $link->setTicketId($newTicketId);
             $link->setLinkedTicketId($newLinkedId);
-            $this->update($link);
-            $moved++;
+            try {
+                $this->update($link);
+                $moved++;
+            } catch (\OCP\DB\Exception $e) {
+                // exists()→update is check-then-act: a concurrent equivalent
+                // link on the target wins the unique index — this row is
+                // then redundant and counts as a drop, not a failure.
+                if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                    $this->delete($link);
+                    $dropped++;
+                    continue;
+                }
+                throw $e;
+            }
         }
 
         return ['moved' => $moved, 'dropped' => $dropped];

@@ -23,6 +23,11 @@ use OCP\IDBConnection;
  */
 class TicketMapper extends QBMapper
 {
+	// unique-conflict:ok — every write execution site in this mapper is an
+	// id-keyed conditional UPDATE (merge/close/SLA timestamp stamps) that
+	// never SETs the hd_ticket_num_idx ticket_number column. ticket_number is
+	// minted in the create path before insert, not by these sites.
+
     /** Statuses considered "done" (excluded from dashboard "my tickets" and "recent activity" by default) */
     public const DONE_STATUSES = ['done', 'resolved', 'closed'];
 

@@ -53,46 +53,42 @@ class SurveyService
             throw new \InvalidArgumentException('satisfaction_survey_rating_invalid');
         }
 
-        try {
-            return $this->workflowLock->withTicketLocks(
-                [$ticketId],
-                function () use ($ticketId, $rating, $comment, $assertAuthorized): TicketSurvey {
-                    $ticket = $this->ticketMapper->find($ticketId);
-                    if ($assertAuthorized !== null) {
-                        $assertAuthorized($ticket);
-                    }
-                    if ($ticket->getMergedIntoId() !== null) {
-                        throw new \InvalidArgumentException('satisfaction_survey_only_when_done');
-                    }
-                    if ($ticket->getStatus() !== Ticket::STATUS_DONE) {
-                        throw new \InvalidArgumentException('satisfaction_survey_only_when_done');
-                    }
+        return $this->workflowLock->withTicketLocks(
+            [$ticketId],
+            function () use ($ticketId, $rating, $comment, $assertAuthorized): TicketSurvey {
+                $ticket = $this->ticketMapper->find($ticketId);
+                if ($assertAuthorized !== null) {
+                    $assertAuthorized($ticket);
+                }
+                if ($ticket->getMergedIntoId() !== null) {
+                    throw new \InvalidArgumentException('satisfaction_survey_only_when_done');
+                }
+                if ($ticket->getStatus() !== Ticket::STATUS_DONE) {
+                    throw new \InvalidArgumentException('satisfaction_survey_only_when_done');
+                }
 
-                    $existing = $this->getSurveyByTicket($ticketId);
-                    if ($existing !== null) {
-                        throw new \InvalidArgumentException('satisfaction_survey_already_submitted');
-                    }
+                $existing = $this->getSurveyByTicket($ticketId);
+                if ($existing !== null) {
+                    throw new \InvalidArgumentException('satisfaction_survey_already_submitted');
+                }
 
-                    $survey = new TicketSurvey();
-                    $survey->setTicketId($ticketId);
-                    $survey->setRating($rating);
-                    $survey->setComment($comment !== null && trim($comment) !== '' ? trim($comment) : null);
-                    $survey->setSurveyedAt(new \DateTime());
+                $survey = new TicketSurvey();
+                $survey->setTicketId($ticketId);
+                $survey->setRating($rating);
+                $survey->setComment($comment !== null && trim($comment) !== '' ? trim($comment) : null);
+                $survey->setSurveyedAt(new \DateTime());
 
-                    try {
-                        return $this->ticketSurveyMapper->insert($survey);
-                    } catch (DbException $e) {
-                        if ($e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
-                            throw new \InvalidArgumentException('satisfaction_survey_already_submitted', 0, $e);
-                        }
-                        throw $e;
+                try {
+                    return $this->ticketSurveyMapper->insert($survey);
+                } catch (DbException $e) {
+                    if ($e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                        throw new \InvalidArgumentException('satisfaction_survey_already_submitted', 0, $e);
                     }
-                },
-                'TicketCheck survey'
-            );
-        } catch (\InvalidArgumentException $e) {
-            throw $e;
-        }
+                    throw $e;
+                }
+            },
+            'TicketCheck survey'
+        );
     }
 
     /**

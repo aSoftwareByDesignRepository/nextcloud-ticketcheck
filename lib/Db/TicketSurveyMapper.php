@@ -95,7 +95,18 @@ class TicketSurveyMapper extends QBMapper
         }
 
         $sourceSurvey->setTicketId($targetId);
-        $this->update($sourceSurvey);
+        try {
+            $this->update($sourceSurvey);
+        } catch (\OCP\DB\Exception $e) {
+            // findByTicket()→update is check-then-act: a survey that lands on
+            // the target between the check and this write makes the source
+            // row redundant — drop it instead of surfacing the raw exception.
+            if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                $this->delete($sourceSurvey);
+                return ['moved' => 0, 'dropped' => 1];
+            }
+            throw $e;
+        }
         return ['moved' => 1, 'dropped' => 0];
     }
 

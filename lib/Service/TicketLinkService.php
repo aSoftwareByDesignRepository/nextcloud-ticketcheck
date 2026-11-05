@@ -15,6 +15,7 @@ use OCA\Ticketcheck\Db\TicketLink;
 use OCA\Ticketcheck\Db\TicketLinkMapper;
 use OCA\Ticketcheck\Db\TicketMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\DB\Exception as DbException;
 use Psr\Log\LoggerInterface;
 
 class TicketLinkService
@@ -96,7 +97,17 @@ class TicketLinkService
         $link->setLinkType($storeType);
         $link->setCreatedAt(new \DateTime());
 
-        $inserted = $this->linkMapper->insert($link);
+        try {
+            $inserted = $this->linkMapper->insert($link);
+        } catch (DbException $e) {
+            // exists()→insert is check-then-act: a concurrent link that wins
+            // the (ticket_id,linked_ticket_id,link_type) unique index must
+            // surface the same message the pre-check throws.
+            if ($e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                throw new \InvalidArgumentException('Link already exists', 0, $e);
+            }
+            throw $e;
+        }
         $this->logger->info('Ticket link added', [
             'ticket_id' => $ticketId,
             'linked_ticket_id' => $linkedTicketId,

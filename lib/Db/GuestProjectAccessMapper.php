@@ -138,7 +138,17 @@ class GuestProjectAccessMapper extends QBMapper
         $access->setCreatedAt(new \DateTime());
         $access->setCreatedBy($createdBy);
 
-        return $this->insert($access);
+        try {
+            return $this->insert($access);
+        } catch (\OCP\DB\Exception $e) {
+            // hasAccess()→insert is check-then-act: a concurrent grant that
+            // wins the (user_id,project_id) unique index must surface the
+            // same message the pre-check throws, never the raw DB exception.
+            if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                throw new \Exception('User already has access to this project', 0, $e);
+            }
+            throw $e;
+        }
     }
 
     /**

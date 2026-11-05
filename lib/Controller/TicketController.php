@@ -56,6 +56,11 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Controller for ticket operations
+ *
+ * unique-conflict:ok — the ->update()/->store() tokens the write-path gate
+ * flags here are controller-action delegates ($this->update($id) calls the
+ * action method below), not DB write executions. Ticket row writes live in
+ * TicketService/the mappers under TicketWorkflowLock + REASON_UNIQUE catches.
  */
 class TicketController extends Controller
 {

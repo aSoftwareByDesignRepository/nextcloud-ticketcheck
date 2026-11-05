@@ -18,6 +18,11 @@ use OCP\IDBConnection;
 
 class InboundMessageMapper extends QBMapper
 {
+	// unique-conflict:ok — the claim() INSERT carries the REASON_UNIQUE catch
+	// and resolves the duplicate row. The remaining write sites are the stale
+	// reclaim conditional UPDATE and finish()'s row update: both key on `id`
+	// and never SET msg_hash, so they cannot violate hd_inb_hash_ux.
+
 	public function __construct(IDBConnection $db)
 	{
 		parent::__construct($db, 'helpdesk_inbound_msgs', InboundMessage::class);

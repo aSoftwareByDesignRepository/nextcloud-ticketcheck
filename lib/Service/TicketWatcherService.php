@@ -15,6 +15,7 @@ use OCA\Ticketcheck\Db\TicketWatcher;
 use OCA\Ticketcheck\Db\TicketWatcherMapper;
 use OCA\Ticketcheck\Db\TicketMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\DB\Exception as DbException;
 use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 
@@ -91,7 +92,17 @@ class TicketWatcherService
         $watcher->setUserId($userId);
         $watcher->setCreatedAt(new \DateTime());
 
-        $inserted = $this->watcherMapper->insert($watcher);
+        try {
+            $inserted = $this->watcherMapper->insert($watcher);
+        } catch (DbException $e) {
+            // isWatching()→insert is check-then-act: a concurrent add that wins
+            // the (ticket_id,user_id) unique index must surface the same
+            // message the pre-check throws, never the raw DB exception.
+            if ($e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                throw new \InvalidArgumentException('User is already watching this ticket', 0, $e);
+            }
+            throw $e;
+        }
         $this->logger->info('Watcher added', ['ticket_id' => $ticketId, 'user_id' => $userId]);
         return $inserted;
     }

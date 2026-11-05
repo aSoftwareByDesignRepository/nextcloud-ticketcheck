@@ -22,6 +22,11 @@ use Psr\Log\LoggerInterface;
  */
 class PrototypeFundBacklogSeeder
 {
+    // unique-conflict:ok — one-shot provisioning seeder, single-flight by
+    // contract (admin/dev fixture load, not a request path). The findBy*
+    // pre-checks make re-runs idempotent; a concurrent double-seed would
+    // fail loud on the UNIQUE index instead of silently corrupting.
+
     public const PROJECT_NAME = 'NEXTICK — Prototype Fund Backlog (intern)';
 
     private const SEED_FILE = __DIR__ . '/data/prototype-fund-backlog.json';
