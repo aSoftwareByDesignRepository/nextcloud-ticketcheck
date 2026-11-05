@@ -21,6 +21,7 @@ use OCA\Ticketcheck\Service\GuestMigrationService;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
@@ -67,6 +68,7 @@ class GuestMigrationController extends Controller
     }
 
     #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function wizard(): TemplateResponse
     {
         $l = $this->l10nFactory->get($this->appName);

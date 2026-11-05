@@ -69,11 +69,7 @@ class PortalAuthController extends Controller
         }
         // HTTPS-only by spec — loopback/dev hosts are exempt (same secure-
         // context treatment browsers give localhost).
-        $host = strtolower((string)$this->request->getServerHost());
-        if (($p = strpos($host, ':')) !== false && $host[0] !== '[') {
-            $host = substr($host, 0, $p); // getServerHost may carry the port
-        }
-        $host = trim($host, '[]');
+        $host = $this->serverHostName();
         $loopback = in_array($host, ['localhost', '127.0.0.1', '::1'], true)
             || str_ends_with($host, '.localhost')
             || str_ends_with($host, '.test')
@@ -326,7 +322,25 @@ class PortalAuthController extends Controller
             return true; // non-browser clients carry no Origin — AnonRateLimit applies
         }
         $host = parse_url($origin, PHP_URL_HOST);
-        return is_string($host) && strcasecmp($host, (string)$this->request->getServerHost()) === 0;
+        // parse_url keeps IPv6 brackets ("[::1]") — strip to match serverHostName()
+        return is_string($host) && strcasecmp(trim($host, '[]'), $this->serverHostName()) === 0;
+    }
+
+    /**
+     * Hostname-only form of getServerHost() — it may carry the port
+     * ("localhost:8081", "[::1]:8080"), and Origin/Referer hosts never do.
+     */
+    private function serverHostName(): string
+    {
+        $host = strtolower((string)$this->request->getServerHost());
+        if (str_starts_with($host, '[')) {
+            // "[::1]:8080" → drop the port after the closing bracket
+            $end = strpos($host, ']');
+            $host = $end === false ? $host : substr($host, 0, $end + 1);
+        } elseif (($p = strpos($host, ':')) !== false) {
+            $host = substr($host, 0, $p);
+        }
+        return trim($host, '[]');
     }
 
     public static function maskEmail(string $email): string
