@@ -46,6 +46,7 @@ const READY = {
 	'dashboard': { populated: '.helpdesk-dashboard-metric-content, .helpdesk-card' },
 	'kanban': { populated: '.tc-kanban' },
 	'projects': { populated: '.tc-table-wrap, .helpdesk-table', empty: '.helpdesk-empty' },
+	'project-detail': { populated: '.helpdesk-card, .tc-project-detail-team__roles' },
 	'customers': { populated: '.tc-table-wrap, .helpdesk-table', empty: '.helpdesk-empty' },
 	'guests': { populated: '.tc-table-wrap, .helpdesk-table' },
 	'kb': { populated: '#kb-articles-container, .helpdesk-card' },
@@ -131,6 +132,7 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 	/** @type {import('@playwright/test').Page} */
 	let guestPage;
 	let detailUrl = null;
+	let projectUrl = null;
 
 	test.beforeAll(async ({ browser }) => {
 		ctx = await browser.newContext({
@@ -161,6 +163,13 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 			);
 			return a ? a.getAttribute('href') : null;
 		});
+
+		// Dynamic project-detail: first /projects/{id} link on the staff list.
+		projectUrl = await staffPage.evaluate(() => {
+			const a = document.querySelector('a[href*="/apps/ticketcheck/projects/"]');
+			const h = a ? a.getAttribute('href') : null;
+			return h && /\/projects\/\d+/.test(h) ? h : null;
+		});
 	});
 
 	test.afterAll(async () => {
@@ -188,6 +197,13 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 						? new URL(detailUrl).pathname + new URL(detailUrl).search
 						: detailUrl;
 					// href already carries the app prefix — keep the path verbatim.
+					surface._resolved = href;
+				}
+				if (surface.path === 'DYNAMIC_PROJECT' && !surface._resolved) {
+					expect(projectUrl, 'no /projects/{id} link on staff projects list — cannot capture detail').toBeTruthy();
+					const href = projectUrl.startsWith('http')
+						? new URL(projectUrl).pathname + new URL(projectUrl).search
+						: projectUrl;
 					surface._resolved = href;
 				}
 				const page = pageFor();

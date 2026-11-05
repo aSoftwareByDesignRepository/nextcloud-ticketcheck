@@ -69,6 +69,14 @@
       "emptyDriver": "searchNoMatch"
     },
     {
+      "id": "project-detail",
+      "path": "DYNAMIC_PROJECT",
+      "states": [
+        "populated"
+      ],
+      "dark": true
+    },
+    {
       "id": "customers",
       "path": "/customers",
       "states": [

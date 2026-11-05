@@ -171,6 +171,37 @@
             return list;
         }
 
+        // Duplicate-name/email 409: the field is already pinned via the
+        // server `fields` map (api.js → CheckFieldErrors). The summary box
+        // additionally carries the message + a link to the conflicting
+        // record so the dead end becomes a next step.
+        function showConflictSummary(payload, fallbackMessage) {
+            const box = ensureErrorBox();
+            box.replaceChildren();
+            const content = document.createElement('div');
+            content.className = 'helpdesk-alert__content';
+            const title = document.createElement('p');
+            title.className = 'helpdesk-alert__title';
+            title.textContent = String(fallbackMessage || '');
+            content.appendChild(title);
+            const existingId = payload && payload.customer_id ? parseInt(payload.customer_id, 10) : 0;
+            if (existingId > 0 && typeof OC !== 'undefined' && OC.generateUrl) {
+                const linkP = document.createElement('p');
+                linkP.className = 'helpdesk-alert__text';
+                const link = document.createElement('a');
+                link.className = 'tc-customer-conflict-existing-link';
+                link.href = OC.generateUrl('/apps/ticketcheck/customers/' + existingId);
+                link.textContent = t('ticketcheck', 'View Customer Details');
+                linkP.appendChild(link);
+                content.appendChild(linkP);
+            }
+            box.appendChild(content);
+            box.hidden = false;
+            if (typeof box.scrollIntoView === 'function') {
+                box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
         function validateForm() {
             const box = ensureErrorBox();
             const emailInput = form.querySelector('#customer-email');
@@ -328,11 +359,15 @@
                     }
                 })
                 .catch((error) => {
-                    showAlert(
-                        t('ticketcheck', 'error_with_recovery', {
-                            message: error.message || t('ticketcheck', 'failed_to_save_customer'),
-                        }),
-                    );
+                    if (error && error.status === 409 && error.payload) {
+                        showConflictSummary(error.payload, error.message);
+                    } else {
+                        showAlert(
+                            t('ticketcheck', 'error_with_recovery', {
+                                message: error.message || t('ticketcheck', 'failed_to_save_customer'),
+                            }),
+                        );
+                    }
                     setSubmitLoading(submitBtn, submitLabelEl, false, loadingLabel, originalSubmitText);
                 });
         });

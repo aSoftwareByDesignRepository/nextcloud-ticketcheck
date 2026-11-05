@@ -376,6 +376,7 @@ class CustomerController extends Controller
             if ($existing !== null) {
                 return new DataResponse([
                     'error' => $l->t('customer_name_already_exists'),
+                    'fields' => ['name' => $l->t('customer_name_already_exists')],
                     'customer_id' => (int)$existing->getId(),
                 ], Http::STATUS_CONFLICT);
             }
@@ -383,6 +384,7 @@ class CustomerController extends Controller
             if ($existing !== null) {
                 return new DataResponse([
                     'error' => $l->t('customer_email_already_exists'),
+                    'fields' => ['email' => $l->t('customer_email_already_exists')],
                     'customer_id' => (int)$existing->getId(),
                 ], Http::STATUS_CONFLICT);
             }
@@ -462,11 +464,19 @@ class CustomerController extends Controller
             // helpdesk_customers.name and .email are UNIQUE — renaming onto an existing record must be a clear error
             $nameConflict = $this->customerMapper->findByName($name);
             if ($nameConflict !== null && (int)$nameConflict->getId() !== $id) {
-                return new DataResponse(['error' => $l->t('customer_name_already_exists')], Http::STATUS_CONFLICT);
+                return new DataResponse([
+                    'error' => $l->t('customer_name_already_exists'),
+                    'fields' => ['name' => $l->t('customer_name_already_exists')],
+                    'customer_id' => (int)$nameConflict->getId(),
+                ], Http::STATUS_CONFLICT);
             }
             $emailConflict = $this->customerMapper->findByEmail($email);
             if ($emailConflict !== null && (int)$emailConflict->getId() !== $id) {
-                return new DataResponse(['error' => $l->t('customer_email_already_exists')], Http::STATUS_CONFLICT);
+                return new DataResponse([
+                    'error' => $l->t('customer_email_already_exists'),
+                    'fields' => ['email' => $l->t('customer_email_already_exists')],
+                    'customer_id' => (int)$emailConflict->getId(),
+                ], Http::STATUS_CONFLICT);
             }
 
             // Atomic: a failed project sync must not leave the customer half-updated behind a 400.
@@ -504,14 +514,25 @@ class CustomerController extends Controller
     {
         $byName = $this->customerMapper->findByName($name);
         if ($byName !== null && (int)$byName->getId() !== $selfId) {
-            return new DataResponse(['error' => $l->t('customer_name_already_exists')], Http::STATUS_CONFLICT);
+            return new DataResponse([
+                'error' => $l->t('customer_name_already_exists'),
+                'fields' => ['name' => $l->t('customer_name_already_exists')],
+                'customer_id' => (int)$byName->getId(),
+            ], Http::STATUS_CONFLICT);
         }
         $byEmail = $this->customerMapper->findByEmail($email);
         if ($byEmail !== null && (int)$byEmail->getId() !== $selfId) {
-            return new DataResponse(['error' => $l->t('customer_email_already_exists')], Http::STATUS_CONFLICT);
+            return new DataResponse([
+                'error' => $l->t('customer_email_already_exists'),
+                'fields' => ['email' => $l->t('customer_email_already_exists')],
+                'customer_id' => (int)$byEmail->getId(),
+            ], Http::STATUS_CONFLICT);
         }
         // Conflicting row vanished between write and lookup — still a duplicate-name conflict in spirit.
-        return new DataResponse(['error' => $l->t('customer_name_already_exists')], Http::STATUS_CONFLICT);
+        return new DataResponse([
+            'error' => $l->t('customer_name_already_exists'),
+            'fields' => ['name' => $l->t('customer_name_already_exists')],
+        ], Http::STATUS_CONFLICT);
     }
 
     private function isUniqueConstraintViolation(\Throwable $e): bool
