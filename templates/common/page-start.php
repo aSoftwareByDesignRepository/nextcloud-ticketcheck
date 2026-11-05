@@ -50,6 +50,7 @@ $pageIcons = [
 	'customer-detail' => 'users',
 	'customer-form' => 'users',
 	'guests' => 'user-plus',
+	'guests-migration' => 'user-plus',
 	'guest-form' => 'user-plus',
 	'guest-edit' => 'user-plus',
 	'kb' => 'book',

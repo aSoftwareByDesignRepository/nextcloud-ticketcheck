@@ -55,6 +55,7 @@ trait PageRenderTrait
 		'projects',
 		'customers',
 		'guests',
+		'guests-migration',
 		'kb',
 		'portal-home',
 		'portal-tickets',

@@ -580,6 +580,7 @@ class NavigationContextService
 				|| (str_starts_with($currentPageId, 'project-') && $id === 'projects')
 				|| (str_starts_with($currentPageId, 'customer-') && $id === 'customers')
 				|| (str_starts_with($currentPageId, 'guest-') && $id === 'guests')
+				|| ($currentPageId === 'guests-migration' && $id === 'guests')
 				|| (str_starts_with($currentPageId, 'kb-') && $id === 'kb')
 				|| (str_starts_with($currentPageId, 'portal-ticket') && $id === 'portal-tickets')
 				|| ($currentPageId === 'rate-limit' && $id === 'portal-home');

@@ -21,10 +21,20 @@
 }
 
 /* Passwordless portal (spec passwordless-guests-2026-11) */
-.tc-portal-auth {
+.tc-portal-auth,
+.tc-portal-signin {
 	max-width: 30rem;
 	margin-inline: auto;
 	padding-block: var(--space-4, 1rem);
+	padding-inline: var(--space-4, 1rem);
+	/* Opaque surface on the full-bleed NC guest chrome (body#body-login is a
+	   blue gradient + wave SVG): the platform login pattern is a card, and
+	   bare inherited chrome ink on the gradient failed contrast (washed-out
+	   lead/notice) plus the craft-edge-clip screen-edge check. */
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius, 4px);
 }
 .tc-portal-auth h1 { margin-block-end: var(--space-2, .5rem); }
 .tc-portal-auth .tc-page-lead {

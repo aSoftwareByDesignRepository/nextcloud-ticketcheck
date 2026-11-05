@@ -85,6 +85,10 @@ class GuestMigrationController extends Controller
             'pageId' => 'guests-migration',
             'pageTitle' => $l->t('guest_migration_title'),
             'pageHelp' => $l->t('guest_migration_lead'),
+            'breadcrumbParent' => [
+                'label' => $l->t('guest_users'),
+                'url' => $this->urlGenerator->linkToRoute('ticketcheck.guestUser.index'),
+            ],
             'buckets' => $report['buckets'],
             'lists' => $report['lists'],
             'ncLoginAllowed' => $this->authConfig->ncPortalLoginAllowed(),

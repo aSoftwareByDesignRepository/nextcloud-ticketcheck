@@ -20,10 +20,8 @@ $bucketMeta = [
 	'error'                   => ['tone' => 'error', 'actions' => ['rollback']],
 ];
 ?>
+<?php include __DIR__ . '/../common/page-start.php'; ?>
 <div class="tc-migration" data-page="guests-migration">
-	<h1><?php p($l->t('guest_migration_title')); ?></h1>
-	<p class="tc-page-lead"><?php p($l->t('guest_migration_lead')); ?></p>
-
 	<section class="tc-card tc-stage" aria-label="<?php p($l->t('migration_stage_status')); ?>">
 		<ul class="tc-stage__list">
 			<li><strong><?php p($l->t('nc_login_door')); ?>:</strong>
@@ -130,3 +128,4 @@ $bucketMeta = [
 
 	<div id="tc-mig-status" class="tc-mig-status" role="status" aria-live="polite"></div>
 </div>
+<?php include __DIR__ . '/../common/page-end.php'; ?>

@@ -273,6 +273,7 @@ class EnrichTemplateShellContext implements IEventListener
 			'projects',
 			'customers',
 			'guests',
+			'guests-migration',
 			'kb',
 			'portal-home',
 			'portal-tickets',
