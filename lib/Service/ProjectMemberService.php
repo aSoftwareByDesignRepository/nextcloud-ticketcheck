@@ -80,6 +80,7 @@ class ProjectMemberService
     private function addMemberLocked(int $projectId, string $userId, string $role): array
     {
         $role = $this->normalizeRole($role);
+        $this->assertProjectExists($projectId);
         $this->assertActorMayAddMember($projectId, $role);
 
         // Validate user exists
@@ -121,6 +122,27 @@ class ProjectMemberService
     }
 
     /**
+     * Fail closed on writes to a project that does not exist — otherwise a
+     * member row can be minted for a phantom project (orphan data + the
+     * endpoint becomes an existence oracle returning success).
+     */
+    private function assertProjectExists(int $projectId): void
+    {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('id')
+            ->from('helpdesk_projects')
+            ->where($qb->expr()->eq('id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
+
+        $result = $qb->executeQuery();
+        $row = $result->fetch();
+        $result->closeCursor();
+
+        if ($row === false || $row === null) {
+            throw new \Exception('Project not found');
+        }
+    }
+
+    /**
      * Remove a team member from a project
      *
      * @param int $projectId
@@ -138,7 +160,6 @@ class ProjectMemberService
                     throw new \Exception('User is not a member of this project');
                 }
                 $this->assertActorMayRemoveMember($projectId, (string)$member['role']);
-                $this->assertCanRemoveMember($projectId, (string)$member['role']);
 
                 $qb = $this->db->getQueryBuilder();
                 $qb->delete('hd_proj_members')
@@ -174,7 +195,6 @@ class ProjectMemberService
                     throw new \Exception('User is not a member of this project');
                 }
                 $this->assertActorMayChangeRole($projectId, (string)$member['role'], $newRole);
-                $this->assertCanChangeRole($projectId, (string)$member['role'], $newRole);
 
                 $qb = $this->db->getQueryBuilder();
                 $qb->update('hd_proj_members')
@@ -333,18 +353,10 @@ class ProjectMemberService
         return $role;
     }
 
-    private function assertCanRemoveMember(int $projectId, string $role): void
-    {
-        if ($role === self::ROLE_ADMIN && $this->countAdmins($projectId) <= 1) {
-            throw new \Exception('Cannot remove the last project administrator');
-        }
-    }
-
     public function canActorRemoveMember(int $projectId, string $targetRole): bool
     {
         try {
             $this->assertActorMayRemoveMember($projectId, $targetRole);
-            $this->assertCanRemoveMember($projectId, $targetRole);
             return true;
         } catch (\Exception $e) {
             return false;
@@ -359,7 +371,12 @@ class ProjectMemberService
         }
         $actorId = $actor->getUID();
 
-        if ($this->permissionService->isNextcloudAdministrator($actorId)) {
+        if ($this->permissionService->isGuest()) {
+            // Dual-role actors keep guest scope everywhere else — same here.
+            throw new \Exception('Access denied');
+        }
+
+        if ($this->permissionService->isAppAdmin($actorId)) {
             return;
         }
 
@@ -375,11 +392,7 @@ class ProjectMemberService
             return;
         }
 
-        if ($this->countAdmins($projectId) === 0) {
-            return;
-        }
-
-        throw new \Exception('Only project administrators can remove team members');
+        throw new \Exception('Only project or app administrators can remove team members');
     }
 
     /**
@@ -394,7 +407,12 @@ class ProjectMemberService
         }
         $actorId = $actor->getUID();
 
-        if ($this->permissionService->isNextcloudAdministrator($actorId)) {
+        if ($this->permissionService->isGuest()) {
+            // Dual-role actors keep guest scope everywhere else — same here.
+            throw new \Exception('Access denied');
+        }
+
+        if ($this->permissionService->isAppAdmin($actorId)) {
             return;
         }
 
@@ -410,13 +428,7 @@ class ProjectMemberService
             return;
         }
 
-        // Helpdesk admins with no project-admin role may manage when the project
-        // has no Admins yet (bootstrap / recovery) — same as role-change path.
-        if ($this->countAdmins($projectId) === 0) {
-            return;
-        }
-
-        throw new \Exception('Only project administrators can add team members');
+        throw new \Exception('Only project or app administrators can add team members');
     }
 
     private function roleRank(string $role): int
@@ -441,7 +453,12 @@ class ProjectMemberService
         }
         $actorId = $actor->getUID();
 
-        if ($this->permissionService->isNextcloudAdministrator($actorId)) {
+        if ($this->permissionService->isGuest()) {
+            // Dual-role actors keep guest scope everywhere else — same here.
+            throw new \Exception('Access denied');
+        }
+
+        if ($this->permissionService->isAppAdmin($actorId)) {
             return;
         }
 
@@ -458,33 +475,7 @@ class ProjectMemberService
             return;
         }
 
-        if ($this->countAdmins($projectId) === 0) {
-            return;
-        }
-
-        throw new \Exception('Only project administrators can change team roles');
-    }
-
-    private function assertCanChangeRole(int $projectId, string $currentRole, string $newRole): void
-    {
-        if ($currentRole === self::ROLE_ADMIN && $newRole !== self::ROLE_ADMIN && $this->countAdmins($projectId) <= 1) {
-            throw new \Exception('Cannot remove the last project administrator');
-        }
-    }
-
-    private function countAdmins(int $projectId): int
-    {
-        $qb = $this->db->getQueryBuilder();
-        $qb->select($qb->func()->count('*'))
-            ->from('hd_proj_members')
-            ->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)))
-            ->andWhere($qb->expr()->eq('role', $qb->createNamedParameter(self::ROLE_ADMIN)));
-
-        $result = $qb->executeQuery();
-        $count = (int)$result->fetchOne();
-        $result->closeCursor();
-
-        return $count;
+        throw new \Exception('Only project or app administrators can change team roles');
     }
 
     private function projectMembersLockKey(int $projectId): string

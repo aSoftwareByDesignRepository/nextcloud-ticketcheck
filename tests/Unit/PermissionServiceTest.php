@@ -668,4 +668,105 @@ class PermissionServiceTest extends TestCase
         self::assertFalse($this->permissionService->canAccessGuestUserAdministration());
         self::assertFalse($this->permissionService->canViewHelpdeskOverview('dual1'));
     }
+
+    // ── canManageProjectMembers ─────────────────────────────────────────
+    // Model (2026-11): app admins (NC admin, helpdesk_admins group,
+    // dedicated app-admin UIDs) administer every project's roster; project
+    // Admins administer their own project. No seed-only restriction.
+
+    private function stubUser(string $uid, array $groupMap, bool $isNcAdmin = false): void
+    {
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn($uid);
+        $this->userSession->method('getUser')->willReturn($user);
+        $map = [];
+        foreach ($groupMap as $gid => $in) {
+            $map[] = [$uid, $gid, $in];
+        }
+        $this->groupManager->method('isInGroup')->willReturnMap($map);
+        $this->groupManager->method('isAdmin')->willReturn($isNcAdmin);
+    }
+
+    public function testCanManageProjectMembers_NcAdminManagesEveryProject(): void
+    {
+        $this->stubUser('ncadmin', [], true);
+        self::assertTrue($this->permissionService->canManageProjectMembers(5));
+    }
+
+    public function testCanManageProjectMembers_HelpdeskAdminManagesProjectThatAlreadyHasAdmins(): void
+    {
+        // Regression: the old seed-only rule denied helpdesk admins on
+        // projects that already had an Admin member.
+        $this->stubUser('hdadmin', [
+            PermissionService::GROUP_HELPDESK_CUSTOMERS => false,
+            PermissionService::GROUP_HELPDESK_ADMINS => true,
+            PermissionService::GROUP_HELPDESK_AGENTS => false,
+        ]);
+        self::assertTrue($this->permissionService->canManageProjectMembers(5));
+    }
+
+    public function testCanManageProjectMembers_DedicatedAppAdminUidManages(): void
+    {
+        $this->stubUser('appadmin1', [
+            PermissionService::GROUP_HELPDESK_CUSTOMERS => false,
+            PermissionService::GROUP_HELPDESK_ADMINS => false,
+            PermissionService::GROUP_HELPDESK_AGENTS => false,
+        ]);
+        $this->config->method('getAppValue')->willReturnMap([
+            ['ticketcheck', 'app_admin_user_ids', '[]', '["appadmin1"]'],
+        ]);
+        self::assertTrue($this->permissionService->canManageProjectMembers(5));
+    }
+
+    public function testCanManageProjectMembers_ProjectAdminManagesOwnProject(): void
+    {
+        $this->mockProjectMemberRole = 'Admin';
+        $this->stubUser('projadmin', [
+            PermissionService::GROUP_HELPDESK_CUSTOMERS => false,
+            PermissionService::GROUP_HELPDESK_ADMINS => false,
+            PermissionService::GROUP_HELPDESK_AGENTS => true,
+        ]);
+        self::assertTrue($this->permissionService->canManageProjectMembers(5));
+    }
+
+    public function testCanManageProjectMembers_PlainAgentDenied(): void
+    {
+        // Agent without project-Admin role and without app-admin status.
+        $this->mockProjectMemberRole = 'Agent';
+        $this->stubUser('agent1', [
+            PermissionService::GROUP_HELPDESK_CUSTOMERS => false,
+            PermissionService::GROUP_HELPDESK_ADMINS => false,
+            PermissionService::GROUP_HELPDESK_AGENTS => true,
+        ]);
+        self::assertFalse($this->permissionService->canManageProjectMembers(5));
+    }
+
+    public function testCanManageProjectMembers_NonMemberStaffDenied(): void
+    {
+        // Staff user with no membership row and no app-admin status.
+        $this->stubUser('agent1', [
+            PermissionService::GROUP_HELPDESK_CUSTOMERS => false,
+            PermissionService::GROUP_HELPDESK_ADMINS => false,
+            PermissionService::GROUP_HELPDESK_AGENTS => true,
+        ]);
+        self::assertFalse($this->permissionService->canManageProjectMembers(5));
+    }
+
+    public function testCanManageProjectMembers_GuestDeniedEvenWithStaffGroups(): void
+    {
+        // Dual-role guest: guest membership wins — never a member manager.
+        $this->mockProjectMemberRole = 'Admin';
+        $this->stubUser('dual1', [
+            PermissionService::GROUP_HELPDESK_CUSTOMERS => true,
+            PermissionService::GROUP_HELPDESK_ADMINS => true,
+            PermissionService::GROUP_HELPDESK_AGENTS => true,
+        ]);
+        self::assertFalse($this->permissionService->canManageProjectMembers(5));
+    }
+
+    public function testCanManageProjectMembers_AnonymousDenied(): void
+    {
+        $this->userSession->method('getUser')->willReturn(null);
+        self::assertFalse($this->permissionService->canManageProjectMembers(5));
+    }
 }

@@ -387,19 +387,14 @@ class PermissionService
             return false;
         }
 
-        // Nextcloud admins are the break-glass recovery path.
-        if ($this->isNcAdminCached($userId)) {
+        // App admins (NC admin, helpdesk_admins group, dedicated app-admin
+        // UIDs) administer every project's roster — same scope as the rest
+        // of the app's admin surfaces.
+        if ($this->isAppAdmin($userId)) {
             return true;
         }
 
-        if ($this->isProjectAdmin($projectId, $userId)) {
-            return true;
-        }
-
-        // Global helpdesk admins may seed orphaned projects, but not override
-        // project admins in projects they do not administer.
-        return $this->isInGroupCached($userId, self::GROUP_HELPDESK_ADMINS)
-            && $this->countProjectAdmins($projectId) === 0;
+        return $this->isProjectAdmin($projectId, $userId);
     }
 
     /**
@@ -459,31 +454,6 @@ class PermissionService
         } catch (\Throwable $e) {
             if (DbQueryGuard::isMissingSchemaObject($e)) {
                 return null;
-            }
-            throw $e;
-        }
-    }
-
-    private function countProjectAdmins(int $projectId): int
-    {
-        if ($projectId <= 0) {
-            return 0;
-        }
-
-        try {
-            $qb = $this->db->getQueryBuilder();
-            $qb->select($qb->func()->count('*'))
-                ->from(self::TABLE_PROJECT_MEMBERS)
-                ->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)))
-                ->andWhere($qb->expr()->eq('role', $qb->createNamedParameter('Admin')));
-
-            $result = $qb->executeQuery();
-            $count = (int)$result->fetchOne();
-            $result->closeCursor();
-            return $count;
-        } catch (\Throwable $e) {
-            if (DbQueryGuard::isMissingSchemaObject($e)) {
-                return -1;
             }
             throw $e;
         }

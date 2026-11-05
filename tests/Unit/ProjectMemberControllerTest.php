@@ -95,4 +95,24 @@ class ProjectMemberControllerTest extends TestCase
         self::assertSame(400, $response->getStatus());
         self::assertSame(['error' => 'cannot_remove_last_project_admin'], $response->getData());
     }
+
+    /**
+     * REGRESSION (audit 2026-11-05): adding a member to a nonexistent
+     * project used to return 200 and mint an orphan member row. Must be a
+     * uniform 404.
+     */
+    public function testAddMemberToMissingProjectReturns404(): void
+    {
+        $this->request->method('getParam')->willReturnCallback(
+            static fn(string $key, mixed $default = null): mixed => $key === 'user_id' ? 'e2e_agent' : $default
+        );
+        $this->permissionService->method('canManageProjectMembers')->with(999999)->willReturn(true);
+        $this->projectMemberService->method('addMember')
+            ->willThrowException(new \Exception('Project not found'));
+
+        $response = $this->controller->addMember(999999);
+
+        self::assertSame(404, $response->getStatus());
+        self::assertSame(['error' => 'project_not_found'], $response->getData());
+    }
 }

@@ -202,6 +202,9 @@ class ProjectController extends Controller
                 return $denied;
             }
             $canManage = $this->permissionService->canManageProjectMembers($id);
+            $currentUserId = $this->permissionService->getCurrentUserId();
+            $isNcAdmin = $currentUserId !== null
+                && $this->permissionService->isNextcloudAdministrator($currentUserId);
             $customer = $project['customer_id'] ?
                 $this->projectService->getCustomer($project['customer_id']) : null;
 
@@ -277,19 +280,11 @@ class ProjectController extends Controller
                 ? $l->t('inactive_status')
                 : $l->t('active_status');
 
-            $adminCount = 0;
-            foreach ($members as $memberRow) {
-                if ((string)($memberRow['role'] ?? '') === 'Admin') {
-                    $adminCount++;
-                }
-            }
             $membersForView = [];
             foreach ($members as $member) {
                 $memberRole = (string)($member['role'] ?? '');
-                $isLastAdmin = $memberRole === 'Admin' && $adminCount <= 1;
                 $membersForView[] = array_merge($member, [
                     'can_remove' => $canManage
-                        && !$isLastAdmin
                         && $this->projectMemberService->canActorRemoveMember($id, $memberRole),
                 ]);
             }
@@ -306,6 +301,7 @@ class ProjectController extends Controller
                     'projectAnalytics' => $projectAnalytics,
                     'recentTickets' => $recentTickets,
                     'canManage' => $canManage,
+                    'isNcAdmin' => $isNcAdmin,
                     'canManageGuests' => $this->permissionService->canAccessGuestUserAdministration(),
                 ],
                 'project-detail',

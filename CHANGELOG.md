@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- Creating or renaming a customer to a name or e-mail address that already
+  exists now shows a clear "already exists" message (HTTP 409) instead of a
+  generic error — duplicate rows were previously only rejected by an opaque
+  database error (customer report 2026-11-04)
+- App admins (Nextcloud admins, helpdesk_admins group, dedicated app-admin
+  users) can now manage team members and roles in every project — the
+  previous seed-only restriction (only on projects without any admin) was
+  inconsistent with the rest of the app's admin surfaces
+- Adding a member to a nonexistent project no longer returns success and
+  writes an orphan member row; the endpoint answers a uniform 404
+- Removing or demoting the last project admin is no longer a dead-end
+  lock — app admins remain the recovery path on admin-less projects
+- Project members card no longer a silent dead end: when the "Add team
+  member" form is hidden (no manage rights, or an empty eligible-user
+  picker), the roles card now explains why — staff-group gate info for
+  managers plus an NC-admin-only link to user management, and a quiet
+  "managed by project admins" hint for everyone else (customer report
+  2026-11-04)
+
+## 2.6.0 - 2026-11-03
+
+### Added
+
+- Passwordless guest portal: e-mail OTP (6-digit, SHA-256 at rest, ≤5
+  SQL-fenced attempts) + single-use magic links, app-owned `tkc_portal`
+  sessions (30 d sliding / 365 d absolute) with a bound `tkc_csrf`
+  double-submit token, uniform no-oracle login responses
+- Guest identities in `helpdesk_guest_identity` with `portal:<id>` actor
+  strings, alias table for the staged NC-guest migration, migration wizard
+  + `occ ticketcheck:guests:migrate|--rollback|--purge-disabled`, nc_fallback
+  bridge, S3 door flip, S4 disable, S5 upgrade gate repair step
+- Guest mail outbox with idempotency keys, new-device notices, invite mails
+  (magic link, never a password), migration announcements drained before S3
+- Staff API for identities (`/api/identities/**`), sign-in/sessions page,
+  companion client device tokens (`/companion/api/v1/client/**`, §10.7),
+  per-identity e-mail prefs and locale, GDPR disable/erase flows
+- `PortalActorResolver` as the single actor authority; tickets, comments,
+  watchers, prefs, e-mail, and inbound mail resolve `portal:` actors
+
+### Security
+
+- No plaintext passwords, OTPs, magic tokens, or session tokens persist
+- Public portal routes enforce SameSite=Lax HttpOnly Secure cookies,
+  Origin checks, AnonRateLimit, and brute-force throttling
+
+### Changed
+
+- All `/portal/**` routes are `#[PublicPage]`; per-ticket access is still
+  enforced by `canViewTicketWithProjectAccess`
+- `PermissionService` resolves canonical `portal:<id>` actors when a
+  `PortalActorResolver` is present (legacy signature still works)
+
 ## 2.5.1 - 2026-10-25
 
 ### Fixed

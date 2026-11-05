@@ -123,7 +123,7 @@ class ProjectMemberController extends Controller
             ]);
         } catch (\Throwable $e) {
             $this->logError('Project member operation failed', ['exception' => $e]);
-            return $this->memberOperationErrorResponse($e, 400);
+            return $this->memberOperationErrorResponse($e);
         }
     }
 
@@ -150,7 +150,7 @@ class ProjectMemberController extends Controller
             ]);
         } catch (\Throwable $e) {
             $this->logError('Project member operation failed', ['exception' => $e]);
-            return $this->memberOperationErrorResponse($e, 400);
+            return $this->memberOperationErrorResponse($e);
         }
     }
 
@@ -189,7 +189,7 @@ class ProjectMemberController extends Controller
             ]);
         } catch (\Throwable $e) {
             $this->logError('Project member operation failed', ['exception' => $e]);
-            return $this->memberOperationErrorResponse($e, 400);
+            return $this->memberOperationErrorResponse($e);
         }
     }
 
@@ -215,7 +215,7 @@ class ProjectMemberController extends Controller
             ]);
         } catch (\Throwable $e) {
             $this->logError('Project member operation failed', ['exception' => $e]);
-            return $this->memberOperationErrorResponse($e, 400);
+            return $this->memberOperationErrorResponse($e);
         }
     }
 
@@ -243,7 +243,7 @@ class ProjectMemberController extends Controller
             ]);
         } catch (\Throwable $e) {
             $this->logError('Project member operation failed', ['exception' => $e]);
-            return $this->memberOperationErrorResponse($e, 400);
+            return $this->memberOperationErrorResponse($e);
         }
     }
 
@@ -351,15 +351,17 @@ class ProjectMemberController extends Controller
         return [$userIds, $role];
     }
 
-    private function memberOperationErrorResponse(\Throwable $e, int $status): DataResponse
+    private function memberOperationErrorResponse(\Throwable $e): DataResponse
     {
         $l = $this->l10nFactory->get('ticketcheck');
         $message = strtolower(trim($e->getMessage()));
+        $status = str_contains($message, 'project not found') ? 404 : 400;
         $mapped = match (true) {
             str_contains($message, 'guest users cannot be added as project team members') => $l->t('guests_cannot_be_team_members'),
             str_contains($message, 'user not found') => $l->t('user_not_found'),
             str_contains($message, 'user is disabled') => $l->t('user_is_disabled'),
             str_contains($message, 'already a member') => $l->t('user_already_project_member'),
+            str_contains($message, 'project not found') => $l->t('project_not_found'),
             str_contains($message, 'user is not a member') => $l->t('user_not_project_member'),
             str_contains($message, 'invalid role') => $l->t('invalid_member_role'),
             str_contains($message, 'last project administrator') => $l->t('cannot_remove_last_project_admin'),

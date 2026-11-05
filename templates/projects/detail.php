@@ -18,12 +18,6 @@ $members = $_['members'];
 $availableUsers = $_['availableUsers'];
 $analytics = $_['projectAnalytics'] ?? null;
 $recentTickets = is_array($_['recentTickets'] ?? null) ? $_['recentTickets'] : [];
-$adminCount = 0;
-foreach ($members as $member) {
-    if (($member['role'] ?? '') === 'Admin') {
-        $adminCount++;
-    }
-}
 
 /** @var \OCP\IL10N $l */
 $l = $_['l'];
@@ -295,7 +289,6 @@ $customerDetailHref = ($customerIdForLink > 0 && !empty($_['isAdmin']))
                                 <ul class="tc-project-detail-members-list">
                                     <?php foreach ($members as $member): ?>
                                         <?php $memberRole = $member['role'] ?? 'Support User'; ?>
-                                        <?php $isLastProjectAdmin = $memberRole === 'Admin' && $adminCount <= 1; ?>
                                         <li class="helpdesk-member-card helpdesk-project-detail-member-card tc-project-detail-member-card--full">
                                             <div class="helpdesk-member-card__info">
                                                 <div class="helpdesk-member-avatar" aria-hidden="true"><?php p(strtoupper(substr((string)($member['user_name'] ?? '?'), 0, 1))); ?></div>
@@ -316,8 +309,8 @@ $customerDetailHref = ($customerIdForLink > 0 && !empty($_['isAdmin']))
                                                 </div>
                                                 <?php if (!empty($_['canManage'])): ?>
                                                     <div class="helpdesk-popover helpdesk-hidden" data-role-popover data-user-id="<?php p($member['user_id']); ?>" role="menu">
-                                                        <button type="button" class="helpdesk-popover__item" data-role-option value="Support User" role="menuitem" <?php if ($isLastProjectAdmin): ?>disabled aria-disabled="true"<?php endif; ?>><?php p($l->t('support_user')); ?></button>
-                                                        <button type="button" class="helpdesk-popover__item" data-role-option value="Agent" role="menuitem" <?php if ($isLastProjectAdmin): ?>disabled aria-disabled="true"<?php endif; ?>><?php p($l->t('agent')); ?></button>
+                                                        <button type="button" class="helpdesk-popover__item" data-role-option value="Support User" role="menuitem"><?php p($l->t('support_user')); ?></button>
+                                                        <button type="button" class="helpdesk-popover__item" data-role-option value="Agent" role="menuitem"><?php p($l->t('agent')); ?></button>
                                                         <button type="button" class="helpdesk-popover__item" data-role-option value="Admin" role="menuitem"><?php p($l->t('admin')); ?></button>
                                                         <div class="helpdesk-popover__divider"></div>
                                                         <div class="helpdesk-text-muted helpdesk-project-detail-role-help"><?php p($l->t('role_descriptions_short')); ?></div>
@@ -404,6 +397,7 @@ $customerDetailHref = ($customerIdForLink > 0 && !empty($_['isAdmin']))
                                     <span class="helpdesk-badge"><?php p($l->t('admin')); ?></span>
                                     <span class="helpdesk-text-muted"><?php p($l->t('manage_members_and_settings')); ?></span>
                                 </div>
+                                <?php include __DIR__ . '/../parts/member-availability-hint.php'; ?>
                             </div>
                         </div>
                     <?php endif; ?>
