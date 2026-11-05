@@ -1961,8 +1961,11 @@ class SettingsController extends Controller
     /**
      * GET: redirect the admin into the provider consent flow. The state token
      * is single-use, expires in 10 min, and is bound to the initiating UID.
+     * The attribute is mandatory: only callers are tokenless browser
+     * navigations; the state token minted in-method is the real CSRF guard.
      */
     #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function inboundImapOauthBegin(): Response
     {
         $l = $this->l10nFactory->get('ticketcheck');
