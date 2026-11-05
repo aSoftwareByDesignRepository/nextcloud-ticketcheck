@@ -642,6 +642,7 @@ OC.L10N.register(
 	"customer_name_already_exists" : "A customer with this name already exists",
 	"customer_name_placeholder" : "Par exemple, ABC Corporation ou John Doe",
 	"customer_name_required" : "Le nom du client est requis",
+	"customer_name_too_long" : "customer_name_too_long",
 	"customer_not_found" : "Client introuvable",
 	"customer_performance" : "Performance du client",
 	"customer_performance_analytics" : "Analyse des performances client",

@@ -642,6 +642,7 @@ OC.L10N.register(
 	"customer_name_already_exists" : "A customer with this name already exists",
 	"customer_name_placeholder" : "f.eks. ABC Corporation eller John Doe",
 	"customer_name_required" : "Kundenavn er påkrævet",
+	"customer_name_too_long" : "customer_name_too_long",
 	"customer_not_found" : "Kunde ikke fundet",
 	"customer_performance" : "Kundeydeevne",
 	"customer_performance_analytics" : "Kundeperformanceanalyse",

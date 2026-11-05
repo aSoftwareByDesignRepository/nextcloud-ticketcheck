@@ -642,6 +642,7 @@ OC.L10N.register(
 	"customer_name_already_exists" : "A customer with this name already exists",
 	"customer_name_placeholder" : "t.ex. ABC Corporation eller Anders Andersson",
 	"customer_name_required" : "Kundens namn krävs",
+	"customer_name_too_long" : "customer_name_too_long",
 	"customer_not_found" : "Kunden hittades inte",
 	"customer_performance" : "Kundprestanda",
 	"customer_performance_analytics" : "Kundresultatanalys",

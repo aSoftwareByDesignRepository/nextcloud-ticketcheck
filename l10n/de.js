@@ -642,6 +642,7 @@ OC.L10N.register(
 	"customer_name_already_exists" : "Ein Kunde mit diesem Namen existiert bereits",
 	"customer_name_placeholder" : "z. B. ABC GmbH oder Max Mustermann",
 	"customer_name_required" : "Kundenname ist erforderlich",
+	"customer_name_too_long" : "Kundenname ist zu lang (maximal 255 Zeichen)",
 	"customer_not_found" : "Kunde nicht gefunden",
 	"customer_performance" : "Kundenleistung",
 	"customer_performance_analytics" : "Kunden-Leistungsanalysen",

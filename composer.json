@@ -8,10 +8,10 @@
             "name": "Lara Raffel"
         },
         {
-            "name": "Alexander Mäule"
+            "name": "Alexander M\u00e4ule"
         },
         {
-            "name": "Hauke Klünder"
+            "name": "Hauke Kl\u00fcnder"
         }
     ],
     "require": {
@@ -39,7 +39,31 @@
     },
     "scripts": {
         "test": "phpunit",
-        "test:mutation:license-l10n": "php tests/Mutation/run-license-l10n-mutations.php"
+        "test:mutation:license-l10n": "php tests/Mutation/run-license-l10n-mutations.php",
+        "test:mutation:customer-duplicate": [
+            "php tests/Mutation/run-customer-duplicate-mutations.php"
+        ],
+        "test:mutation:passwordless-auth": [
+            "php tests/Mutation/run-passwordless-auth-mutations.php"
+        ],
+        "test:mutation:portal-gate": [
+            "php tests/Mutation/run-portal-gate-mutations.php"
+        ],
+        "test:mutation:portal-csrf": [
+            "php tests/Mutation/run-portal-csrf-mutations.php"
+        ],
+        "test:mutation:guest-migration": [
+            "php tests/Mutation/run-guest-migration-mutations.php"
+        ],
+        "test:mutation:guest-outbox": [
+            "php tests/Mutation/run-guest-outbox-mutations.php"
+        ],
+        "test:mutation:guest-device": [
+            "php tests/Mutation/run-guest-device-mutations.php"
+        ],
+        "test:mutation:member-hint": [
+            "php tests/Mutation/run-member-hint-mutations.php"
+        ]
     },
     "config": {
         "optimize-autoloader": true,

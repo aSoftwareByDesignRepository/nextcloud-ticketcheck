@@ -642,6 +642,7 @@ OC.L10N.register(
 	"customer_name_already_exists" : "A customer with this name already exists",
 	"customer_name_placeholder" : "np. ABC Corporation lub Jan Kowalski",
 	"customer_name_required" : "Nazwa klienta jest wymagana",
+	"customer_name_too_long" : "customer_name_too_long",
 	"customer_not_found" : "Nie znaleziono klienta",
 	"customer_performance" : "Wydajność klienta",
 	"customer_performance_analytics" : "Analiza wydajności klienta",

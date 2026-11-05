@@ -644,6 +644,7 @@
     "customer_name_already_exists": "A customer with this name already exists",
     "customer_name_placeholder": "e.g., ABC Corporation or John Doe",
     "customer_name_required": "Customer name is required",
+    "customer_name_too_long": "Customer name is too long (maximum 255 characters)",
     "customer_not_found": "Customer not found",
     "customer_performance": "Customer Performance",
     "customer_performance_analytics": "Customer Performance Analytics",

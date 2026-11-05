@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Creating or renaming a customer to a name or e-mail address that already
   exists now shows a clear "already exists" message (HTTP 409) instead of a
   generic error — duplicate rows were previously only rejected by an opaque
-  database error (customer report 2026-11-04)
+  database error (customer report 2026-11-04). Customer writes are now
+  atomic (a failed project assignment rolls back instead of leaving an
+  orphan record), and over-length names are rejected with a field-level
+  message instead of a database error
 - App admins (Nextcloud admins, helpdesk_admins group, dedicated app-admin
   users) can now manage team members and roles in every project — the
   previous seed-only restriction (only on projects without any admin) was

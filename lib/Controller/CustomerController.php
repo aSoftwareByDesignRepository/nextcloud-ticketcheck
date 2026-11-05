@@ -16,6 +16,7 @@ use OCA\Ticketcheck\Service\LocaleFormatService;
 use OCA\Ticketcheck\Service\NavigationContextService;
 use OCA\Ticketcheck\Service\FrontEndAssetService;
 use OCA\Ticketcheck\Db\TicketMapper;
+use OCA\Ticketcheck\Db\HelpdeskCustomerMapper;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -46,6 +47,7 @@ class CustomerController extends Controller
     private PermissionService $permissionService;
     private DeletionService $deletionService;
     private TicketMapper $ticketMapper;
+    private HelpdeskCustomerMapper $customerMapper;
     private IURLGenerator $urlGenerator;
     /** @phpstan-ignore-next-line */
     private IGroupManager $groupManager;
@@ -66,6 +68,7 @@ class CustomerController extends Controller
         PermissionService $permissionService,
         DeletionService $deletionService,
         TicketMapper $ticketMapper,
+        HelpdeskCustomerMapper $customerMapper,
         IURLGenerator $urlGenerator,
         IGroupManager $groupManager,
         IUserManager $userManager,
@@ -83,6 +86,7 @@ class CustomerController extends Controller
         $this->permissionService = $permissionService;
         $this->deletionService = $deletionService;
         $this->ticketMapper = $ticketMapper;
+        $this->customerMapper = $customerMapper;
         $this->urlGenerator = $urlGenerator;
         $this->groupManager = $groupManager;
         $this->userManager = $userManager;
@@ -346,6 +350,8 @@ class CustomerController extends Controller
             return new DataResponse(['error' => $l->t('access_denied')], 403);
         }
 
+        $name = '';
+        $email = '';
         try {
             $name = trim((string)$this->request->getParam('name', ''));
             $email = trim((string)$this->request->getParam('email', ''));
@@ -355,11 +361,30 @@ class CustomerController extends Controller
             if ($name === '') {
                 return new DataResponse(['error' => $l->t('customer_name_required')], 400);
             }
+            if (mb_strlen($name) > 255) {
+                return new DataResponse(['error' => $l->t('customer_name_too_long')], 400);
+            }
             if ($email === '') {
                 return new DataResponse(['error' => $l->t('email_address_required')], 400);
             }
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 return new DataResponse(['error' => $l->t('invalid_email_address')], 400);
+            }
+
+            // helpdesk_customers.name and .email are UNIQUE — surface a clear error instead of a generic 400
+            $existing = $this->customerMapper->findByName($name);
+            if ($existing !== null) {
+                return new DataResponse([
+                    'error' => $l->t('customer_name_already_exists'),
+                    'customer_id' => (int)$existing->getId(),
+                ], Http::STATUS_CONFLICT);
+            }
+            $existing = $this->customerMapper->findByEmail($email);
+            if ($existing !== null) {
+                return new DataResponse([
+                    'error' => $l->t('customer_email_already_exists'),
+                    'customer_id' => (int)$existing->getId(),
+                ], Http::STATUS_CONFLICT);
             }
 
             // Get current user
@@ -368,10 +393,19 @@ class CustomerController extends Controller
                 return new DataResponse(['error' => $l->t('user_not_authenticated')], 401);
             }
 
-            $customerId = $this->projectService->createCustomer($name, $email, null, $phone, $notes, $user->getUID());
-            $projectIds = $this->parseProjectIds();
-            if (!empty($projectIds)) {
-                $this->syncCustomerProjects($customerId, $projectIds, false);
+            // Atomic: a failed project sync must not leave an orphan customer row behind a 400.
+            $customerId = null;
+            $this->db->beginTransaction();
+            try {
+                $customerId = $this->projectService->createCustomer($name, $email, null, $phone, $notes, $user->getUID());
+                $projectIds = $this->parseProjectIds();
+                if (!empty($projectIds)) {
+                    $this->syncCustomerProjects($customerId, $projectIds, false);
+                }
+                $this->db->commit();
+            } catch (\Throwable $e) {
+                $this->db->rollBack();
+                throw $e;
             }
 
             return new DataResponse([
@@ -380,6 +414,9 @@ class CustomerController extends Controller
                 'message' => $l->t('customer_created_successfully'),
             ]);
         } catch (\Throwable $e) {
+            if ($this->isUniqueConstraintViolation($e)) {
+                return $this->customerConflictResponse($l, $name, $email, null);
+            }
             $this->logger->error('Customer operation failed', ['exception' => $e]);
             return new DataResponse(['error' => $l->t('an_error_occurred')], 400);
         }
@@ -396,6 +433,8 @@ class CustomerController extends Controller
             return new DataResponse(['error' => $l->t('access_denied')], 403);
         }
 
+        $name = '';
+        $email = '';
         try {
             $name = trim((string)$this->request->getParam('name', ''));
             $email = trim((string)$this->request->getParam('email', ''));
@@ -404,6 +443,9 @@ class CustomerController extends Controller
 
             if ($name === '') {
                 return new DataResponse(['error' => $l->t('customer_name_required')], 400);
+            }
+            if (mb_strlen($name) > 255) {
+                return new DataResponse(['error' => $l->t('customer_name_too_long')], 400);
             }
             if ($email === '') {
                 return new DataResponse(['error' => $l->t('email_address_required')], 400);
@@ -417,10 +459,28 @@ class CustomerController extends Controller
                 return new DataResponse(['error' => $l->t('customer_not_found')], 404);
             }
 
-            $this->projectService->updateCustomer($id, $name, $email, null, $phone, $notes);
-            $projectIds = $this->parseProjectIds();
-            if ($projectIds !== null) {
-                $this->syncCustomerProjects($id, $projectIds, true);
+            // helpdesk_customers.name and .email are UNIQUE — renaming onto an existing record must be a clear error
+            $nameConflict = $this->customerMapper->findByName($name);
+            if ($nameConflict !== null && (int)$nameConflict->getId() !== $id) {
+                return new DataResponse(['error' => $l->t('customer_name_already_exists')], Http::STATUS_CONFLICT);
+            }
+            $emailConflict = $this->customerMapper->findByEmail($email);
+            if ($emailConflict !== null && (int)$emailConflict->getId() !== $id) {
+                return new DataResponse(['error' => $l->t('customer_email_already_exists')], Http::STATUS_CONFLICT);
+            }
+
+            // Atomic: a failed project sync must not leave the customer half-updated behind a 400.
+            $this->db->beginTransaction();
+            try {
+                $this->projectService->updateCustomer($id, $name, $email, null, $phone, $notes);
+                $projectIds = $this->parseProjectIds();
+                if ($projectIds !== null) {
+                    $this->syncCustomerProjects($id, $projectIds, true);
+                }
+                $this->db->commit();
+            } catch (\Throwable $e) {
+                $this->db->rollBack();
+                throw $e;
             }
 
             return new DataResponse([
@@ -428,9 +488,39 @@ class CustomerController extends Controller
                 'message' => $l->t('customer_updated_successfully'),
             ]);
         } catch (\Throwable $e) {
+            if ($this->isUniqueConstraintViolation($e)) {
+                return $this->customerConflictResponse($l, $name, $email, $id);
+            }
             $this->logger->error('Customer operation failed', ['exception' => $e]);
             return new DataResponse(['error' => $l->t('an_error_occurred')], 400);
         }
+    }
+
+    /**
+     * Resolve which UNIQUE column a constraint violation hit (TOCTOU path)
+     * and answer with the matching translated message.
+     */
+    private function customerConflictResponse(IL10N $l, string $name, string $email, ?int $selfId): DataResponse
+    {
+        $byName = $this->customerMapper->findByName($name);
+        if ($byName !== null && (int)$byName->getId() !== $selfId) {
+            return new DataResponse(['error' => $l->t('customer_name_already_exists')], Http::STATUS_CONFLICT);
+        }
+        $byEmail = $this->customerMapper->findByEmail($email);
+        if ($byEmail !== null && (int)$byEmail->getId() !== $selfId) {
+            return new DataResponse(['error' => $l->t('customer_email_already_exists')], Http::STATUS_CONFLICT);
+        }
+        // Conflicting row vanished between write and lookup — still a duplicate-name conflict in spirit.
+        return new DataResponse(['error' => $l->t('customer_name_already_exists')], Http::STATUS_CONFLICT);
+    }
+
+    private function isUniqueConstraintViolation(\Throwable $e): bool
+    {
+        if ($e instanceof \OCP\DB\Exception && $e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+            return true;
+        }
+        $previous = $e->getPrevious();
+        return $previous instanceof \Throwable && $this->isUniqueConstraintViolation($previous);
     }
 
     /**

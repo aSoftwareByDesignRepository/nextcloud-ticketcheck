@@ -746,6 +746,16 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			}
 			$name = $method->getName();
 			$retType = $method->getReturnType();
+			if ($typeName === \OCA\Ticketcheck\Db\HelpdeskCustomerMapper::class
+				&& in_array($name, ['findByName', 'findByEmail'], true)) {
+				// store()/update() pre-check UNIQUE name/email conflicts: the happy
+				// path must observe an empty directory, not a phantom duplicate row.
+				try {
+					$mock->method($name)->willReturn(null);
+				} catch (\Throwable) {
+				}
+				continue;
+			}
 			if ($name === 'withGuestActivityGate') {
 				// The real gate acquires the lock then invokes the callback. A
 				// null-returning stub would skip $action entirely and mask the

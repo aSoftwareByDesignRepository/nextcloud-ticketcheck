@@ -642,6 +642,7 @@ OC.L10N.register(
 	"customer_name_already_exists" : "A customer with this name already exists",
 	"customer_name_placeholder" : "bv. ABC Corporation of John Doe",
 	"customer_name_required" : "Klantnaam is verplicht",
+	"customer_name_too_long" : "customer_name_too_long",
 	"customer_not_found" : "Klant niet gevonden",
 	"customer_performance" : "Prestaties van de klant",
 	"customer_performance_analytics" : "Analyse van de prestaties van de klant",

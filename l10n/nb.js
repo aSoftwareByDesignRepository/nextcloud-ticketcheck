@@ -642,6 +642,7 @@ OC.L10N.register(
 	"customer_name_already_exists" : "A customer with this name already exists",
 	"customer_name_placeholder" : "f.eks. ABC Corporation eller Ola Nordmann",
 	"customer_name_required" : "Kundenavn er påkrevd",
+	"customer_name_too_long" : "customer_name_too_long",
 	"customer_not_found" : "Kunde ikke funnet",
 	"customer_performance" : "Kundeytelse",
 	"customer_performance_analytics" : "Kundeytelse Analytics",

@@ -644,6 +644,7 @@
     "customer_name_already_exists": "A customer with this name already exists",
     "customer_name_placeholder": "por ejemplo, ABC Corporation o John Doe",
     "customer_name_required": "El nombre del cliente es obligatorio.",
+    "customer_name_too_long": "customer_name_too_long",
     "customer_not_found": "Cliente no encontrado",
     "customer_performance": "Rendimiento del cliente",
     "customer_performance_analytics": "Análisis de rendimiento del cliente",
