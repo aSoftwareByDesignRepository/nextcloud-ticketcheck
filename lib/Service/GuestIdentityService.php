@@ -23,6 +23,7 @@ use OCA\Ticketcheck\Db\GuestProjectAccessMapper;
 use OCA\Ticketcheck\Db\PortalOtpMapper;
 use OCA\Ticketcheck\Db\PortalSessionMapper;
 use OCP\DB\Exception as DbException;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 class GuestIdentityService
@@ -47,10 +48,19 @@ class GuestIdentityService
     /** Find-or-create by lowered e-mail (unique key; dup race → re-read). */
     public function findOrCreate(string $email, string $displayName, string $createdBy, ?string $locale = null): GuestIdentity
     {
+        return $this->findOrCreateWithReuse($email, $displayName, $createdBy, $locale)[0];
+    }
+
+    /**
+     * @return array{0: GuestIdentity, 1: bool} identity + reuse flag —
+     *         true when a pre-existing row was returned, false on insert
+     */
+    public function findOrCreateWithReuse(string $email, string $displayName, string $createdBy, ?string $locale = null): array
+    {
         $email = strtolower(trim($email));
         $existing = $this->identities->findByEmail($email);
         if ($existing !== null) {
-            return $existing;
+            return [$existing, true];
         }
         $i = new GuestIdentity();
         $i->setEmail($email);
@@ -60,14 +70,14 @@ class GuestIdentityService
         $i->setCreatedAt(new \DateTime());
         $i->setCreatedBy($createdBy !== '' ? $createdBy : 'system');
         try {
-            return $this->identities->insert($i);
+            return [$this->identities->insert($i), false];
         } catch (DbException $e) {
             if ($e->getReason() !== DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
                 throw $e;
             }
             $again = $this->identities->findByEmail($email);
             if ($again !== null) {
-                return $again;
+                return [$again, true];
             }
             throw $e;
         }
@@ -153,6 +163,11 @@ class GuestIdentityService
 
     public function grantProjects(int $identityId, array $projectIds, ?int $customerId, string $createdBy): void
     {
+        // Resolve BOTH referents before any write — a grant for a missing
+        // identity or phantom project id mints orphan access rows that then
+        // surface in device bootstrap project_ids (existence oracle too).
+        $this->requireIdentity($identityId);
+        $this->assertProjectsExist($projectIds);
         $actor = PortalActorResolver::actorForIdentity($identityId);
         foreach ($projectIds as $pid) {
             $pid = (int)$pid;
@@ -166,8 +181,43 @@ class GuestIdentityService
 
     public function revokeProject(int $identityId, int $projectId, string $actor): void
     {
+        $this->requireIdentity($identityId);
+        $this->assertProjectsExist([$projectId]);
         $this->access->revokeAccess(PortalActorResolver::actorForIdentity($identityId), $projectId);
         $this->audit->log($actor, 'membership_revoked', PortalActorResolver::actorForIdentity($identityId), ['project_id' => $projectId]);
+    }
+
+    /**
+     * @param int[] $projectIds
+     * @return int[] positive project ids that do not exist
+     */
+    public function findMissingProjectIds(array $projectIds): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $projectIds),
+            static fn (int $id): bool => $id > 0
+        )));
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('id')
+            ->from('helpdesk_projects')
+            ->where($qb->expr()->in('id', $qb->createNamedParameter($ids, IQueryBuilder::PARAM_INT_ARRAY)));
+        $result = $qb->executeQuery();
+        $existing = [];
+        while ($row = $result->fetch()) {
+            $existing[(int)$row['id']] = true;
+        }
+        $result->closeCursor();
+        return array_values(array_filter($ids, static fn (int $id): bool => !isset($existing[$id])));
+    }
+
+    private function assertProjectsExist(array $projectIds): void
+    {
+        if ($this->findMissingProjectIds($projectIds) !== []) {
+            throw new \InvalidArgumentException('project_not_found');
+        }
     }
 
     /** @return list<GuestIdentity> admin listing (identities table) */

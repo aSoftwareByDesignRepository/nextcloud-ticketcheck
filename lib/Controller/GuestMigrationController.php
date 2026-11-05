@@ -25,6 +25,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 use OCP\IURLGenerator;
+use OCP\IUserManager;
 use OCP\L10N\IFactory;
 use OCP\IUserSession;
 
@@ -44,6 +45,7 @@ class GuestMigrationController extends Controller
         private readonly PermissionService $permissionService,
         private readonly GuestAuditMapper $audit,
         private readonly IUserSession $userSession,
+        private readonly IUserManager $userManager,
         private readonly IURLGenerator $urlGenerator,
         private readonly IFactory $l10nFactory,
     ) {
@@ -89,7 +91,15 @@ class GuestMigrationController extends Controller
             'identityProvisioning' => $this->authConfig->isIdentityProvisioning(),
             's5Armed' => $this->authConfig->s5GateArmed(),
             'outboxDepth' => $this->outboxMapper->countPending(),
-            'miglogRecent' => array_slice($this->miglog->recent(50), 0, 50),
+            'miglogRecent' => array_map(
+                static fn ($row): array => [
+                    'created_at' => $row->getCreatedAt()?->format('Y-m-d H:i'),
+                    'uid' => $row->getLegacyUid(),
+                    'action' => $row->getStage(),
+                    'actor' => $row->getCreatedBy(),
+                ],
+                array_slice($this->miglog->recent(50), 0, 50)
+            ),
             'identities' => array_map(
                 fn ($i) => ['id' => (int)$i->getId(), 'email' => (string)$i->getEmail(),
                     'display_name' => (string)$i->getDisplayName()],
@@ -158,6 +168,9 @@ class GuestMigrationController extends Controller
         if ($uid === '') {
             return new JSONResponse(['success' => false, 'error' => $l->t('an_error_occurred')], 422);
         }
+        if ($this->userManager->get($uid) === null) {
+            return new JSONResponse(['success' => false, 'error' => 'not_found'], 404);
+        }
         if ($on && \OCA\Ticketcheck\Service\PortalActorResolver::isIdentityActor($uid)) {
             return new JSONResponse(['success' => false, 'error' => $l->t('an_error_occurred')], 422);
         }
@@ -177,6 +190,9 @@ class GuestMigrationController extends Controller
         }
         $uid = (string)$this->request->getParam('uid', '');
         $action = (string)$this->request->getParam('resolution', 'abandon');
+        if ($uid === '' || $this->userManager->get($uid) === null) {
+            return new JSONResponse(['success' => false, 'error' => 'not_found'], 404);
+        }
         if ($action === 'abandon') {
             $this->migration->markAbandoned($uid, $this->actor(), (string)$this->request->getParam('reason', ''));
             return new JSONResponse(['success' => true]);
@@ -196,6 +212,9 @@ class GuestMigrationController extends Controller
         $identityId = (int)$this->request->getParam('identity_id', 0);
         if ($uid === '' || $identityId <= 0 || $this->request->getParam('confirm') !== 'merge') {
             return new JSONResponse(['success' => false, 'error' => $l->t('confirm_required')], 422);
+        }
+        if ($this->userManager->get($uid) === null || $this->identities->find($identityId) === null) {
+            return new JSONResponse(['success' => false, 'error' => 'not_found'], 404);
         }
         return new JSONResponse(['success' => true] + $this->migration->migrateOne($uid, $this->actor(), $identityId));
     }

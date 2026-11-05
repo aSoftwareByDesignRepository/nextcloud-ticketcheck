@@ -72,20 +72,28 @@
 				reload();
 			} else if (btn.hasAttribute('data-tc-dryrun')) {
 				const r = await TicketCheckApi.get('/api/guests/migration/status');
-				say(JSON.stringify(r.buckets));
+				const buckets = r && r.buckets ? r.buckets : {};
+				root.querySelectorAll('.tc-bucket[data-bucket]').forEach((card) => {
+					const b = card.getAttribute('data-bucket');
+					const el = card.querySelector('.tc-bucket__count');
+					if (el && Object.prototype.hasOwnProperty.call(buckets, b)) {
+						el.textContent = String(buckets[b]);
+					}
+				});
+				say(t('ticketcheck', 'migration_dryrun_done'));
 			} else if (btn.hasAttribute('data-tc-run')) {
 				if (!(await confirmAction(t('ticketcheck', 'run_confirm')))) { return; }
-				const r = await TicketCheckApi.post('/api/guests/migration/run', { confirm: 'run' });
-				say(JSON.stringify(r.results || r)); reload();
+				await TicketCheckApi.post('/api/guests/migration/run', { confirm: 'run' });
+				say(t('ticketcheck', 'migration_run_done')); reload();
 			} else if (btn.hasAttribute('data-tc-disable')) {
 				if (!(await confirmAction(t('ticketcheck', 'disable_nc_confirm'), true))) { return; }
 				const r = await TicketCheckApi.post('/api/guests/migration/disable-nc', { confirm: 'disable' });
-				say('disabled: ' + (r.disabled || 0)); reload();
+				say(t('ticketcheck', 'migration_disabled_done', [String(r.disabled || 0)])); reload();
 			} else if (btn.hasAttribute('data-tc-door')) {
 				const target = btn.getAttribute('data-current') === 'allowed' ? 'refused' : 'allowed';
 				if (target === 'refused' && !(await confirmAction(t('ticketcheck', 'close_door_confirm'), true))) { return; }
 				const r = await TicketCheckApi.post('/api/guests/migration/door', { door: target, acknowledged: ack() });
-				say('door: ' + (r.door || 'error')); reload();
+				say(t('ticketcheck', 'nc_login_door') + ': ' + t('ticketcheck', r.door === 'allowed' ? 'door_open' : 'door_closed')); reload();
 			}
 		} catch (err) {
 			say((err && err.message) || 'error');

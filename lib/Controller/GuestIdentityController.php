@@ -67,18 +67,27 @@ class GuestIdentityController extends Controller
         if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return new JSONResponse(['success' => false, 'error' => $l->t('email_display_name_required')], 422);
         }
+        // Fail before create: a phantom project id would otherwise mint
+        // orphan access rows on the freshly created identity.
+        if ($this->identities->findMissingProjectIds($projectIds) !== []) {
+            return new JSONResponse(['success' => false, 'error' => $l->t('invalid_project_id')], 422);
+        }
         try {
-            $identity = $this->identities->findOrCreate($email, $name, $this->actor());
-            $this->identities->grantProjects((int)$identity->getId(), $projectIds, null, $this->actor());
-            $this->audit->log($this->actor(), 'identity_created', PortalActorResolver::actorForIdentity((int)$identity->getId()));
+            [$identity, $reused] = $this->identities->findOrCreateWithReuse($email, $name, $this->actor());
         } catch (\InvalidArgumentException $e) {
             return new JSONResponse(['success' => false, 'error' => $l->t('invalid_email_address')], 422);
         }
+        try {
+            $this->identities->grantProjects((int)$identity->getId(), $projectIds, null, $this->actor());
+        } catch (\InvalidArgumentException) {
+            return new JSONResponse(['success' => false, 'error' => $l->t('invalid_project_id')], 422);
+        }
+        $this->audit->log($this->actor(), 'identity_created', PortalActorResolver::actorForIdentity((int)$identity->getId()));
         $sent = $this->sendInvite((int)$identity->getId());
         return new JSONResponse([
             'success' => true,
             'identity_id' => (int)$identity->getId(),
-            'reused' => $identity->getCreatedAt() !== null,
+            'reused' => $reused,
             'invite_sent' => $sent,
         ], 201);
     }

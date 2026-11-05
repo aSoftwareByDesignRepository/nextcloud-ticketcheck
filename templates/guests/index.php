@@ -61,6 +61,11 @@ $formatGuestDate = static function ($raw) use ($localeFormat, $l): string {
                         <strong><?php p((string)$guestCount); ?></strong>
                         <?php p($l->t('guest_users')); ?>
                     </p>
+                    <a href="<?php p($_['urlGenerator']->linkToRoute('ticketcheck.guestMigration.wizard')); ?>"
+                        class="helpdesk-btn helpdesk-btn--secondary">
+                        <?php print_unescaped(IconCatalog::render('git-branch', 'tc-icon--inline')); ?>
+                        <?php p($l->t('guest_migration_title')); ?>
+                    </a>
                 </div>
 
                 <?php if ($guestCount === 0): ?>
