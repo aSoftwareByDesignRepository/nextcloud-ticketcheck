@@ -208,6 +208,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Companion invoicing deep links:** Ticket detail and customer detail can open a companion invoicing app's receivables filtered by ProjectCheck `customerId` (TicketCheck customer ids are PC customer ids — no invented name-search mapping), shown only when that app is installed and enabled.
 
+## [2.6.0] — 2026-11-05
+
+### Added
+
+- + NC-guest account migration
+- + surface/gate/notification coverage
+- — settings CRUD, picker, companion
+
+### Fixed
+
+- — GET oauth/begin 412
+- hosts, migration wizard 412 on GET
+- — unhide OTP code block (dead-end), regression spec
+- — opaque auth card + migration wizard chrome
+- — grant/revoke referent resolution, reused flag, wizard craft wave
+- — 404 uniformity, unique-conflict paths, l10n
+- + legend overflowing at phone width
+- + link the existing record
+- site
+- + %n ticket totals for all locales
+- name/email + atomic writes
+- + no more silent dead ends
+- $resourceKeys in the idempotent closure
+- — background:→background-color: on select-matching rules
+- + resources redirect test stub
+- + agreement/doubled-token sweep
+- coverage
+- — l10n, tint fill, keyed-import idempotency, guard TOCTOU, spec holes
+- break-word)
+- 320px
+- alternation
+- lock
+- surfaces
+
+### Changed
+
+- createCustomer
+- — regen sync, no semantic change
+- ownership
+- — atlas-farm artifacts, docs and l10n batch 2026-10-25
+- Fund
+- side
+- side
+
 ## [Unreleased]
 
 ## [2.3.3] - 2026-08-01
