@@ -99,7 +99,10 @@ for (const vp of viewports) {
 				expect(homeOpen).toBeGreaterThanOrEqual(0);
 				expect(homeOpen).toBeLessThanOrEqual(homeTotal);
 
-				await page.goto(URLS.changePassword, { waitUntil: 'domcontentloaded' });
+				// Second page must render for migrated (passwordless) guests too:
+				// /portal/change-password legitimately redirects them to the
+				// sign-in/sessions page (D-T13), so compare against email-prefs.
+				await page.goto(URLS.emailPrefs, { waitUntil: 'domcontentloaded' });
 				await ensureAuthenticated(page);
 				await assertGuestShell(page);
 				[navTotal, navOpen] = await readStats();
