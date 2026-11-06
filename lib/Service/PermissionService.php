@@ -121,7 +121,10 @@ class PermissionService
     public function isGuest(): bool
     {
         // Identity sessions are guests even though NC sees no logged-in user.
-        if ($this->actorResolver !== null && $this->actorResolver->kind() === 'identity') {
+        // 'nc_guest' counts too: a migrated uid's actor is canonicalized to
+        // 'portal:<id>' (§9.2), which can never pass the NC group check below —
+        // without this the portal silently treats migrated NC guests as staff.
+        if ($this->actorResolver !== null && $this->actorResolver->isGuest()) {
             return true;
         }
         $userId = $this->getCurrentUserId();
