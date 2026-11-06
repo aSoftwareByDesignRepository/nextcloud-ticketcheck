@@ -301,6 +301,23 @@ final class SettingsPagesContractTest extends TestCase
 		);
 	}
 
+	public function testE2eMultipageSpecCoversExactlyTheRoutableCatalog(): void
+	{
+		$spec = self::read('e2e/settings-pages.spec.js');
+		self::assertSame(
+			1,
+			preg_match('/settingsSections\s*=\s*\[(.*?)\];/s', $spec, $m),
+			'settings-pages.spec.js must declare the literal section list it drives',
+		);
+		$span = (string) preg_replace('~//[^\n]*~', '', $m[1]);
+		preg_match_all("/'([a-z-]+)'/", $span, $pairs);
+		self::assertSame(
+			SettingsSectionCatalog::routableSections(),
+			$pairs[1],
+			'e2e multipage spec drifted from the routable catalog — every routed section needs the axe + nav legs',
+		);
+	}
+
 	public function testPostApiRoutesRemainUnchanged(): void
 	{
 		$names = array_column(self::routes(), 'name');

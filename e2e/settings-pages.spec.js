@@ -12,11 +12,12 @@ const { ensureAuthenticated } = require('./helpers/auth-guard');
 // settings-support-us.spec.js are describe.skip'ed for the same reason).
 const settingsSections = [
   'access',
+  'categories',
+  'resources',
   'email',
   'inbound-mail',
   'knowledge-base',
   'kb-categories',
-  'categories',
   'escalation',
   'about',
 ];
