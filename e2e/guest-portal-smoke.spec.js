@@ -316,14 +316,17 @@ for (const vp of viewports) {
 			expect((await restoreResponse).ok()).toBeTruthy();
 		});
 
-		test('change password: form and submit control', async ({ page }) => {
+		test('change password: migrated guests land on the sessions page', async ({ page }) => {
+			// D-T13: passwordless (aliased) identities have no password —
+			// /portal/change-password redirects them to the sign-in/sessions
+			// surface. The e2e_guest fixture is migrated, so the contract is
+			// the redirect + a rendered sessions page, not the legacy form.
 			await page.goto(URLS.changePassword, { waitUntil: 'domcontentloaded' });
 			await ensureAuthenticated(page);
-			await assertGuestShell(page);
-			await expect(page.locator('form').first()).toBeVisible();
-			// Locale-agnostic: match the primary submit button structurally
-			// (guest fixtures may run in any language).
-			await expect(page.locator('form button[type="submit"]').first()).toBeVisible();
+			await expect(page).toHaveURL(/\/portal\/sign-in/);
+			await expect(page.locator('.tc-portal-signin[data-page="portal-signin"]')).toBeVisible();
+			// The sessions surface carries real session management controls.
+			await expect(page.locator('.tc-portal-signin button').first()).toBeVisible();
 			// SECURITY regression guard: every portal GET must apply guest CSP + nonce.
 			const nonce = await readCspNonceFromMeta(page);
 			expect(nonce, 'csp-nonce meta must carry a non-empty nonce').toMatch(/.+/);
