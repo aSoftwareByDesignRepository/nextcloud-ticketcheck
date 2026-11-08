@@ -94,6 +94,35 @@ class ImapSupportTest extends TestCase
 		}
 	}
 
+	public function testDialedPeerIsTheRemoteEndNotTheLocalAddress(): void
+	{
+		// Server on 127.0.0.1, client bound to 127.0.0.2: the two ends differ,
+		// as on a server with a private address dialing a public mail host.
+		$errno = 0;
+		$errstr = '';
+		$server = @stream_socket_server('tcp://127.0.0.1:0', $errno, $errstr);
+		self::assertNotFalse($server, $errstr);
+		$addr = (string)stream_socket_get_name($server, false);
+		$ctx = stream_context_create(['socket' => ['bindto' => '127.0.0.2:0']]);
+		$client = @stream_socket_client('tcp://' . $addr, $errno, $errstr, 2, STREAM_CLIENT_CONNECT, $ctx);
+		if ($client === false) {
+			fclose($server);
+			self::markTestSkipped('127.0.0.2 is not usable as a local address here: ' . $errstr);
+		}
+		$accepted = @stream_socket_accept($server, 2);
+
+		try {
+			self::assertStringStartsWith('127.0.0.2:', (string)stream_socket_get_name($client, false));
+			self::assertSame('127.0.0.1', ImapConnection::dialedPeerIpOrNull($client, true));
+		} finally {
+			if (is_resource($accepted)) {
+				fclose($accepted);
+			}
+			fclose($client);
+			fclose($server);
+		}
+	}
+
 	public function testDialedPeerUnverifiableFailsClosed(): void
 	{
 		// A unix socketpair has no ip:port peer name — the peer cannot be
