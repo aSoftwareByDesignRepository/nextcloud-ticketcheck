@@ -23,6 +23,8 @@ use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\EmailHeaderSanitizer;
 use OCA\Ticketcheck\Service\SettingsSectionCatalog;
+use OCA\Ticketcheck\Service\SlaPolicyService;
+use OCA\Ticketcheck\Service\SlaSettingsException;
 use OCA\Ticketcheck\Service\InboundMailAuthService;
 use OCA\Ticketcheck\Service\InboundMailConfigService;
 use OCA\Ticketcheck\Service\InboundMailDetectService;
@@ -93,6 +95,7 @@ class SettingsController extends Controller
     private ?ProjectService $projectService;
     private ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories;
     private ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources;
+    private SlaPolicyService $slaPolicy;
 
     public function __construct(
         string $appName,
@@ -121,6 +124,7 @@ class SettingsController extends Controller
         ?ProjectService $projectService = null,
         ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories = null,
         ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
+        ?SlaPolicyService $slaPolicy = null,
     ) {
         parent::__construct($appName, $request);
         $this->permissionService = $permissionService;
@@ -147,6 +151,7 @@ class SettingsController extends Controller
         $this->projectService = $projectService;
         $this->ticketCategories = $ticketCategories;
         $this->ticketResources = $ticketResources;
+        $this->slaPolicy = $slaPolicy ?? new SlaPolicyService($config);
     }
 
     protected function getFrontEndAssetService(): FrontEndAssetService
@@ -293,6 +298,7 @@ class SettingsController extends Controller
                 'kbCategories' => $this->categoryService->list(),
             ],
             'escalation' => $this->escalationSettingsExtras(),
+            'sla' => ['slaSettings' => $this->slaPolicy->settingsPayload()],
             'license' => $this->licenseSettingsExtras($l),
             'support' => [
                 'supportUsLinks' => new SupportUsLinks(
@@ -415,6 +421,39 @@ class SettingsController extends Controller
             'licenseSearchUsersUrl' => $this->urlGenerator->linkToRouteAbsolute('ticketcheck.license.searchUsers'),
             'requesttoken' => \OCP\Util::callRegister(),
         ];
+    }
+
+    /**
+     * Update the SLA targets per priority and the business-hours calendar.
+     */
+    #[NoAdminRequired]
+    public function updateSla(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+
+        $targets = $this->request->getParam('targets', []);
+        $days = $this->request->getParam('business_days', []);
+        try {
+            $this->slaPolicy->save(
+                is_array($targets) ? $targets : [],
+                $this->normalizeYesNo($this->request->getParam('business_hours_enabled', 'no')) === 'yes',
+                is_array($days) ? array_values($days) : [],
+                (string)$this->request->getParam('business_start', ''),
+                (string)$this->request->getParam('business_end', ''),
+                (string)$this->request->getParam('holidays', ''),
+                (string)$this->request->getParam('timezone', ''),
+            );
+        } catch (SlaSettingsException $e) {
+            return new JSONResponse(['error' => $l->t($e->getL10nKey(), [$e->getParameter()])], 400);
+        }
+
+        return new JSONResponse([
+            'success' => true,
+            'saved_values' => $this->slaPolicy->settingsPayload(),
+        ]);
     }
 
     /**

@@ -213,7 +213,8 @@ final class ImapConnection
 	 */
 	public static function dialedPeerIpOrNull($fp, bool $allowPrivateHost): ?string
 	{
-		$name = @stream_socket_get_name($fp, false);
+		// true = the remote end; false would return this server's own (often private) address.
+		$name = @stream_socket_get_name($fp, true);
 		if (!is_string($name) || $name === '') {
 			return $allowPrivateHost ? '0.0.0.0' : null;
 		}

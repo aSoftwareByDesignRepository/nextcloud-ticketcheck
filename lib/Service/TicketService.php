@@ -42,6 +42,7 @@ class TicketService
     private CompanionNotificationService $companionNotifications;
     private IUserSession $userSession;
     private IConfig $config;
+    private ?SlaPolicyService $slaPolicy = null;
     private IDBConnection $db;
     private LoggerInterface $logger;
     private ?TicketCategoryService $ticketCategories;
@@ -63,6 +64,7 @@ class TicketService
         IDBConnection $db,
         ?TicketCategoryService $ticketCategories = null,
         ?PortalActorResolver $actorResolver = null,
+        ?SlaPolicyService $slaPolicy = null,
     ) {
         $this->actorResolver = $actorResolver;
         $this->ticketMapper = $ticketMapper;
@@ -79,6 +81,7 @@ class TicketService
         $this->logger = $logger;
         $this->db = $db;
         $this->ticketCategories = $ticketCategories;
+        $this->slaPolicy = $slaPolicy;
     }
 
     /**
@@ -1042,38 +1045,19 @@ class TicketService
     }
 
     /**
-     * Calculate SLA due dates based on priority
+     * Calculate SLA due dates from the priority's targets (Settings → SLA),
+     * in business hours when the SLA calendar is enabled.
      *
      * @param Ticket $ticket
      * @return void
      */
     private function calculateSLADates(Ticket $ticket): void
     {
-        // Get SLA settings from config (hours)
-        $slaResponseTime = [
-            Ticket::PRIORITY_URGENT => 4,
-            Ticket::PRIORITY_HIGH => 8,
-            Ticket::PRIORITY_NORMAL => 24,
-            Ticket::PRIORITY_LOW => 48,
-        ];
+        $this->slaPolicy ??= new SlaPolicyService($this->config);
+        $due = $this->slaPolicy->dueDates((string) $ticket->getPriority(), new \DateTime());
 
-        $slaResolutionTime = [
-            Ticket::PRIORITY_URGENT => 24,
-            Ticket::PRIORITY_HIGH => 48,
-            Ticket::PRIORITY_NORMAL => 120, // 5 days
-            Ticket::PRIORITY_LOW => 240, // 10 days
-        ];
-
-        $priority = $ticket->getPriority();
-        $responseHours = $slaResponseTime[$priority] ?? 24;
-        $resolutionHours = $slaResolutionTime[$priority] ?? 120;
-
-        $now = new \DateTime();
-        $responseDue = (clone $now)->modify("+{$responseHours} hours");
-        $resolutionDue = (clone $now)->modify("+{$resolutionHours} hours");
-
-        $ticket->setSlaResponseDue($responseDue);
-        $ticket->setSlaResolutionDue($resolutionDue);
+        $ticket->setSlaResponseDue($due['response']);
+        $ticket->setSlaResolutionDue($due['resolution']);
 
         // Fresh SLA clock: allow breach alerts for the new due dates (e.g. after priority change).
         $ticket->setSlaResponseAlertedAt(null);

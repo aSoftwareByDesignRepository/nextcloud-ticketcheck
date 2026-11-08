@@ -32,6 +32,7 @@ The Helpdesk app provides a complete standalone helpdesk and customer support sy
 - **Visual Charts and Reporting**: Dashboard analytics and performance metrics
 - **CSV Export**: Data export capabilities for reporting
 - **SLA Monitoring**: Automated breach alerts and escalation
+- **SLA Targets**: First-response and resolution targets per priority, optionally counted in business hours with working days, a time zone and holidays
 - **Daily Digest Emails**: Agent notifications and summaries
 
 ### User Interface

@@ -19,6 +19,7 @@ const settingsSections = [
   'knowledge-base',
   'kb-categories',
   'escalation',
+  'sla',
   'about',
 ];
 
