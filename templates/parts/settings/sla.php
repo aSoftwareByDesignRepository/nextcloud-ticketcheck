@@ -29,6 +29,7 @@ $slaTargetColumns = [
 	<div class="helpdesk-card">
 		<div class="helpdesk-card__body">
 			<form id="sla-settings-form" data-helpdesk-submit-feedback="1">
+				<div class="tc-table-wrap tc-table-wrap--form">
 				<table class="helpdesk-table tc-sla-targets-table">
 					<caption class="helpdesk-form-label"><?php p($l->t('sla_targets_caption')); ?></caption>
 					<thead>
@@ -59,6 +60,7 @@ $slaTargetColumns = [
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 				<p class="helpdesk-form-help tc-field__hint-block"><?php p($l->t('sla_targets_apply_note')); ?></p>
 
 				<fieldset class="helpdesk-form-group tc-field tc-field--full-width">
