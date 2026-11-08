@@ -76,7 +76,7 @@ final class AppBrandNameContractTest extends TestCase
 
 	public function testShippedL10nCatalogsKeepEnglishBrandName(): void
 	{
-		foreach (['de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'en'] as $lang) {
+		foreach (['de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'tr', 'en'] as $lang) {
 			$path = $this->root . '/l10n/' . $lang . '.json';
 			if (!is_file($path)) {
 				continue;

@@ -22,7 +22,7 @@ final class L10nPlaceholderParityTest extends TestCase
 
 	public function testFooterLocalesKeepEnglishPlaceholders(): void
 	{
-		$locales = ['de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR', 'pt'];
+		$locales = ['de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR', 'pt', 'tr'];
 		$en = $this->loadTranslations('en');
 		self::assertNotEmpty($en);
 		foreach ($locales as $locale) {
@@ -58,7 +58,7 @@ final class L10nPlaceholderParityTest extends TestCase
 	 */
 	public function testPluralMsgidsAreRealArraysInEveryLocale(): void
 	{
-		$locales = ['en', 'de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR', 'pt'];
+		$locales = ['en', 'de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR', 'pt', 'tr'];
 		foreach ($locales as $locale) {
 			$path = $this->root . '/l10n/' . $locale . '.json';
 			self::assertFileExists($path);
