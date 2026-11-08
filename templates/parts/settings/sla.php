@@ -46,7 +46,7 @@ $slaTargetColumns = [
 								<?php foreach ($slaTargetColumns as $column => $columnLabel): ?>
 									<td>
 										<input type="number" min="1" max="<?php p($slaMaxHours); ?>" step="1" required
-											class="tc-sla-hours"
+											class="tc-sla-hours helpdesk-form-control"
 											id="sla-<?php p($priority); ?>-<?php p($column); ?>"
 											name="targets[<?php p($priority); ?>][<?php p($column); ?>]"
 											data-sla-priority="<?php p($priority); ?>"
@@ -94,17 +94,17 @@ $slaTargetColumns = [
 					<div class="tc-form-grid">
 						<div class="helpdesk-form-group tc-field">
 							<label for="sla-business-start" class="helpdesk-form-label"><?php p($l->t('sla_business_start')); ?></label>
-							<input type="time" name="business_start" id="sla-business-start" step="60"
+							<input type="time" name="business_start" id="sla-business-start" step="60" class="helpdesk-form-control"
 								value="<?php p((string)($slaCalendar['start'] ?? SlaPolicyService::DEFAULT_BUSINESS_START)); ?>">
 						</div>
 						<div class="helpdesk-form-group tc-field">
 							<label for="sla-business-end" class="helpdesk-form-label"><?php p($l->t('sla_business_end')); ?></label>
-							<input type="time" name="business_end" id="sla-business-end" step="60"
+							<input type="time" name="business_end" id="sla-business-end" step="60" class="helpdesk-form-control"
 								value="<?php p((string)($slaCalendar['end'] ?? SlaPolicyService::DEFAULT_BUSINESS_END)); ?>">
 						</div>
 						<div class="helpdesk-form-group tc-field">
 							<label for="sla-timezone" class="helpdesk-form-label"><?php p($l->t('sla_timezone')); ?></label>
-							<input type="text" name="timezone" id="sla-timezone" list="sla-timezone-list" autocomplete="off" spellcheck="false"
+							<input type="text" name="timezone" id="sla-timezone" list="sla-timezone-list" autocomplete="off" spellcheck="false" class="helpdesk-form-control"
 								aria-describedby="sla-timezone-help"
 								value="<?php p((string)($slaCalendar['timezone'] ?? '')); ?>">
 							<datalist id="sla-timezone-list">
@@ -116,7 +116,7 @@ $slaTargetColumns = [
 						</div>
 						<div class="helpdesk-form-group tc-field tc-field--full-width">
 							<label for="sla-holidays" class="helpdesk-form-label"><?php p($l->t('sla_holidays')); ?></label>
-							<textarea name="holidays" id="sla-holidays" rows="5" spellcheck="false"
+							<textarea name="holidays" id="sla-holidays" rows="5" spellcheck="false" class="helpdesk-form-control"
 								aria-describedby="sla-holidays-help"><?php p(implode("\n", $slaHolidays)); ?></textarea>
 							<span class="helpdesk-form-help tc-field__hint-block" id="sla-holidays-help"><?php p($l->t('sla_holidays_help')); ?></span>
 						</div>

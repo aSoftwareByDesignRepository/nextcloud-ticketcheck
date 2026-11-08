@@ -19716,3 +19716,9 @@ textarea {
 .tc-resource-item--disabled .settings-kb-category-item__name {
 	opacity: 0.65;
 }
+
+/* SLA target hour inputs: family skin via .helpdesk-form-control, but stay
+   compact inside the per-priority table cells (bounded, not the NC 130px pin). */
+.tc-sla-hours {
+	max-width: 9rem;
+}
