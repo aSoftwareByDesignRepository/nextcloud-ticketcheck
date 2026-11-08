@@ -268,6 +268,68 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // SLA targets per priority and the business-hours calendar
+    const slaForm = document.getElementById('sla-settings-form');
+    if (slaForm) {
+        const slaBusinessToggle = document.getElementById('sla-business-hours-enabled');
+        const slaCalendarFields = slaForm.querySelectorAll(
+            '#sla-working-days input, #sla-business-start, #sla-business-end, #sla-timezone, #sla-holidays'
+        );
+        const slaFieldValue = (id) => {
+            const el = document.getElementById(id);
+            return el ? String(el.value || '') : '';
+        };
+
+        function syncSlaCalendarFields() {
+            const enabled = !!(slaBusinessToggle && slaBusinessToggle.checked);
+            slaCalendarFields.forEach((el) => {
+                el.disabled = !enabled;
+            });
+        }
+
+        if (slaBusinessToggle) {
+            slaBusinessToggle.addEventListener('change', syncSlaCalendarFields);
+            syncSlaCalendarFields();
+        }
+
+        slaForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const targets = {};
+            this.querySelectorAll('input[data-sla-priority]').forEach((input) => {
+                const priority = input.getAttribute('data-sla-priority');
+                const target = input.getAttribute('data-sla-target');
+                targets[priority] = targets[priority] || {};
+                targets[priority][target] = input.value;
+            });
+            const data = {
+                targets: targets,
+                business_hours_enabled: slaBusinessToggle && slaBusinessToggle.checked ? 'yes' : 'no',
+                business_days: Array.from(this.querySelectorAll('input[name="business_days[]"]:checked')).map((el) => el.value),
+                business_start: slaFieldValue('sla-business-start'),
+                business_end: slaFieldValue('sla-business-end'),
+                timezone: slaFieldValue('sla-timezone'),
+                holidays: slaFieldValue('sla-holidays')
+            };
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            setButtonBusy(submitBtn, true, 'saving');
+
+            requestJson('POST', '/apps/ticketcheck/settings/sla', data)
+                .then((resp) => {
+                    if (!resp.success) {
+                        throw new Error(resp.error || t('ticketcheck', 'error_saving_settings'));
+                    }
+                    announceSettings(t('ticketcheck', 'settings_saved'), 'success');
+                })
+                .catch((err) => {
+                    announceSettings(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'error_saving_settings') }), 'error');
+                })
+                .finally(() => {
+                    setButtonBusy(submitBtn, false, 'saving', 'save_settings');
+                });
+        });
+    }
+
     // App access preview (server-localized strings; DOM-safe list rendering)
     let loadAppAccessPreview = null;
     const appAccessPreviewCard = document.getElementById('app-access-preview-card');

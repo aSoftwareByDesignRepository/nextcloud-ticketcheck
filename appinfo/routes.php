@@ -142,7 +142,7 @@ return [
         // Keep the requirement literal (route files load without the app autoloader).
         // tests/Unit/Controller/SettingsPagesContractTest pins it to SettingsSectionCatalog::routeRequirement().
         ['name' => 'settings#section', 'url' => '/settings/{section}', 'verb' => 'GET',
-            'requirements' => ['section' => 'access|categories|resources|email|inbound-mail|knowledge-base|kb-categories|escalation|about']],
+            'requirements' => ['section' => 'access|categories|resources|email|inbound-mail|knowledge-base|kb-categories|escalation|sla|about']],
         ['name' => 'settings#listTicketCategories', 'url' => '/api/settings/ticket-categories', 'verb' => 'GET'],
         ['name' => 'settings#createTicketCategory', 'url' => '/api/settings/ticket-categories', 'verb' => 'POST'],
         ['name' => 'settings#updateTicketCategory', 'url' => '/api/settings/ticket-categories/{key}', 'verb' => 'PUT', 'requirements' => ['key' => '[a-z0-9-]+']],
@@ -160,6 +160,7 @@ return [
         ['name' => 'settings#importTicketResources', 'url' => '/api/settings/ticket-resources/import', 'verb' => 'POST'],
         ['name' => 'settings#updateEmail', 'url' => '/settings/email', 'verb' => 'POST'],
         ['name' => 'settings#updateKnowledgeBase', 'url' => '/settings/knowledge-base', 'verb' => 'POST'],
+        ['name' => 'settings#updateSla', 'url' => '/settings/sla', 'verb' => 'POST'],
         ['name' => 'settings#updateAppAccess', 'url' => '/settings/app-access', 'verb' => 'POST'],
         ['name' => 'settings#getAppAccessPreview', 'url' => '/api/settings/app-access/preview', 'verb' => 'GET'],
         ['name' => 'settings#searchNextcloudGroups', 'url' => '/api/settings/groups/search', 'verb' => 'GET'],
