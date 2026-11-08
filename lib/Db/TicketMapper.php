@@ -229,6 +229,118 @@ class TicketMapper extends QBMapper
     }
 
     /**
+     * Open tickets with no assignee (companion Home badge).
+     * NULL and '' both count as unassigned — same rule as
+     * {@see applyAssignedToFilter()} with {@see ASSIGNED_TO_UNASSIGNED}.
+     *
+     * @param list<string> $statuses
+     */
+    public function countUnassignedOpen(array $statuses): int
+    {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select($qb->func()->count('*', 'cnt'))
+            ->from($this->getTableName(), 't')
+            ->where($qb->expr()->isNull('t.merged_into_id'))
+            ->andWhere($qb->expr()->orX(
+                $qb->expr()->isNull('t.assigned_to'),
+                $qb->expr()->eq('t.assigned_to', $qb->createNamedParameter('')),
+            ));
+
+        if ($statuses !== []) {
+            $qb->andWhere($qb->expr()->in('t.status', $qb->createNamedParameter($statuses, IQueryBuilder::PARAM_STR_ARRAY)));
+        }
+
+        $result = $qb->executeQuery();
+        $count = (int)($result->fetchOne() ?: 0);
+        $result->closeCursor();
+        return $count;
+    }
+
+    /**
+     * SLA-breached open tickets (companion Home badge), mirroring
+     * {@see \OCA\Ticketcheck\Service\CompanionTicketService::isOverdue()}:
+     * the response dimension counts only while status='new', the resolution
+     * dimension until done. `$now` arrives as a named parameter so the
+     * comparison stays DB-portable (no NOW()/current-timestamp dialect).
+     *
+     * @param list<string> $statuses
+     */
+    public function countSlaBreachedOpen(array $statuses, \DateTimeImmutable $now): int
+    {
+        $nowSql = $now->format('Y-m-d H:i:s');
+        $qb = $this->db->getQueryBuilder();
+        $qb->select($qb->func()->count('*', 'cnt'))
+            ->from($this->getTableName(), 't')
+            ->where($qb->expr()->isNull('t.merged_into_id'))
+            ->andWhere($qb->expr()->orX(
+                $qb->expr()->andX(
+                    $qb->expr()->eq('t.status', $qb->createNamedParameter(Ticket::STATUS_NEW)),
+                    $qb->expr()->lt('t.sla_response_due', $qb->createNamedParameter($nowSql)),
+                ),
+                $qb->expr()->lt('t.sla_resolution_due', $qb->createNamedParameter($nowSql)),
+            ));
+
+        if ($statuses !== []) {
+            $qb->andWhere($qb->expr()->in('t.status', $qb->createNamedParameter($statuses, IQueryBuilder::PARAM_STR_ARRAY)));
+        }
+
+        $result = $qb->executeQuery();
+        $count = (int)($result->fetchOne() ?: 0);
+        $result->closeCursor();
+        return $count;
+    }
+
+    /**
+     * Oldest breached SLA due among open tickets as a `Y-m-d H:i:s` string,
+     * or null when nothing is breached. The "relevant due" follows
+     * {@see \OCA\Ticketcheck\Service\CompanionTicketService::isOverdue()}:
+     * sla_response_due while status='new', sla_resolution_due on every open
+     * status. Two aggregate queries keep this portable — there is no
+     * cross-DB MIN-of-two-columns expression.
+     *
+     * @param list<string> $statuses
+     */
+    public function oldestSlaBreach(array $statuses, \DateTimeImmutable $now): ?string
+    {
+        $nowSql = $now->format('Y-m-d H:i:s');
+        $oldest = null;
+
+        // Response dimension — breached only while status='new'.
+        $qb = $this->db->getQueryBuilder();
+        $qb->selectAlias($qb->createFunction('MIN(t.sla_response_due)'), 'oldest')
+            ->from($this->getTableName(), 't')
+            ->where($qb->expr()->isNull('t.merged_into_id'))
+            ->andWhere($qb->expr()->eq('t.status', $qb->createNamedParameter(Ticket::STATUS_NEW)))
+            ->andWhere($qb->expr()->lt('t.sla_response_due', $qb->createNamedParameter($nowSql)));
+        $result = $qb->executeQuery();
+        $row = $result->fetch();
+        $result->closeCursor();
+        $due = $row === false ? null : ($row['oldest'] ?? null);
+        if (is_string($due) && $due !== '') {
+            $oldest = $due;
+        }
+
+        // Resolution dimension — breached on every open status until done.
+        $qb = $this->db->getQueryBuilder();
+        $qb->selectAlias($qb->createFunction('MIN(t.sla_resolution_due)'), 'oldest')
+            ->from($this->getTableName(), 't')
+            ->where($qb->expr()->isNull('t.merged_into_id'))
+            ->andWhere($qb->expr()->lt('t.sla_resolution_due', $qb->createNamedParameter($nowSql)));
+        if ($statuses !== []) {
+            $qb->andWhere($qb->expr()->in('t.status', $qb->createNamedParameter($statuses, IQueryBuilder::PARAM_STR_ARRAY)));
+        }
+        $result = $qb->executeQuery();
+        $row = $result->fetch();
+        $result->closeCursor();
+        $due = $row === false ? null : ($row['oldest'] ?? null);
+        if (is_string($due) && $due !== '' && ($oldest === null || $due < $oldest)) {
+            $oldest = $due;
+        }
+
+        return $oldest;
+    }
+
+    /**
      * Find ticket by ID
      *
      * @param int $id

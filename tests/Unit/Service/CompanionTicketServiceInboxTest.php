@@ -207,18 +207,59 @@ final class CompanionTicketServiceInboxTest extends TestCase
 				$captured[] = [$statuses, $assignedTo, $watchedBy];
 				return count($captured);
 			});
+		$this->ticketMapper->method('countUnassignedOpen')->willReturn(7);
+		$this->ticketMapper->method('countSlaBreachedOpen')->willReturn(3);
+		$this->ticketMapper->method('oldestSlaBreach')
+			->willReturn((new \DateTimeImmutable('-120 minutes -30 seconds'))->format('Y-m-d H:i:s'));
 
 		$counts = $this->service->queueCounts('alice');
 
-		self::assertSame(['open' => 1, 'mine' => 2, 'waiting' => 3, 'watching' => 4], $counts);
+		// C-05 hasTickets probe runs two all-status lookups first (assigned
+		// OR watched), shifting the queue-count call indices by two.
+		self::assertTrue($counts['hasTickets']);
+		self::assertSame(3, $counts['open']);
+		self::assertSame(4, $counts['mine']);
+		self::assertSame(5, $counts['waiting']);
+		self::assertSame(6, $counts['watching']);
+		self::assertSame(7, $counts['unassigned']);
+		self::assertSame(3, $counts['slaBreachCount']);
+		self::assertSame(120, $counts['slaOldestBreachMinutes']);
+		// hasTickets: all-status assigned-to-caller, then all-status watched-by
+		self::assertSame([null, 'alice', null], $captured[0]);
+		self::assertSame([null, null, 'alice'], $captured[1]);
 		// open: all open statuses, no assignee/watcher scope
-		self::assertSame([[Ticket::STATUS_NEW, Ticket::STATUS_IN_PROGRESS, Ticket::STATUS_WAITING], null, null], $captured[0]);
+		self::assertSame([[Ticket::STATUS_NEW, Ticket::STATUS_IN_PROGRESS, Ticket::STATUS_WAITING], null, null], $captured[2]);
 		// mine: scoped to caller
-		self::assertSame('alice', $captured[1][1]);
+		self::assertSame('alice', $captured[3][1]);
 		// waiting: single status
-		self::assertSame([[Ticket::STATUS_WAITING], null, null], $captured[2]);
+		self::assertSame([[Ticket::STATUS_WAITING], null, null], $captured[4]);
 		// watching: watcher scope
-		self::assertSame('alice', $captured[3][2]);
+		self::assertSame('alice', $captured[5][2]);
+	}
+
+	public function testQueueCountsReportsNullOldestBreachWithoutSlaBreach(): void
+	{
+		$this->ticketMapper->method('countCompanionQueue')->willReturn(0);
+		$this->ticketMapper->method('countUnassignedOpen')->willReturn(0);
+		$this->ticketMapper->method('countSlaBreachedOpen')->willReturn(0);
+		$this->ticketMapper->method('oldestSlaBreach')->willReturn(null);
+
+		$counts = $this->service->queueCounts('alice');
+
+		self::assertSame(0, $counts['slaBreachCount']);
+		self::assertNull($counts['slaOldestBreachMinutes']);
+	}
+
+	public function testQueueCountsReportsNoTicketsForFreshAgent(): void
+	{
+		$this->ticketMapper->method('countCompanionQueue')->willReturn(0);
+		$this->ticketMapper->method('countUnassignedOpen')->willReturn(0);
+		$this->ticketMapper->method('countSlaBreachedOpen')->willReturn(0);
+		$this->ticketMapper->method('oldestSlaBreach')->willReturn(null);
+
+		$counts = $this->service->queueCounts('alice');
+
+		self::assertFalse($counts['hasTickets']);
 	}
 
 	public function testInboxItemCarriesSlaAndVersionFields(): void

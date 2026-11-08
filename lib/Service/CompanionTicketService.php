@@ -134,15 +134,31 @@ class CompanionTicketService
 	 * Queue counts for the Home screen. Companion users are agents/admins and
 	 * see every ticket (role gate), so plain COUNT queries are accurate.
 	 *
-	 * @return array{open: int, mine: int, waiting: int, watching: int}
+	 * @return array{hasTickets: bool, open: int, mine: int, waiting: int, watching: int, unassigned: int, slaBreachCount: int, slaOldestBreachMinutes: ?int}
 	 */
 	public function queueCounts(string $uid): array
 	{
+		$now = new \DateTimeImmutable();
+		$oldestBreachDue = $this->ticketMapper->oldestSlaBreach(self::OPEN_STATUSES, $now);
+
+		// C-05 edge "agent with no queues → CTA": an agent who has never been
+		// assigned or watched a ticket (any status) gets the widget's CTA
+		// face instead of permanent zero-counts. statuses=null = all rows.
+		$hasAssigned = $this->ticketMapper->countCompanionQueue(null, $uid, null) > 0;
+		$hasWatched = $this->ticketMapper->countCompanionQueue(null, null, $uid) > 0;
+		$hasTickets = $hasAssigned || $hasWatched;
+
 		return [
+			'hasTickets' => $hasTickets,
 			'open' => $this->ticketMapper->countCompanionQueue(self::OPEN_STATUSES, null, null),
 			'mine' => $this->ticketMapper->countCompanionQueue(self::OPEN_STATUSES, $uid, null),
 			'waiting' => $this->ticketMapper->countCompanionQueue([Ticket::STATUS_WAITING], null, null),
 			'watching' => $this->ticketMapper->countCompanionQueue(self::OPEN_STATUSES, null, $uid),
+			'unassigned' => $this->ticketMapper->countUnassignedOpen(self::OPEN_STATUSES),
+			'slaBreachCount' => $this->ticketMapper->countSlaBreachedOpen(self::OPEN_STATUSES, $now),
+			'slaOldestBreachMinutes' => $oldestBreachDue === null
+				? null
+				: max(0, intdiv($now->getTimestamp() - (new \DateTimeImmutable($oldestBreachDue))->getTimestamp(), 60)),
 		];
 	}
 
