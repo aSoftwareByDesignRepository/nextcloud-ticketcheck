@@ -10,9 +10,16 @@ namespace OCA\Ticketcheck\Service;
  */
 class SlaSettingsException extends \InvalidArgumentException
 {
+	/**
+	 * @param list<string> $fields form control names the message blames —
+	 *                             the controller returns them as the `fields`
+	 *                             map so each offender gets aria-invalid +
+	 *                             an inline error (WCAG 3.3.1/3.3.3).
+	 */
 	public function __construct(
 		private string $l10nKey,
 		private string $parameter = '',
+		private array $fields = [],
 	) {
 		parent::__construct($l10nKey);
 	}
@@ -25,5 +32,11 @@ class SlaSettingsException extends \InvalidArgumentException
 	public function getParameter(): string
 	{
 		return $this->parameter;
+	}
+
+	/** @return list<string> */
+	public function getFields(): array
+	{
+		return $this->fields;
 	}
 }

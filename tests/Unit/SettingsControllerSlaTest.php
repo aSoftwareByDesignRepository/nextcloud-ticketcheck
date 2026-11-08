@@ -131,11 +131,18 @@ class SettingsControllerSlaTest extends TestCase
 		$controller = $this->controller();
 		$this->slaPolicy->expects(self::once())->method('save')
 			->with([], false, [], '', '', '', 'Mars/Olympus')
-			->willThrowException(new SlaSettingsException('sla_error_timezone', 'Mars/Olympus'));
+			->willThrowException(new SlaSettingsException('sla_error_timezone', 'Mars/Olympus', ['timezone']));
 
 		$response = $controller->updateSla();
 
 		self::assertSame(400, $response->getStatus());
-		self::assertSame(['error' => 'sla_error_timezone Mars/Olympus'], $response->getData());
+		self::assertSame(
+			[
+				'error' => 'sla_error_timezone Mars/Olympus',
+				'fields' => ['timezone' => 'sla_error_timezone Mars/Olympus'],
+			],
+			$response->getData(),
+			'validation errors must name the offending control for field-level rendering',
+		);
 	}
 }

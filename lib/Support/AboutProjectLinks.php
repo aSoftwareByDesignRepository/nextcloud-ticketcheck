@@ -50,6 +50,25 @@ final class AboutProjectLinks
 	public const FUNDING_PERIOD_EN = 'June to November 2026';
 	public const FUNDING_PERIOD_DE = 'Juni bis November 2026';
 
+	/**
+	 * Funding period wording per shipped UI language (EN is the fallback).
+	 * Keyed by the lower-cased locale tag; region tags fall back to their
+	 * base language via the lookup in {@see fundingPeriod()}.
+	 */
+	private const FUNDING_PERIODS = [
+		'da' => 'juni til november 2026',
+		'de' => self::FUNDING_PERIOD_DE,
+		'es' => 'junio a noviembre de 2026',
+		'fr' => 'juin à novembre 2026',
+		'it' => 'giugno a novembre 2026',
+		'nb' => 'juni til november 2026',
+		'nl' => 'juni tot november 2026',
+		'pl' => 'czerwiec do listopada 2026',
+		'pt' => 'junho a novembro de 2026',
+		'sv' => 'juni till november 2026',
+		'tr' => 'Haziran–Kasım 2026',
+	];
+
 	/** Förderkennzeichen per the BMFTR Zuwendungsbescheid. */
 	public const FUNDING_REFERENCE = '16IS26S24';
 
@@ -58,6 +77,21 @@ final class AboutProjectLinks
 		$lang = strtolower(str_replace('_', '-', trim($languageCode)));
 
 		return $lang === 'de' || str_starts_with($lang, 'de-');
+	}
+
+	/**
+	 * Funding period in the reader's language; English when the locale has
+	 * no dedicated wording (and for pt-BR/pt-AO style tags, the base
+	 * language wording).
+	 */
+	private function fundingPeriod(string $languageCode): string
+	{
+		$lang = strtolower(str_replace('_', '-', trim($languageCode)));
+		$base = explode('-', $lang)[0];
+
+		return self::FUNDING_PERIODS[$lang]
+			?? self::FUNDING_PERIODS[$base]
+			?? self::FUNDING_PERIOD_EN;
 	}
 
 	/**
@@ -118,7 +152,7 @@ final class AboutProjectLinks
 		return [
 			'grantProjectName' => self::GRANT_PROJECT_NAME,
 			'fundingProgramme' => self::FUNDING_PROGRAMME,
-			'fundingPeriod' => $isGerman ? self::FUNDING_PERIOD_DE : self::FUNDING_PERIOD_EN,
+			'fundingPeriod' => $this->fundingPeriod($languageCode),
 			'fundingReference' => self::FUNDING_REFERENCE,
 			'licenseId' => self::LICENSE_ID,
 			'prototypeFundUrl' => self::PROTOTYPE_FUND_URL,

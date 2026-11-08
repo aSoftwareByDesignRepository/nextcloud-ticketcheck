@@ -104,9 +104,14 @@ $slaTargetColumns = [
 						</div>
 						<div class="helpdesk-form-group tc-field">
 							<label for="sla-timezone" class="helpdesk-form-label"><?php p($l->t('sla_timezone')); ?></label>
-							<input type="text" name="timezone" id="sla-timezone" autocomplete="off" spellcheck="false"
+							<input type="text" name="timezone" id="sla-timezone" list="sla-timezone-list" autocomplete="off" spellcheck="false"
 								aria-describedby="sla-timezone-help"
 								value="<?php p((string)($slaCalendar['timezone'] ?? '')); ?>">
+							<datalist id="sla-timezone-list">
+								<?php foreach (($_['slaTimezones'] ?? []) as $slaTz): ?>
+									<option value="<?php p($slaTz); ?>"></option>
+								<?php endforeach; ?>
+							</datalist>
 							<span class="helpdesk-form-help tc-field__hint-block" id="sla-timezone-help"><?php p($l->t('sla_timezone_help')); ?></span>
 						</div>
 						<div class="helpdesk-form-group tc-field tc-field--full-width">

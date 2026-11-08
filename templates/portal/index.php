@@ -37,7 +37,7 @@ $todayHuman = $localeFormat !== null
                     <?php if (($stats['waiting'] ?? 0) > 0): ?>
                         <a href="<?php p($portalFilterUrl('waiting')); ?>"
                             class="tc-dashboard-kpi helpdesk-card helpdesk-card--interactive portal-card-clickable"
-                            aria-label="<?php p($l->t('filter_by')); ?>: <?php p($l->t('needs_response')); ?>">
+                            aria-label="<?php p($l->t('filter_by')); ?> <?php p($l->t('needs_response')); ?>">
                             <span class="tc-dashboard-kpi__icon tc-dashboard-kpi__icon--accent" aria-hidden="true">
                                 <?php print_unescaped(IconCatalog::render('alert-triangle')); ?>
                             </span>
@@ -51,7 +51,7 @@ $todayHuman = $localeFormat !== null
 
                     <a href="<?php p($portalFilterUrl('new')); ?>"
                         class="tc-dashboard-kpi helpdesk-card helpdesk-card--interactive portal-card-clickable<?php if ((int)($stats['new'] ?? 0) === 0) { ?> tc-dashboard-kpi--zero<?php } ?>"
-                        aria-label="<?php p($l->t('filter_by')); ?>: <?php p($l->t('new_tickets')); ?>">
+                        aria-label="<?php p($l->t('filter_by')); ?> <?php p($l->t('new_tickets')); ?>">
                         <span class="tc-dashboard-kpi__icon tc-dashboard-kpi__icon--primary" aria-hidden="true">
                             <?php print_unescaped(IconCatalog::render('plus-circle')); ?>
                         </span>
@@ -64,7 +64,7 @@ $todayHuman = $localeFormat !== null
 
                     <a href="<?php p($portalFilterUrl('in_progress')); ?>"
                         class="tc-dashboard-kpi helpdesk-card helpdesk-card--interactive portal-card-clickable<?php if ((int)($stats['in_progress'] ?? 0) === 0) { ?> tc-dashboard-kpi--zero<?php } ?>"
-                        aria-label="<?php p($l->t('filter_by')); ?>: <?php p($l->t('in_progress_tickets')); ?>">
+                        aria-label="<?php p($l->t('filter_by')); ?> <?php p($l->t('in_progress_tickets')); ?>">
                         <span class="tc-dashboard-kpi__icon tc-dashboard-kpi__icon--accent" aria-hidden="true">
                             <?php print_unescaped(IconCatalog::render('clock')); ?>
                         </span>
@@ -77,7 +77,7 @@ $todayHuman = $localeFormat !== null
 
                     <a href="<?php p($portalFilterUrl('done')); ?>"
                         class="tc-dashboard-kpi helpdesk-card helpdesk-card--interactive portal-card-clickable<?php if ((int)($stats['done'] ?? 0) === 0) { ?> tc-dashboard-kpi--zero<?php } ?>"
-                        aria-label="<?php p($l->t('filter_by')); ?>: <?php p($l->t('resolved_tickets')); ?>">
+                        aria-label="<?php p($l->t('filter_by')); ?> <?php p($l->t('resolved_tickets')); ?>">
                         <span class="tc-dashboard-kpi__icon tc-dashboard-kpi__icon--success" aria-hidden="true">
                             <?php print_unescaped(IconCatalog::render('check-circle')); ?>
                         </span>

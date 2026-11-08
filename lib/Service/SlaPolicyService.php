@@ -164,10 +164,20 @@ class SlaPolicyService
 			$response = is_array($row) ? self::hoursOrNull($row['response'] ?? null) : null;
 			$resolution = is_array($row) ? self::hoursOrNull($row['resolution'] ?? null) : null;
 			if ($response === null || $resolution === null) {
-				throw new SlaSettingsException('sla_error_hours_range', (string)self::MAX_HOURS);
+				$badFields = [];
+				if ($response === null) {
+					$badFields[] = 'targets[' . $priority . '][response]';
+				}
+				if ($resolution === null) {
+					$badFields[] = 'targets[' . $priority . '][resolution]';
+				}
+				throw new SlaSettingsException('sla_error_hours_range', (string)self::MAX_HOURS, $badFields);
 			}
 			if ($response > $resolution) {
-				throw new SlaSettingsException('sla_error_response_after_resolution');
+				throw new SlaSettingsException('sla_error_response_after_resolution', '', [
+					'targets[' . $priority . '][response]',
+					'targets[' . $priority . '][resolution]',
+				]);
 			}
 			$clean[$priority] = ['response' => $response, 'resolution' => $resolution];
 		}
@@ -190,26 +200,26 @@ class SlaPolicyService
 				continue;
 			}
 			if (!self::isDate($date)) {
-				throw new SlaSettingsException('sla_error_holiday', $date);
+				throw new SlaSettingsException('sla_error_holiday', $date, ['holidays']);
 			}
 			$holidayList[] = $date;
 		}
 		$holidayList = array_values(array_unique($holidayList));
 		sort($holidayList);
 		if (count($holidayList) > self::MAX_HOLIDAYS) {
-			throw new SlaSettingsException('sla_error_too_many_holidays', (string)self::MAX_HOLIDAYS);
+			throw new SlaSettingsException('sla_error_too_many_holidays', (string)self::MAX_HOLIDAYS, ['holidays']);
 		}
 
 		if ($businessHoursEnabled) {
 			if ($cleanDays === []) {
-				throw new SlaSettingsException('sla_error_no_days');
+				throw new SlaSettingsException('sla_error_no_days', '', ['business_days[]']);
 			}
 			if (!self::isTime($start) || !self::isTime($end) || $start >= $end) {
-				throw new SlaSettingsException('sla_error_time_range');
+				throw new SlaSettingsException('sla_error_time_range', '', ['business_start', 'business_end']);
 			}
 		}
 		if ($timezone !== '' && !self::isTimezone($timezone)) {
-			throw new SlaSettingsException('sla_error_timezone', $timezone);
+			throw new SlaSettingsException('sla_error_timezone', $timezone, ['timezone']);
 		}
 
 		$this->config->setAppValue(self::APP_ID, self::CONFIG_TARGETS, (string)json_encode($clean));

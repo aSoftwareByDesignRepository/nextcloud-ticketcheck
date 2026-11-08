@@ -298,7 +298,10 @@ class SettingsController extends Controller
                 'kbCategories' => $this->categoryService->list(),
             ],
             'escalation' => $this->escalationSettingsExtras(),
-            'sla' => ['slaSettings' => $this->slaPolicy->settingsPayload()],
+            'sla' => [
+                'slaSettings' => $this->slaPolicy->settingsPayload(),
+                'slaTimezones' => \DateTimeZone::listIdentifiers(),
+            ],
             'license' => $this->licenseSettingsExtras($l),
             'support' => [
                 'supportUsLinks' => new SupportUsLinks(
@@ -447,7 +450,11 @@ class SettingsController extends Controller
                 (string)$this->request->getParam('timezone', ''),
             );
         } catch (SlaSettingsException $e) {
-            return new JSONResponse(['error' => $l->t($e->getL10nKey(), [$e->getParameter()])], 400);
+            $message = $l->t($e->getL10nKey(), [$e->getParameter()]);
+            return new JSONResponse([
+                'error' => $message,
+                'fields' => array_fill_keys($e->getFields(), $message),
+            ], 400);
         }
 
         return new JSONResponse([
