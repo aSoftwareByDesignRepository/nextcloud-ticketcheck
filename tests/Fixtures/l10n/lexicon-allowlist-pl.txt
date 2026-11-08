@@ -37,3 +37,4 @@ ticket # proper — API field name linked_ticket_id
 webhook # loanword — IT term
 token # loanword — IT term
 source # loanword — 'open source'
+yyyy # abbrev — ISO date-format token (YYYY-MM-DD)

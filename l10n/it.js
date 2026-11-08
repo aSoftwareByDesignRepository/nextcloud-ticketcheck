@@ -4,6 +4,8 @@ OC.L10N.register(
 	"%1$s (%2$s)" : "%1$s (%2$s)",
 	"%n ticket total" : "%n ticket total",
 	"%n tickets total" : "%n ticket total",
+	"%n view" : "%n visualizzazione",
+	"%n views" : "%n visualizzazioni",
 	"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:" : "%s resta gratuito (AGPL) sulla sua Nextcloud. Segnalazioni di bug e idee su GitHub restano benvenute — fa parte della cura open source gratuita. Se la sua organizzazione ha bisogno di assistenza prenotabile con fattura — o di licenze mobile ufficiali — scelga un'opzione qui sotto:",
 	"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:" : "%s resta gratuito (AGPL) sulla sua Nextcloud. Segnalazioni di bug e idee su GitHub restano benvenute — fa parte della cura open source gratuita. Se la sua organizzazione ha bisogno di assistenza prenotabile con fattura, scelga un'opzione qui sotto:",
 	"(opens in a new tab)" : "(si apre in una nuova scheda)",

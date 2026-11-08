@@ -55,3 +55,5 @@ sakstoken # shared — sak+token compound
 administratørrapport # shared — administrator+rapport compound
 taggadresse # shared — tagg+adresse compound (plus-addressing)
 deaktiver # shared — de+aktiver imperative (deactivate), shared da/nb form
+europe # proper — IANA tz identifier prefix (Europe/Berlin)
+yyyy # abbrev — ISO date-format token (YYYY-MM-DD)

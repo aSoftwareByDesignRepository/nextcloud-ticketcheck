@@ -200,7 +200,7 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 		LicenseController::class => ['show', 'apply', 'remove', 'seats', 'assignSeat', 'removeSeat', 'searchUsers'],
 		SettingsController::class => [
 			'index', 'section',
-			'updateEmail', 'updateKnowledgeBase', 'updateAppAccess', 'testEmail',
+			'updateEmail', 'updateKnowledgeBase', 'updateAppAccess', 'updateSla', 'testEmail',
 			'createKBCategory', 'updateKBCategory', 'deleteKBCategory',
 			'createEscalationRule', 'updateEscalationRule', 'deleteEscalationRule',
 			'getAppAccessPreview', 'searchNextcloudGroups', 'searchNextcloudUsers',

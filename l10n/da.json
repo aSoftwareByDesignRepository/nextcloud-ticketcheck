@@ -3,6 +3,8 @@
         "%1$s (%2$s)": "%1$s (%2$s)",
         "%n ticket total": "%n sag i alt",
         "%n tickets total": "%n sager i alt",
+        "%n view": "%n visning",
+        "%n views": "%n visninger",
         "%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s forbliver gratis (AGPL) på Nextcloud. Fejlrapporter og idéer på GitHub er velkomne — det er gratis open source-support. Hvis organisationen har brug for fakturerbar hjælp — eller officielle mobile licenser — vælg en mulighed nedenfor:",
         "%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s forbliver gratis (AGPL) på Nextcloud. Fejlrapporter og idéer på GitHub er velkomne — det er gratis open source-support. Hvis organisationen har brug for fakturerbar hjælp, vælg en mulighed nedenfor:",
         "(opens in a new tab)": "(åbner i en ny fane)",
