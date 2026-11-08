@@ -68,7 +68,7 @@ $bucketMeta = [
 								<?php endif; ?>
 								<?php if (in_array('merge', $meta['actions'], true) && !empty($identities)): ?>
 									<span class="tc-merge">
-										<select data-tc-merge-target aria-label="<?php p($l->t('merge_into')); ?>">
+										<select data-tc-merge-target class="helpdesk-form-control" aria-label="<?php p($l->t('merge_into')); ?>">
 											<?php foreach ($identities as $ident): ?>
 												<option value="<?php p((string)$ident['id']); ?>"><?php p($ident['email']); ?></option>
 											<?php endforeach; ?>

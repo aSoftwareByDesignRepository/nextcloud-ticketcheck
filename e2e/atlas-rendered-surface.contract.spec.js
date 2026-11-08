@@ -22,6 +22,8 @@ const STAFF_SURFACES = [
 	['/apps/ticketcheck/guests', 'guests list'],
 	['/apps/ticketcheck/guests/create', 'guest create form'],
 	['/apps/ticketcheck/settings', 'settings'],
+	['/apps/ticketcheck/settings/sla', 'settings sla'],
+	['/apps/ticketcheck/guests/migration', 'guests migration wizard'],
 ];
 
 test.describe('Rendered-surface contract — staff', () => {
@@ -41,9 +43,14 @@ test.describe('Rendered-surface contract — staff', () => {
 				content: '#tc-main-content, #app-content',
 				navExclude: '#app-navigation, nav, .tc-nav',
 				// Intentional marker-less designs: project chips row (flex badges),
-				// the bordered app-access preview (listbox-style rows), and
-				// tc-card-list — a semantic <ul> whose <li>s render as cards.
-				listAllow: '.tc-guests-project-access, .settings-app-access-preview__list, .tc-card-list',
+				// the bordered app-access preview (listbox-style rows),
+				// tc-card-list — a semantic <ul> whose <li>s render as cards,
+				// the migration stage strip (horizontal badge row) and the
+				// uid action rows inside each bucket's <details>.
+				listAllow: '.tc-guests-project-access, .settings-app-access-preview__list, .tc-card-list, .tc-stage__list, .tc-bucket__list ul',
+				// SLA target hour inputs are deliberately compact (9rem skinned
+				// cells inside a wide table) — pinned-control covers the rest.
+				controlAllow: '.tc-sla-hours',
 			});
 			await assertIconsAcrossSchemes(page);
 		});

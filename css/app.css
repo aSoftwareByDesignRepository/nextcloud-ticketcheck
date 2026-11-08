@@ -11096,6 +11096,25 @@ aside.portal-help-tip {
 	--tc-bdg-edge: color-mix(in srgb, var(--tc-bdg-ink) 42%, var(--color-border-maxcontrast, var(--tc-border-strong)));
 	--tc-bdg-dot: var(--tc-bdg-ink);
 }
+/* Status tones used by the guest-migration wizard stage strip. */
+.tc-badge--ok {
+	--tc-bdg-ink: var(--tc-success-text, var(--color-success-text));
+	--tc-bdg-fill: var(--tc-tint-success);
+	--tc-bdg-edge: color-mix(in srgb, var(--tc-bdg-ink) 42%, var(--color-border-maxcontrast, var(--tc-border-strong)));
+	--tc-bdg-dot: var(--tc-bdg-ink);
+}
+.tc-badge--warn {
+	--tc-bdg-ink: var(--tc-warning-text, var(--color-warning-text));
+	--tc-bdg-fill: var(--tc-tint-warning);
+	--tc-bdg-edge: color-mix(in srgb, var(--tc-bdg-ink) 42%, var(--color-border-maxcontrast, var(--tc-border-strong)));
+	--tc-bdg-dot: var(--tc-bdg-ink);
+}
+.tc-badge--error {
+	--tc-bdg-ink: var(--tc-error-text, var(--color-error-text));
+	--tc-bdg-fill: var(--tc-tint-critical);
+	--tc-bdg-edge: color-mix(in srgb, var(--tc-error-element, #cc4646) 40%, var(--tc-border));
+	--tc-bdg-dot: var(--tc-bdg-ink);
+}
 
 /* Dark themes: --color-primary-element ink on the info tint measures ~4.4:1 —
    just under WCAG AA for small badge text. Lifting the ink toward the theme's
@@ -11112,6 +11131,80 @@ aside.portal-help-tip {
 	body[data-theme-default] .tc-badge--agent {
 		--tc-bdg-ink: color-mix(in srgb, var(--color-primary-element) 72%, var(--color-main-text));
 	}
+}
+
+/* Guest migration wizard (staff admin page). These rules lived in
+   guest-portal.css, which staff mode never loads — the wizard rendered
+   dead chrome (no stage strip layout, no bucket grid, no badge tones)
+   and the merge-target select hit the NC ~130px pin. */
+.tc-stage__list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--tc-space-3) var(--tc-space-5);
+}
+.tc-stage__list li {
+	display: flex;
+	align-items: center;
+	gap: var(--tc-space-2);
+}
+.tc-bucket-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+	gap: var(--tc-space-3);
+	margin-block: var(--tc-space-4);
+}
+.tc-bucket__count {
+	font-size: 1.75rem;
+	font-weight: 700;
+	margin: 0;
+}
+.tc-bucket--error {
+	border-color: var(--tc-error-element, #cc4646);
+}
+.tc-bucket--warn .tc-bucket__count {
+	color: var(--tc-warning-text, var(--color-warning-text));
+}
+.tc-bucket__hint {
+	color: var(--tc-muted);
+	font-size: var(--tc-fs-sm);
+	min-height: 2.4em;
+}
+.tc-uid-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--tc-space-2);
+	padding-block: var(--tc-space-1);
+}
+.tc-merge {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--tc-space-2);
+	max-width: 100%;
+}
+.tc-merge select.helpdesk-form-control {
+	width: 16rem;
+	max-width: 100%;
+}
+.tc-actions__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--tc-space-3);
+	margin-block-end: var(--tc-space-3);
+}
+.tc-actions__door {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--tc-space-4);
+}
+.tc-mig-status {
+	margin-block-start: var(--tc-space-4);
+	font-weight: 600;
+	min-height: 1.5em;
 }
 
 /* Cards + sections */

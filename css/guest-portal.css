@@ -70,21 +70,6 @@
 	display: inline-block; padding: .1rem .5rem; border-radius: 999px;
 	background: var(--color-primary-element-light, #e4eef6); font-size: .8em; font-weight: 600;
 }
-.tc-bucket-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: var(--space-3, .75rem); margin-block: var(--space-4, 1rem); }
-.tc-bucket__count { font-size: 1.75rem; font-weight: 700; margin: 0; }
-
-/* Migration wizard (spec passwordless-guests-2026-11 §8) */
-.tc-stage__list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--space-3, .75rem) var(--space-5, 1.5rem); }
-.tc-stage__list li { display: flex; align-items: center; gap: var(--space-2, .5rem); }
-.tc-badge--ok { background: color-mix(in srgb, var(--color-success, #46ba61) 18%, var(--color-main-background)); }
-.tc-badge--warn { background: color-mix(in srgb, var(--color-warning, #fc0) 25%, var(--color-main-background)); }
-.tc-badge--error, .tc-bucket--error { }
-.tc-bucket--error { border-color: var(--color-error, #e9322d); }
-.tc-bucket--warn .tc-bucket__count { color: var(--color-warning-text, #8a5a00); }
-.tc-bucket__hint { color: var(--color-text-maxcontrast, #666); font-size: .9em; min-height: 2.4em; }
-.tc-uid-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2, .5rem); padding-block: var(--space-1, .25rem); }
-.tc-merge { display: inline-flex; align-items: center; gap: var(--space-2, .5rem); }
-.tc-merge select { max-width: 16rem; min-height: 36px; }
-.tc-actions__row { display: flex; flex-wrap: wrap; gap: var(--space-3, .75rem); margin-block-end: var(--space-3, .75rem); }
-.tc-actions__door { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4, 1rem); }
-.tc-mig-status { margin-block-start: var(--space-4, 1rem); font-weight: 600; min-height: 1.5em; }
+/* Migration wizard chrome moved to app.css — the wizard is a staff admin
+   page and guest-portal.css never loads there (the rules were dead weight
+   here). */

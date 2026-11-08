@@ -246,7 +246,7 @@
                 }
                 const input = document.createElement('input');
                 input.type = 'url';
-                input.className = 'tc-input';
+                input.className = 'helpdesk-form-control';
                 input.id = 'tc-kb-link-url';
                 input.autocomplete = 'url';
                 input.inputMode = 'url';

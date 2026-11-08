@@ -23,7 +23,7 @@
 			danger: true,
 			render: () => {
 				input = C.createElement('input', {
-					class: 'tc-input',
+					class: 'helpdesk-form-control',
 					attrs: { type: 'text', placeholder: t('ticketcheck', 'reason_optional'), 'aria-label': t('ticketcheck', 'abandon_reason') },
 				});
 				return input;

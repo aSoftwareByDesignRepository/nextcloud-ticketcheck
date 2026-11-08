@@ -70,7 +70,7 @@
         }
         return new Promise((resolve) => {
             const select = document.createElement('select');
-            select.className = 'tc-input';
+            select.className = 'helpdesk-form-control';
             select.id = 'tc-bulk-select';
             options.forEach((opt) => {
                 const o = document.createElement('option');
@@ -109,7 +109,7 @@
         return new Promise((resolve) => {
             const input = document.createElement('input');
             input.type = 'text';
-            input.className = 'tc-input';
+            input.className = 'helpdesk-form-control';
             input.id = 'tc-bulk-text';
             if (maxLength) input.maxLength = maxLength;
             const field = document.createElement('label');
@@ -186,7 +186,7 @@
 
             const search = document.createElement('input');
             search.type = 'search';
-            search.className = 'tc-input';
+            search.className = 'helpdesk-form-control';
             search.id = 'tc-bulk-assignee-search';
             search.setAttribute('role', 'combobox');
             search.setAttribute('aria-autocomplete', 'list');
