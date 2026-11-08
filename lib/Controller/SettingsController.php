@@ -1426,6 +1426,11 @@ class SettingsController extends Controller
                 continue;
             }
             foreach ($group->getUsers() as $user) {
+                // Group membership can outlive the login itself — a deactivated
+                // account must never be offered as an escalation target.
+                if (!$user->isEnabled()) {
+                    continue;
+                }
                 $uid = $user->getUID();
                 if (!isset($usersById[$uid])) {
                     $usersById[$uid] = [
@@ -1439,6 +1444,9 @@ class SettingsController extends Controller
         if (empty($usersById)) {
             $allUsers = $this->userManager->search('', 200);
             foreach ($allUsers as $user) {
+                if (!$user->isEnabled()) {
+                    continue;
+                }
                 $uid = $user->getUID();
                 if ($this->groupManager->isInGroup($uid, PermissionService::GROUP_HELPDESK_CUSTOMERS)) {
                     continue;
@@ -2159,12 +2167,19 @@ class SettingsController extends Controller
         $allowed = [];
         $blocked = [];
         $affectedNonAdmins = [];
+        $evaluated = 0;
 
         $currentUserId = $this->permissionService->getCurrentUserId();
         $currentSettings = $this->permissionService->getAppAccessSettings();
         $affectedIncludesCurrentUser = false;
 
         foreach ($users as $user) {
+            // A deactivated account can never use the app — counting it in the
+            // impact preview would overstate the blast radius of the change.
+            if (!$user->isEnabled()) {
+                continue;
+            }
+            $evaluated++;
             $uid = $user->getUID();
             $entry = [
                 'uid' => $uid,
@@ -2193,7 +2208,9 @@ class SettingsController extends Controller
 
         return [
             'summary' => [
-                'total_users' => count($users),
+                // Evaluated population only — deactivated accounts are skipped
+                // above and must not inflate the total.
+                'total_users' => $evaluated,
                 'allowed_users' => count($allowed),
                 'blocked_users' => count($blocked),
             ],

@@ -131,11 +131,19 @@ class SettingsControllerAppAccessPreviewTest extends TestCase
         $alice = $this->createMock(IUser::class);
         $alice->method('getUID')->willReturn('alice');
         $alice->method('getDisplayName')->willReturn('Alice A');
+        $alice->method('isEnabled')->willReturn(true);
         $bob = $this->createMock(IUser::class);
         $bob->method('getUID')->willReturn('bob');
         $bob->method('getDisplayName')->willReturn('Bob B');
+        $bob->method('isEnabled')->willReturn(true);
+        $dead = $this->createMock(IUser::class);
+        $dead->method('getUID')->willReturn('dead-dan');
+        $dead->method('getDisplayName')->willReturn('Dead Dan');
+        $dead->method('isEnabled')->willReturn(false);
 
-        $this->userManager->method('search')->with('', 1000)->willReturn([$alice, $bob]);
+        // Deactivated accounts are excluded from the impact preview — the
+        // summary must stay at 2 total users despite three being returned.
+        $this->userManager->method('search')->with('', 1000)->willReturn([$alice, $bob, $dead]);
         $this->groupManager->method('isAdmin')->willReturn(false);
         $this->permissionService->method('canUserAccessAppWithSettings')->willReturnCallback(
             static function (string $uid, array $settings): bool {
@@ -179,6 +187,7 @@ class SettingsControllerAppAccessPreviewTest extends TestCase
             $u = $this->createMock(IUser::class);
             $u->method('getUID')->willReturn('u' . $i);
             $u->method('getDisplayName')->willReturn('User ' . $i);
+            $u->method('isEnabled')->willReturn(true);
             $users[] = $u;
         }
 
@@ -201,6 +210,7 @@ class SettingsControllerAppAccessPreviewTest extends TestCase
             $u = $this->createMock(IUser::class);
             $u->method('getUID')->willReturn('u' . $i);
             $u->method('getDisplayName')->willReturn('User ' . $i);
+            $u->method('isEnabled')->willReturn(true);
             $users[] = $u;
         }
 

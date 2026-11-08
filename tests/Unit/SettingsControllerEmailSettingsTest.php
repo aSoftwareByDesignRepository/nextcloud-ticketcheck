@@ -214,6 +214,7 @@ class SettingsControllerEmailSettingsTest extends TestCase
         $user = $this->createMock(\OCP\IUser::class);
         $user->method('getUID')->willReturn('agent1');
         $user->method('getDisplayName')->willReturn('Agent One');
+        $user->method('isEnabled')->willReturn(true);
 
         $this->userManager->method('search')->willReturn([$user]);
         $this->permissionService->method('getCurrentUserId')->willReturn('admin1');
@@ -253,6 +254,7 @@ class SettingsControllerEmailSettingsTest extends TestCase
         $user = $this->createMock(\OCP\IUser::class);
         $user->method('getUID')->willReturn('agent1');
         $user->method('getDisplayName')->willReturn('Agent One');
+        $user->method('isEnabled')->willReturn(true);
 
         $this->userManager->method('search')->willReturn([$user]);
         $this->permissionService->method('getCurrentUserId')->willReturn('admin1');
