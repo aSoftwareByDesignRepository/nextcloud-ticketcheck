@@ -26,6 +26,7 @@ class GuestUserLoginListener implements IEventListener
 {
     private const GROUP_GUESTS = 'helpdesk_customers';
     private const DEFAULT_APP = 'ticketcheck';
+    private const GUEST_QUOTA = '0 B';
 
     public function __construct(
         private readonly IGroupManager $groupManager,
@@ -60,8 +61,9 @@ class GuestUserLoginListener implements IEventListener
             // to TicketCheck — the per-user defaultapp value has no self-service
             // or admin UI to revert it (issue #5). PostLoginEvent fires before
             // the post-login redirect resolves, so clearing here already fixes
-            // this login's landing page.
-            self::clearDefaultAppPin($this->config, $userId);
+            // this login's landing page. The guest zero-quota isolation write
+            // gets the same treatment.
+            self::clearGuestPins($this->config, $userId);
         } catch (\Throwable $e) {
             $this->logger->error('GuestUserLoginListener failed', [
                 'user_id' => $userId,
@@ -71,16 +73,24 @@ class GuestUserLoginListener implements IEventListener
     }
 
     /**
-     * Remove the TicketCheck pin when the stored default app is exactly the one
-     * the app set (member pins and guest-account creation share this value).
+     * Remove the app-written guest isolation pins when the stored values are
+     * exactly the ones the app set:
+     *  - core.defaultapp = 'ticketcheck' (pinned at login and guest creation;
+     *    no self-service or admin UI exists — issue #5)
+     *  - files.quota = '0 B' (zero-quota guest isolation, written via
+     *    IUser::setQuota and setUserValue at guest creation; 'none'/'default'
+     *    and real limits are admin choices and stay untouched)
      */
-    public static function clearDefaultAppPin(IConfig $config, string $userId): void
+    public static function clearGuestPins(IConfig $config, string $userId): void
     {
         if ($userId === '') {
             return;
         }
         if ($config->getUserValue($userId, 'core', 'defaultapp') === self::DEFAULT_APP) {
             $config->deleteUserValue($userId, 'core', 'defaultapp');
+        }
+        if ($config->getUserValue($userId, 'files', 'quota') === self::GUEST_QUOTA) {
+            $config->deleteUserValue($userId, 'files', 'quota');
         }
     }
 }

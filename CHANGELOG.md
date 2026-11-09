@@ -13,9 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   TicketCheck portal: the `core.defaultapp` user value the app sets at
   guest login is now cleared on group removal and self-heals on the next
   login for anyone already stuck (there is no user/admin UI for the
-  per-user default app, issue #5). Guest login handling and the boot-time
-  guest gate are also hardened so a failure there can no longer turn a
-  member's login into an internal server error
+  per-user default app, issue #5). The guest zero-quota isolation write
+  (`files.quota` = `0 B`) is unpinned the same way — a removed guest kept
+  a 0-byte quota and could not upload files. Admin-set quotas and
+  default-app choices are preserved. Guest login handling and the
+  boot-time guest gate are also hardened so a failure there can no
+  longer turn a member's login into an internal server error
 - Creating or renaming a customer to a name or e-mail address that already
   exists now shows a clear "already exists" message (HTTP 409) instead of a
   generic error — duplicate rows were previously only rejected by an opaque

@@ -99,6 +99,48 @@ class GuestUserLoginListenerTest extends TestCase
         $listener->handle($this->loginEvent($this->user('carol')));
     }
 
+    public function testGuestZeroQuotaPinIsClearedOnLogin(): void
+    {
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isInGroup')->willReturn(false);
+
+        $config = $this->createMock(IConfig::class);
+        $config->method('getUserValue')->willReturnMap([
+            ['dora', 'core', 'defaultapp', '', ''],
+            ['dora', 'files', 'quota', '', '0 B'],
+        ]);
+        $config->expects($this->once())
+            ->method('deleteUserValue')
+            ->with('dora', 'files', 'quota');
+
+        $listener = new GuestUserLoginListener(
+            $groupManager,
+            $config,
+            $this->createMock(LoggerInterface::class),
+        );
+        $listener->handle($this->loginEvent($this->user('dora')));
+    }
+
+    public function testAdminSetQuotaIsPreserved(): void
+    {
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isInGroup')->willReturn(false);
+
+        $config = $this->createMock(IConfig::class);
+        $config->method('getUserValue')->willReturnMap([
+            ['elias', 'core', 'defaultapp', '', ''],
+            ['elias', 'files', 'quota', '', '5 GB'],
+        ]);
+        $config->expects($this->never())->method('deleteUserValue');
+
+        $listener = new GuestUserLoginListener(
+            $groupManager,
+            $config,
+            $this->createMock(LoggerInterface::class),
+        );
+        $listener->handle($this->loginEvent($this->user('elias')));
+    }
+
     public function testListenerFailureNeverBreaksLogin(): void
     {
         $groupManager = $this->createMock(IGroupManager::class);

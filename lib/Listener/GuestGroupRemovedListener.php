@@ -42,7 +42,7 @@ class GuestGroupRemovedListener implements IEventListener
         }
 
         try {
-            GuestUserLoginListener::clearDefaultAppPin($this->config, $event->getUser()->getUID());
+            GuestUserLoginListener::clearGuestPins($this->config, $event->getUser()->getUID());
         } catch (\Throwable $e) {
             $this->logger->error('Failed to clear guest defaultapp pin on group removal', [
                 'user_id' => $event->getUser()->getUID(),
