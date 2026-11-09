@@ -45,6 +45,13 @@ $shellExempt = [
 	'/templates/layout.guest.php',
 	'/templates/settings/personal.php',
 	'/templates/portal/gdpr-notice.php',
+	// Pre-auth portal pages render inside layout.guest.php (tc-portal-auth
+	// chrome) — page-start.php is the authenticated portal shell only.
+	'/templates/portal/login.php',
+	'/templates/portal/sign-in.php',
+	'/templates/portal/magic-confirm.php',
+	'/templates/portal/login-unavailable.php',
+	'/templates/portal/nc-login-retired.php',
 	'/templates/portal/resolveShowKnowledgeBase.php',
 	'/templates/kb/resolveFormCommentsFlag.php',
 	'/templates/kb/resolveArticleFeatureFlags.php',

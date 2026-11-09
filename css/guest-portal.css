@@ -25,8 +25,8 @@
 .tc-portal-signin {
 	max-width: 30rem;
 	margin-inline: auto;
-	padding-block: var(--space-4, 1rem);
-	padding-inline: var(--space-4, 1rem);
+	padding-block: var(--tc-space-4);
+	padding-inline: var(--tc-space-4);
 	/* Opaque surface on the full-bleed NC guest chrome (body#body-login is a
 	   blue gradient + wave SVG): the platform login pattern is a card, and
 	   bare inherited chrome ink on the gradient failed contrast (washed-out
@@ -36,18 +36,18 @@
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius, 4px);
 }
-.tc-portal-auth h1 { margin-block-end: var(--space-2, .5rem); }
+.tc-portal-auth h1 { margin-block-end: var(--tc-space-2); }
 .tc-portal-auth .tc-page-lead {
 	color: var(--color-text-maxcontrast, var(--color-main-text));
-	margin-block-end: var(--space-4, 1rem);
+	margin-block-end: var(--tc-space-4);
 }
-.tc-portal-auth form { display: grid; gap: var(--space-3, .75rem); }
+.tc-portal-auth form { display: grid; gap: var(--tc-space-3); }
 .tc-portal-auth .tc-input { min-height: 48px; font-size: 1rem; padding-inline: .75rem; }
 .tc-portal-auth .tc-btn { min-height: 48px; font-size: 1rem; }
 .tc-portal-auth #tc-login-code { letter-spacing: .35em; text-align: center; font-size: 1.5rem; }
 .tc-hidden { display: none !important; }
 .tc-notice {
-	padding: var(--space-3, .75rem) var(--space-4, 1rem);
+	padding: var(--tc-space-3) var(--tc-space-4);
 	border-radius: var(--border-radius-large, 10px);
 	background: color-mix(in srgb, var(--color-primary-element-light, #e4eef6) 70%, var(--color-main-background));
 	border: 1px solid var(--color-border, #d8d8d8);
@@ -55,12 +55,12 @@
 .tc-field-error {
 	color: var(--color-error-text, var(--tc-danger-ink, var(--color-error, #e9322d)));
 	font-weight: 600;
-	margin-block-start: var(--space-3, .75rem);
+	margin-block-start: var(--tc-space-3);
 }
-.tc-session-list { list-style: none; padding: 0; margin: 0 0 var(--space-4, 1rem); display: grid; gap: var(--space-2, .5rem); }
+.tc-session-list { list-style: none; padding: 0; margin: 0 0 var(--tc-space-4); display: grid; gap: var(--tc-space-2); }
 .tc-session {
-	display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3, .75rem);
-	padding: var(--space-3, .75rem) var(--space-4, 1rem);
+	display: flex; flex-wrap: wrap; align-items: center; gap: var(--tc-space-3);
+	padding: var(--tc-space-3) var(--tc-space-4);
 	border: 1px solid var(--color-border, #d8d8d8);
 	border-radius: var(--border-radius-large, 10px);
 }
