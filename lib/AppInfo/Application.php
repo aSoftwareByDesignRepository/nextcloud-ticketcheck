@@ -155,6 +155,13 @@ class Application extends App implements IBootstrap
             \OCA\Ticketcheck\Listener\GuestUserLoginListener::class
         );
 
+        // Clears the defaultapp pin the moment a user leaves helpdesk_customers
+        // so they are not trapped on the portal after removal.
+        $context->registerEventListener(
+            \OCP\Group\Events\UserRemovedEvent::class,
+            \OCA\Ticketcheck\Listener\GuestGroupRemovedListener::class
+        );
+
         $context->registerEventListener(
             \OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent::class,
             \OCA\Ticketcheck\Listener\EnrichTemplateShellContext::class
@@ -793,34 +800,45 @@ class Application extends App implements IBootstrap
     private function interceptGuestRequests(): void
     {
         $container = $this->getContainer();
-        $userSession = $container->get(\OCP\IUserSession::class);
-        $groupManager = $container->get(\OCP\IGroupManager::class);
-        $request = $container->get(\OCP\IRequest::class);
-        $urlGenerator = $container->get(\OCP\IURLGenerator::class);
+        try {
+            $userSession = $container->get(\OCP\IUserSession::class);
+            $groupManager = $container->get(\OCP\IGroupManager::class);
+            $request = $container->get(\OCP\IRequest::class);
+            $urlGenerator = $container->get(\OCP\IURLGenerator::class);
 
-        $user = $userSession->getUser();
-        if (!$user) {
-            return;
+            $user = $userSession->getUser();
+            if (!$user) {
+                return;
+            }
+
+            if (!$groupManager->isInGroup($user->getUID(), 'helpdesk_customers')) {
+                return;
+            }
+
+            $path = GuestAccessAllowlist::normalizePath($request->getPathInfo() ?? '');
+            if (GuestAccessAllowlist::isPathAllowed($path)) {
+                return;
+            }
+
+            $container->get(\Psr\Log\LoggerInterface::class)->warning('Guest blocked at boot (path not on allowlist)', [
+                'user_id' => $user->getUID(),
+                'path' => $path,
+                'ip' => $request->getRemoteAddress(),
+            ]);
+            $portalUrl = $urlGenerator->linkToRoute('ticketcheck.customerPortal.index');
+            header('Location: ' . $portalUrl, true, 302);
+            exit();
+        } catch (\Throwable $e) {
+            // Boot interception is defense-in-depth on top of
+            // GuestSecurityMiddleware and the template listeners — a failure
+            // here must never 500 the request.
+            try {
+                $container->get(\Psr\Log\LoggerInterface::class)->error('interceptGuestRequests failed', [
+                    'exception' => $e,
+                ]);
+            } catch (\Throwable) {
+            }
         }
-
-        if (!$groupManager->isInGroup($user->getUID(), 'helpdesk_customers')) {
-            return;
-        }
-
-        $path = GuestAccessAllowlist::normalizePath($request->getPathInfo() ?? '');
-        if (GuestAccessAllowlist::isPathAllowed($path)) {
-            return;
-        }
-
-        $logger = $container->get(\Psr\Log\LoggerInterface::class);
-        $logger->warning('Guest blocked at boot (path not on allowlist)', [
-            'user_id' => $user->getUID(),
-            'path' => $path,
-            'ip' => $request->getRemoteAddress(),
-        ]);
-        $portalUrl = $urlGenerator->linkToRoute('ticketcheck.customerPortal.index');
-        header('Location: ' . $portalUrl, true, 302);
-        exit();
     }
 
     /**
@@ -836,25 +854,34 @@ class Application extends App implements IBootstrap
     private function setupGuestUserSecurity(): void
     {
         $container = $this->getContainer();
-        $groupManager = $container->get(\OCP\IGroupManager::class);
+        try {
+            $config = $container->get(\OCP\IConfig::class);
+            // Group existence is ensured once, not on every request — the
+            // three lookups + potential writes must not sit on the hot path
+            // or 500 logins when the group backend is unavailable.
+            if ($config->getAppValue(self::APP_ID, 'helpdesk_groups_ensured', 'no') === 'yes') {
+                return;
+            }
+            $groupManager = $container->get(\OCP\IGroupManager::class);
 
-        // Ensure helpdesk_customers group exists
-        if (!$groupManager->get('helpdesk_customers')) {
-            $groupManager->createGroup('helpdesk_customers');
+            foreach (['helpdesk_customers', 'helpdesk_agents', 'helpdesk_admins'] as $gid) {
+                if (!$groupManager->get($gid)) {
+                    $groupManager->createGroup($gid);
+                }
+            }
+
+            $config->setAppValue(self::APP_ID, 'helpdesk_groups_ensured', 'yes');
+
+            // Guest isolation is enforced by interceptGuestRequests(), GuestSecurityMiddleware,
+            // and PermissionService::canAccessApp() — do not rewrite app config from boot.
+        } catch (\Throwable $e) {
+            try {
+                $container->get(\Psr\Log\LoggerInterface::class)->error('setupGuestUserSecurity failed', [
+                    'exception' => $e,
+                ]);
+            } catch (\Throwable) {
+            }
         }
-
-        // Ensure helpdesk_agents group exists
-        if (!$groupManager->get('helpdesk_agents')) {
-            $groupManager->createGroup('helpdesk_agents');
-        }
-
-        // Ensure helpdesk_admins group exists
-        if (!$groupManager->get('helpdesk_admins')) {
-            $groupManager->createGroup('helpdesk_admins');
-        }
-
-        // Guest isolation is enforced by interceptGuestRequests(), GuestSecurityMiddleware,
-        // and PermissionService::canAccessApp() — do not rewrite app config from boot.
     }
 
     /**
@@ -864,24 +891,33 @@ class Application extends App implements IBootstrap
     private function overrideNavigationForGuests(): void
     {
         $container = $this->getContainer();
-        $userSession = $container->get(\OCP\IUserSession::class);
-        $groupManager = $container->get(\OCP\IGroupManager::class);
+        try {
+            $userSession = $container->get(\OCP\IUserSession::class);
+            $groupManager = $container->get(\OCP\IGroupManager::class);
 
-        $user = $userSession->getUser();
-        if (!$user) {
-            return;
+            $user = $userSession->getUser();
+            if (!$user) {
+                return;
+            }
+
+            // Check if user is a guest
+            if (!$groupManager->isInGroup($user->getUID(), 'helpdesk_customers')) {
+                return;
+            }
+
+            // Clear all navigation entries for guests
+            $navigationManager = $container->get(\OCP\INavigationManager::class);
+
+            // Remove all default navigation entries
+            // Guests should not see Files, Photos, Calendar, etc.
+            $navigationManager->clear();
+        } catch (\Throwable $e) {
+            try {
+                $container->get(\Psr\Log\LoggerInterface::class)->error('overrideNavigationForGuests failed', [
+                    'exception' => $e,
+                ]);
+            } catch (\Throwable) {
+            }
         }
-
-        // Check if user is a guest
-        if (!$groupManager->isInGroup($user->getUID(), 'helpdesk_customers')) {
-            return;
-        }
-
-        // Clear all navigation entries for guests
-        $navigationManager = $container->get(\OCP\INavigationManager::class);
-
-        // Remove all default navigation entries
-        // Guests should not see Files, Photos, Calendar, etc.
-        $navigationManager->clear();
     }
 }
