@@ -45,7 +45,7 @@ class GuestUserLoginListener implements IEventListener
         $userId = $user->getUID();
 
         // Any failure here must never turn the login POST into a 500 — the
-        // defaultapp pin is a convenience, not a gate.
+        // best-effort pin is a convenience, not a gate; it retries next login.
         try {
             if ($this->groupManager->isInGroup($userId, self::GROUP_GUESTS)) {
                 // Set default app for this user to helpdesk portal

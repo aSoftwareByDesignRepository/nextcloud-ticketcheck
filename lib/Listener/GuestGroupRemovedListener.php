@@ -41,6 +41,7 @@ class GuestGroupRemovedListener implements IEventListener
             return;
         }
 
+        // best-effort: a failed clear self-heals on the user's next login.
         try {
             GuestUserLoginListener::clearGuestPins($this->config, $event->getUser()->getUID());
         } catch (\Throwable $e) {

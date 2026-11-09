@@ -800,11 +800,12 @@ class Application extends App implements IBootstrap
     private function interceptGuestRequests(): void
     {
         $container = $this->getContainer();
+        $user = null;
+        $path = '';
         try {
             $userSession = $container->get(\OCP\IUserSession::class);
             $groupManager = $container->get(\OCP\IGroupManager::class);
             $request = $container->get(\OCP\IRequest::class);
-            $urlGenerator = $container->get(\OCP\IURLGenerator::class);
 
             $user = $userSession->getUser();
             if (!$user) {
@@ -819,26 +820,32 @@ class Application extends App implements IBootstrap
             if (GuestAccessAllowlist::isPathAllowed($path)) {
                 return;
             }
-
-            $container->get(\Psr\Log\LoggerInterface::class)->warning('Guest blocked at boot (path not on allowlist)', [
-                'user_id' => $user->getUID(),
-                'path' => $path,
-                'ip' => $request->getRemoteAddress(),
-            ]);
-            $portalUrl = $urlGenerator->linkToRoute('ticketcheck.customerPortal.index');
-            header('Location: ' . $portalUrl, true, 302);
-            exit();
         } catch (\Throwable $e) {
-            // Boot interception is defense-in-depth on top of
-            // GuestSecurityMiddleware and the template listeners — a failure
-            // here must never 500 the request.
+            // Guest status could not be determined — let the request through.
+            // GuestSecurityMiddleware and the BeforeTemplateRendered listeners
+            // still enforce the same allowlist on app/template routes; a
+            // session/group-backend hiccup must never 500 every request.
             try {
                 $container->get(\Psr\Log\LoggerInterface::class)->error('interceptGuestRequests failed', [
                     'exception' => $e,
                 ]);
             } catch (\Throwable) {
             }
+            return;
         }
+
+        // A guest on a non-allowlisted path was positively identified: the
+        // block itself is NOT inside the try above — a failure here must deny
+        // (500), never wave a known-blocked guest through to non-template
+        // endpoints (DAV/OCS) that no deeper layer covers.
+        $container->get(\Psr\Log\LoggerInterface::class)->warning('Guest blocked at boot (path not on allowlist)', [
+            'user_id' => $user->getUID(),
+            'path' => $path,
+            'ip' => $container->get(\OCP\IRequest::class)->getRemoteAddress(),
+        ]);
+        $portalUrl = $container->get(\OCP\IURLGenerator::class)->linkToRoute('ticketcheck.customerPortal.index');
+        header('Location: ' . $portalUrl, true, 302);
+        exit();
     }
 
     /**
@@ -854,6 +861,7 @@ class Application extends App implements IBootstrap
     private function setupGuestUserSecurity(): void
     {
         $container = $this->getContainer();
+        // best-effort: failed ensure retries next request while flag unset.
         try {
             $config = $container->get(\OCP\IConfig::class);
             // Group existence is ensured once, not on every request — the
@@ -864,12 +872,21 @@ class Application extends App implements IBootstrap
             }
             $groupManager = $container->get(\OCP\IGroupManager::class);
 
-            foreach (['helpdesk_customers', 'helpdesk_agents', 'helpdesk_admins'] as $gid) {
+            $gids = ['helpdesk_customers', 'helpdesk_agents', 'helpdesk_admins'];
+            foreach ($gids as $gid) {
                 if (!$groupManager->get($gid)) {
                     $groupManager->createGroup($gid);
                 }
             }
 
+            // Only pin the one-time flag once every group verifiably exists —
+            // createGroup() may return null without throwing on a backend
+            // hiccup, and a prematurely-pinned flag would never retry.
+            foreach ($gids as $gid) {
+                if (!$groupManager->get($gid)) {
+                    return;
+                }
+            }
             $config->setAppValue(self::APP_ID, 'helpdesk_groups_ensured', 'yes');
 
             // Guest isolation is enforced by interceptGuestRequests(), GuestSecurityMiddleware,
