@@ -2050,7 +2050,6 @@ OC.L10N.register(
 	"search_result_count_singular" : "%n makale bulundu",
 	"search_results" : "Arama sonuçları",
 	"search_results_for" : "Şu ifade için arama sonuçları",
-	"search_suggestions" : "Arama önerileri",
 	"search_tickets" : "Talep ara...",
 	"searching" : "Aranıyor...",
 	"secure_limited" : "Güvenli ve sınırlı",

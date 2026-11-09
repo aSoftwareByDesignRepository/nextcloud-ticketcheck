@@ -155,6 +155,14 @@ class KnowledgeBaseService
      */
     public function createArticle(array $params): KBArticle
     {
+        // Validate before any side effects (category auto-create below writes).
+        $title = $this->cleanTitle($params['title'] ?? '');
+        $content = $this->htmlSanitizerService->sanitize((string)($params['content'] ?? ''));
+        $missing = $this->missingRequiredFields($title, $content);
+        if ($missing !== []) {
+            throw new \OCA\Ticketcheck\Exception\ValidationException($missing);
+        }
+
         $this->categoryService->ensureDefaultExists();
 
         $category = $this->resolveCategoryFromParams($params);
@@ -164,8 +172,8 @@ class KnowledgeBaseService
         }
 
         $article = new KBArticle();
-        $article->setTitle($this->requireTitle($params['title'] ?? ''));
-        $article->setContent($this->htmlSanitizerService->sanitize((string)($params['content'] ?? '')));
+        $article->setTitle($title);
+        $article->setContent($content);
         $article->setCategory($category);
         $article->setPublished(self::reqBool($params['published'] ?? null, false));
         $article->setPinned((int)self::reqBool($params['pinned'] ?? null, false));
@@ -195,9 +203,16 @@ class KnowledgeBaseService
             throw new ArticleNotFoundException($id);
         }
 
-        $article->setTitle($this->requireTitle($params['title'] ?? $article->getTitle()));
+        $title = $this->cleanTitle($params['title'] ?? $article->getTitle());
         $oldContent = (string) $article->getContent();
-        $article->setContent($this->htmlSanitizerService->sanitize((string)($params['content'] ?? $article->getContent())));
+        $content = $this->htmlSanitizerService->sanitize((string)($params['content'] ?? $oldContent));
+        $missing = $this->missingRequiredFields($title, $content);
+        if ($missing !== []) {
+            throw new \OCA\Ticketcheck\Exception\ValidationException($missing);
+        }
+
+        $article->setTitle($title);
+        $article->setContent($content);
         $article->setCategory($this->resolveCategoryFromParams($params) ?: $article->getCategory());
         $article->setPublished(self::reqBool($params['published'] ?? null, (bool)$article->getPublished()));
         $article->setPinned((int)self::reqBool($params['pinned'] ?? null, (bool)$article->getPinned()));
@@ -578,17 +593,42 @@ class KnowledgeBaseService
     }
 
     /**
-     * An article must have a real, human-visible title. Blank or whitespace-only
-     * input is a hard validation failure — never silently persist "Untitled"
-     * articles that pollute lists and search results.
+     * An article must have a real, human-visible title and body. Blank or
+     * whitespace-only input is a hard validation failure — never silently
+     * persist "Untitled" or empty articles that pollute lists and search
+     * results. Every failing field is returned so the client can mark all
+     * affected controls at once.
+     *
+     * @return list<string>
      */
-    private function requireTitle(mixed $title): string
+    private function missingRequiredFields(string $title, string $sanitizedContent): array
     {
-        $clean = trim(strip_tags((string)$title));
-        if ($clean === '') {
-            throw new \OCA\Ticketcheck\Exception\ValidationException(['title']);
+        $missing = [];
+        if ($title === '') {
+            $missing[] = 'title';
         }
-        return $clean;
+        if ($this->contentIsEmpty($sanitizedContent)) {
+            $missing[] = 'content';
+        }
+        return $missing;
+    }
+
+    private function cleanTitle(mixed $title): string
+    {
+        return trim(strip_tags((string)$title));
+    }
+
+    /**
+     * Sanitized article HTML counts as present when it carries visible text
+     * or at least one embedded image; markup-only or whitespace bodies do not.
+     */
+    private function contentIsEmpty(string $sanitizedContent): bool
+    {
+        if (preg_match('/<img\b/i', $sanitizedContent) === 1) {
+            return false;
+        }
+        $text = html_entity_decode(strip_tags($sanitizedContent), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        return !preg_match('/\S/u', $text);
     }
 
     private function getKbImagesFolder(): ISimpleFolder

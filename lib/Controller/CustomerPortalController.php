@@ -1913,8 +1913,8 @@ class CustomerPortalController extends Controller
             'portal-email-prefs',
             [
                 'preferences' => $prefs,
-                'saveUrl' => $this->urlGenerator->linkToRouteAbsolute('ticketcheck.userPreferences.saveEmailPreferences'),
-                'accountDeletionUrl' => $this->urlGenerator->linkToRouteAbsolute('ticketcheck.customerPortal.requestAccountDeletion'),
+                'saveUrl' => $this->urlGenerator->linkToRoute('ticketcheck.userPreferences.saveEmailPreferences'),
+                'accountDeletionUrl' => $this->urlGenerator->linkToRoute('ticketcheck.customerPortal.requestAccountDeletion'),
             ],
         );
     }

@@ -44,6 +44,10 @@
 					el.textContent = String(value);
 					return;
 				}
+				if (key.slice(0, 2) === 'on' && typeof value === 'function') {
+					el.addEventListener(key.slice(2).toLowerCase(), value);
+					return;
+				}
 				if (key in el && typeof el[key] !== 'object') {
 					try { el[key] = value; return; } catch (_) { /* fall back to attribute */ }
 				}

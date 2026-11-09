@@ -2050,7 +2050,6 @@ OC.L10N.register(
 	"search_result_count_singular" : "%n artikel hittades",
 	"search_results" : "Sökresultat",
 	"search_results_for" : "Sökresultat för",
-	"search_suggestions" : "Sök förslag",
 	"search_tickets" : "Sök ärenden...",
 	"searching" : "Söker...",
 	"secure_limited" : "Säker och begränsad",

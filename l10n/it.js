@@ -2050,7 +2050,6 @@ OC.L10N.register(
 	"search_result_count_singular" : "Articolo %n trovato",
 	"search_results" : "Risultati della ricerca",
 	"search_results_for" : "Risultati ricerca per",
-	"search_suggestions" : "Suggerimenti di ricerca",
 	"search_tickets" : "Cerca i ticket...",
 	"searching" : "Sto cercando...",
 	"secure_limited" : "Sicuro e limitato",

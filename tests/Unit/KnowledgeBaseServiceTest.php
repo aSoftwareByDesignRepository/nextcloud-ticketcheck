@@ -17,6 +17,7 @@ use OCA\Ticketcheck\Db\KBComment;
 use OCA\Ticketcheck\Db\KBCommentMapper;
 use OCA\Ticketcheck\Db\KBHelpfulVoteMapper;
 use OCA\Ticketcheck\Exception\ArticleNotFoundException;
+use OCA\Ticketcheck\Exception\ValidationException;
 use OCA\Ticketcheck\Service\CategoryService;
 use OCA\Ticketcheck\Service\HtmlSanitizerService;
 use OCA\Ticketcheck\Service\KnowledgeBaseService;
@@ -319,6 +320,70 @@ class KnowledgeBaseServiceTest extends TestCase
         $this->service->addComment(1, '   ', 'user1', 'User One', 'user@example.com');
     }
 
+    public function testCreateArticleRejectsMissingTitleAndContent(): void
+    {
+        // A completely empty submission must report BOTH required fields at
+        // once — the client marks each named control from the fields map.
+        $this->htmlSanitizerService->method('sanitize')->willReturnArgument(0);
+        $this->articleMapper->expects($this->never())->method('insert');
+
+        try {
+            $this->service->createArticle(['title' => '   ', 'content' => '']);
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertSame(['title', 'content'], $e->getErrors());
+        }
+    }
+
+    public function testCreateArticleRejectsMarkupOnlyContent(): void
+    {
+        $this->htmlSanitizerService->method('sanitize')->willReturnArgument(0);
+        $this->articleMapper->expects($this->never())->method('insert');
+
+        try {
+            $this->service->createArticle(['title' => 'Valid title', 'content' => '<p> &nbsp; </p>']);
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertSame(['content'], $e->getErrors());
+        }
+    }
+
+    public function testCreateArticleAcceptsImageOnlyContent(): void
+    {
+        // A body that is just an embedded image still has visible content.
+        $this->htmlSanitizerService->method('sanitize')->willReturnArgument(0);
+        $this->permissionService->method('getCurrentUserId')->willReturn('user1');
+        $this->articleMapper->expects($this->once())
+            ->method('insert')
+            ->with($this->callback(static function (KBArticle $a): bool {
+                return $a->getTitle() === 'Image only'
+                    && str_contains((string)$a->getContent(), '<img');
+            }))
+            ->willReturnCallback(static function (KBArticle $a): KBArticle {
+                return $a;
+            });
+
+        $this->service->createArticle([
+            'title' => 'Image only',
+            'content' => '<p><img src="kb_20260101120000_abcdef0123456789.png" alt="diagram"></p>',
+        ]);
+    }
+
+    public function testUpdateArticleRejectsEmptyContent(): void
+    {
+        $article = $this->createArticle(5, 'Title', 'General', true);
+        $this->articleMapper->method('find')->with(5)->willReturn($article);
+        $this->htmlSanitizerService->method('sanitize')->willReturnArgument(0);
+        $this->articleMapper->expects($this->never())->method('update');
+
+        try {
+            $this->service->updateArticle(5, ['content' => '   ']);
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertSame(['content'], $e->getErrors());
+        }
+    }
+
     public function testUpdateArticleParsesFormEncodedBoolStrings(): void
     {
         // Form-encoded posts send the literal string "false" — a naive
@@ -368,7 +433,7 @@ class KnowledgeBaseServiceTest extends TestCase
         $article = new KBArticle();
         $article->setId($id);
         $article->setTitle($title);
-        $article->setContent('');
+        $article->setContent('Body text');
         $article->setCategory($category);
         $article->setPublished($published);
         $article->setViews(0);

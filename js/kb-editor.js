@@ -15,18 +15,19 @@
         return key;
     }
 
-    function parseApiResponse(response) {
-        return response.text().then((text) => {
-            let data = null;
-            try { data = JSON.parse(text); } catch (e) {}
-            if (!response.ok) {
-                throw new Error((data && (data.error || data.message)) || t('ticketcheck', 'server_error_try_again_later'));
-            }
-            if (!data) {
-                throw new Error(t('ticketcheck', 'server_error_try_again_later'));
-            }
-            return data;
-        });
+    /**
+     * Article body counts as present when it carries visible text or at least
+     * one embedded image; markup-only or whitespace bodies do not. Mirrors
+     * KnowledgeBaseService::contentIsEmpty so the client pre-check matches
+     * the server verdict.
+     */
+    function kbContentIsEmpty(html) {
+        const host = document.createElement('div');
+        host.innerHTML = String(html || '');
+        if (host.querySelector('img')) {
+            return false;
+        }
+        return host.textContent.replace(/\u00a0/g, ' ').trim() === '';
     }
 
     function getFormSnapshot(form) {
@@ -151,6 +152,10 @@
             editor.setAttribute('role', 'textbox');
             editor.setAttribute('aria-multiline', 'true');
             editor.setAttribute('aria-labelledby', 'kb-content-label');
+            // Server `fields` maps and the client pre-check resolve `content`
+            // to this visible editor — not the offscreen textarea carrying
+            // the submitted value (field-errors picks the first DOM match).
+            editor.setAttribute('data-field', 'content');
             editor.setAttribute('data-placeholder', this.textarea.getAttribute('placeholder') || t('ticketcheck', 'write_article_content_placeholder'));
             editor.contentEditable = true;
             editor.innerHTML = sanitizeKbHtml(this.textarea.value);
@@ -721,6 +726,31 @@
 
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
+
+                // Client pre-check mirrors the server required-field verdict:
+                // mark every empty control via the canonical field-errors
+                // pack (aria-invalid + inline .tc-field-error + focus on the
+                // first offender) instead of round-tripping a doomed POST.
+                const requiredMsg = (window.TicketCheckFormValidation && typeof TicketCheckFormValidation.translate === 'function')
+                    ? TicketCheckFormValidation.translate('field_required')
+                    : t('ticketcheck', 'field_required');
+                const missing = {};
+                const titleInput = form.querySelector('#title');
+                if (!titleInput || String(titleInput.value || '').trim() === '') {
+                    missing.title = requiredMsg;
+                }
+                const contentInput = form.querySelector('#kb-content');
+                if (kbContentIsEmpty(contentInput ? contentInput.value : '')) {
+                    missing.content = requiredMsg;
+                }
+                if (Object.keys(missing).length > 0) {
+                    const api = window.TicketCheckApi;
+                    if (api && typeof api.markFields === 'function') {
+                        api.markFields(missing);
+                    }
+                    return;
+                }
+
                 isSubmitting = true;
 
                 const formData = new FormData(this);

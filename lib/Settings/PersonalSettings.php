@@ -45,7 +45,7 @@ class PersonalSettings implements ISettings
                 'preferences' => [],
                 'isGuest' => false,
                 'l' => $this->l10nFactory->get('ticketcheck'),
-                'saveUrl' => $this->urlGenerator->linkToRouteAbsolute('ticketcheck.userPreferences.saveEmailPreferences'),
+                'saveUrl' => $this->urlGenerator->linkToRoute('ticketcheck.userPreferences.saveEmailPreferences'),
             ]);
         }
 
@@ -58,7 +58,7 @@ class PersonalSettings implements ISettings
             'isGuest' => $isGuest,
             'l' => $this->l10nFactory->get('ticketcheck'),
             'urlGenerator' => $this->urlGenerator,
-            'saveUrl' => $this->urlGenerator->linkToRouteAbsolute('ticketcheck.userPreferences.saveEmailPreferences'),
+            'saveUrl' => $this->urlGenerator->linkToRoute('ticketcheck.userPreferences.saveEmailPreferences'),
         ];
 
         return new TemplateResponse('ticketcheck', 'settings/personal', $parameters);

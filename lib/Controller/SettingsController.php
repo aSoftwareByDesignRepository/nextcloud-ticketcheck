@@ -307,7 +307,7 @@ class SettingsController extends Controller
                 'supportUsLinks' => new SupportUsLinks(
                     'TicketCheck',
                     true,
-                    $this->urlGenerator->linkToRouteAbsolute(
+                    $this->urlGenerator->linkToRoute(
                         'ticketcheck.settings.section',
                         ['section' => 'license'],
                     ) . '#ticketcheck-license',
@@ -327,7 +327,7 @@ class SettingsController extends Controller
             'appAccessExtraGroupsPicker' => $this->formatExtraGroupsForPicker($appAccess['extra_groups']),
             'appAccessAllowedUsersPicker' => $this->formatUsersForPicker($appAccess['access_allowed_user_ids']),
             'appAccessAppAdminsPicker' => $this->formatUsersForPicker($appAccess['app_admin_user_ids']),
-            'appAccessSearchUsersUrl' => $this->urlGenerator->linkToRouteAbsolute('ticketcheck.settings.searchNextcloudUsers'),
+            'appAccessSearchUsersUrl' => $this->urlGenerator->linkToRoute('ticketcheck.settings.searchNextcloudUsers'),
         ];
     }
 
@@ -410,8 +410,8 @@ class SettingsController extends Controller
             $licenseStatus = null;
             $licenseSeatsList = null;
         }
-        $licenseSeatsUrl = $this->urlGenerator->linkToRouteAbsolute('ticketcheck.license.seats');
-        $licenseApiUrl = $this->urlGenerator->linkToRouteAbsolute('ticketcheck.license.show');
+        $licenseSeatsUrl = $this->urlGenerator->linkToRoute('ticketcheck.license.seats');
+        $licenseApiUrl = $this->urlGenerator->linkToRoute('ticketcheck.license.show');
         return [
             'licenseStatus' => $licenseStatus,
             'licenseSeatsList' => $licenseSeatsList,
@@ -421,7 +421,7 @@ class SettingsController extends Controller
             'licenseSeatsUrl' => $licenseSeatsUrl,
             'licenseAssignSeatUrl' => $licenseSeatsUrl,
             'licenseRemoveSeatBase' => rtrim($licenseSeatsUrl, '/') . '/',
-            'licenseSearchUsersUrl' => $this->urlGenerator->linkToRouteAbsolute('ticketcheck.license.searchUsers'),
+            'licenseSearchUsersUrl' => $this->urlGenerator->linkToRoute('ticketcheck.license.searchUsers'),
             'requesttoken' => \OCP\Util::callRegister(),
         ];
     }

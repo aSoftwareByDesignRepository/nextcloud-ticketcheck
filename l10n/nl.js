@@ -2050,7 +2050,6 @@ OC.L10N.register(
 	"search_result_count_singular" : "%n-artikel gevonden",
 	"search_results" : "Zoekresultaten",
 	"search_results_for" : "Zoekresultaten voor",
-	"search_suggestions" : "Suggesties zoeken",
 	"search_tickets" : "Tickets zoeken...",
 	"searching" : "Zoeken...",
 	"secure_limited" : "Beveiligd & beperkt",
