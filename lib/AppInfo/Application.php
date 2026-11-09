@@ -20,6 +20,7 @@ use OCA\Ticketcheck\Repair\EnsureTicketcheckSchema;
 use OCA\Ticketcheck\Repair\CleanupDanglingMergeShells;
 use OCA\Ticketcheck\Repair\EnforceGuestMigrationGate;
 use OCA\Ticketcheck\Repair\UninstallDropTables;
+use OCA\Ticketcheck\Repair\UnpinLegacyGuestPins;
 use OCA\Ticketcheck\Service\GuestAccessAllowlist;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Support\NavGate;
@@ -140,6 +141,14 @@ class Application extends App implements IBootstrap
 				$c->get(\OCP\IDBConnection::class),
 				$c->get(\OCP\IConfig::class),
 				$c->get(\OCP\IGroupManager::class),
+			);
+		});
+
+		$context->registerService(UnpinLegacyGuestPins::class, function ($c): UnpinLegacyGuestPins {
+			return new UnpinLegacyGuestPins(
+				$c->get(\OCP\IConfig::class),
+				$c->get(\OCP\IGroupManager::class),
+				$c->get(\Psr\Log\LoggerInterface::class),
 			);
 		});
 

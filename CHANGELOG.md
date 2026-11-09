@@ -20,7 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   via `ticketcheck.guest_created_at` / `ticketcheck.portal_pins`), so
   admin-set quotas and default-app choices are preserved — including an
   admin-assigned `0 B` upload-disabled quota on an account the app never
-  created. Guest login handling and the boot-time guest gate are also
+  created. Users pinned by versions that wrote no provenance (member
+  logins before `portal_pins` existed) are healed once at upgrade by a
+  post-migration repair step: non-members lose the
+  `defaultapp`/`firstrunwizard` pins outright, and current members get
+  the provenance flag stamped — including the originally reported stuck
+  cohort. Guest login handling and the boot-time guest gate are also
   hardened so a failure there can no longer turn a member's login into
   an internal server error
 - Creating or renaming a customer to a name or e-mail address that already

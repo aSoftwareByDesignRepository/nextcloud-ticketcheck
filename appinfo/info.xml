@@ -399,6 +399,7 @@ Almanya Federal Araştırma, Teknoloji ve Uzay Bakanlığı (BMFTR) TicketCheck'
 			<step>OCA\Ticketcheck\Repair\EnsureTicketcheckSchema</step>
 			<step>OCA\Ticketcheck\Repair\CleanupDanglingMergeShells</step>
 			<step>OCA\Ticketcheck\Repair\EnforceGuestMigrationGate</step>
+			<step>OCA\Ticketcheck\Repair\UnpinLegacyGuestPins</step>
 		</post-migration>
 		<uninstall>
 			<step>OCA\Ticketcheck\Repair\UninstallDropTables</step>

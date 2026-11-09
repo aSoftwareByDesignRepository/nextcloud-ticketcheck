@@ -95,6 +95,8 @@ class GuestUserLoginListener implements IEventListener
      * fully the admin's again, so a '0 B' quota set on it afterwards stays
      * put. Accounts the app never created keep every user value untouched —
      * in particular files.quota is never deleted for them.
+     * Pins written before these markers existed (pre-flag member logins) are
+     * healed once by the UnpinLegacyGuestPins post-migration repair step.
      */
     public static function clearGuestPins(IConfig $config, string $userId): void
     {
