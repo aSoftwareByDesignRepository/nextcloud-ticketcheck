@@ -5,7 +5,9 @@ declare(strict_types=1);
 /**
  * Guest Group Removal Listener
  * Clears the TicketCheck default-app pin when a user leaves helpdesk_customers
- * so they are not trapped on the portal after removal (issue #5).
+ * so they are not trapped on the portal after removal (issue #5) — but only
+ * pins the app provably wrote (guest_created_at / portal_pins provenance);
+ * values an admin set on an account the app never created are preserved.
  *
  * @copyright Copyright (c) 2026, Nextcloud GmbH
  * @license AGPL-3.0-or-later
