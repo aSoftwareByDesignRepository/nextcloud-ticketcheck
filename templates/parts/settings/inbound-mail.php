@@ -62,7 +62,7 @@ $tcImapSmtp = is_array($tcImapStatus['smtp'] ?? null) ? $tcImapStatus['smtp'] : 
 		</div>
 	</div>
 
-	<form id="tc-inbound-mail-form" data-helpdesk-submit-feedback="1">
+	<form id="tc-inbound-mail-form" class="tc-form" data-helpdesk-submit-feedback="1">
 		<div class="helpdesk-card">
 			<div class="helpdesk-card__body">
 				<h3 class="helpdesk-card__title"><?php p($l->t('inbound_step1_heading')); ?></h3>

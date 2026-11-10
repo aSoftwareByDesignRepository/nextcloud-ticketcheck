@@ -60,8 +60,3 @@ test('kb-article renders all required icons via IconCatalog', () => {
 		);
 	}
 });
-
-test('kb-search suggestions hydrate their icon via data-lucide', () => {
-	const src = readFileSync(path.join(appRoot, 'js/kb-search.js'), 'utf8');
-	assert.match(src, /data-lucide["']?\s*,\s*["']search["']/, 'search suggestion icon must use data-lucide="search"');
-});

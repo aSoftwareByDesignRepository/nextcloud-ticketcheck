@@ -284,7 +284,7 @@ $localeFormat = $_['localeFormat'] ?? null;
                     <div class="ticket-detail-reply" role="region" aria-labelledby="ticket-detail-reply-title">
                         <h3 id="ticket-detail-reply-title" class="ticket-detail-reply__title"><?php p($l->t('add_comment')); ?></h3>
                         <p class="ticket-detail-reply__help helpdesk-text-muted"><?php p($l->t('portal_reply_section_help')); ?></p>
-                        <form id="reply-form" data-ticket-id="<?php p($_['ticket']->getId()); ?>"
+                        <form id="reply-form" class="tc-form" data-ticket-id="<?php p($_['ticket']->getId()); ?>"
                             data-ticket-number="<?php p($_['ticket']->getTicketNumber()); ?>"
                             data-customer-name="<?php p($_['ticket']->getCustomerName()); ?>"
                             data-customer-email="<?php p($_['ticket']->getCustomerEmail()); ?>"

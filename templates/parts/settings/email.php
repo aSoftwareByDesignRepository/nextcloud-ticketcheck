@@ -11,7 +11,7 @@ $emailSettings = $_['emailSettings'] ?? [];
 <section class="tc-section" id="settings-email-heading" aria-label="<?php p($l->t('Email notifications')); ?>">
 	<div class="helpdesk-card">
 		<div class="helpdesk-card__body">
-			<form id="email-settings-form" data-helpdesk-submit-feedback="1">
+			<form id="email-settings-form" class="tc-form" data-helpdesk-submit-feedback="1">
 				<div class="tc-form-grid">
 					<div class="helpdesk-form-group tc-field tc-field--full-width">
 						<label for="email-from-name" class="helpdesk-form-label">

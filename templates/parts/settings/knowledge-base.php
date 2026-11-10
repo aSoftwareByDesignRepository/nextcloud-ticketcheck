@@ -11,7 +11,7 @@ $kbSettings = $_['knowledgeBaseSettings'] ?? [];
 <section class="tc-section" id="settings-kb-heading" aria-label="<?php p($l->t('Knowledge base settings')); ?>">
 	<div class="helpdesk-card">
 		<div class="helpdesk-card__body">
-			<form id="kb-settings-form" data-helpdesk-submit-feedback="1">
+			<form id="kb-settings-form" class="tc-form" data-helpdesk-submit-feedback="1">
 				<div class="tc-form-grid">
 					<div class="helpdesk-form-group tc-field tc-field--checkbox tc-field--full-width">
 						<input type="checkbox"
