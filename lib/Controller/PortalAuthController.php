@@ -67,6 +67,12 @@ class PortalAuthController extends Controller
         if ($this->actors->isGuest()) {
             return new RedirectResponse($this->urlGenerator->linkToRoute('ticketcheck.customerPortal.index'));
         }
+        // E-19: a signed-in NC user (staff, internal requester, or unscoped
+        // user) never needs the guest auth form — route them through the app
+        // entry point which resolves their actual scope.
+        if ($this->actors->kind() === 'staff') {
+            return new RedirectResponse($this->urlGenerator->linkToRoute('ticketcheck.page.index'));
+        }
         // HTTPS-only by spec — loopback/dev hosts are exempt (same secure-
         // context treatment browsers give localhost).
         $host = $this->serverHostName();
@@ -87,6 +93,16 @@ class PortalAuthController extends Controller
         ]);
     }
 
+    /**
+     * E-19/NN-07: identity-auth endpoints assume an anonymous caller. An
+     * NC-session actor (staff, internal requester, or contained guest) must
+     * never mint a portal session over their NC session.
+     */
+    private function ncSessionBlocksPortalAuth(): bool
+    {
+        return $this->actors->isGuest() || $this->actors->kind() === 'staff';
+    }
+
     /** POST /portal/auth/otp — identical payload+status for every input. */
     #[PublicPage]
     #[NoAdminRequired]
@@ -96,6 +112,10 @@ class PortalAuthController extends Controller
     {
         $resp = new JSONResponse(['sent' => true], 202);
         $resp->addHeader('Cache-Control', 'no-store');
+        if ($this->ncSessionBlocksPortalAuth()) {
+            // Uniform no-op: same payload+status, nothing issued (E-19).
+            return $resp;
+        }
         if (!$this->originOk()) {
             return $resp;
         }
@@ -138,6 +158,10 @@ class PortalAuthController extends Controller
     #[AnonRateLimit(limit: 20, period: 3600)]
     public function verifyOtp(): JSONResponse
     {
+        if ($this->ncSessionBlocksPortalAuth()) {
+            // Uniform failure — no session minted on an NC session (E-19).
+            return $this->invalidCode();
+        }
         $ip = (string)($this->request->getRemoteAddress() ?: 'unknown');
         $this->throttler->sleepDelay($ip, 'tkc_otp_verify');
         $email = strtolower(trim((string)$this->request->getParam('email', '')));
@@ -157,6 +181,10 @@ class PortalAuthController extends Controller
     #[NoCSRFRequired]
     public function magic(string $token): TemplateResponse|RedirectResponse
     {
+        if ($this->ncSessionBlocksPortalAuth()) {
+            // NC-session actors resolve their own scope at the app root (E-19).
+            return new RedirectResponse($this->urlGenerator->linkToRoute('ticketcheck.page.index'));
+        }
         $l = $this->l10nFactory->get($this->appName);
         return $this->renderPortalPage('portal/magic-confirm', 'portal-login', [
             'token' => $token,
@@ -171,6 +199,10 @@ class PortalAuthController extends Controller
     #[AnonRateLimit(limit: 20, period: 3600)]
     public function magicConsume(string $token): JSONResponse|RedirectResponse
     {
+        if ($this->ncSessionBlocksPortalAuth()) {
+            // No session minted over an NC session — resolve own scope (E-19).
+            return new RedirectResponse($this->urlGenerator->linkToRoute('ticketcheck.page.index'));
+        }
         $ip = (string)($this->request->getRemoteAddress() ?: 'unknown');
         $identityId = $this->otp->consumeMagic($token);
         if ($identityId === null) {

@@ -84,6 +84,9 @@ class FrontEndAssetService
 			'export' => 'export',
 			'portal-home' => 'portal-home',
 			'portal-tickets' => null,
+			// "My requests" reuses the server-rendered portal list partials —
+			// no dedicated JS module (row-click enhancement below).
+			'my-requests' => null,
 			'portal-create' => 'guest-ticket-form',
 			'portal-ticket-detail' => 'guest-ticket-reply',
 			'portal-kb' => 'kb-search',
@@ -105,6 +108,12 @@ class FrontEndAssetService
 		if ($pageScript === 'tickets') {
 			Util::addScript(Application::APP_ID, 'ticket-filters');
 			Util::addScript(Application::APP_ID, 'bulk-actions');
+			Util::addScript(Application::APP_ID, 'list-row-click');
+		}
+
+		if ($pageScript === 'my-requests') {
+			// Whole-row click → portal ticket detail (same affordance as the
+			// staff list; no bulk ops on the requester surface).
 			Util::addScript(Application::APP_ID, 'list-row-click');
 		}
 
@@ -175,6 +184,14 @@ class FrontEndAssetService
 			}
 			if ($settingsSection === 'resources') {
 				Util::addScript(Application::APP_ID, 'settings-resources');
+			}
+			if ($settingsSection === 'transfer') {
+				Util::addStyle(Application::APP_ID, 'common/transfer');
+				// Bridge exposes the .url/.get/.post/.upload contract the
+				// synced transfer.js expects — load it first (customercheck
+				// precedent).
+				Util::addScript(Application::APP_ID, 'transfer-bridge');
+				Util::addScript(Application::APP_ID, 'transfer');
 			}
 		}
 

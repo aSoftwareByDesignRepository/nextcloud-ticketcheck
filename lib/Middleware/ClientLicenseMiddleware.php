@@ -82,6 +82,14 @@ class ClientLicenseMiddleware extends Middleware
 			return;
 		}
 
+		if ($controller instanceof \OCA\Ticketcheck\Controller\RequesterCompanionController
+			&& str_starts_with($path, '/companion/api/v1/requester/')) {
+			if (!$this->companionGate->canAccessRequesterCompanion($userId)) {
+				throw new RoleDeniedException('ROLE_DENIED');
+			}
+			return;
+		}
+
 		if (!$this->companionGate->canAccessCompanion($userId)) {
 			throw new RoleDeniedException('ROLE_DENIED');
 		}

@@ -108,7 +108,7 @@ class TicketServiceDeleteAttachmentTest extends TestCase
 
         $locking = $this->createMock(ILockingProvider::class);
         $locking->expects(self::once())->method('acquireLock')
-            ->with(TicketWorkflowLock::KEY_PREFIX . '5', ILockingProvider::LOCK_EXCLUSIVE, self::anything());
+            ->with(TicketWorkflowLock::LOCK_PREFIX . '5', ILockingProvider::LOCK_EXCLUSIVE, self::anything());
         $locking->expects(self::once())->method('releaseLock');
 
         $service = $this->buildService($attachmentMapper, $locking);
@@ -171,7 +171,7 @@ class TicketServiceDeleteAttachmentTest extends TestCase
 
         $locking = $this->createMock(ILockingProvider::class);
         $locking->method('acquireLock')
-            ->willThrowException(new LockedException(TicketWorkflowLock::KEY_PREFIX . '5'));
+            ->willThrowException(new LockedException(TicketWorkflowLock::LOCK_PREFIX . '5'));
 
         $service = $this->buildService($attachmentMapper, $locking);
 

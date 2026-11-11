@@ -254,7 +254,7 @@ class CustomerPortalController extends Controller
     {
         // SECURITY: Guests only see tickets they may open (project + authz),
         // never other customers' titles in a shared project list.
-        if ($this->permissionService->isGuest()) {
+        if ($this->isPortalScopedActor()) {
             $tickets = $this->loadGuestVisibleTickets();
             $projects = $this->buildAccessiblePortalProjects();
         } else {
@@ -342,7 +342,7 @@ class CustomerPortalController extends Controller
         // Guests: same visibility as the support dashboard (project-scoped tickets).
         // Email-only lists looked empty while the dashboard showed project tickets —
         // that mismatch was confusing and contradicted the portal security model.
-        if ($this->permissionService->isGuest()) {
+        if ($this->isPortalScopedActor()) {
             $tickets = $this->loadGuestVisibleTickets();
         } else {
             $userEmail = (string)($this->permissionService->getCurrentUserEmail() ?? '');
@@ -387,7 +387,7 @@ class CustomerPortalController extends Controller
         }
 
         // Get tickets for this specific project (guests: all project tickets they can access)
-        if ($this->permissionService->isGuest()) {
+        if ($this->isPortalScopedActor()) {
             $tickets = array_values(array_filter(
                 $this->loadGuestVisibleTickets(),
                 static function ($ticket) use ($projectId) {
@@ -433,7 +433,9 @@ class CustomerPortalController extends Controller
     {
         // Staff reaching the guest-only portal create form get sent to the
         // staff create-ticket view instead of a guest template dead end.
-        if (!$this->permissionService->isGuest()) {
+        // Requester-group members (incl. dual-role staff per D-R22) use the
+        // portal create path for their own requests.
+        if (!$this->canUsePortalCreate()) {
             return new RedirectResponse(
                 $this->urlGenerator->linkToRoute('ticketcheck.ticket.create')
             );
@@ -467,7 +469,12 @@ class CustomerPortalController extends Controller
         }
 
         $hasActiveProjects = $projects !== [];
-        $canCreateTicket = $this->navigationContext->canGuestCreateTicket() && $hasActiveProjects;
+        // Requester-scope creates never pick a project (D-R09): their gate
+        // is portal membership itself, not an active-project list that is
+        // empty for them by construction. The project gate is guest-only.
+        $canCreateTicket = $this->permissionService->isGuest()
+            ? ($this->navigationContext->canGuestCreateTicket() && $hasActiveProjects)
+            : true;
         $l = $this->l10nFactory->get($this->appName);
 
         $defaultProjectId = null;
@@ -507,10 +514,12 @@ class CustomerPortalController extends Controller
             $l = $this->l10nFactory->get($this->appName);
             $userId = (string)($this->permissionService->getCurrentUserId() ?? '');
 
-            // The portal create endpoint is guest-only: a staff POST previously
-            // fell through to a generic 400 after ticket validation rejected the
-            // missing customer identity — a dead end with no next step.
-            if (!$this->permissionService->isGuest()) {
+            // The portal create endpoint is portal-scope only: a staff POST
+            // previously fell through to a generic 400 after ticket validation
+            // rejected the missing customer identity — a dead end with no next
+            // step. Requester-group members (incl. dual-role staff, D-R22)
+            // create through this path with server-set identity fields.
+            if (!$this->canUsePortalCreate()) {
                 return new JSONResponse([
                     'error' => $l->t('portal_create_guest_accounts_only'),
                 ], 403);
@@ -601,6 +610,14 @@ class CustomerPortalController extends Controller
                 }
             }
 
+            // Requester-scope creates never carry a project (spec D-R09/E-21):
+            // every non-guest portal poster is a requester-group member
+            // (canUsePortalCreate gate above) — including dual-role staff,
+            // whose self-requests go to triage unassigned like any other.
+            if (!$this->permissionService->isGuest()) {
+                $projectId = null;
+            }
+
             // Create ticket
             $ticketData = [
                 'title' => $title,
@@ -609,8 +626,12 @@ class CustomerPortalController extends Controller
                 'category' => $category,
                 'project_id' => $projectId,
                 'customer_name' => $this->permissionService->getCurrentUserDisplayName(),
-                'customer_email' => $this->permissionService->getCurrentUserEmail(),
-                'created_by_guest' => $this->permissionService->isGuest(),
+                'customer_email' => (string)($this->permissionService->getCurrentUserEmail() ?? ''),
+                'created_by_guest' => $this->canUsePortalCreate(),
+                // E-15: a requester without an NC e-mail may still file —
+                // created_by=<uid> scopes the ticket; empty address = no
+                // notifications. Guests keep the strict requirement.
+                'allow_missing_customer_email' => !$this->permissionService->isGuest(),
             ];
 
             $attachmentValidationError = $this->validatePendingAttachmentUploads();
@@ -947,7 +968,7 @@ class CustomerPortalController extends Controller
             // guests. `ticket_not_found` is returned both for missing rows
             // (catch below) and for rows the caller cannot see, so an
             // attacker cannot enumerate ticket ids.
-            if (!$this->permissionService->canViewTicketWithProjectAccess($ticket)) {
+            if (!$this->permissionService->canPortalViewTicket($ticket)) {
                 $l = $this->l10nFactory->get($this->appName);
                 $denied = $this->renderPortalPage(
                     'portal/error',
@@ -977,7 +998,7 @@ class CustomerPortalController extends Controller
                 }
                 $survivorId = (int) $survivor->getId();
                 if ($survivorId !== $id
-                    && $this->permissionService->canViewTicketWithProjectAccess($survivor)) {
+                    && $this->permissionService->canPortalViewTicket($survivor)) {
                     return new RedirectResponse(
                         $this->urlGenerator->linkToRoute(
                             'ticketcheck.customerPortal.viewTicket',
@@ -1125,9 +1146,10 @@ class CustomerPortalController extends Controller
             // "missing or inaccessible" tickets. Otherwise the difference
             // between 400 (wrong status) and 403 (no permission) would let
             // an attacker enumerate ticket ids belonging to other guests.
-            // CSAT is portal-only: staff must not pollute ratings.
-            if (!$this->permissionService->isGuest()
-                || !$this->permissionService->canViewTicketWithProjectAccess($ticket)) {
+            // CSAT is portal-only: staff must not pollute ratings. Internal
+            // requesters rate like customers (spec E-24).
+            if (!$this->isPortalScopedActor()
+                || !$this->permissionService->canPortalViewTicket($ticket)) {
                 return new JSONResponse([
                     'error' => $l->t('ticket_not_found'),
                 ], 404);
@@ -1141,7 +1163,7 @@ class CustomerPortalController extends Controller
                     'error' => $l->t('ticket_not_found'),
                 ], 404);
             }
-            if (!$this->permissionService->canViewTicketWithProjectAccess($active)) {
+            if (!$this->permissionService->canPortalViewTicket($active)) {
                 return new JSONResponse([
                     'error' => $l->t('ticket_not_found'),
                 ], 404);
@@ -1164,8 +1186,8 @@ class CustomerPortalController extends Controller
                 $comment === '' ? null : $comment,
                 function (\OCA\Ticketcheck\Db\Ticket $fresh): void {
                     // Uniform 404 for missing/inaccessible (no enumeration via 403).
-                    if (!$this->permissionService->isGuest()
-                        || !$this->permissionService->canViewTicketWithProjectAccess($fresh)) {
+                    if (!$this->isPortalScopedActor()
+                        || !$this->permissionService->canPortalViewTicket($fresh)) {
                         throw new \InvalidArgumentException('ticket_not_found');
                     }
                 }
@@ -1221,7 +1243,7 @@ class CustomerPortalController extends Controller
             $ticket = $this->ticketMapper->find($id);
             // SECURITY: collapse "missing" and "inaccessible" into a single
             // 404 to prevent ticket-id enumeration by unauthorised guests.
-            if (!$this->permissionService->canViewTicketWithProjectAccess($ticket)) {
+            if (!$this->permissionService->canPortalViewTicket($ticket)) {
                 return new JSONResponse([
                     'error' => $l->t('ticket_not_found'),
                 ], 404);
@@ -1233,7 +1255,7 @@ class CustomerPortalController extends Controller
                     'error' => $l->t('ticket_not_found'),
                 ], 404);
             }
-            if (!$this->permissionService->canViewTicketWithProjectAccess($active)) {
+            if (!$this->permissionService->canPortalViewTicket($active)) {
                 return new JSONResponse([
                     'error' => $l->t('ticket_not_found'),
                 ], 404);
@@ -1275,7 +1297,7 @@ class CustomerPortalController extends Controller
 
             // SECURITY: uniform 404 so missing vs forbidden ticket ids look
             // identical to unauthorised callers and cannot be enumerated.
-            if (!$this->permissionService->canViewTicketWithProjectAccess($ticket)) {
+            if (!$this->permissionService->canPortalViewTicket($ticket)) {
                 return new JSONResponse([
                     'error' => $l->t('ticket_not_found')
                 ], 404);
@@ -1289,7 +1311,7 @@ class CustomerPortalController extends Controller
                     'error' => $l->t('ticket_not_found'),
                 ], 404);
             }
-            if (!$this->permissionService->canViewTicketWithProjectAccess($active)) {
+            if (!$this->permissionService->canPortalViewTicket($active)) {
                 return new JSONResponse([
                     'error' => $l->t('ticket_not_found'),
                 ], 404);
@@ -1362,7 +1384,8 @@ class CustomerPortalController extends Controller
                     $ticket,
                     (string)($this->permissionService->getCurrentUserDisplayName() ?? ''),
                     $comment,
-                    $currentUserId // Exclude comment author from notifications
+                    $currentUserId, // Exclude comment author from notifications
+                    true // Portal replies are customer-side comments (incl. requesters — MH-10)
                 );
             } catch (\Throwable $e) {
                 // Soft-fail: never turn a successful portal reply into a false 400.
@@ -1507,7 +1530,7 @@ class CustomerPortalController extends Controller
 
             // SECURITY: uniform 404 so missing vs forbidden ticket ids look
             // identical to unauthorised callers and cannot be enumerated.
-            if (!$this->permissionService->canViewTicketWithProjectAccess($ticket)) {
+            if (!$this->permissionService->canPortalViewTicket($ticket)) {
                 return new JSONResponse([
                     'success' => false,
                     'message' => $l->t('ticket_not_found')
@@ -1523,7 +1546,7 @@ class CustomerPortalController extends Controller
                     'message' => $l->t('ticket_not_found'),
                 ], 404);
             }
-            if (!$this->permissionService->canViewTicketWithProjectAccess($active)) {
+            if (!$this->permissionService->canPortalViewTicket($active)) {
                 return new JSONResponse([
                     'success' => false,
                     'message' => $l->t('ticket_not_found'),
@@ -1663,7 +1686,7 @@ class CustomerPortalController extends Controller
     private function buildPortalTicketAuthzAssert(): callable
     {
         return function (Ticket $fresh): void {
-            if (!$this->permissionService->canViewTicketWithProjectAccess($fresh)) {
+            if (!$this->permissionService->canPortalViewTicket($fresh)) {
                 throw new \Exception('ticket_not_found');
             }
         };
@@ -1719,7 +1742,7 @@ class CustomerPortalController extends Controller
     public function checkRateLimitStatus(): JSONResponse
     {
         $l = $this->l10nFactory->get($this->appName);
-        if (!$this->permissionService->isGuest()) {
+        if (!$this->canUsePortalCreate()) {
             return new JSONResponse([
                 'success' => false,
                 'error' => $l->t('access_denied'),
@@ -1886,6 +1909,11 @@ class CustomerPortalController extends Controller
     #[NoCSRFRequired]
     public function changePassword(): TemplateResponse|RedirectResponse
     {
+        // Internal requesters have an NC-managed account, not an app-managed
+        // one (NN-07): the portal password page is meaningless to them.
+        if ($this->permissionService->isRequester()) {
+            return new RedirectResponse($this->urlGenerator->linkToRoute('ticketcheck.customerPortal.index'));
+        }
         // Passwordless identities have no password — D-T13 routes them to the
         // sign-in/sessions page; the old page stays for NC-era guests only.
         if (\OCA\Ticketcheck\Service\PortalActorResolver::isIdentityActor($this->permissionService->getCurrentUserId())) {
@@ -1914,7 +1942,11 @@ class CustomerPortalController extends Controller
             [
                 'preferences' => $prefs,
                 'saveUrl' => $this->urlGenerator->linkToRoute('ticketcheck.userPreferences.saveEmailPreferences'),
-                'accountDeletionUrl' => $this->urlGenerator->linkToRoute('ticketcheck.customerPortal.requestAccountDeletion'),
+                // Account deletion applies to app-managed guest accounts only —
+                // hidden for requesters/staff (the endpoint denies them anyway).
+                'accountDeletionUrl' => $this->permissionService->isGuest()
+                    ? $this->urlGenerator->linkToRoute('ticketcheck.customerPortal.requestAccountDeletion')
+                    : '',
             ],
         );
     }
@@ -2288,7 +2320,7 @@ class CustomerPortalController extends Controller
             // SECURITY: do not disclose ticket existence to unauthorised
             // guests — same 404 as for missing ticket ids prevents
             // enumeration through the attachment download endpoint.
-            if (!$this->permissionService->canViewTicketWithProjectAccess($ticket)) {
+            if (!$this->permissionService->canPortalViewTicket($ticket)) {
                 return new JSONResponse(['error' => $l->t('ticket_not_found')], 404);
             }
 
@@ -2300,7 +2332,7 @@ class CustomerPortalController extends Controller
             }
             $activeId = (int) $activeTicket->getId();
             if ($activeId !== $id
-                && !$this->permissionService->canViewTicketWithProjectAccess($activeTicket)) {
+                && !$this->permissionService->canPortalViewTicket($activeTicket)) {
                 return new JSONResponse(['error' => $l->t('ticket_not_found')], 404);
             }
 
@@ -2353,6 +2385,14 @@ class CustomerPortalController extends Controller
     #[NoCSRFRequired]
         public function logout(): \OCP\AppFramework\Http\RedirectResponse
     {
+        // Portal logout ends an app/portal session — an internal requester's
+        // session is their NC session (NN-07): no-op back to the portal home.
+        if ($this->permissionService->isRequester()) {
+            return new \OCP\AppFramework\Http\RedirectResponse(
+                $this->urlGenerator->linkToRoute('ticketcheck.customerPortal.index')
+            );
+        }
+
         // Log the guest user logout
         $logger = $this->logger;
         $user = $this->userSession->getUser();
@@ -2394,14 +2434,42 @@ class CustomerPortalController extends Controller
      *
      * Loads candidates from accessible projects (plus the guest's own
      * no-project tickets), then keeps only rows that pass
-     * canViewTicketWithProjectAccess. That matches detail/reply authz so the
+     * canPortalViewTicket. That matches detail/reply authz so the
      * list never leaks titles/metadata for tickets the guest cannot open
      * (e.g. another customer's ticket in a shared project).
      *
      * @return list<Ticket>
      */
+    /**
+     * Portal-scope actors: contained guests + internal requesters on an NC
+     * session. Read/list scoping for both runs through the guest-derived
+     * requester scope in PermissionService (spec D-R05).
+     */
+    private function isPortalScopedActor(): bool
+    {
+        return $this->permissionService->isGuest() || $this->permissionService->isRequester();
+    }
+
+    /**
+     * Portal create/write scope: guests plus requester-group members —
+     * including dual-role staff, whose self-requests always go through the
+     * portal create path (spec D-R22).
+     */
+    private function canUsePortalCreate(): bool
+    {
+        if ($this->permissionService->isGuest()) {
+            return true;
+        }
+        $userId = (string)($this->permissionService->getCurrentUserId() ?? '');
+        return $userId !== '' && $this->permissionService->isRequesterGroupMember($userId);
+    }
+
     private function loadGuestVisibleTickets(): array
     {
+        if ($this->permissionService->isRequester()) {
+            return $this->loadRequesterVisibleTickets();
+        }
+
         $accessibleProjectIds = $this->normalizeProjectIdList($this->permissionService->getAccessibleProjectIds());
         // Over-fetch slightly so permission filtering still fills the portal page.
         $fetchLimit = self::PORTAL_TICKET_LIST_LIMIT * 2;
@@ -2428,7 +2496,7 @@ class CustomerPortalController extends Controller
         $tickets = array_values(array_filter(
             $tickets,
             function ($ticket): bool {
-                return $this->permissionService->canViewTicketWithProjectAccess($ticket);
+                return $this->permissionService->canPortalViewTicket($ticket);
             }
         ));
 
@@ -2441,6 +2509,39 @@ class CustomerPortalController extends Controller
             return array_slice($tickets, 0, self::PORTAL_TICKET_LIST_LIMIT);
         }
 
+        return $tickets;
+    }
+
+    /**
+     * Requester ticket list (spec D-R05): created_by OR customer_email
+     * candidates, post-filtered through canPortalViewTicket so the
+     * restricted e-mail leg (D-R15) applies here exactly as on detail/authz.
+     * The created_by leg keeps own tickets listed when the requester has no
+     * NC e-mail (E-15) or their e-mail changed since filing (E-05).
+     *
+     * @return array<int, Ticket>
+     */
+    private function loadRequesterVisibleTickets(): array
+    {
+        $userId = (string)($this->permissionService->getCurrentUserId() ?? '');
+        if ($userId === '') {
+            return [];
+        }
+        $email = (string)($this->permissionService->getCurrentUserEmail() ?? '');
+        $candidates = $this->ticketMapper->findByCreatorOrEmail(
+            $userId,
+            $email,
+            self::PORTAL_TICKET_LIST_LIMIT * 2
+        );
+        $tickets = array_values(array_filter(
+            $candidates,
+            function ($ticket): bool {
+                return $this->permissionService->canPortalViewTicket($ticket);
+            }
+        ));
+        if (count($tickets) > self::PORTAL_TICKET_LIST_LIMIT) {
+            return array_slice($tickets, 0, self::PORTAL_TICKET_LIST_LIMIT);
+        }
         return $tickets;
     }
 

@@ -1042,7 +1042,9 @@ class GuestUserController extends Controller
         }
 
         try {
-            if ($this->resolveGuestAccount($userId) === null) {
+            if ($this->resolveGuestAccount($userId) === null
+                && !($this->userManager->get($userId) !== null
+                    && $this->permissionService->isRequesterProjectAccessGrantable($userId))) {
                 return new JSONResponse(['success' => false, 'error' => $l->t('guest_user_not_found')], 404);
             }
             if ($this->getInvalidProjectIds([$projectId]) !== []) {
@@ -1090,7 +1092,9 @@ class GuestUserController extends Controller
         }
 
         try {
-            if ($this->resolveGuestAccount($userId) === null) {
+            if ($this->resolveGuestAccount($userId) === null
+                && !($this->userManager->get($userId) !== null
+                    && $this->permissionService->isRequesterProjectAccessGrantable($userId))) {
                 return new JSONResponse(['success' => false, 'error' => $l->t('guest_user_not_found')], 404);
             }
             try {

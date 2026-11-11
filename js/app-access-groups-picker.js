@@ -20,20 +20,17 @@
 		return text;
 	}
 
-	document.addEventListener('DOMContentLoaded', function () {
-		if (!window.TicketCheckApi || typeof window.TicketCheckApi.get !== 'function') {
-			return;
-		}
-		const root = document.getElementById('app-access-extra-groups-picker');
+	function initGroupPicker(prefix) {
+		const root = document.getElementById(prefix + '-picker');
 		if (!root) {
 			return;
 		}
 
-		const hiddenInput = document.getElementById('app-access-extra-groups');
-		const chipList = document.getElementById('app-access-extra-groups-chips');
-		const searchInput = document.getElementById('app-access-extra-groups-search');
-		const resultsEl = document.getElementById('app-access-extra-groups-results');
-		const statusEl = document.getElementById('app-access-extra-groups-search-status');
+		const hiddenInput = document.getElementById(prefix);
+		const chipList = document.getElementById(prefix + '-chips');
+		const searchInput = document.getElementById(prefix + '-search');
+		const resultsEl = document.getElementById(prefix + '-results');
+		const statusEl = document.getElementById(prefix + '-search-status');
 		if (!hiddenInput || !chipList || !searchInput || !resultsEl) {
 			return;
 		}
@@ -174,7 +171,7 @@
 				btn.type = 'button';
 				btn.className = 'tc-select-combobox__option';
 				btn.setAttribute('role', 'option');
-				btn.id = 'app-access-extra-group-opt-' + index;
+				btn.id = prefix + '-opt-' + index;
 
 				const label = document.createElement('span');
 				label.className = 'tc-select-combobox__option-label';
@@ -289,5 +286,13 @@
 
 		syncHiddenInput();
 		renderChips();
+	}
+
+	document.addEventListener('DOMContentLoaded', function () {
+		if (!window.TicketCheckApi || typeof window.TicketCheckApi.get !== 'function') {
+			return;
+		}
+		initGroupPicker('app-access-extra-groups');
+		initGroupPicker('app-access-requester-groups');
 	});
 })();

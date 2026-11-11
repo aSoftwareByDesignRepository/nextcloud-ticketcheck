@@ -21,6 +21,7 @@ const settingsSections = [
   'escalation',
   'sla',
   'about',
+  'transfer',
 ];
 
 /**

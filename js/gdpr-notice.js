@@ -10,6 +10,40 @@
 	const LS_KEY = 'helpdesk_gdpr_accepted';
 	const DISMISS_PATH_GUEST = '/apps/ticketcheck/api/guest/portal-privacy-notice';
 	const DISMISS_PATH_USER = '/apps/ticketcheck/api/user/portal-privacy-notice';
+	const BANNER_OFFSET_VAR = '--tc-gdpr-banner-offset';
+	let bannerResizeObserver = null;
+
+	function clearBannerOffset() {
+		if (bannerResizeObserver) {
+			bannerResizeObserver.disconnect();
+			bannerResizeObserver = null;
+		}
+		document.documentElement.style.removeProperty(BANNER_OFFSET_VAR);
+	}
+
+	function updateBannerOffset(banner) {
+		if (!banner || banner.hasAttribute('hidden')) {
+			clearBannerOffset();
+			return;
+		}
+		const height = Math.ceil(banner.getBoundingClientRect().height);
+		document.documentElement.style.setProperty(BANNER_OFFSET_VAR, `${height}px`);
+	}
+
+	function observeBannerOffset(banner) {
+		clearBannerOffset();
+		updateBannerOffset(banner);
+		if (typeof ResizeObserver === 'function') {
+			bannerResizeObserver = new ResizeObserver(function () {
+				updateBannerOffset(banner);
+			});
+			bannerResizeObserver.observe(banner);
+			return;
+		}
+		window.addEventListener('resize', function () {
+			updateBannerOffset(banner);
+		});
+	}
 
 	function hideBanner(banner) {
 		if (!banner) {
@@ -17,6 +51,7 @@
 		}
 		banner.setAttribute('hidden', '');
 		banner.setAttribute('aria-expanded', 'false');
+		clearBannerOffset();
 		const acceptBtn = document.getElementById('gdpr-notice-accept');
 		if (acceptBtn) {
 			acceptBtn.setAttribute('aria-expanded', 'false');
@@ -64,6 +99,7 @@
 
 		banner.removeAttribute('hidden');
 		banner.setAttribute('aria-expanded', 'true');
+		observeBannerOffset(banner);
 
 		const acceptBtn = document.getElementById('gdpr-notice-accept');
 		if (acceptBtn) {

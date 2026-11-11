@@ -520,6 +520,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 allow_helpdesk_admins: formData.get('allow_helpdesk_admins') ? 'yes' : 'no',
                 allow_helpdesk_agents: formData.get('allow_helpdesk_agents') ? 'yes' : 'no',
                 allow_helpdesk_customers: formData.get('allow_helpdesk_customers') ? 'yes' : 'no',
+                allow_helpdesk_requesters: formData.get('allow_helpdesk_requesters') ? 'yes' : 'no',
+                requester_groups: (formData.get('requester_groups') || '').trim(),
+                requester_all_users: formData.get('requester_all_users') ? 'yes' : 'no',
+                requester_project_access: formData.get('requester_project_access') ? 'yes' : 'no',
                 extra_groups: (formData.get('extra_groups') || '').trim(),
                 access_restriction_enabled: (formData.get('access_restriction_enabled') || 'no') === 'yes' ? 'yes' : 'no',
                 access_allowed_user_ids: (formData.get('access_allowed_user_ids') || '').trim(),
@@ -537,7 +541,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const hasEnabledScope = data.allow_helpdesk_admins === 'yes' ||
                 data.allow_helpdesk_agents === 'yes' ||
                 data.allow_helpdesk_customers === 'yes' ||
-                data.extra_groups !== '';
+                data.allow_helpdesk_requesters === 'yes' ||
+                data.extra_groups !== '' ||
+                data.requester_groups !== '';
             if (!hasEnabledScope) {
                 announceSettings(t('ticketcheck', 'app_access_requires_one_enabled_scope'), 'error');
                 return;

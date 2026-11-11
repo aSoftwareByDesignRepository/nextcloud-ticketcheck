@@ -13356,6 +13356,9 @@ body.tc-modal-open {
 .tc-banner[hidden] {
 	display: none !important;
 }
+body:has(.tc-banner:not([hidden])) #app-content.tc-app {
+	padding-bottom: calc(var(--helpdesk-spacing-xl, var(--tc-space-7)) + var(--tc-gdpr-banner-offset, 12rem));
+}
 .tc-banner--info {
 	background: color-mix(in srgb, var(--color-main-background, #fff) 88%, var(--color-primary-element, #0082c9) 12%);
 	border-top-color: color-mix(in srgb, var(--color-primary-element, #0082c9) 40%, transparent);

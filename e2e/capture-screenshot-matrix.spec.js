@@ -30,13 +30,25 @@ const { test, expect, devices } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const { ensureAuthenticated } = require('./helpers/auth-guard');
-const { resolveGuestStorageState } = require('./helpers/guest-storage');
+const { resolveGuestStorageState, resolveStorageStateFor } = require('./helpers/guest-storage');
 
-const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://127.0.0.1:8081').replace(/\/$/, '');
+const BASE = (process.env.E2E_BASE || process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
 const APP = '/index.php/apps/ticketcheck';
 const MANIFEST = JSON.parse(fs.readFileSync(path.join(__dirname, 'screenshot-matrix.json'), 'utf8'));
+const SURFACE_FILTER = (process.env.MATRIX_SURFACE_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+const SURFACES = SURFACE_FILTER.length
+	? MANIFEST.surfaces.filter((surface) => SURFACE_FILTER.includes(surface.id))
+	: MANIFEST.surfaces;
 const OUT = path.resolve(__dirname, '../../../../.cursor/atlas-farm-v3/artifacts/ticketcheck', MANIFEST.outDir);
 const EMPTY_QUERY = 'atlas-matrix-nomatch';
+
+function requiredStorageState(label) {
+	const state = resolveStorageStateFor(label);
+	if (typeof state === 'object' && (!Array.isArray(state.cookies) || state.cookies.length === 0)) {
+		throw new Error(`Missing authenticated ${label} storage state — provision the fixture before capturing the matrix`);
+	}
+	return state;
+}
 
 /** Selector that proves the intended state actually rendered. */
 const READY = {
@@ -53,6 +65,7 @@ const READY = {
 	'export': { current: '.tc-export, .helpdesk-form-control' },
 	'settings-about': { current: '.helpdesk-card, .tc-shell' },
 	'settings-access': { current: '.helpdesk-card, .tc-shell' },
+	'settings-access-requesters': { populated: '#app-access-helpdesk-requesters' },
 	'settings-inbound': { current: '.helpdesk-card, .tc-shell' },
 	'settings-categories': { populated: '.helpdesk-table, .tc-table-wrap, .helpdesk-card' },
 	'settings-resources': { populated: '#tc-resource-list li[data-key], .helpdesk-empty, .helpdesk-card' },
@@ -60,6 +73,11 @@ const READY = {
 	'portal-tickets': { populated: '.portal-home-tickets, .helpdesk-table, .portal-shortcuts' },
 	'portal-create': { current: '.portal-create' },
 	'portal-kb': { populated: '.portal-shortcuts, .helpdesk-card, .tc-shell' },
+	'requester-portal-empty': { empty: '.helpdesk-empty' },
+	'requester-portal-populated': { populated: '.tc-tickets-list, .tc-table-wrap, .tc-card-list' },
+	'requester-create': { current: '.portal-create' },
+	'my-requests-empty': { empty: '.helpdesk-empty' },
+	'my-requests-populated': { populated: '.tc-tickets-list, .tc-table-wrap, .tc-card-list' },
 };
 
 const capturedFiles = [];
@@ -131,22 +149,36 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 	let staffPage;
 	/** @type {import('@playwright/test').Page} */
 	let guestPage;
+	/** @type {import('@playwright/test').BrowserContext} */
+	let requesterCtx;
+	/** @type {import('@playwright/test').BrowserContext} */
+	let requesterEmptyCtx;
+	/** @type {import('@playwright/test').BrowserContext} */
+	let dualRoleCtx;
+	/** @type {import('@playwright/test').Page} */
+	let requesterPage;
+	/** @type {import('@playwright/test').Page} */
+	let requesterEmptyPage;
+	/** @type {import('@playwright/test').Page} */
+	let dualRolePage;
 	let detailUrl = null;
 	let projectUrl = null;
 
 	test.beforeAll(async ({ browser }) => {
-		ctx = await browser.newContext({
-			...devices['Desktop Chrome'],
-			storageState: process.env.E2E_STORAGE_STATE
-				? path.resolve(process.env.E2E_STORAGE_STATE)
-				: path.resolve(__dirname, '..', '.auth', 'storage-state.json'),
-		});
-		staffPage = await ctx.newPage();
-		await staffPage.goto(`${BASE}${APP}/tickets`, { waitUntil: 'domcontentloaded' });
-		await ensureAuthenticated(staffPage);
-
-		const needsGuest = MANIFEST.surfaces.some((s) => s.role === 'guest');
-		if (needsGuest) {
+		const roles = new Set(SURFACES.map((s) => s.role).filter(Boolean));
+		const needsStaff = SURFACES.some((s) => !s.role);
+		if (needsStaff) {
+			ctx = await browser.newContext({
+				...devices['Desktop Chrome'],
+				storageState: process.env.E2E_STORAGE_STATE
+					? path.resolve(process.env.E2E_STORAGE_STATE)
+					: path.resolve(__dirname, '..', '.auth', 'storage-state.json'),
+			});
+			staffPage = await ctx.newPage();
+			await staffPage.goto(`${BASE}${APP}/tickets`, { waitUntil: 'domcontentloaded' });
+			await ensureAuthenticated(staffPage);
+		}
+		if (roles.has('guest')) {
 			guestCtx = await browser.newContext({
 				...devices['Desktop Chrome'],
 				storageState: resolveGuestStorageState(),
@@ -155,21 +187,47 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 			await guestPage.goto(`${BASE}${APP}/portal`, { waitUntil: 'domcontentloaded' });
 			await ensureAuthenticated(guestPage);
 		}
+		if (roles.has('requester')) {
+			requesterCtx = await browser.newContext({
+				...devices['Desktop Chrome'],
+				storageState: requiredStorageState('requester'),
+			});
+			requesterPage = await requesterCtx.newPage();
+			await requesterPage.goto(`${BASE}${APP}/portal`, { waitUntil: 'domcontentloaded' });
+			await ensureAuthenticated(requesterPage);
+		}
+		if (roles.has('requester-empty')) {
+			requesterEmptyCtx = await browser.newContext({
+				...devices['Desktop Chrome'],
+				storageState: requiredStorageState('requesterempty'),
+			});
+			requesterEmptyPage = await requesterEmptyCtx.newPage();
+			await requesterEmptyPage.goto(`${BASE}${APP}/portal`, { waitUntil: 'domcontentloaded' });
+			await ensureAuthenticated(requesterEmptyPage);
+		}
+		if (roles.has('dual-role')) {
+			dualRoleCtx = await browser.newContext({
+				...devices['Desktop Chrome'],
+				storageState: requiredStorageState('dualrole'),
+			});
+			dualRolePage = await dualRoleCtx.newPage();
+			await dualRolePage.goto(`${BASE}${APP}/my-requests`, { waitUntil: 'domcontentloaded' });
+			await ensureAuthenticated(dualRolePage);
+		}
 
-		// Dynamic ticket-detail: first ticket link on the staff list.
-		detailUrl = await staffPage.evaluate(() => {
-			const a = document.querySelector(
-				'a[href*="/apps/ticketcheck/tickets/"]:not([href*="/create"]):not([href*="/kanban"]):not([href*="/edit"])',
-			);
-			return a ? a.getAttribute('href') : null;
-		});
-
-		// Dynamic project-detail: first /projects/{id} link on the staff list.
-		projectUrl = await staffPage.evaluate(() => {
-			const a = document.querySelector('a[href*="/apps/ticketcheck/projects/"]');
-			const h = a ? a.getAttribute('href') : null;
-			return h && /\/projects\/\d+/.test(h) ? h : null;
-		});
+		if (staffPage) {
+			detailUrl = await staffPage.evaluate(() => {
+				const a = document.querySelector(
+					'a[href*="/apps/ticketcheck/tickets/"]:not([href*="/create"]):not([href*="/kanban"]):not([href*="/edit"])',
+				);
+				return a ? a.getAttribute('href') : null;
+			});
+			projectUrl = await staffPage.evaluate(() => {
+				const a = document.querySelector('a[href*="/apps/ticketcheck/projects/"]');
+				const h = a ? a.getAttribute('href') : null;
+				return h && /\/projects\/\d+/.test(h) ? h : null;
+			});
+		}
 	});
 
 	test.afterAll(async () => {
@@ -183,12 +241,25 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 					2,
 				),
 			);
-			await Promise.allSettled([ctx && ctx.close(), guestCtx && guestCtx.close()]);
+			await Promise.allSettled([
+				ctx && ctx.close(),
+				guestCtx && guestCtx.close(),
+				requesterCtx && requesterCtx.close(),
+				requesterEmptyCtx && requesterEmptyCtx.close(),
+				dualRoleCtx && dualRoleCtx.close(),
+			]);
 		}
 	});
 
-	for (const surface of MANIFEST.surfaces) {
-		const pageFor = () => (surface.role === 'guest' ? guestPage : staffPage);
+	const pageFor = (surface) => {
+		if (surface.role === 'guest') return guestPage;
+		if (surface.role === 'requester') return requesterPage;
+		if (surface.role === 'requester-empty') return requesterEmptyPage;
+		if (surface.role === 'dual-role') return dualRolePage;
+		return staffPage;
+	};
+
+	for (const surface of SURFACES) {
 		for (const state of surface.states || ['current']) {
 			test(`${surface.id} ${state} — viewport sweep`, async () => {
 				if (surface.path === 'DYNAMIC_TICKET' && !surface._resolved) {
@@ -206,7 +277,7 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 						: projectUrl;
 					surface._resolved = href;
 				}
-				const page = pageFor();
+				const page = pageFor(surface);
 				const url = surface._resolved
 					? `${BASE}${surface._resolved}`
 					: `${BASE}${surfaceUrl(surface, state)}`;
@@ -229,8 +300,8 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 	}
 
 	test('dark cells — desktop', async () => {
-		for (const surface of MANIFEST.surfaces.filter((s) => s.dark)) {
-			const page = surface.role === 'guest' ? guestPage : staffPage;
+		for (const surface of SURFACES.filter((s) => s.dark)) {
+			const page = pageFor(surface);
 			const firstState = (surface.states || ['current'])[0];
 			const url = surface._resolved || `${APP}${surface.path}`;
 			const ready = (READY[surface.id] || {})[firstState] || '.tc-shell, #app-content';

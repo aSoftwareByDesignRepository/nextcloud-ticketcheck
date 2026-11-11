@@ -128,7 +128,14 @@ if ($navMode === 'guest' && $urlGenerator instanceof \OCP\IURLGenerator) {
 		<?php endforeach; ?>
 	</div>
 
-	<?php if ($navMode === 'guest' && $urlGenerator instanceof \OCP\IURLGenerator && $logoutUrl !== ''): ?>
+	<?php if ($navMode === 'guest' && !empty($_['isRequester']) && $urlGenerator instanceof \OCP\IURLGenerator): ?>
+		<div class="tc-nav__logout">
+			<a class="tc-nav__logout-btn tc-nav__back-home" href="<?php p($urlGenerator->linkToDefaultPageUrl()); ?>">
+				<span class="tc-nav__icon" aria-hidden="true"><?php print_unescaped(IconCatalog::render('arrow-left')); ?></span>
+				<span><?php p($l->t('back_to_nextcloud')); ?></span>
+			</a>
+		</div>
+	<?php elseif ($navMode === 'guest' && $urlGenerator instanceof \OCP\IURLGenerator && $logoutUrl !== ''): ?>
 		<div class="tc-nav__logout">
 			<form method="post" action="<?php p($logoutUrl); ?>" class="tc-nav__logout-form" data-tc-guest-logout-form>
 				<input type="hidden" name="requesttoken" value="<?php p($requesttoken); ?>" data-tc-logout-requesttoken>

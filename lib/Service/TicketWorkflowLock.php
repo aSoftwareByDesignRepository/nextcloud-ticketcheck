@@ -27,7 +27,7 @@ use Psr\Log\LoggerInterface;
  */
 class TicketWorkflowLock
 {
-	public const KEY_PREFIX = 'ticketcheck/ticket/';
+	public const LOCK_PREFIX = 'ticketcheck/ticket/';
 
 	/**
 	 * oc_file_locks.key is varchar(64). A longer key is silently truncated on
@@ -72,7 +72,7 @@ class TicketWorkflowLock
 
 		$keys = [];
 		foreach ($ids as $id) {
-			$keys[] = self::KEY_PREFIX . $id;
+			$keys[] = self::LOCK_PREFIX . $id;
 		}
 
 		return $this->withExclusiveKeys($keys, $callback, $label);
@@ -176,10 +176,10 @@ class TicketWorkflowLock
 	{
 		$heldTicketIds = [];
 		foreach ($this->heldDepth as $key => $depth) {
-			if ($depth <= 0 || !str_starts_with($key, self::KEY_PREFIX)) {
+			if ($depth <= 0 || !str_starts_with($key, self::LOCK_PREFIX)) {
 				continue;
 			}
-			$id = (int) substr($key, strlen(self::KEY_PREFIX));
+			$id = (int) substr($key, strlen(self::LOCK_PREFIX));
 			if ($id > 0) {
 				$heldTicketIds[] = $id;
 			}
@@ -190,13 +190,13 @@ class TicketWorkflowLock
 
 		$minHeld = min($heldTicketIds);
 		foreach ($keys as $key) {
-			if (!str_starts_with($key, self::KEY_PREFIX)) {
+			if (!str_starts_with($key, self::LOCK_PREFIX)) {
 				continue;
 			}
 			if (($this->heldDepth[$key] ?? 0) > 0) {
 				continue;
 			}
-			$id = (int) substr($key, strlen(self::KEY_PREFIX));
+			$id = (int) substr($key, strlen(self::LOCK_PREFIX));
 			if ($id > 0 && $id < $minHeld) {
 				throw new \InvalidArgumentException(
 					'Cannot expand ticket locks downward while holding higher ticket IDs (deadlock risk).'

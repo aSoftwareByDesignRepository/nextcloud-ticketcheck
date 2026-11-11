@@ -41,6 +41,9 @@ class Notifier implements INotifier
 		$link = $this->urlGenerator->linkToRouteAbsolute('ticketcheck.ticket.show', [
 			'id' => $notification->getObjectId(),
 		]);
+		$portalLink = $this->urlGenerator->linkToRouteAbsolute('ticketcheck.customerPortal.viewTicket', [
+			'id' => $notification->getObjectId(),
+		]);
 
 		switch ($notification->getSubject()) {
 			case 'ticket_assigned':
@@ -57,6 +60,21 @@ class Notifier implements INotifier
 				$notification->setParsedSubject($l->t('Ticket waiting: %s', [$number !== '' ? $number : $title]));
 				$notification->setParsedMessage($l->t('Status changed to waiting. Open TicketCheck to continue.'));
 				$notification->setLink($link);
+				return $notification;
+			case 'ticket_requester_reply':
+				$notification->setParsedSubject($l->t('New reply on %s', [$number !== '' ? $number : $title]));
+				$notification->setParsedMessage($l->t('A reply was added to your request. Open the portal to read it.'));
+				$notification->setLink($portalLink);
+				return $notification;
+			case 'ticket_requester_status':
+				$notification->setParsedSubject($l->t('Status changed on %s', [$number !== '' ? $number : $title]));
+				$notification->setParsedMessage($l->t('The status of your request changed. Open the portal for details.'));
+				$notification->setLink($portalLink);
+				return $notification;
+			case 'ticket_requester_update':
+				$notification->setParsedSubject($l->t('Update on %s', [$number !== '' ? $number : $title]));
+				$notification->setParsedMessage($l->t('Your request was updated. Open the portal for details.'));
+				$notification->setLink($portalLink);
 				return $notification;
 			default:
 				throw new UnknownNotificationException();

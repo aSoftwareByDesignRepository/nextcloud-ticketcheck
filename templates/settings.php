@@ -28,6 +28,7 @@ $tcSettingsSectionFiles = [
 	'escalation' => 'escalation.php',
 	'sla' => 'sla.php',
 	'about' => 'about.php',
+	'transfer' => 'transfer.php',
 ];
 $tcRequestedSection = (string) ($_['settingsSection'] ?? '');
 ?>

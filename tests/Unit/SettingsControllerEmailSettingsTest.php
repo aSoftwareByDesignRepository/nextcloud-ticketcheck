@@ -181,6 +181,60 @@ class SettingsControllerEmailSettingsTest extends TestCase
         self::assertSame(['error' => 'app_access_unknown_groups'], $response->getData());
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('requesterDoorPolicies')]
+    public function testRestrictedDoorAcceptsEnabledRequesterScope(string $allUsers): void
+    {
+        $params = [
+            'allow_helpdesk_admins' => 'yes',
+            'allow_helpdesk_agents' => 'yes',
+            'allow_helpdesk_customers' => 'no',
+            'allow_helpdesk_requesters' => 'yes',
+            'access_restriction_enabled' => 'yes',
+            'requester_all_users' => $allUsers,
+        ];
+        $this->request->method('getParam')->willReturnCallback(
+            static fn (string $key, mixed $default = null): mixed => $params[$key] ?? $default
+        );
+        $this->userManager->method('search')->willReturn([]);
+        $saved = [];
+        $this->config->method('setAppValue')->willReturnCallback(
+            static function (string $app, string $key, string $value) use (&$saved): void {
+                $saved[$key] = $value;
+            }
+        );
+
+        $response = $this->controller->updateAppAccess();
+
+        self::assertSame(200, $response->getStatus());
+        self::assertSame('1', $saved['access_restriction_enabled'] ?? null);
+        self::assertSame('yes', $saved['app_access_helpdesk_requesters'] ?? null);
+        self::assertSame($allUsers, $saved['app_access_requester_all_users'] ?? null);
+    }
+
+    public static function requesterDoorPolicies(): array
+    {
+        return [['no'], ['yes']];
+    }
+
+    public function testRestrictedDoorRejectsDisabledRequesterScopeWithoutAllowlist(): void
+    {
+        $params = [
+            'allow_helpdesk_customers' => 'no',
+            'allow_helpdesk_requesters' => 'no',
+            'access_restriction_enabled' => 'yes',
+            'requester_all_users' => 'yes',
+        ];
+        $this->request->method('getParam')->willReturnCallback(
+            static fn (string $key, mixed $default = null): mixed => $params[$key] ?? $default
+        );
+        $this->config->expects(self::never())->method('setAppValue');
+
+        $response = $this->controller->updateAppAccess();
+
+        self::assertSame(422, $response->getStatus());
+        self::assertSame(['error' => 'app_access_restricted_needs_allowlist'], $response->getData());
+    }
+
     public function testUpdateAppAccessPersistsValues(): void
     {
         $this->userManager->method('search')->willReturn([]);

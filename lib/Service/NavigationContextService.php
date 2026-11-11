@@ -31,7 +31,7 @@ class NavigationContextService
 	{
 		$perm = $this->permissionService;
 		if ($navMode === 'guest') {
-			if (!$perm->isGuest()) {
+			if (!$perm->isGuest() && !$perm->isRequester()) {
 				return null;
 			}
 			// Guest ticket visibility is project-scoped (plus own no-project
@@ -40,6 +40,26 @@ class NavigationContextService
 			$userId = (string)($perm->getCurrentUserId() ?? '');
 			if ($userId === '') {
 				return null;
+			}
+			if ($perm->isRequester()) {
+				// Requester stats must match the list universe exactly:
+				// created_by + restricted e-mail candidates post-filtered
+				// through canViewTicketWithProjectAccess (D-R05/D-R15) — own
+				// tickets count even with no NC e-mail (E-15).
+				$email = (string)($perm->getCurrentUserEmail() ?? '');
+				$candidates = $this->ticketMapper->findByCreatorOrEmail($userId, $email, 400);
+				$total = 0;
+				$open = 0;
+				foreach ($candidates as $candidate) {
+					if (!$perm->canPortalViewTicket($candidate)) {
+						continue;
+					}
+					$total++;
+					if (!TicketMapper::isDoneStatus((string)$candidate->getStatus())) {
+						$open++;
+					}
+				}
+				return ['total' => $total, 'open' => $open];
 			}
 			$email = (string)($perm->getCurrentUserEmail() ?? '');
 			$projectIds = array_values(array_map('intval', $perm->getAccessibleProjectIds() ?? []));
@@ -109,6 +129,9 @@ class NavigationContextService
 			return 'portal-home';
 		}
 
+		if (str_starts_with($path, '/my-requests')) {
+			return 'my-requests';
+		}
 		if (str_starts_with($path, '/dashboard')) {
 			return 'dashboard';
 		}
@@ -182,6 +205,7 @@ class NavigationContextService
 	{
 		$titles = [
 			'dashboard' => [$l->t('dashboard'), $l->t('scope_all_projects')],
+			'my-requests' => [$l->t('my_requests'), $l->t('my_requests_page_help')],
 			'tickets' => [$l->t('all_tickets'), $l->t('view_and_manage_requests')],
 			'tickets-kanban' => [$l->t('kanban_board'), $l->t('view_and_manage_requests')],
 			'ticket-detail' => [$l->t('ticket_details'), ''],
@@ -254,6 +278,7 @@ class NavigationContextService
 			'portalLogin' => $urlGenerator->linkToRoute('ticketcheck.portalAuth.login'),
 			'portalEmailPrefs' => $urlGenerator->linkToRoute('ticketcheck.customerPortal.emailPreferences'),
 			'portalLogout' => $urlGenerator->linkToRoute('ticketcheck.customerPortal.logout'),
+			'myRequests' => $urlGenerator->linkToRoute('ticketcheck.myRequests.index'),
 			'guestLanguage' => $urlGenerator->linkToRoute('ticketcheck.customerPortal.setLanguage'),
 			'home' => $urlGenerator->linkToDefaultPageUrl(),
 		];
@@ -330,6 +355,11 @@ class NavigationContextService
 			} elseif ($perm->isAgent()) {
 				$roleLabel = $l->t('scope_role_agent');
 				$roleBadge = 'agent';
+			} elseif ($perm->isNcManagedPortalUser()) {
+				// NC-managed portal users are org staff, not "guests" — never
+				// the guest role label on their shell (spec §8 copy rules).
+				$roleLabel = $l->t('scope_role_requester');
+				$roleBadge = 'requester';
 			} elseif ($mode === 'guest') {
 				$roleLabel = $l->t('scope_role_guest');
 				$roleBadge = 'guest';
@@ -428,6 +458,12 @@ class NavigationContextService
 			['id' => 'tickets', 'label' => $l->t('tickets'), 'icon' => 'ticket', 'url' => $urls['tickets'], 'hint' => $l->t('tickets_nav_hint')],
 			['id' => 'tickets-kanban', 'label' => $l->t('kanban_board'), 'icon' => 'columns', 'url' => $urls['ticketsKanban'], 'hint' => $l->t('kanban_nav_hint')],
 		];
+		// Dual-role staff (requester-group member + staff scope) get the "My
+		// requests" surface for their own tickets (spec D-R10/US-R04). Hidden
+		// for pure staff — no dead nav item (contract G-8).
+		if ($uid !== '' && $perm->isRequesterGroupMember($uid)) {
+			$operations[] = ['id' => 'my-requests', 'label' => $l->t('my_requests'), 'icon' => 'inbox', 'url' => $urls['myRequests'], 'hint' => $l->t('my_requests_nav_hint')];
+		}
 		$groups[] = ['group' => $l->t('nav_group_operations'), 'items' => $this->navItemsFromDefs($operations, $currentPageId)];
 
 		$directory = [
@@ -556,10 +592,19 @@ class NavigationContextService
 				&& PortalActorResolver::isIdentityActor($perm->getCurrentUserId()))
 			? ['id' => 'portal-signin', 'label' => $l->t('portal_signin_title'), 'icon' => 'lock', 'url' => $urls['portalSignIn'], 'hint' => $l->t('portal_signin_nav_hint')]
 			: ['id' => 'portal-password', 'label' => $l->t('change_password'), 'icon' => 'lock', 'url' => $urls['portalPassword'], 'hint' => $l->t('portal_password_nav_hint')];
-		$account = [
-			$accountItem,
-			['id' => 'portal-email-prefs', 'label' => $l->t('email_preferences'), 'icon' => 'mail', 'url' => $urls['portalEmailPrefs'], 'hint' => $l->t('portal_email_nav_hint')],
-		];
+		$account = [];
+		// NC-managed sessions (internal requesters AND dual-role staff in the
+		// portal) never get portal-credential items — password/session/deletion
+		// are meaningless or destructive on an NC session (spec D-R07/NN-07).
+		// Contained NC guests keep them: their app-managed account uses them.
+		$ncManaged = $perm->isNcManagedPortalUser();
+		if (!$ncManaged) {
+			$account[] = $accountItem;
+		}
+		$account[] = ['id' => 'portal-email-prefs', 'label' => $l->t('email_preferences'), 'icon' => 'mail', 'url' => $urls['portalEmailPrefs'], 'hint' => $l->t('portal_email_nav_hint')];
+		if ($ncManaged) {
+			$account[] = ['id' => 'back-to-nextcloud', 'label' => $l->t('back_to_nextcloud'), 'icon' => 'arrow-left', 'url' => $urls['home'], 'hint' => $l->t('back_to_nextcloud_nav_hint')];
+		}
 		$groups[] = ['group' => $l->t('nav_group_account'), 'items' => $this->navItemsFromDefs($account, $currentPageId)];
 
 		return array_values($groups);

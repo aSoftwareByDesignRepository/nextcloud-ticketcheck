@@ -58,7 +58,7 @@ module.exports = async function globalSetup() {
 	await acquireSharedInstanceLock('ticketcheck')
 	const { resetE2eUserState } = await import('../../_shared/e2e/reset-e2e-user-state.mjs')
 	resetE2eUserState()
-	const base = (process.env.E2E_BASE || 'http://127.0.0.1:8081').replace(/\/$/, '');
+	const base = (process.env.E2E_BASE || 'http://localhost:8081').replace(/\/$/, '');
 	const loginUrl = process.env.E2E_LOGIN_URL || `${base}/index.php/login`;
 	const authDir = path.resolve(__dirname, '..', '.auth');
 
@@ -95,6 +95,44 @@ module.exports = async function globalSetup() {
 		});
 		if (ok) {
 			process.env.E2E_GUEST_STORAGE_STATE = outputPath;
+		}
+	}
+
+	const requesterUser = process.env.E2E_REQUESTER_USER;
+	const requesterPass = process.env.E2E_REQUESTER_PASSWORD;
+	if (requesterUser && requesterPass) {
+		const outputPath = process.env.E2E_REQUESTER_STORAGE_STATE
+			? path.resolve(process.env.E2E_REQUESTER_STORAGE_STATE)
+			: path.join(authDir, 'requester-storage-state.json');
+		const ok = await loginAndSave({
+			user: requesterUser,
+			pass: requesterPass,
+			loginUrl,
+			outputPath,
+			label: 'requester',
+		});
+		if (ok) {
+			process.env.E2E_REQUESTER_STORAGE_STATE = outputPath;
+		}
+	}
+
+	const extraFixtures = [
+		['REQUESTER2', 'requester2'],
+		['REQUESTEREMPTY', 'requesterempty'],
+		['DUALROLE', 'dualrole'],
+	];
+	for (const [envLabel, label] of extraFixtures) {
+		const user = process.env[`E2E_${envLabel}_USER`];
+		const pass = process.env[`E2E_${envLabel}_PASSWORD`];
+		if (!user || !pass) {
+			continue;
+		}
+		const outputPath = process.env[`E2E_${envLabel}_STORAGE_STATE`]
+			? path.resolve(process.env[`E2E_${envLabel}_STORAGE_STATE`])
+			: path.join(authDir, `${label}-storage-state.json`);
+		const ok = await loginAndSave({ user, pass, loginUrl, outputPath, label });
+		if (ok) {
+			process.env[`E2E_${envLabel}_STORAGE_STATE`] = outputPath;
 		}
 	}
 };

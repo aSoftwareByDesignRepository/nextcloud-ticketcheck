@@ -228,6 +228,17 @@ class Application extends App implements IBootstrap
             );
         });
 
+        $context->registerService(\OCA\Ticketcheck\Service\RequesterTicketService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\RequesterTicketService(
+                $c->get(\OCA\Ticketcheck\Service\PermissionService::class),
+                $c->get(\OCA\Ticketcheck\Service\CompanionGateService::class),
+                $c->get(\OCA\Ticketcheck\Db\TicketMapper::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketService::class),
+                $c->get(\OCA\Ticketcheck\Db\AttachmentMapper::class),
+                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
+            );
+        });
+
         // Register services
         $context->registerService('TicketService', function ($c) {
             return new \OCA\Ticketcheck\Service\TicketService(
@@ -259,7 +270,9 @@ class Application extends App implements IBootstrap
                 $c->get(\OCP\IConfig::class),
                 $c->get(\OCA\Ticketcheck\Db\GuestProjectAccessMapper::class),
                 $c->get(\OCP\IDBConnection::class),
-                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class)
+                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
+                $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get(\OCP\IUserManager::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\PermissionService::class, function ($c) {
@@ -282,7 +295,9 @@ class Application extends App implements IBootstrap
                 $c->get(\OCP\IGroupManager::class),
                 $c->get(\OCA\Ticketcheck\Db\TicketWatcherMapper::class),
                 $c->get(\OCA\Ticketcheck\Service\InboundSmtpSendService::class),
-                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class)
+                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
+                $c->get('PermissionService'),
+                $c->get(\OCA\Ticketcheck\Service\CompanionNotificationService::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\ActivityEventService::class, function ($c) {
@@ -769,6 +784,60 @@ class Application extends App implements IBootstrap
             );
         });
 
+        // ── Config & data transfer (test → production) ──────────────────
+        $context->registerService(\OCA\Ticketcheck\ConfigTransfer\TransferManifest::class, fn () => new \OCA\Ticketcheck\ConfigTransfer\TransferManifest());
+        $context->registerService(\OCA\Ticketcheck\ConfigTransfer\TransferHooks::class, function ($c): \OCA\Ticketcheck\ConfigTransfer\TransferHooks {
+            return new \OCA\Ticketcheck\ConfigTransfer\TransferHooks(
+                $c->get(\OCA\Ticketcheck\Service\PermissionService::class),
+                $c->get(\OCA\Ticketcheck\ConfigTransfer\TransferManifest::class),
+                $c->get(UpgradeBackupService::class),
+                $c->get(\OCA\Ticketcheck\Service\EmailHeaderSanitizer::class),
+                $c->get(\Psr\Log\LoggerInterface::class),
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\ConfigTransfer\TransferPendingStore::class, fn ($c) => new \OCA\Ticketcheck\ConfigTransfer\TransferPendingStore($c->get(IRootFolder::class), $c->get(\OCP\IConfig::class), 'ticketcheck'));
+        $context->registerService(\OCA\Ticketcheck\ConfigTransfer\TransferReceiptStore::class, fn ($c) => new \OCA\Ticketcheck\ConfigTransfer\TransferReceiptStore($c->get(\OCP\IConfig::class), 'ticketcheck'));
+        $context->registerService(\OCA\Ticketcheck\ConfigTransfer\TransferService::class, function ($c): \OCA\Ticketcheck\ConfigTransfer\TransferService {
+            return new \OCA\Ticketcheck\ConfigTransfer\TransferService(
+                $c->get(\OCP\IDBConnection::class),
+                $c->get(\OCP\IConfig::class),
+                $c->get(\OCP\IUserManager::class),
+                $c->get(\OCP\IGroupManager::class),
+                $c->get(IRootFolder::class),
+                $c->get(IAppManager::class),
+                $c->get(ILockingProvider::class),
+                $c->get(\OCP\IURLGenerator::class),
+                $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get(\OCA\Ticketcheck\ConfigTransfer\TransferManifest::class),
+                $c->get(\OCA\Ticketcheck\ConfigTransfer\TransferHooks::class),
+                $c->get(\OCA\Ticketcheck\ConfigTransfer\TransferPendingStore::class),
+                $c->get(\OCA\Ticketcheck\ConfigTransfer\TransferReceiptStore::class),
+                'ticketcheck',
+                $c->get(\OCP\IAppConfig::class),
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\BackgroundJob\TransferApplyJob::class, function ($c): \OCA\Ticketcheck\BackgroundJob\TransferApplyJob {
+            return new \OCA\Ticketcheck\BackgroundJob\TransferApplyJob(
+                $c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
+                $c->get(\OCA\Ticketcheck\ConfigTransfer\TransferService::class),
+                $c->get(ILockingProvider::class),
+                $c->get(\OCP\BackgroundJob\IJobList::class),
+                $c->get(\Psr\Log\LoggerInterface::class),
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Controller\TransferApiController::class, function ($c): \OCA\Ticketcheck\Controller\TransferApiController {
+            return new \OCA\Ticketcheck\Controller\TransferApiController(
+                self::APP_ID,
+                $c->get(\OCP\IRequest::class),
+                $c->get(\OCA\Ticketcheck\ConfigTransfer\TransferHooks::class),
+                $c->get(\OCA\Ticketcheck\ConfigTransfer\TransferService::class),
+                $c->get(\OCP\BackgroundJob\IJobList::class),
+                $c->get(\OCP\Security\Bruteforce\IThrottler::class),
+                $c->get(\OCP\IGroupManager::class),
+                $c->get(\OCP\IUserSession::class),
+            );
+        });
+
         // AssignmentService removed for standalone operation
         $context->registerDashboardWidget(\OCA\Ticketcheck\Dashboard\TicketOverviewWidget::class);
     }
@@ -876,27 +945,44 @@ class Application extends App implements IBootstrap
             // Group existence is ensured once, not on every request — the
             // three lookups + potential writes must not sit on the hot path
             // or 500 logins when the group backend is unavailable.
-            if ($config->getAppValue(self::APP_ID, 'helpdesk_groups_ensured', 'no') === 'yes') {
-                return;
-            }
-            $groupManager = $container->get(\OCP\IGroupManager::class);
+            if ($config->getAppValue(self::APP_ID, 'helpdesk_groups_ensured', 'no') !== 'yes') {
+                $groupManager = $container->get(\OCP\IGroupManager::class);
 
-            $gids = ['helpdesk_customers', 'helpdesk_agents', 'helpdesk_admins'];
-            foreach ($gids as $gid) {
-                if (!$groupManager->get($gid)) {
-                    $groupManager->createGroup($gid);
+                $gids = ['helpdesk_customers', 'helpdesk_agents', 'helpdesk_admins'];
+                foreach ($gids as $gid) {
+                    if (!$groupManager->get($gid)) {
+                        $groupManager->createGroup($gid);
+                    }
+                }
+
+                // Only pin the one-time flag once every group verifiably exists —
+                // createGroup() may return null without throwing on a backend
+                // hiccup, and a prematurely-pinned flag would never retry.
+                $allExist = true;
+                foreach ($gids as $gid) {
+                    if (!$groupManager->get($gid)) {
+                        $allExist = false;
+                    }
+                }
+                if ($allExist) {
+                    $config->setAppValue(self::APP_ID, 'helpdesk_groups_ensured', 'yes');
                 }
             }
 
-            // Only pin the one-time flag once every group verifiably exists —
-            // createGroup() may return null without throwing on a backend
-            // hiccup, and a prematurely-pinned flag would never retry.
-            foreach ($gids as $gid) {
-                if (!$groupManager->get($gid)) {
-                    return;
+            // helpdesk_requesters has its own ensure flag (spec D-R17): the
+            // shared helpdesk_groups_ensured flag is already 'yes' on every
+            // installed instance, so riding it would provision the gid on
+            // fresh installs only and silently skip every upgrade.
+            if ($config->getAppValue(self::APP_ID, 'helpdesk_requester_group_ensured', 'no') !== 'yes') {
+                $groupManager = $groupManager ?? $container->get(\OCP\IGroupManager::class);
+                $requesterGid = \OCA\Ticketcheck\Service\PermissionService::GROUP_HELPDESK_REQUESTERS;
+                if (!$groupManager->get($requesterGid)) {
+                    $groupManager->createGroup($requesterGid);
+                }
+                if ($groupManager->get($requesterGid)) {
+                    $config->setAppValue(self::APP_ID, 'helpdesk_requester_group_ensured', 'yes');
                 }
             }
-            $config->setAppValue(self::APP_ID, 'helpdesk_groups_ensured', 'yes');
 
             // Guest isolation is enforced by interceptGuestRequests(), GuestSecurityMiddleware,
             // and PermissionService::canAccessApp() — do not rewrite app config from boot.

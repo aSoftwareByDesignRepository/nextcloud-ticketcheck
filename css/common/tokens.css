@@ -43,6 +43,8 @@
 	--tc-touch-min: 44px;
 	--tc-touch-lg: 48px;
 	--tc-tab-num: tabular-nums;
+	--tc-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	--tc-gdpr-banner-offset: 0px;
 
 	/* Shell: full width by default; constrained reading column = 72rem (AZC) */
 	--tc-shell-max: 72rem;

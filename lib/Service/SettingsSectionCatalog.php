@@ -43,6 +43,7 @@ final class SettingsSectionCatalog
 		'license',
 		'support',
 		'about',
+		'transfer',
 	];
 
 	/**
@@ -88,6 +89,10 @@ final class SettingsSectionCatalog
 		'settings-escalation-heading' => 'escalation',
 		'settings-sla-heading' => 'sla',
 		'settings-about-heading' => 'about',
+		// The transfer cards are new (no legacy mega-page anchor existed);
+		// the entry keeps the every-routable-section-needs-an-anchor
+		// contract and gives deep links a stable target.
+		'tc-transfer-export-card' => 'transfer',
 	];
 
 	/**
@@ -146,6 +151,7 @@ final class SettingsSectionCatalog
 			'license' => $l->t('Mobile license'),
 			'support' => $l->t('Support & us'),
 			'about' => $l->t('About this project'),
+			'transfer' => $l->t('Transfer configuration'),
 			default => $l->t('Settings'),
 		};
 	}
@@ -170,6 +176,7 @@ final class SettingsSectionCatalog
 			// Intentionally the same string as label(): a bare "Über" reads
 			// broken in German, and the full name still fits chips/sidebar.
 			'about' => $l->t('About this project'),
+			'transfer' => $l->t('Transfer'),
 			default => $l->t('Settings'),
 		};
 	}
@@ -193,6 +200,7 @@ final class SettingsSectionCatalog
 			'escalation' => $l->t('settings_escalation_lead'),
 			'sla' => $l->t('settings_sla_lead'),
 			'about' => $l->t('settings_about_lead'),
+			'transfer' => $l->t('Copy all settings, catalogues and data between a test and a production instance — one encrypted file, dry-run before anything is written.'),
 			default => '',
 		};
 	}

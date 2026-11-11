@@ -170,6 +170,54 @@
       "role": "guest"
     },
     {
+      "id": "requester-portal-empty",
+      "path": "/portal",
+      "states": [
+        "empty"
+      ],
+      "role": "requester-empty"
+    },
+    {
+      "id": "requester-portal-populated",
+      "path": "/portal/tickets",
+      "states": [
+        "populated"
+      ],
+      "role": "requester"
+    },
+    {
+      "id": "requester-create",
+      "path": "/portal/tickets/create",
+      "states": [
+        "current"
+      ],
+      "role": "requester"
+    },
+    {
+      "id": "my-requests-empty",
+      "path": "/my-requests",
+      "states": [
+        "empty"
+      ],
+      "emptyDriver": "searchNoMatch",
+      "role": "dual-role"
+    },
+    {
+      "id": "my-requests-populated",
+      "path": "/my-requests",
+      "states": [
+        "populated"
+      ],
+      "role": "dual-role"
+    },
+    {
+      "id": "settings-access-requesters",
+      "path": "/settings/access",
+      "states": [
+        "populated"
+      ]
+    },
+    {
       "id": "settings-resources",
       "path": "/settings/resources",
       "states": [

@@ -122,7 +122,7 @@ class CustomerPortalControllerTicketLinksAccessTest extends TestCase
         // other guests' tickets.
         $ticket = $this->createMock(Ticket::class);
         $this->ticketMapper->method('find')->with(23)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->with($ticket)->willReturn(false);
+        $this->permissionService->method('canPortalViewTicket')->with($ticket)->willReturn(false);
         $this->ticketLinkService->expects($this->never())->method('getLinksForTicket');
 
         $response = $this->controller->getTicketLinks(23);
@@ -142,7 +142,7 @@ class CustomerPortalControllerTicketLinksAccessTest extends TestCase
         ];
         $this->ticketMapper->method('find')->with(23)->willReturn($ticket);
         $this->ticketService->method('getActiveTicket')->with(23)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->with($ticket)->willReturn(true);
+        $this->permissionService->method('canPortalViewTicket')->with($ticket)->willReturn(true);
         $this->ticketLinkService->method('getLinksForTicket')->with(23)->willReturn($links);
 
         $response = $this->controller->getTicketLinks(23);

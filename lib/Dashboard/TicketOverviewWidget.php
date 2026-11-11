@@ -99,13 +99,14 @@ class TicketOverviewWidget implements IAPIWidgetV2, IButtonWidget, IIconWidget, 
 
     public function getItemsV2(string $userId, ?string $since = null, int $limit = 7): WidgetItems
     {
-        if ($userId === '' || !$this->permissionService->canViewHelpdeskOverview($userId)) {
+        $sessionUser = $this->permissionService->getCurrentUserId();
+        if ($userId === '' || ($sessionUser !== null && $sessionUser !== $userId)) {
             return new WidgetItems([], $this->l10n->t('desklet_no_access'), '');
         }
 
-        $sessionUser = $this->permissionService->getCurrentUserId();
-        if ($sessionUser !== null && $sessionUser !== $userId) {
-            return new WidgetItems([], $this->l10n->t('desklet_no_access'), '');
+        if (!$this->permissionService->canViewHelpdeskOverview($userId)) {
+            // NH-04: requester-scope users get their own-requests desklet.
+            return $this->requesterItems($userId, $since, $limit);
         }
 
         $limit = max(1, min(self::MAX_PAGE_ITEMS, $limit));
@@ -139,13 +140,26 @@ class TicketOverviewWidget implements IAPIWidgetV2, IButtonWidget, IIconWidget, 
 
     public function getWidgetButtons(string $userId): array
     {
-        if ($userId === '' || !$this->permissionService->canViewHelpdeskOverview($userId)) {
+        $sessionUser = $this->permissionService->getCurrentUserId();
+        if ($userId === '' || ($sessionUser !== null && $sessionUser !== $userId)) {
             return [];
         }
-
-        $sessionUser = $this->permissionService->getCurrentUserId();
-        if ($sessionUser !== null && $sessionUser !== $userId) {
-            return [];
+        if (!$this->permissionService->canViewHelpdeskOverview($userId)) {
+            if (!$this->isRequesterDeskletUser($userId)) {
+                return [];
+            }
+            return [
+                new WidgetButton(
+                    WidgetButton::TYPE_MORE,
+                    $this->absoluteRoute('ticketcheck.customerPortal.index'),
+                    $this->l10n->t('desklet_requester_open_portal')
+                ),
+                new WidgetButton(
+                    WidgetButton::TYPE_NEW,
+                    $this->absoluteRoute('ticketcheck.customerPortal.createTicket'),
+                    $this->l10n->t('new_request')
+                ),
+            ];
         }
 
         return [
@@ -155,6 +169,94 @@ class TicketOverviewWidget implements IAPIWidgetV2, IButtonWidget, IIconWidget, 
                 $this->l10n->t('desklet_open_ticket_list')
             ),
         ];
+    }
+
+    /**
+     * Requester desklet gate (NH-04): a requester-scope uid that is not
+     * guest-contained. Guests keep the no-access empty state (their desklet
+     * is the portal, not the NC dashboard they cannot reach anyway).
+     */
+    private function isRequesterDeskletUser(string $userId): bool
+    {
+        try {
+            if ($this->permissionService->isGuest()) {
+                return false;
+            }
+            return $this->permissionService->isRequesterGroupMember($userId);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * "My requests" desklet (NH-04): own requests under the same
+     * requester-scope visibility as the portal list (D-R05/D-R15).
+     */
+    private function requesterItems(string $userId, ?string $since, int $limit): WidgetItems
+    {
+        if (!$this->isRequesterDeskletUser($userId)) {
+            return new WidgetItems([], $this->l10n->t('desklet_no_access'), '');
+        }
+
+        $limit = max(1, min(self::MAX_PAGE_ITEMS, $limit));
+        $iconUrl = $this->getIconUrl();
+        $email = (string)($this->permissionService->getCurrentUserEmail() ?? '');
+        $candidates = $this->ticketMapper->findByCreatorOrEmail($userId, $email, self::RECENT_CANDIDATES);
+        $visible = array_values(array_filter(
+            $candidates,
+            fn (Ticket $ticket): bool => $this->permissionService->isRequesterScopedTicket($ticket, $userId)
+        ));
+        $open = count(array_filter(
+            $visible,
+            static fn (Ticket $ticket): bool => !TicketMapper::isDoneStatus((string)$ticket->getStatus())
+        ));
+
+        $atAGlance = $this->l10n->t('desklet_requester_at_a_glance', [count($visible), $open]);
+        $rows = [];
+        $rows[] = $this->makeNav(
+            $this->l10n->t('my_requests'),
+            $this->l10n->t('desklet_requester_nav_portal_sub'),
+            $this->absoluteRoute('ticketcheck.customerPortal.index'),
+            self::ID_NAV_HOME,
+            $iconUrl
+        );
+        $rows[] = $this->makeNav(
+            $this->l10n->t('new_request'),
+            $this->l10n->t('desklet_requester_nav_create_sub'),
+            $this->absoluteRoute('ticketcheck.customerPortal.createTicket'),
+            self::ID_NAV_CREATE,
+            $iconUrl
+        );
+        foreach (array_slice($visible, 0, self::RECENT_CAP) as $i => $ticket) {
+            $rows[] = $this->makeRequesterRecentRow($ticket, $iconUrl, $i === 0);
+        }
+
+        return new WidgetItems($this->paginate($rows, $since, $limit), '', $atAGlance);
+    }
+
+    private function makeRequesterRecentRow(Ticket $ticket, string $iconUrl, bool $isFirst): WidgetItem
+    {
+        $statusKey = 'status_' . $ticket->getStatus();
+        $statusLabel = $this->l10n->t($statusKey);
+        $rawTitle = $ticket->getTitle() ?? '';
+        $titlePart = trim($rawTitle) === ''
+            ? $this->l10n->t('desklet_untitled')
+            : $this->elide($rawTitle, self::TITLE_MAX);
+        $title = $this->l10n->t('desklet_recent_title', [
+            (string) $ticket->getTicketNumber(),
+            $titlePart,
+        ]);
+        $subtitle = $isFirst
+            ? $this->l10n->t('desklet_recent_sub_first', [$statusLabel])
+            : $this->l10n->t('desklet_recent_sub', [$statusLabel]);
+
+        return new WidgetItem(
+            $title,
+            $subtitle,
+            $this->absoluteRoute('ticketcheck.customerPortal.viewTicket', ['id' => $ticket->getId()]),
+            $iconUrl,
+            'ticket-' . (string) $ticket->getId()
+        );
     }
 
     private function absoluteRoute(string $name, array $args = []): string

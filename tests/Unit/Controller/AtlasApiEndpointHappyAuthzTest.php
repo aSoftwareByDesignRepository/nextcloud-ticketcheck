@@ -505,6 +505,8 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			$mock->method('canBrowseGlobalProjectDirectory')->willReturn($allow);
 			$mock->method('canAccessProject')->willReturn($allow);
 			$mock->method('canViewTicketWithProjectAccess')->willReturn($allow);
+			// Portal paths use the portal-scoped predicate (requester isolation).
+			$mock->method('canPortalViewTicket')->willReturn($allow);
 			$mock->method('canBulkDeleteTickets')->willReturn($allow);
 			$mock->method('canMoveTicketToProject')->willReturn($allow);
 			$mock->method('isKnowledgeBaseIndexAvailable')->willReturn(true);

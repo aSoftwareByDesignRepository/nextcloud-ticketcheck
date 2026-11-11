@@ -15,6 +15,14 @@ return [
         ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
         ['name' => 'page#needsRole', 'url' => '/needs-role', 'verb' => 'GET'],
 
+        // "My requests" — dual-role staff surface for own requester tickets
+        ['name' => 'myRequests#index', 'url' => '/my-requests', 'verb' => 'GET'],
+        ['name' => 'requesterCompanion#index', 'url' => '/companion/api/v1/requester/tickets', 'verb' => 'GET'],
+        ['name' => 'requesterCompanion#create', 'url' => '/companion/api/v1/requester/tickets', 'verb' => 'POST'],
+        ['name' => 'requesterCompanion#show', 'url' => '/companion/api/v1/requester/tickets/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'requesterCompanion#reply', 'url' => '/companion/api/v1/requester/tickets/{id}/reply', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'requesterCompanion#download', 'url' => '/companion/api/v1/requester/tickets/{id}/attachments/{attachmentId}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+', 'attachmentId' => '\\d+']],
+
         // Dashboard routes
         ['name' => 'dashboard#index', 'url' => '/dashboard', 'verb' => 'GET'],
         ['name' => 'dashboard#getStats', 'url' => '/api/dashboard/stats', 'verb' => 'GET'],
@@ -142,7 +150,7 @@ return [
         // Keep the requirement literal (route files load without the app autoloader).
         // tests/Unit/Controller/SettingsPagesContractTest pins it to SettingsSectionCatalog::routeRequirement().
         ['name' => 'settings#section', 'url' => '/settings/{section}', 'verb' => 'GET',
-            'requirements' => ['section' => 'access|categories|resources|email|inbound-mail|knowledge-base|kb-categories|escalation|sla|about']],
+            'requirements' => ['section' => 'access|categories|resources|email|inbound-mail|knowledge-base|kb-categories|escalation|sla|about|transfer']],
         ['name' => 'settings#listTicketCategories', 'url' => '/api/settings/ticket-categories', 'verb' => 'GET'],
         ['name' => 'settings#createTicketCategory', 'url' => '/api/settings/ticket-categories', 'verb' => 'POST'],
         ['name' => 'settings#updateTicketCategory', 'url' => '/api/settings/ticket-categories/{key}', 'verb' => 'PUT', 'requirements' => ['key' => '[a-z0-9-]+']],
@@ -317,5 +325,12 @@ return [
         ['name' => 'companion#kbArticle', 'url' => '/companion/api/v1/kb/articles/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
         ['name' => 'companion#pushRegister', 'url' => '/companion/api/v1/push/register', 'verb' => 'POST'],
         ['name' => 'companion#pushUnregister', 'url' => '/companion/api/v1/push/unregister', 'verb' => 'POST'],
+
+        // ── Config & data transfer (test → production) ──────────────────
+        ['name' => 'transferApi#status', 'url' => '/api/admin/transfer/status', 'verb' => 'GET'],
+        ['name' => 'transferApi#export', 'url' => '/api/admin/transfer/export', 'verb' => 'POST'],
+        ['name' => 'transferApi#preview', 'url' => '/api/admin/transfer/preview', 'verb' => 'POST'],
+        ['name' => 'transferApi#apply', 'url' => '/api/admin/transfer/apply', 'verb' => 'POST'],
+        ['name' => 'transferApi#reconcile', 'url' => '/api/admin/transfer/reconcile', 'verb' => 'POST'],
     ],
 ];

@@ -522,6 +522,46 @@ class TicketMapper extends QBMapper
     }
 
     /**
+     * Candidate set for the internal-requester scope (spec D-R05): tickets
+     * authored by $userId OR addressed to $customerEmail. Callers MUST still
+     * post-filter each row through
+     * PermissionService::canViewTicketWithProjectAccess / the requester-scope
+     * helper — the e-mail leg is deliberately wider than visibility so the
+     * restricted-match rule (D-R15) is enforced in one place, not in SQL.
+     *
+     * @return array<int, Ticket>
+     */
+    public function findByCreatorOrEmail(string $userId, string $customerEmail, int $limit = 100, ?int $beforeId = null): array
+    {
+        $userId = trim($userId);
+        $normalized = strtolower(trim($customerEmail));
+        if ($userId === '' && $normalized === '') {
+            return [];
+        }
+        $qb = $this->db->getQueryBuilder();
+        $expr = $qb->expr();
+        $or = $expr->orX();
+        if ($userId !== '') {
+            $or->add($expr->eq('created_by', $qb->createNamedParameter($userId)));
+        }
+        if ($normalized !== '') {
+            $or->add($expr->eq(
+                $qb->func()->lower('customer_email'),
+                $qb->createNamedParameter($normalized)
+            ));
+        }
+        $qb->select('*')
+            ->from($this->getTableName())
+            ->where($or)
+            ->orderBy($beforeId === null ? 'created_at' : 'id', 'DESC')
+            ->setMaxResults(max(1, min(400, $limit)));
+        if ($beforeId !== null && $beforeId > 0) {
+            $qb->andWhere($expr->lt('id', $qb->createNamedParameter($beforeId, IQueryBuilder::PARAM_INT)));
+        }
+        return $this->findTicketEntities($qb);
+    }
+
+    /**
      * Count tickets for a customer email (sidebar footer / lightweight summaries).
      */
     public function countByCustomerEmail(string $customerEmail): int

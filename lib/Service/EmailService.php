@@ -47,6 +47,8 @@ class EmailService
     private ?TicketWatcherMapper $watcherMapper;
     private ?InboundSmtpSendService $inboundSmtp;
     private ?PortalActorResolver $actorResolver;
+    private ?PermissionService $permissionService;
+    private ?CompanionNotificationService $companionNotify;
 
     public function __construct(
         IMailer $mailer,
@@ -63,9 +65,13 @@ class EmailService
         IGroupManager $groupManager,
         ?TicketWatcherMapper $watcherMapper = null,
         ?InboundSmtpSendService $inboundSmtp = null,
-        ?PortalActorResolver $actorResolver = null
+        ?PortalActorResolver $actorResolver = null,
+        ?PermissionService $permissionService = null,
+        ?CompanionNotificationService $companionNotify = null
     ) {
         $this->actorResolver = $actorResolver;
+        $this->permissionService = $permissionService;
+        $this->companionNotify = $companionNotify;
         $this->mailer = $mailer;
         $this->config = $config;
         $this->urlGenerator = $urlGenerator;
@@ -206,6 +212,7 @@ class EmailService
         };
 
         $sent = $this->sendToGuestRecipients($ticket, null, EmailPreferencesService::PREF_GUEST_TICKET_UPDATED, $composeGuest);
+        $this->notifyRequesterBells($ticket, null, 'ticket_requester_update');
         $this->notifyWatchersIfAvailable($ticket, $composeStaff, null);
         return $sent;
     }
@@ -247,6 +254,7 @@ class EmailService
         };
 
         $sent = $this->sendToGuestRecipients($ticket, null, EmailPreferencesService::PREF_GUEST_TICKET_STATUS_CHANGED, $composeGuest);
+        $this->notifyRequesterBells($ticket, null, 'ticket_requester_status');
         $this->notifyWatchersIfAvailable($ticket, $composeStaff, null);
         return $sent;
     }
@@ -259,7 +267,7 @@ class EmailService
      * @param string $commentContent
      * @return bool
      */
-    public function sendNewCommentNotification(Ticket $ticket, string $commentAuthor, string $commentContent, ?string $excludeUserId = null): bool
+    public function sendNewCommentNotification(Ticket $ticket, string $commentAuthor, string $commentContent, ?string $excludeUserId = null, bool $isCustomerComment = false): bool
     {
         $composeGuest = function () use ($ticket, $commentAuthor, $commentContent): array {
             $appName = $this->getAppNameForSubject();
@@ -287,10 +295,13 @@ class EmailService
         };
 
         $sentGuests = $this->sendToGuestRecipients($ticket, $excludeUserId, EmailPreferencesService::PREF_GUEST_TICKET_COMMENT, $composeGuest);
+        $this->notifyRequesterBells($ticket, $excludeUserId, 'ticket_requester_reply');
 
         // Notify internal members only when the comment is from a customer.
-        // This avoids mislabeling internal agent updates as "customer replies".
-        if ($this->isGuestUserId($excludeUserId)) {
+        // Portal-side authors pass $isCustomerComment (requesters cannot be
+        // detected via helpdesk_customers membership — spec MH-10); the
+        // legacy isGuestUserId probe stays for contained guests.
+        if ($isCustomerComment || $this->isGuestUserId($excludeUserId)) {
             $this->sendInternalCustomerCommentNotification($ticket, $commentAuthor, $commentContent, $excludeUserId);
         }
 
@@ -1099,22 +1110,22 @@ class EmailService
     private function sendToGuestRecipients(Ticket $ticket, ?string $excludeUserId, ?string $notificationType, callable $composeContent): bool
     {
         $projectId = $ticket->getProjectId();
+        $sentAny = false;
+        $handledUids = [];
 
         if ($projectId === null) {
-            $this->logger->info('Skipping notification: no project on ticket #' . $ticket->getTicketNumber());
-            return false;
-        }
-
+            // No guest_access recipients exist for project-less tickets —
+            // requester recipients below still run (MH-10).
+            $this->logger->info('Skipping guest-project notification fan-out: no project on ticket #' . $ticket->getTicketNumber());
+        } else {
         $guestUserIds = $this->guestProjectAccessMapper->getUsersForProject((int)$projectId);
 
         if (empty($guestUserIds)) {
             $this->logger->info('No guest recipients for project ' . $projectId . ' (ticket #' . $ticket->getTicketNumber() . ')');
-            return false;
         }
 
-        $sentAny = false;
-
         foreach ($guestUserIds as $guestUserId) {
+            $handledUids[$guestUserId] = true;
             // Skip the comment author
             if ($excludeUserId && $guestUserId === $excludeUserId) {
                 $this->logger->debug('Skipping notification to comment author: ' . $guestUserId);
@@ -1155,6 +1166,15 @@ class EmailService
                 continue;
             }
 
+            // NH-05: a requester-scope uid holding a guest_access row is
+            // evaluated under the restricted requester leg (D-R15) — the
+            // looser guest e-mail match must never leak a peer's ticket.
+            if ($this->permissionService !== null
+                && $this->permissionService->isRequesterGroupMember($guestUserId)
+                && !$this->permissionService->isRequesterScopedTicket($ticket, $guestUserId, $email)) {
+                continue;
+            }
+
             $payload = $this->withUserLanguage($guestUserId, fn () => $composeContent());
             if ($this->sendEmail($email, $name, (string)$payload['subject'], (string)$payload['htmlBody'], (string)$payload['textBody'], $ticket->getId(), $ticket->getCustomerEmail())) {
                 $sentAny = true;
@@ -1164,8 +1184,82 @@ class EmailService
         if (!$sentAny) {
             $this->logger->info('No valid guest recipient emails for project ' . $projectId . ' (ticket #' . $ticket->getTicketNumber() . ')');
         }
+        }
+
+        // Internal requesters (spec MH-10/D-R09): uid recipients resolved
+        // through the single requester-scope authority — their tickets reach
+        // them even with project_id=null, which the guest_access path can
+        // never cover. guest_access members already handled are skipped.
+        foreach ($this->requesterRecipientUids($ticket) as $uid) {
+            if (isset($handledUids[$uid])) {
+                continue;
+            }
+            if ($excludeUserId !== null && $excludeUserId !== '' && $uid === $excludeUserId) {
+                continue;
+            }
+            if ($notificationType && !$this->emailPreferences->userWantsEmail($uid, $notificationType)) {
+                $this->logger->debug('Skipping requester notification: user has disabled ' . $notificationType, ['userId' => $uid]);
+                continue;
+            }
+            $user = $this->userManager->get($uid);
+            $email = $user !== null ? $user->getEMailAddress() : null;
+            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                // E-15: requesters without an NC e-mail simply get no mail.
+                continue;
+            }
+            $name = $user !== null ? ($user->getDisplayName() ?: $uid) : $uid;
+            $payload = $this->withUserLanguage($uid, fn () => $composeContent());
+            if ($this->sendEmail($email, $name, (string)$payload['subject'], (string)$payload['htmlBody'], (string)$payload['textBody'], $ticket->getId(), $ticket->getCustomerEmail())) {
+                $sentAny = true;
+            }
+        }
 
         return $sentAny;
+    }
+
+    /**
+     * Requester-scope uids for whom this ticket is customer-visible
+     * (spec MH-10): own tickets + restricted e-mail leg (D-R15), resolved
+     * by PermissionService — the single scoping authority. Returns [] when
+     * the service is unwired (legacy/test construction).
+     *
+     * @return list<string>
+     */
+    private function requesterRecipientUids(Ticket $ticket): array
+    {
+        if ($this->permissionService === null) {
+            return [];
+        }
+        try {
+            return $this->permissionService->requesterRecipientUids($ticket);
+        } catch (\Throwable $e) {
+            // Notification fan-out must never break the send flow.
+            $this->logger->warning('Requester recipient resolution failed', [
+                'ticket_id' => $ticket->getId(),
+                'exception' => $e,
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * NC notification bell for requester-scope recipients (spec NH-01):
+     * mirrors the e-mail trigger so the requester sees the event in-app too.
+     * No-op when the companion service or the notifications app is absent.
+     */
+    private function notifyRequesterBells(Ticket $ticket, ?string $excludeUserId, string $subject): void
+    {
+        if ($this->companionNotify === null) {
+            return;
+        }
+        try {
+            $this->companionNotify->notifyRequesterTicketEvent($ticket, $excludeUserId ?? '', $subject);
+        } catch (\Throwable $e) {
+            $this->logger->warning('Requester bell notification failed', [
+                'ticket_id' => $ticket->getId(),
+                'exception' => $e,
+            ]);
+        }
     }
 
     /**

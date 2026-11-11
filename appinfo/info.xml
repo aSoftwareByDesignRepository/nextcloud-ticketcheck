@@ -389,6 +389,9 @@ Almanya Federal Araştırma, Teknoloji ve Uzay Bakanlığı (BMFTR) TicketCheck'
 		<command>OCA\Ticketcheck\Command\GuestsMigrateCommand</command>
 		<command>OCA\Ticketcheck\Command\GuestsRollbackCommand</command>
 		<command>OCA\Ticketcheck\Command\GuestsPurgeDisabledCommand</command>
+		<command>OCA\Ticketcheck\Command\ConfigExportCommand</command>
+		<command>OCA\Ticketcheck\Command\ConfigImportCommand</command>
+		<command>OCA\Ticketcheck\Command\ConfigReconcileCommand</command>
 	</commands>
 
 	<repair-steps>

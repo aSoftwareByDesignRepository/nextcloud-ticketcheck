@@ -248,7 +248,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket = new Ticket();
         $ticket->setId(7);
         $this->ticketMapper->method('find')->with(7)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(true);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(true);
 
         $request = $this->createMock(IRequest::class);
         $request->method('getParam')->willReturnCallback(static fn(string $name) => match ($name) {
@@ -276,7 +276,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket->setStatus(Ticket::STATUS_DONE);
         $this->ticketMapper->method('find')->with(7)->willReturn($ticket);
         $this->ticketService->method('getActiveTicket')->with(7)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(true);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(true);
 
         $controller = $this->buildControllerWithRequest($request);
         $response = $controller->addReply(7);
@@ -298,7 +298,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket = new Ticket();
         $ticket->setId(7);
         $this->ticketMapper->method('find')->with(7)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(false);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(false);
 
         $controller = $this->buildControllerWithRequest($request);
         $response = $controller->addReply(7);
@@ -314,7 +314,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket = new Ticket();
         $ticket->setId(11);
         $this->ticketMapper->method('find')->with(11)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(false);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(false);
 
         $response = $this->controller->downloadAttachment(11, 1);
 
@@ -341,7 +341,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket = new Ticket();
         $ticket->setId(3);
         $this->ticketMapper->method('find')->with(3)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(false);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(false);
 
         $response = $this->controller->uploadAttachment(3);
 
@@ -357,7 +357,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket->setStatus(Ticket::STATUS_DONE);
         $this->ticketMapper->method('find')->with(9)->willReturn($ticket);
         $this->ticketService->method('getActiveTicket')->with(9)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(true);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(true);
 
         $response = $this->controller->uploadAttachment(9);
 
@@ -421,7 +421,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket->setId(8);
         $ticket->setStatus(Ticket::STATUS_DONE);
         $this->ticketMapper->method('find')->with(8)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(true);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(true);
 
         $request = $this->createMock(IRequest::class);
         $request->method('getParam')->willReturnCallback(static fn(string $name, $default = null) => match ($name) {
@@ -444,7 +444,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket->setStatus(Ticket::STATUS_NEW);
         $this->ticketMapper->method('find')->with(8)->willReturn($ticket);
         $this->ticketService->method('getActiveTicket')->with(8)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(true);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(true);
 
         $request = $this->createMock(IRequest::class);
         $request->method('getParam')->willReturnCallback(static fn(string $name, $default = null) => match ($name) {
@@ -466,7 +466,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket->setStatus(Ticket::STATUS_DONE);
         $this->ticketMapper->method('find')->with(10)->willReturn($ticket);
         $this->ticketService->method('getActiveTicket')->with(10)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(true);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(true);
         $this->surveyService->method('submitSurvey')
             ->willThrowException(new \InvalidArgumentException('satisfaction_survey_already_submitted'));
 
@@ -494,7 +494,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $survivor->setStatus(Ticket::STATUS_DONE);
         $this->ticketMapper->method('find')->with(30)->willReturn($shell);
         $this->ticketService->method('getActiveTicket')->with(30)->willReturn($survivor);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(true);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(true);
         $this->surveyService->expects(self::once())
             ->method('submitSurvey')
             ->with(40, 5, null);
@@ -648,7 +648,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket->setStatus('waiting_customer');
         $this->ticketMapper->method('find')->with(12)->willReturn($ticket);
         $this->ticketService->method('getActiveTicket')->with(12)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(true);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(true);
         $this->ticketService->method('addComment')->willReturn(new Comment());
 
         $request = $this->createMock(IRequest::class);
@@ -672,7 +672,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket->setId(9);
         $ticket->setStatus(Ticket::STATUS_DONE);
         $this->ticketMapper->method('find')->with(9)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(false);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(false);
 
         $request = $this->createMock(IRequest::class);
         $request->method('getParam')->willReturnCallback(static fn(string $name, $default = null) => match ($name) {
@@ -696,7 +696,7 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $ticket = new Ticket();
         $ticket->setId(42);
         $this->ticketMapper->method('find')->with(42)->willReturn($ticket);
-        $this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(false);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(false);
 
         $response = $this->controller->viewTicket(42);
 

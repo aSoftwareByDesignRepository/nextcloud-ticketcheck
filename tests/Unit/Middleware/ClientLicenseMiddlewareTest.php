@@ -88,6 +88,40 @@ final class ClientLicenseMiddlewareTest extends TestCase
 		$mw->beforeController(new \stdClass(), 'bootstrap');
 	}
 
+	#[\PHPUnit\Framework\Attributes\DataProvider('requesterRoutes')]
+	public function testRequesterBypassRequiresAuthenticatedRequesterControllerAndScope(string $path, bool $requesterController, bool $allowed, bool $passes): void
+	{
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth());
+		$request->method('getPathInfo')->willReturn($path);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$gate = $this->createMock(CompanionGateService::class);
+		$gate->method('canAccessRequesterCompanion')->with('alice')->willReturn($allowed);
+		$gate->method('canAccessCompanion')->willReturn(false);
+		$license = $this->createMock(LicenseService::class);
+		$license->expects(self::never())->method('isMobilePlanActive');
+		$license->expects(self::never())->method('assertMobileAccess');
+		$controller = $requesterController
+			? $this->getMockBuilder(\OCA\Ticketcheck\Controller\RequesterCompanionController::class)->disableOriginalConstructor()->getMock()
+			: new \stdClass();
+		if (!$passes) $this->expectException(RoleDeniedException::class);
+		$this->makeMw($request, $session, $license, $gate)->beforeController($controller, 'index');
+	}
+
+	public static function requesterRoutes(): array
+	{
+		return [
+			['/apps/ticketcheck/companion/api/v1/requester/tickets', true, true, true],
+			['/apps/ticketcheck/companion/api/v1/requester/tickets', true, false, false],
+			['/apps/ticketcheck/companion/api/v1/requester/tickets', false, true, false],
+			['/apps/ticketcheck/companion/api/v1/inbox', true, true, false],
+			['/apps/ticketcheck/companion/api/v1/requester/../inbox', true, true, false],
+		];
+	}
+
 	public function testNonCompanionPathIsNoOp(): void
 	{
 		$request = $this->createMock(IRequest::class);

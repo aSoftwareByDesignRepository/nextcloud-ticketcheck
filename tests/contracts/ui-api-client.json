@@ -4,6 +4,40 @@
  "companionDir": "mobile/ticketcheck",
  "contracts": [
   {
+   "id": "requester-create-fields",
+   "param": "title+description",
+   "description": "Requester create uses server-owned NC identity and no project. Both clients collect title and description; companion requires an automatically generated idempotency header.",
+   "errorCodes": ["request_failed", "idempotency_key_required"],
+   "server": [
+    {"file": "lib/Controller/CustomerPortalController.php", "needles": ["getParam('title'", "getParam('description'", "title_is_required", "description_is_required"]},
+    {"file": "lib/Controller/RequesterCompanionController.php", "needles": ["storeTicket()", "requester.create", "idempotency_key_required"]}
+   ],
+   "web": [
+    {"file": "templates/portal/create-ticket.php", "needles": ["name=\"title\"", "name=\"description\""]}
+   ],
+   "mobile": [
+    {"file": "src/screens/RequesterPortalScreen.tsx", "needles": ["field('title'", "field('description'", "create.titleRequired", "create.descriptionRequired", "createRequesterTicket(", "newIdempotencyKey()"]},
+    {"file": "src/api/requester.ts", "needles": ["JSON.stringify({ title, description", "X-TC-Idempotency-Key"]}
+   ]
+  },
+  {
+   "id": "requester-public-reply",
+   "param": "comment",
+   "description": "Portal and native requester replies require a nonempty public message; optional attachments travel with the same reply. Internal-note and staff identity inputs are not exposed.",
+   "errorCodes": ["request_failed", "idempotency_key_required"],
+   "server": [
+    {"file": "lib/Controller/CustomerPortalController.php", "needles": ["getParam('comment'", "comment_required"]},
+    {"file": "lib/Controller/RequesterCompanionController.php", "needles": ["addReply($id)", "requester.reply."]}
+   ],
+   "web": [
+    {"file": "templates/portal/ticket-detail.php", "needles": ["name=\"comment\""]}
+   ],
+   "mobile": [
+    {"file": "src/screens/RequesterPortalScreen.tsx", "needles": ["field('comment'", "ticket.commentEmpty", "replyToRequesterTicket("]},
+    {"file": "src/api/requester.ts", "needles": ["body.append('comment', comment)", "X-TC-Idempotency-Key", "attachments[]"]}
+   ]
+  },
+  {
    "id": "ticket-resources-select",
    "param": "resources",
    "description": "Optional multi-select of enabled resource keys on staff ticket create/edit and companion create. Server validates every key exists+enabled (uniform 422 `fields:{resources}`); portal never binds the param.",

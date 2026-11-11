@@ -59,10 +59,22 @@ class CompanionGateService
 		return $this->permissions->canViewHelpdeskOverview($uid);
 	}
 
+	public function canAccessRequesterCompanion(string $uid): bool
+	{
+		try {
+			return $uid !== '' && $this->userManager->get($uid) !== null
+				&& !$this->groupManager->isInGroup($uid, PermissionService::GROUP_HELPDESK_CUSTOMERS)
+				&& $this->permissions->isRequesterGroupMember($uid)
+				&& $this->permissions->canUserAccessAppByUid($uid);
+		} catch (\Throwable) {
+			return false;
+		}
+	}
+
 	public function resolveRole(string $uid): string
 	{
 		if (!$this->canAccessCompanion($uid)) {
-			return 'denied';
+			return $this->resolveDeniedVariant($uid);
 		}
 		if ($this->userManager->get($uid) === null) {
 			return 'denied';
@@ -72,6 +84,32 @@ class CompanionGateService
 			return 'admin';
 		}
 		return 'agent';
+	}
+
+	/**
+	 * Denied-role refinement (spec NH-06): requester-scope uids get a
+	 * dedicated wire value so the client can show tailored copy + the
+	 * portal deep link instead of the generic staff-only wall. Older
+	 * clients fail closed on the unknown enum (same as 'denied').
+	 * Guest containment keeps precedence — a customer+requester uid stays
+	 * 'denied' (D-R04), and no seat is ever implied by this role (NN-11).
+	 */
+	private function resolveDeniedVariant(string $uid): string
+	{
+		try {
+			if ($uid === '' || $this->userManager->get($uid) === null) {
+				return 'denied';
+			}
+			if ($this->groupManager->isInGroup($uid, PermissionService::GROUP_HELPDESK_CUSTOMERS)) {
+				return 'denied';
+			}
+			if ($this->permissions->isRequesterGroupMember($uid)) {
+				return 'requester';
+			}
+		} catch (\Throwable) {
+			// Role resolution fails closed.
+		}
+		return 'denied';
 	}
 
 	/**
@@ -94,8 +132,12 @@ class CompanionGateService
 			$maxAttachment = 10 * 1024 * 1024;
 		}
 
-		$pushEnabled = $this->push?->isFeatureEnabled() ?? false;
-		$features = self::FEATURES;
+		$staff = in_array($role, ['agent', 'admin'], true);
+		$pushEnabled = $staff && ($this->push?->isFeatureEnabled() ?? false);
+		$features = $staff ? self::FEATURES : [];
+		if ($this->canAccessRequesterCompanion($uid)) {
+			$features[] = 'requesterPortal';
+		}
 		if ($pushEnabled) {
 			$features[] = 'push';
 		}
@@ -117,7 +159,7 @@ class CompanionGateService
 				'envelope' => $envelopeWire,
 				'vendorPublicKeyB64' => VendorPublicKey::publicKeyB64(),
 				'seat' => [
-					'assigned' => $gate['seatAssigned'] && $gate['seatWithinLimit'] && $gate['licenseValid'],
+					'assigned' => $staff && $gate['seatAssigned'] && $gate['seatWithinLimit'] && $gate['licenseValid'],
 					'validUntil' => is_string($validUntil) ? $validUntil : null,
 				],
 			],

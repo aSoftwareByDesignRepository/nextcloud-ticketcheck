@@ -32,6 +32,7 @@ add_to() {
 ensure_group helpdesk_agents
 ensure_group helpdesk_admins
 ensure_group helpdesk_customers
+ensure_group helpdesk_requesters
 
 ensure_user tkcagent 'TKC Agent' 'TkC_Agent_E2e_2026!'
 add_to helpdesk_agents tkcagent
@@ -53,6 +54,20 @@ add_to helpdesk_customers e2e_guest
 ensure_user tkcdual 'TKC Dual Role' 'TkC_Dual_E2e_2026!'
 add_to helpdesk_customers tkcdual
 add_to helpdesk_agents tkcdual
+
+# Internal requesters (spec US-R01…US-R05): pure requester-scope NC users —
+# no staff, guest, or project membership. Two users enable the GAC-3
+# cross-requester isolation fixture.
+ensure_user tkcrequester 'TKC Requester' 'TkC_Requester_E2e_2026!'
+add_to helpdesk_requesters tkcrequester
+
+ensure_user tkcrequester2 'TKC Requester Two' 'TkC_Requester2_E2e_2026!'
+add_to helpdesk_requesters tkcrequester2
+
+# Dual-role staff+requester (US-R04): agent who is also a requester member.
+ensure_user tkcagentreq 'TKC Agent Requester' 'TkC_AgentReq_E2e_2026!'
+add_to helpdesk_agents tkcagentreq
+add_to helpdesk_requesters tkcagentreq
 
 echo "seed-ticketcheck-e2e-users: ok"
 php occ user:info tkcdual | sed -n '1,12p'

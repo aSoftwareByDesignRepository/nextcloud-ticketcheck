@@ -19,10 +19,11 @@ $urlGenerator = $_['urlGenerator'];
 $l = $_['l'];
 
 $message = (string)($_['message'] ?? $_['error'] ?? $l->t('an_error_occurred'));
-$recoveryHref = !empty($_['isGuest'])
+$portalIsHome = !empty($_['isGuest']) || !empty($_['isPortalHome']);
+$recoveryHref = $portalIsHome
     ? $urlGenerator->linkToRoute('ticketcheck.customerPortal.index')
     : $urlGenerator->linkToRoute('ticketcheck.page.index');
-$recoveryLabel = !empty($_['isGuest'])
+$recoveryLabel = $portalIsHome
     ? $l->t('portal_home')
     : $l->t('back_to_dashboard');
 ?>

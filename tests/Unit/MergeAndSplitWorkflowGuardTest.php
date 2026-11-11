@@ -67,8 +67,8 @@ class MergeAndSplitWorkflowGuardTest extends TestCase
 
 		$locking = $this->createMock(ILockingProvider::class);
 		$expectedKeys = [
-			TicketWorkflowLock::KEY_PREFIX . '10',
-			TicketWorkflowLock::KEY_PREFIX . '20',
+			TicketWorkflowLock::LOCK_PREFIX . '10',
+			TicketWorkflowLock::LOCK_PREFIX . '20',
 		];
 		$lockCall = 0;
 		$locking->expects(self::exactly(2))->method('acquireLock')
@@ -277,7 +277,7 @@ class MergeAndSplitWorkflowGuardTest extends TestCase
 
 	public function testMergeAndSplitShareTheSameLockNamespace(): void
 	{
-		self::assertSame('ticketcheck/ticket/', TicketWorkflowLock::KEY_PREFIX);
+		self::assertSame('ticketcheck/ticket/', TicketWorkflowLock::LOCK_PREFIX);
 		// Shared namespace is what serializes concurrent merge↔split on one ticket.
 		$lock = $this->workflowLockAllowing();
 		$seen = false;
@@ -291,7 +291,7 @@ class MergeAndSplitWorkflowGuardTest extends TestCase
 	{
 		$locking = $this->createMock(ILockingProvider::class);
 		$locking->expects(self::once())->method('acquireLock')
-			->with(TicketWorkflowLock::KEY_PREFIX . '10', ILockingProvider::LOCK_EXCLUSIVE, self::anything());
+			->with(TicketWorkflowLock::LOCK_PREFIX . '10', ILockingProvider::LOCK_EXCLUSIVE, self::anything());
 		$locking->expects(self::once())->method('releaseLock');
 
 		$lock = new TicketWorkflowLock($locking, $this->createMock(LoggerInterface::class));
@@ -308,7 +308,7 @@ class MergeAndSplitWorkflowGuardTest extends TestCase
 	{
 		$locking = $this->createMock(ILockingProvider::class);
 		$locking->expects(self::once())->method('acquireLock')
-			->with(TicketWorkflowLock::KEY_PREFIX . '20', ILockingProvider::LOCK_EXCLUSIVE, self::anything());
+			->with(TicketWorkflowLock::LOCK_PREFIX . '20', ILockingProvider::LOCK_EXCLUSIVE, self::anything());
 		$locking->expects(self::once())->method('releaseLock');
 
 		$lock = new TicketWorkflowLock($locking, $this->createMock(LoggerInterface::class));
@@ -326,8 +326,8 @@ class MergeAndSplitWorkflowGuardTest extends TestCase
 	{
 		$locking = $this->createMock(ILockingProvider::class);
 		$expected = [
-			TicketWorkflowLock::KEY_PREFIX . '10',
-			TicketWorkflowLock::KEY_PREFIX . '20',
+			TicketWorkflowLock::LOCK_PREFIX . '10',
+			TicketWorkflowLock::LOCK_PREFIX . '20',
 		];
 		$call = 0;
 		$locking->expects(self::exactly(2))->method('acquireLock')

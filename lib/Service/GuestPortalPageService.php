@@ -81,6 +81,11 @@ class GuestPortalPageService
 			'user_display_name' => $this->permission->getCurrentUserDisplayName() ?? 'Guest',
 			'user_display_email' => $this->permission->getCurrentUserEmail() ?? '',
 			'requesttoken' => $requesttoken,
+			// NC-managed sessions (internal requesters + dual-role staff) get
+			// the requester nav variant — guest-only items (logout/password/
+			// deletion) are meaningless or destructive on an NC session
+			// (spec D-R07 / NN-07).
+			'isRequester' => $this->permission->isNcManagedPortalUser(),
 			'canCreateTicket' => $this->navigation->canGuestCreateTicket(),
 			'showKnowledgeBase' => $this->permission->isKnowledgeBasePortalContentEnabled(),
 			'scopeContext' => $scopeContext,

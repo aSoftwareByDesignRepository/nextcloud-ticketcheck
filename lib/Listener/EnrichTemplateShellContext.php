@@ -120,10 +120,24 @@ class EnrichTemplateShellContext implements IEventListener
 			if (trim((string)($params['pageHelp'] ?? '')) === '') {
 				$params['pageHelp'] = $errorMeta['pageHelp'];
 			}
+			// E-07: the portal is the in-app home for portal-scope users — the
+			// recovery CTA must point there, not at a dashboard they lack.
+			if (!isset($params['isPortalHome'])) {
+				$params['isPortalHome'] = $this->permissionService->isGuest()
+					|| $this->permissionService->isRequester();
+			}
+			// Support handle (spec §7): a requester reaching a denied surface
+			// leaves one structured WARN line.
+			$this->permissionService->logRequesterScopeDenial(
+				(string)($this->request->getRequestUri() ?? 'error')
+			);
 		}
 
 		$pageId = (string)($params['pageId'] ?? $this->navigationContext->resolvePageIdFromPath());
-		$navMode = (string)($params['navMode'] ?? ($isGuest ? 'guest' : 'staff'));
+		// Pure requesters get the portal shell on error/denial pages too —
+		// staff chrome would only offer links into more denials (E-07).
+		// Dual-role staff keep the staff shell: their error context is staff.
+		$navMode = (string)($params['navMode'] ?? ($isGuest || $this->permissionService->isRequester() ? 'guest' : 'staff'));
 		$scopeInput = is_array($params['scopeContext'] ?? null) ? $params['scopeContext'] : [];
 
 		if (empty($params['shellWidth'])) {
@@ -269,6 +283,7 @@ class EnrichTemplateShellContext implements IEventListener
 		$wide = [
 			'tickets',
 			'tickets-kanban',
+			'my-requests',
 			'dashboard',
 			'projects',
 			'customers',

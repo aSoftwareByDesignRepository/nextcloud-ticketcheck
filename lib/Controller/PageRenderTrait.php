@@ -51,6 +51,7 @@ trait PageRenderTrait
 	private const WIDE_SHELL_PAGE_IDS = [
 		'tickets',
 		'tickets-kanban',
+		'my-requests',
 		'dashboard',
 		'projects',
 		'customers',

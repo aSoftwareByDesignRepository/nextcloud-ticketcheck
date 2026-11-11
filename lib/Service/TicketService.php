@@ -207,6 +207,14 @@ class TicketService
 
         // Validate ticket
         $errors = $ticket->validate();
+        if (!empty($errors) && !empty($data['allow_missing_customer_email'])) {
+            // Requester without an NC e-mail (spec E-15): the ticket still
+            // scopes via created_by=<uid>. Only the hard-required error is
+            // relaxed — a malformed address stays invalid.
+            if (($errors['customerEmail'] ?? '') === 'Customer email is required') {
+                unset($errors['customerEmail']);
+            }
+        }
         if (!empty($errors)) {
             throw new \Exception('Validation failed: ' . implode(', ', $errors));
         }

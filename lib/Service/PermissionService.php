@@ -29,13 +29,30 @@ class PermissionService
     private const TABLE_PROJECT_MEMBERS = 'hd_proj_members';
     public const GROUP_HELPDESK_AGENTS = 'helpdesk_agents';
     public const GROUP_HELPDESK_ADMINS = 'helpdesk_admins';
+    public const GROUP_HELPDESK_REQUESTERS = 'helpdesk_requesters';
     private const APP_ACCESS_ADMINS_KEY = 'app_access_helpdesk_admins';
     private const APP_ACCESS_AGENTS_KEY = 'app_access_helpdesk_agents';
     private const APP_ACCESS_CUSTOMERS_KEY = 'app_access_helpdesk_customers';
+    private const APP_ACCESS_REQUESTERS_KEY = 'app_access_helpdesk_requesters';
+    private const APP_ACCESS_REQUESTER_GROUPS_KEY = 'app_access_requester_groups';
+    /** NH-03: every logged-in NC user is requester-scope (opt-in, default off). */
+    private const APP_ACCESS_REQUESTER_ALL_USERS_KEY = 'app_access_requester_all_users';
+    /** NH-05/Q-R2: requester-scope uids may hold helpdesk_guest_access rows (opt-in, default off). */
+    private const APP_ACCESS_REQUESTER_PROJECT_ACCESS_KEY = 'app_access_requester_project_access';
     private const APP_ACCESS_EXTRA_GROUPS_KEY = 'app_access_extra_groups';
+    /** Max groups an admin may grant requester scope (picker-enforced). */
+    public const REQUESTER_GROUPS_LIMIT = 50;
     private const ACCESS_RESTRICTION_KEY = 'access_restriction_enabled';
     private const ACCESS_ALLOWED_USERS_KEY = 'access_allowed_user_ids';
     private const APP_ADMIN_USERS_KEY = 'app_admin_user_ids';
+
+    /**
+     * Non-uid ticket provenance markers (ticket.created_by) that count as
+     * "system" for the restricted requester e-mail leg (D-R15). A live
+     * non-staff uid is never in this list — that is the whole point of the
+     * restriction (peer-authored tickets must not match via a shared e-mail).
+     */
+    private const SYSTEM_TICKET_CREATORS = ['inbound-email'];
 
     private IUserSession $userSession;
     private IGroupManager $groupManager;
@@ -43,6 +60,8 @@ class PermissionService
     private GuestProjectAccessMapper $guestProjectAccessMapper;
     private IDBConnection $db;
     private ?PortalActorResolver $actorResolver;
+    private ?\Psr\Log\LoggerInterface $logger;
+    private ?\OCP\IUserManager $userManager;
 
     /** @var array<string, bool> Per-request group-membership cache (key: "userId:groupId") */
     private array $groupCache = [];
@@ -57,14 +76,28 @@ class PermissionService
         IConfig $config,
         GuestProjectAccessMapper $guestProjectAccessMapper,
         IDBConnection $db,
-        ?PortalActorResolver $actorResolver = null
+        ?PortalActorResolver $actorResolver = null,
+        ?\Psr\Log\LoggerInterface $logger = null,
+        ?\OCP\IUserManager $userManager = null
     ) {
         $this->actorResolver = $actorResolver;
+        $this->userManager = $userManager;
         $this->userSession = $userSession;
         $this->groupManager = $groupManager;
         $this->config = $config;
         $this->guestProjectAccessMapper = $guestProjectAccessMapper;
         $this->db = $db;
+        $this->logger = $logger;
+    }
+
+    /**
+     * Requester-side project access toggle evaluation (NH-05). Separate from
+     * requesterProjectAccessForUid() so settings parsing stays in one place.
+     * @param array<string, mixed> $settings
+     */
+    private function requesterProjectAccessEnabled(array $settings): bool
+    {
+        return !empty($settings['requester_project_access']);
     }
 
     // ── Per-request cache helpers ────────────────────────────────────────────
@@ -74,6 +107,31 @@ class PermissionService
         $key = $userId . ':' . $groupId;
         if (!array_key_exists($key, $this->groupCache)) {
             $this->groupCache[$key] = (bool)$this->groupManager->isInGroup($userId, $groupId);
+        }
+        return $this->groupCache[$key];
+    }
+
+    /**
+     * Fail-closed variant for requester-scope grants (D-R18): a group-backend
+     * exception (LDAP/AD hiccup) yields no-scope + WARN, never a 500 and never
+     * a grant. Containment checks keep using isInGroupCached() unchanged —
+     * a backend hiccup there must not lock admins out (fail-open posture),
+     * while grant checks must always fail closed.
+     */
+    private function isInGroupFailClosed(string $userId, string $groupId): bool
+    {
+        $key = $userId . ':' . $groupId;
+        if (!array_key_exists($key, $this->groupCache)) {
+            try {
+                $this->groupCache[$key] = (bool)$this->groupManager->isInGroup($userId, $groupId);
+            } catch (\Throwable $e) {
+                $this->groupCache[$key] = false;
+                $this->logger?->warning('[requester-scope] group backend check failed; denying scope grant', [
+                    'user_id' => $userId,
+                    'group_id' => $groupId,
+                    'exception' => $e,
+                ]);
+            }
         }
         return $this->groupCache[$key];
     }
@@ -132,6 +190,159 @@ class PermissionService
             return false;
         }
         return $this->isInGroupCached($userId, self::GROUP_HELPDESK_CUSTOMERS);
+    }
+
+    /**
+     * Whether the uid holds requester-scope group membership under the
+     * requester master toggle. Low-level predicate — used by isRequester(),
+     * hasEnabledHelpdeskScope(), the directory door, and the dual-role
+     * "My requests" nav (a staff member can be in a requester group too).
+     *
+     * Fail-closed (spec D-R18): a group-backend/LDAP exception yields
+     * false, never a 500 and never a grant.
+     */
+    public function isRequesterGroupMember(string $userId): bool
+    {
+        if ($userId === '' || PortalActorResolver::isIdentityActor($userId)) {
+            return false;
+        }
+        return $this->isRequesterGroupMemberWithSettings($userId, $this->getAppAccessSettings());
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function isRequesterGroupMemberWithSettings(string $userId, array $settings): bool
+    {
+        if (empty($settings['allow_helpdesk_requesters'])) {
+            return false;
+        }
+        // NH-03 opt-in: the deployment wants every NC user to be a requester.
+        if (!empty($settings['requester_all_users'])) {
+            return true;
+        }
+        if ($this->isInGroupFailClosed($userId, self::GROUP_HELPDESK_REQUESTERS)) {
+            return true;
+        }
+        foreach ($settings['requester_groups'] ?? [] as $groupId) {
+            if ($this->isInGroupFailClosed($userId, (string) $groupId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the current user resolves to requester scope:
+     * NC user, not guest-contained, no staff scope, requester-group member.
+     * Precedence (spec D-R04): guest containment > staff scope > requester.
+     */
+    public function isRequester(): bool
+    {
+        try {
+            $userId = $this->getCurrentUserId();
+            if ($userId === null || $userId === '') {
+                return false;
+            }
+            // Guest containment wins — a helpdesk_customers member stays a
+            // contained guest even when also in a requester group.
+            if ($this->isGuest()) {
+                return false;
+            }
+            // Staff scope wins — dual-role users keep the staff product.
+            if ($this->hasStaffScope($userId)) {
+                return false;
+            }
+            return $this->isRequesterGroupMember($userId);
+        } catch (\Throwable $e) {
+            // E-17/D-R18: any evaluation failure is no-scope, never a 500
+            // and never a grant.
+            $this->logWarn('requester scope evaluation failed (fail-closed)', $e);
+            return false;
+        }
+    }
+
+    /**
+     * Whether the current actor runs on an NC-managed session inside the
+     * portal: any logged-in NC user that is not guest-contained. Covers
+     * internal requesters AND dual-role staff (who enter the portal create
+     * path per D-R22) — both must get the requester nav variant, because
+     * guest-only items (portal logout, change-password, account deletion)
+     * are meaningless or destructive on an NC session (D-R07/NN-07).
+     * Contained NC guests keep the full guest variant: their app-managed
+     * accounts legitimately use password/logout.
+     */
+    public function isNcManagedPortalUser(): bool
+    {
+        try {
+            $userId = $this->getCurrentUserId();
+            if ($userId === null || $userId === ''
+                || PortalActorResolver::isIdentityActor($userId)) {
+                return false;
+            }
+            return !$this->isGuest();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Support handle (spec §7): one structured WARN line when a requester
+     * hits a denied surface. No ticket content, uid + path only — same
+     * parity as the existing [app-access]/[guest-access] lines.
+     */
+    public function logRequesterScopeDenial(string $surface): void
+    {
+        if (!$this->isRequester()) {
+            return;
+        }
+        try {
+            $logger = $this->logger ?? \OCP\Server::get(\Psr\Log\LoggerInterface::class);
+            $logger->warning('[requester-scope] denied surface reached', [
+                'app' => 'ticketcheck',
+                'uid' => $this->getCurrentUserId(),
+                'surface' => $surface,
+            ]);
+        } catch (\Throwable) {
+            // Logging must never break the denial path itself.
+        }
+    }
+
+    /**
+     * Staff scope for precedence checks: helpdesk admin/agent groups, the
+     * app-admin uid list, NC admin, or any project membership.
+     * Deliberately NOT hasEnabledHelpdeskScope() — that includes the
+     * requester branch itself (and extra_groups is not a staff power).
+     */
+    private function hasStaffScope(string $userId, bool $failToStaff = true): bool
+    {
+        try {
+            if ($this->isNcAdminCached($userId)
+                || $this->isInGroupCached($userId, self::GROUP_HELPDESK_ADMINS)
+                || $this->isInGroupCached($userId, self::GROUP_HELPDESK_AGENTS)
+                || in_array($userId, $this->getAppAdminUserIds(), true)) {
+                return true;
+            }
+            return $this->hasProjectMembershipCached($userId);
+        } catch (\Throwable $e) {
+            // Posture is call-site dependent: precedence checks fail TOWARD
+            // staff (a requester mis-seen as staff still hits per-controller
+            // denial; a staff user mis-seen as requester loses their product).
+            // The D-R15 leak guard fails toward NON-staff (a hiccup must not
+            // reopen the shared-e-mail leak).
+            $this->logWarn('staff scope evaluation failed', $e);
+            return $failToStaff;
+        }
+    }
+
+    private function logWarn(string $message, \Throwable $e): void
+    {
+        try {
+            $logger = $this->logger ?? \OCP\Server::get(\Psr\Log\LoggerInterface::class);
+            $logger->warning('[app-access] ' . $message . ': ' . $e->getMessage(), ['app' => 'ticketcheck']);
+        } catch (\Throwable) {
+            // Logging must never break permission evaluation.
+        }
     }
 
     /**
@@ -249,6 +460,11 @@ class PermissionService
             );
         }
 
+        // Deliberately NO requester branch here (spec US-R05 AC-1/NN-02):
+        // canViewTicket feeds the STAFF routes. A requester hitting a staff
+        // ticket URL gets the same denial as today — their read path exists
+        // only on portal routes via canPortalViewTicket().
+
         // Admins and agents can view all tickets
         if ($this->isHelpdeskAdmin() || $this->isAgent()) {
             return true;
@@ -261,6 +477,194 @@ class PermissionService
         }
 
         return false;
+    }
+
+    /**
+     * Single authority for requester ticket visibility (spec D-R05 + D-R15):
+     * created_by match, or — with the restricted e-mail leg — a
+     * customer_email match (project tickets additionally require project
+     * access). Reused by canViewTicket and the "My requests" staff surface
+     * so both evaluate identical scoping.
+     *
+     * @param mixed $ticket
+     * @param string|null $userEmail The candidate's own e-mail — pass it when
+     *        resolving visibility for an actor other than the session user
+     *        (e.g. notification recipients); null falls back to the session
+     *        user's e-mail for in-request checks.
+     */
+    public function isRequesterScopedTicket($ticket, string $userId, ?string $userEmail = null): bool
+    {
+        if ($userId === '') {
+            return false;
+        }
+        if ($ticket->getCreatedBy() === $userId) {
+            return true;
+        }
+        if (!$this->requesterEmailMatchAllowed($ticket, $userId)) {
+            return false;
+        }
+        $emailMatch = $this->emailsMatch(
+            $userEmail ?? $this->getCurrentUserEmail(),
+            (string) $ticket->getCustomerEmail()
+        );
+        if (!$emailMatch) {
+            return false;
+        }
+        $projectId = $ticket->getProjectId();
+        if ($projectId !== null) {
+            return $this->canAccessProjectForUser((int) $projectId, $userId);
+        }
+        return true;
+    }
+
+    /**
+     * Project access for a specific uid (offline recipient resolution):
+     * agents/admins all projects; project members their projects; requesters
+     * their helpdesk_guest_access grants when NH-05 is enabled.
+     */
+    private function canAccessProjectForUser(int $projectId, string $userId): bool
+    {
+        try {
+            if ($this->isInGroupCached($userId, self::GROUP_HELPDESK_ADMINS)
+                || $this->isInGroupCached($userId, self::GROUP_HELPDESK_AGENTS)
+                || $this->isNcAdminCached($userId)) {
+                return true;
+            }
+            if ($this->isProjectMember($projectId, $userId)) {
+                return true;
+            }
+            if ($this->isInGroupCached($userId, self::GROUP_HELPDESK_CUSTOMERS)) {
+                return $this->guestProjectAccessMapper->hasAccess($userId, $projectId);
+            }
+            return $this->requesterProjectAccessForUid($userId)
+                && $this->guestProjectAccessMapper->hasAccess($userId, $projectId);
+        } catch (\Throwable $e) {
+            $this->logWarn('project access evaluation failed (fail-closed)', $e);
+            return false;
+        }
+    }
+
+    /**
+     * Recipient uids for customer-side notifications on this ticket
+     * (spec MH-10): requester-scope users for whom the ticket is visible —
+     * the uid author plus NC users matching customer_email under the
+     * restricted e-mail leg (D-R15). Contained guests are excluded: they are
+     * covered by the guest_access recipient path (D-R04 precedence). Staff
+     * stay included — a dual-role member's self-filed ticket is
+     * customer-authored and they want the customer-facing reply mail.
+     *
+     * @param \OCA\Ticketcheck\Db\Ticket $ticket
+     * @return list<string>
+     */
+    public function requesterRecipientUids($ticket): array
+    {
+        $candidates = [];
+        $createdBy = trim((string)($ticket->getCreatedBy() ?? ''));
+        if ($createdBy !== ''
+            && !PortalActorResolver::isIdentityActor($createdBy)
+            && !in_array($createdBy, self::SYSTEM_TICKET_CREATORS, true)) {
+            $candidates[] = $createdBy;
+        }
+        $customerEmail = strtolower(trim((string)($ticket->getCustomerEmail() ?? '')));
+        if ($customerEmail !== '' && $this->userManager !== null) {
+            try {
+                foreach ((array)$this->userManager->getByEmail($customerEmail) as $user) {
+                    $uid = $user !== null ? (string)$user->getUID() : '';
+                    if ($uid !== '') {
+                        $candidates[] = $uid;
+                    }
+                }
+            } catch (\Throwable $e) {
+                $this->logWarn('requester recipient lookup failed (fail-closed)', $e);
+            }
+        }
+
+        $recipients = [];
+        foreach (array_unique($candidates) as $uid) {
+            try {
+                if ($this->isInGroupCached($uid, self::GROUP_HELPDESK_CUSTOMERS)) {
+                    continue; // guest containment wins — guest path notifies
+                }
+                if (!$this->isRequesterGroupMember($uid)) {
+                    continue;
+                }
+                $userEmail = '';
+                if ($this->userManager !== null) {
+                    $user = $this->userManager->get($uid);
+                    $userEmail = (string)($user?->getEMailAddress() ?? '');
+                }
+                if ($this->isRequesterScopedTicket($ticket, $uid, $userEmail)) {
+                    $recipients[] = $uid;
+                }
+            } catch (\Throwable $e) {
+                $this->logWarn('requester recipient evaluation failed (fail-closed)', $e);
+            }
+        }
+        return $recipients;
+    }
+
+    /**
+     * Whether uid-based helpdesk_guest_access grants count for
+     * requester-scope users (spec NH-05/Q-R2, default off). Contained
+     * guests and staff are unaffected — this only widens the requester
+     * branch of project access.
+     */
+    private function requesterProjectAccessForUid(string $userId): bool
+    {
+        $settings = $this->getAppAccessSettings();
+        if (!$this->requesterProjectAccessEnabled($settings)) {
+            return false;
+        }
+        return $this->isRequesterGroupMemberWithSettings($userId, $settings);
+    }
+
+    /**
+     * Whether staff may grant this uid a helpdesk_guest_access row
+     * (spec NH-05): pure requester-scope uids only — guests use the guest
+     * path, staff already have staff project access. The NH-05 toggle must
+     * be on; otherwise the grant would be a silent no-op at read time.
+     */
+    public function isRequesterProjectAccessGrantable(string $userId): bool
+    {
+        if ($userId === '' || PortalActorResolver::isIdentityActor($userId)) {
+            return false;
+        }
+        if (!$this->requesterProjectAccessForUid($userId)) {
+            return false;
+        }
+        if ($this->isInGroupCached($userId, self::GROUP_HELPDESK_CUSTOMERS)
+            || $this->isInGroupCached($userId, self::GROUP_HELPDESK_ADMINS)
+            || $this->isInGroupCached($userId, self::GROUP_HELPDESK_AGENTS)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Restricted e-mail-match leg for requesters (spec D-R15): the
+     * customer_email leg grants visibility only when the ticket's created_by
+     * is the requester themselves, a staff-scope uid, empty/system, or a
+     * 'portal:' identity — never a different non-staff uid. Two requesters
+     * sharing an e-mail address (legal in NC) must not read each other's
+     * tickets; staff-filed and inbound tickets still reach them.
+     *
+     * @param mixed $ticket
+     */
+    private function requesterEmailMatchAllowed($ticket, string $userId): bool
+    {
+        $createdBy = (string)($ticket->getCreatedBy() ?? '');
+        if ($createdBy === '' || $createdBy === $userId) {
+            return true;
+        }
+        if (PortalActorResolver::isIdentityActor($createdBy)
+            || in_array($createdBy, self::SYSTEM_TICKET_CREATORS, true)) {
+            return true;
+        }
+        // A uid authored this: allowed only when that uid holds staff scope.
+        // Intentionally not hasEnabledHelpdeskScope() — requester scope must
+        // not count, or two requesters sharing an address would leak (D-R15).
+        // Fail-closed posture: a backend hiccup must not reopen the leak.
+        return $this->hasStaffScope($createdBy, false);
     }
 
     /**
@@ -678,10 +1082,16 @@ class PermissionService
      */
     public function checkRateLimit(int $count, int $limit = 50): bool
     {
-        if (!$this->isGuest()) {
-            return true; // No rate limit for agents/admins
+        if ($this->isGuest()) {
+            return $count < $limit;
         }
-        return $count < $limit;
+        // Internal requesters write through the portal path — same rate
+        // limits as guests (spec US-R02 AC-4).
+        $userId = $this->getCurrentUserId();
+        if ($userId !== null && $userId !== '' && $this->isRequesterGroupMember($userId)) {
+            return $count < $limit;
+        }
+        return true; // No rate limit for agents/admins
     }
 
     /**
@@ -705,6 +1115,13 @@ class PermissionService
         // Agents and admins have access to all projects (uses cached checks internally)
         if ($this->isAgent() || $this->isHelpdeskAdmin()) {
             return null; // null means "all projects"
+        }
+
+        // Requester-scope users only see projects they were explicitly
+        // granted into via helpdesk_guest_access (NH-05, opt-in toggle).
+        $userId = $this->getCurrentUserId();
+        if ($userId !== null && $userId !== '' && $this->requesterProjectAccessForUid($userId)) {
+            return $this->guestProjectAccessMapper->getProjectsForUser($userId);
         }
 
         // Default: no projects accessible
@@ -741,6 +1158,12 @@ class PermissionService
 
         if ($userId !== null && $this->isProjectMember($projectId, $userId)) {
             return true;
+        }
+
+        // NH-05: requester-scope uids may hold explicit guest_access grants.
+        if ($userId !== null && $userId !== ''
+            && $this->requesterProjectAccessForUid($userId)) {
+            return $this->guestProjectAccessMapper->hasAccess($userId, $projectId);
         }
 
         return false;
@@ -785,6 +1208,26 @@ class PermissionService
 
         // Project members and other viewers that passed canViewTicket().
         return true;
+    }
+
+    /**
+     * Portal-only ticket view for the current actor (spec D-R05/D-R15).
+     * Requesters get guest-derived scoping on their uid via
+     * isRequesterScopedTicket(); every other actor falls through to the
+     * normal guest/staff check.
+     *
+     * Portal paths must use this — never canViewTicketWithProjectAccess —
+     * so requester scoping stays off the staff routes (US-R05 AC-1/NN-02).
+     *
+     * @param \OCA\Ticketcheck\Db\Ticket $ticket
+     */
+    public function canPortalViewTicket($ticket): bool
+    {
+        if ($this->isRequester()) {
+            $userId = (string)($this->getCurrentUserId() ?? '');
+            return $this->isRequesterScopedTicket($ticket, $userId);
+        }
+        return $this->canViewTicketWithProjectAccess($ticket);
     }
 
     /**
@@ -876,6 +1319,11 @@ class PermissionService
         if (in_array($userId, $settings['app_admin_user_ids'] ?? [], true)) {
             return true;
         }
+        // Requester scope (spec D-R20): checked before the functional-role
+        // gate — requester membership IS the functional role here.
+        if ($this->isRequesterGroupMemberWithSettings($userId, $settings)) {
+            return true;
+        }
         if (!$this->hasFunctionalHelpdeskRole($userId, $settings['extra_groups'] ?? [])) {
             return false;
         }
@@ -940,6 +1388,11 @@ class PermissionService
             && $this->isInGroupCached($userId, self::GROUP_HELPDESK_CUSTOMERS)) {
             return true;
         }
+        // Requester-group membership implies door admission (spec D-R08/D-R19):
+        // a configured requester group must never hit a second allowlist.
+        if ($this->isRequesterGroupMemberWithSettings($userId, $settings)) {
+            return true;
+        }
         // Empty Restricted allowlists fail closed for staff.
         return false;
     }
@@ -999,6 +1452,10 @@ class PermissionService
      *   allow_helpdesk_admins: bool,
      *   allow_helpdesk_agents: bool,
      *   allow_helpdesk_customers: bool,
+     *   allow_helpdesk_requesters: bool,
+     *   requester_groups: array<int, string>,
+     *   requester_all_users: bool,
+     *   requester_project_access: bool,
      *   extra_groups: array<int, string>,
      *   access_restriction_enabled: bool,
      *   access_allowed_user_ids: list<string>,
@@ -1010,6 +1467,13 @@ class PermissionService
         $admins = $this->config->getAppValue('ticketcheck', self::APP_ACCESS_ADMINS_KEY, 'yes');
         $agents = $this->config->getAppValue('ticketcheck', self::APP_ACCESS_AGENTS_KEY, 'yes');
         $customers = $this->config->getAppValue('ticketcheck', self::APP_ACCESS_CUSTOMERS_KEY, 'yes');
+        $requesters = $this->config->getAppValue('ticketcheck', self::APP_ACCESS_REQUESTERS_KEY, 'yes');
+        $requesterAllUsers = $this->config->getAppValue('ticketcheck', self::APP_ACCESS_REQUESTER_ALL_USERS_KEY, 'no');
+        $requesterProjectAccess = $this->config->getAppValue('ticketcheck', self::APP_ACCESS_REQUESTER_PROJECT_ACCESS_KEY, 'no');
+        $requesterGroupsRaw = $this->config->getAppValue('ticketcheck', self::APP_ACCESS_REQUESTER_GROUPS_KEY, '[]');
+        if (!is_string($requesterGroupsRaw)) {
+            $requesterGroupsRaw = '';
+        }
         $extraGroupsRaw = $this->config->getAppValue('ticketcheck', self::APP_ACCESS_EXTRA_GROUPS_KEY, '');
         if (!is_string($extraGroupsRaw)) {
             // Untyped OCP\IConfig::getAppValue — non-string behaves like unset.
@@ -1021,6 +1485,10 @@ class PermissionService
             'allow_helpdesk_admins' => $admins === 'yes',
             'allow_helpdesk_agents' => $agents === 'yes',
             'allow_helpdesk_customers' => $customers === 'yes',
+            'allow_helpdesk_requesters' => $requesters === 'yes',
+            'requester_groups' => $this->parseJsonGidList($requesterGroupsRaw),
+            'requester_all_users' => $requesterAllUsers === 'yes',
+            'requester_project_access' => $requesterProjectAccess === 'yes',
             'extra_groups' => $this->parseGroupList($extraGroupsRaw),
             'access_restriction_enabled' => $restriction === '1' || $restriction === 'yes',
             'access_allowed_user_ids' => $this->getJsonUidList(self::ACCESS_ALLOWED_USERS_KEY),
@@ -1084,6 +1552,35 @@ class PermissionService
             $uid = trim((string) $uid);
             if ($uid !== '' && !in_array($uid, $out, true)) {
                 $out[] = $uid;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Requester-groups config is JSON-only (no legacy CSV data exists for the
+     * key): malformed input evaluates to [] — fail closed (spec §10/§11).
+     * Capped at REQUESTER_GROUPS_LIMIT so evaluation stays O(50).
+     *
+     * @return list<string>
+     */
+    private function parseJsonGidList(string $raw): array
+    {
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+        $out = [];
+        foreach ($decoded as $gid) {
+            if (!is_string($gid) && !is_int($gid)) {
+                continue;
+            }
+            $gid = trim((string) $gid);
+            if ($gid !== '' && !in_array($gid, $out, true)) {
+                $out[] = $gid;
+            }
+            if (count($out) >= self::REQUESTER_GROUPS_LIMIT) {
+                break;
             }
         }
         return $out;

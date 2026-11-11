@@ -29,6 +29,7 @@ class CompanionNotificationService
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
 		private readonly ?CompanionPushService $push = null,
+		private readonly ?PermissionService $permissions = null,
 	) {
 	}
 
@@ -48,7 +49,9 @@ class CompanionNotificationService
 	public function notifyPublicComment(Ticket $ticket, string $actorUid): void
 	{
 		// Spec §6.4: fan-out only for guest/customer public comments — not agent replies.
-		if (!$this->groupManager->isInGroup($actorUid, PermissionService::GROUP_HELPDESK_CUSTOMERS)) {
+		// Internal requester-scope uids count as customer-side authors (D-R14).
+		if (!$this->groupManager->isInGroup($actorUid, PermissionService::GROUP_HELPDESK_CUSTOMERS)
+			&& !($this->permissions?->isRequesterGroupMember($actorUid) ?? false)) {
 			return;
 		}
 		$recipients = $this->staffRecipients($ticket, $actorUid);
@@ -133,6 +136,59 @@ class CompanionNotificationService
 						'exception' => $e,
 					]);
 				}
+			}
+		}
+	}
+
+	/**
+	 * NC notification bell for requester-scope ticket events (spec NH-01).
+	 * Recipients come from the single requester-scope authority (creator +
+	 * restricted e-mail leg — D-R05/D-R15); no push — requesters hold no
+	 * companion seat. The bell links to the PORTAL ticket view: the staff
+	 * ticket route would deny them.
+	 *
+	 * @param array<string, string> $params
+	 */
+	public function notifyRequesterTicketEvent(Ticket $ticket, string $actorUid, string $subject, array $params = []): void
+	{
+		if ($this->permissions === null || !$this->appManager->isEnabledForUser('notifications')) {
+			return;
+		}
+		$recipients = array_values(array_filter(
+			$this->permissions->requesterRecipientUids($ticket),
+			static fn (string $uid): bool => $uid !== '' && $uid !== $actorUid
+		));
+		if ($recipients === []) {
+			return;
+		}
+		$link = $this->urlGenerator->linkToRouteAbsolute('ticketcheck.customerPortal.viewTicket', [
+			'id' => $ticket->getId(),
+		]);
+		$params += [
+			'actor' => $actorUid,
+			'title' => $ticket->getTitle(),
+			'number' => $ticket->getTicketNumber(),
+		];
+		foreach (array_unique($recipients) as $uid) {
+			if ($this->userManager->get($uid) === null) {
+				continue;
+			}
+			try {
+				$n = $this->notifications->createNotification();
+				$n->setApp(Application::APP_ID)
+					->setUser($uid)
+					->setObject('ticket', (string)$ticket->getId())
+					->setSubject($subject, $params)
+					->setDateTime(new \DateTime())
+					->setLink($link);
+				$this->notifications->notify($n);
+			} catch (\Throwable $e) {
+				$this->logger->warning('TicketCheck requester notification failed', [
+					'subject' => $subject,
+					'uid' => $uid,
+					'ticket_id' => $ticket->getId(),
+					'exception' => $e,
+				]);
 			}
 		}
 	}

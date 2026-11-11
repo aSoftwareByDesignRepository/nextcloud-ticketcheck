@@ -170,7 +170,7 @@ final class CustomerPortalControllerNotificationSoftFailTest extends TestCase
 		$ticket->setStatus(Ticket::STATUS_IN_PROGRESS);
 		$this->ticketMapper->method('find')->with(7)->willReturn($ticket);
 		$this->ticketService->method('getActiveTicket')->with(7)->willReturn($ticket);
-		$this->permissionService->method('canViewTicketWithProjectAccess')->willReturn(true);
+		$this->permissionService->method('canPortalViewTicket')->willReturn(true);
 
 		$comment = new Comment();
 		$comment->setId(44);

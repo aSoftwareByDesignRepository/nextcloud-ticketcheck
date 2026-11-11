@@ -29,9 +29,11 @@ const SECTION_URLS = Object.freeze({
 	email: '/apps/ticketcheck/settings/email',
 	'inbound-mail': '/apps/ticketcheck/settings/inbound-mail',
 	'knowledge-base': '/apps/ticketcheck/settings/knowledge-base',
+	'sla': '/apps/ticketcheck/settings/sla',
 	'kb-categories': '/apps/ticketcheck/settings/kb-categories',
 	escalation: '/apps/ticketcheck/settings/escalation',
 	about: '/apps/ticketcheck/settings/about',
+	transfer: '/apps/ticketcheck/settings/transfer',
 });
 
 /**

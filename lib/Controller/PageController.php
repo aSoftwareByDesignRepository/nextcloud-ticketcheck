@@ -61,6 +61,13 @@ class PageController extends Controller
 			return $this->needsRole();
 		}
 
+		// Internal requesters land on the portal (spec US-R01 AC-1) — after
+		// staff precedence is established by the checks below: a dual-role
+		// member (agent + requester group) must reach the dashboard.
+		if ($this->permissionService->isRequester()) {
+			return new RedirectResponse($this->urlGenerator->linkToRoute('ticketcheck.customerPortal.index'));
+		}
+
 		// Redirect agents/admins to dashboard
 		return new RedirectResponse($this->urlGenerator->linkToRoute('ticketcheck.dashboard.index'));
 	}

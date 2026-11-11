@@ -170,6 +170,92 @@ $appAccess = $_['appAccessSettings'] ?? [];
 					</div>
 				</fieldset>
 
+				<fieldset class="tc-settings__access-fieldset tc-settings__requesters-fieldset">
+					<legend class="tc-settings__legend"><?php p($l->t('requesters_section_title')); ?></legend>
+					<p class="helpdesk-form-help tc-settings__requesters-lead"><?php p($l->t('requesters_section_lead')); ?></p>
+					<div class="tc-form-grid">
+						<div class="helpdesk-form-group tc-field tc-field--checkbox tc-field--full-width">
+							<input type="checkbox"
+								name="allow_helpdesk_requesters"
+								id="app-access-helpdesk-requesters"
+								<?php if (($appAccess['allow_helpdesk_requesters'] ?? true) === true) {
+									p('checked');
+								} ?>>
+							<label for="app-access-helpdesk-requesters"><?php p($l->t('allow_helpdesk_requesters_access')); ?></label>
+						</div>
+						<?php
+						$requesterGroupsPicker = is_array($_['appAccessRequesterGroupsPicker'] ?? null)
+							? $_['appAccessRequesterGroupsPicker']
+							: [];
+						?>
+						<div class="helpdesk-form-group tc-field tc-field--full-width tc-group-picker"
+							id="app-access-requester-groups-picker"
+							data-initial-groups="<?php p(json_encode($requesterGroupsPicker, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)); ?>">
+							<label for="app-access-requester-groups-search" class="helpdesk-form-label"><?php p($l->t('requester_groups_label')); ?></label>
+							<input type="hidden"
+								id="app-access-requester-groups"
+								name="requester_groups"
+								value="<?php p(implode(',', $appAccess['requester_groups'] ?? [])); ?>">
+							<ul id="app-access-requester-groups-chips"
+								class="tc-chip-list"
+								role="list"
+								aria-label="<?php p($l->t('requester_groups_label')); ?>"></ul>
+							<div class="tc-group-picker__search tc-select-combobox">
+								<input type="search"
+									id="app-access-requester-groups-search"
+									class="helpdesk-form-control tc-group-picker__input"
+									autocomplete="off"
+									placeholder="<?php p($l->t('app_access_groups_search_placeholder')); ?>"
+									role="combobox"
+									aria-autocomplete="list"
+									aria-controls="app-access-requester-groups-results"
+									aria-expanded="false"
+									aria-describedby="app-access-requester-groups-help app-access-requester-groups-search-status">
+								<div id="app-access-requester-groups-results"
+									class="tc-select-combobox__results tc-group-picker__results"
+									role="listbox"
+									aria-label="<?php p($l->t('requester_groups_label')); ?>"
+									hidden></div>
+							</div>
+							<p id="app-access-requester-groups-search-status"
+								class="tc-select-combobox__status"
+								role="status"
+								aria-live="polite"
+								hidden></p>
+							<span id="app-access-requester-groups-help" class="helpdesk-form-help"><?php p($l->t('requester_groups_help')); ?></span>
+						</div>
+						<div class="helpdesk-form-group tc-field tc-field--checkbox tc-field--full-width">
+							<input type="checkbox"
+								name="requester_all_users"
+								id="app-access-requester-all-users"
+								<?php if (($appAccess['requester_all_users'] ?? false) === true) {
+									p('checked');
+								} ?>>
+							<label for="app-access-requester-all-users"><?php p($l->t('requester_all_users_label')); ?></label>
+							<span class="helpdesk-form-help"><?php p($l->t('requester_all_users_help')); ?></span>
+						</div>
+						<div class="helpdesk-form-group tc-field tc-field--checkbox tc-field--full-width">
+							<input type="checkbox"
+								name="requester_project_access"
+								id="app-access-requester-project-access"
+								<?php if (($appAccess['requester_project_access'] ?? false) === true) {
+									p('checked');
+								} ?>>
+							<label for="app-access-requester-project-access"><?php p($l->t('requester_project_access_label')); ?></label>
+							<span class="helpdesk-form-help"><?php p($l->t('requester_project_access_help')); ?></span>
+						</div>
+						<div class="helpdesk-form-group tc-field tc-field--full-width">
+							<p class="helpdesk-form-help tc-settings__requesters-notes">
+								<?php p($l->t('requesters_notes_dedicated_group')); ?><br>
+								<?php p($l->t('requesters_notes_precedence')); ?><br>
+								<?php p($l->t('requesters_notes_door')); ?><br>
+								<?php p($l->t('requesters_notes_visibility')); ?><br>
+								<?php p($l->t('requesters_notes_email')); ?>
+							</p>
+						</div>
+					</div>
+				</fieldset>
+
 				<div class="helpdesk-form-actions helpdesk-form-actions--compact">
 					<button type="submit" class="helpdesk-btn helpdesk-btn--primary">
 						<?php p($l->t('save_settings')); ?>

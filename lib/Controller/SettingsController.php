@@ -96,6 +96,7 @@ class SettingsController extends Controller
     private ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories;
     private ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources;
     private SlaPolicyService $slaPolicy;
+    private ?\OCA\Ticketcheck\ConfigTransfer\TransferReceiptStore $transferReceipts;
 
     public function __construct(
         string $appName,
@@ -125,6 +126,7 @@ class SettingsController extends Controller
         ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories = null,
         ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
         ?SlaPolicyService $slaPolicy = null,
+        ?\OCA\Ticketcheck\ConfigTransfer\TransferReceiptStore $transferReceipts = null,
     ) {
         parent::__construct($appName, $request);
         $this->permissionService = $permissionService;
@@ -152,6 +154,7 @@ class SettingsController extends Controller
         $this->ticketCategories = $ticketCategories;
         $this->ticketResources = $ticketResources;
         $this->slaPolicy = $slaPolicy ?? new SlaPolicyService($config);
+        $this->transferReceipts = $transferReceipts;
     }
 
     protected function getFrontEndAssetService(): FrontEndAssetService
@@ -314,8 +317,20 @@ class SettingsController extends Controller
                 ),
             ],
             'about' => $this->aboutSettingsExtras($l),
+            // Synced transfer part needs the system-admin flag (Replace is
+            // sysadmin-only) and the last-receipt line for the import card.
+            'transfer' => [
+                'isSystemAdmin' => $this->isCurrentUserSystemAdmin(),
+                'transferLastReceipt' => $this->transferReceipts?->lastReceipt(),
+            ],
             default => [],
         };
+    }
+
+    private function isCurrentUserSystemAdmin(): bool
+    {
+        $uid = (string)($this->userSession->getUser()?->getUID() ?? '');
+        return $uid !== '' && $this->groupManager->isAdmin($uid);
     }
 
     /** @return array<string, mixed> */
@@ -325,6 +340,7 @@ class SettingsController extends Controller
         return [
             'appAccessSettings' => $appAccess,
             'appAccessExtraGroupsPicker' => $this->formatExtraGroupsForPicker($appAccess['extra_groups']),
+            'appAccessRequesterGroupsPicker' => $this->formatExtraGroupsForPicker($appAccess['requester_groups'] ?? []),
             'appAccessAllowedUsersPicker' => $this->formatUsersForPicker($appAccess['access_allowed_user_ids']),
             'appAccessAppAdminsPicker' => $this->formatUsersForPicker($appAccess['app_admin_user_ids']),
             'appAccessSearchUsersUrl' => $this->urlGenerator->linkToRoute('ticketcheck.settings.searchNextcloudUsers'),
@@ -516,23 +532,37 @@ class SettingsController extends Controller
         $allowAdmins = $this->normalizeYesNo($this->request->getParam('allow_helpdesk_admins', 'yes'));
         $allowAgents = $this->normalizeYesNo($this->request->getParam('allow_helpdesk_agents', 'yes'));
         $allowCustomers = $this->normalizeYesNo($this->request->getParam('allow_helpdesk_customers', 'yes'));
+        $allowRequesters = $this->normalizeYesNo($this->request->getParam('allow_helpdesk_requesters', 'yes'));
         $extraGroups = $this->normalizeGroupList((string)$this->request->getParam('extra_groups', ''));
+        $requesterGroups = $this->parseGroupList((string)$this->request->getParam('requester_groups', ''));
+        $requesterAllUsers = $this->normalizeYesNo($this->request->getParam('requester_all_users', 'no'));
+        $requesterProjectAccess = $this->normalizeYesNo($this->request->getParam('requester_project_access', 'no'));
         $restriction = $this->normalizeYesNo($this->request->getParam('access_restriction_enabled', 'no'));
         $allowedUsers = $this->normalizeUidListParam($this->request->getParam('access_allowed_user_ids', ''));
         $appAdmins = $this->normalizeUidListParam($this->request->getParam('app_admin_user_ids', ''));
         $acknowledgeRisk = $this->normalizeYesNo($this->request->getParam('acknowledge_non_admin_lockout_risk', 'no')) === 'yes';
 
+        // Requester group list is bounded (spec §7/E-14): evaluation stays
+        // O(cap) and the picker cannot smuggle an unbounded list.
+        if (count($requesterGroups) > PermissionService::REQUESTER_GROUPS_LIMIT) {
+            return new JSONResponse([
+                'error' => $l->t('app_access_requester_groups_limit', [(string)PermissionService::REQUESTER_GROUPS_LIMIT]),
+            ], 422);
+        }
+
         // Fail-safe: ensure at least one explicit role/group remains enabled.
-        if ($allowAdmins !== 'yes' && $allowAgents !== 'yes' && $allowCustomers !== 'yes' && $extraGroups === '') {
+        if ($allowAdmins !== 'yes' && $allowAgents !== 'yes' && $allowCustomers !== 'yes'
+            && $allowRequesters !== 'yes' && $extraGroups === '' && $requesterGroups === []) {
             return new JSONResponse(['error' => $l->t('app_access_requires_one_enabled_scope')], 422);
         }
 
-        if ($restriction === 'yes' && $allowedUsers === [] && $extraGroups === '' && $allowCustomers !== 'yes') {
+        if ($restriction === 'yes' && $allowedUsers === [] && $extraGroups === '' && $allowCustomers !== 'yes'
+            && $allowRequesters !== 'yes') {
             return new JSONResponse(['error' => $l->t('app_access_restricted_needs_allowlist')], 422);
         }
 
         $unknownGroups = [];
-        foreach ($this->parseGroupList($extraGroups) as $groupId) {
+        foreach (array_merge($this->parseGroupList($extraGroups), $requesterGroups) as $groupId) {
             if ($this->groupManager->get($groupId) === null) {
                 $unknownGroups[] = $groupId;
             }
@@ -570,6 +600,10 @@ class SettingsController extends Controller
             'allow_helpdesk_admins' => $allowAdmins === 'yes',
             'allow_helpdesk_agents' => $allowAgents === 'yes',
             'allow_helpdesk_customers' => $allowCustomers === 'yes',
+            'allow_helpdesk_requesters' => $allowRequesters === 'yes',
+            'requester_groups' => $requesterGroups,
+            'requester_all_users' => $requesterAllUsers === 'yes',
+            'requester_project_access' => $requesterProjectAccess === 'yes',
             'extra_groups' => $this->parseGroupList($extraGroups),
             'access_restriction_enabled' => $restriction === 'yes',
             'access_allowed_user_ids' => $allowedUsers,
@@ -587,6 +621,10 @@ class SettingsController extends Controller
         $this->config->setAppValue('ticketcheck', 'app_access_helpdesk_admins', $allowAdmins);
         $this->config->setAppValue('ticketcheck', 'app_access_helpdesk_agents', $allowAgents);
         $this->config->setAppValue('ticketcheck', 'app_access_helpdesk_customers', $allowCustomers);
+        $this->config->setAppValue('ticketcheck', 'app_access_helpdesk_requesters', $allowRequesters);
+        $this->config->setAppValue('ticketcheck', 'app_access_requester_groups', json_encode(array_values($requesterGroups), JSON_THROW_ON_ERROR));
+        $this->config->setAppValue('ticketcheck', 'app_access_requester_all_users', $requesterAllUsers);
+        $this->config->setAppValue('ticketcheck', 'app_access_requester_project_access', $requesterProjectAccess);
         $this->config->setAppValue('ticketcheck', 'app_access_extra_groups', $extraGroups);
         $this->config->setAppValue('ticketcheck', 'access_restriction_enabled', $restriction === 'yes' ? '1' : '0');
         $this->config->setAppValue('ticketcheck', 'access_allowed_user_ids', json_encode(array_values($allowedUsers), JSON_THROW_ON_ERROR));
@@ -598,6 +636,10 @@ class SettingsController extends Controller
                 'allow_helpdesk_admins' => $allowAdmins,
                 'allow_helpdesk_agents' => $allowAgents,
                 'allow_helpdesk_customers' => $allowCustomers,
+                'allow_helpdesk_requesters' => $allowRequesters,
+                'requester_groups' => $requesterGroups,
+                'requester_all_users' => $requesterAllUsers,
+                'requester_project_access' => $requesterProjectAccess,
                 'extra_groups' => $extraGroups,
                 'access_restriction_enabled' => $restriction,
                 'access_allowed_user_ids' => $allowedUsers,
