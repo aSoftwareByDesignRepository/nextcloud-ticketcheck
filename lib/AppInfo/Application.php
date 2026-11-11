@@ -795,7 +795,7 @@ class Application extends App implements IBootstrap
                 $c->get(\Psr\Log\LoggerInterface::class),
             );
         });
-        $context->registerService(\OCA\Ticketcheck\ConfigTransfer\TransferPendingStore::class, fn ($c) => new \OCA\Ticketcheck\ConfigTransfer\TransferPendingStore($c->get(IRootFolder::class), $c->get(\OCP\IConfig::class), 'ticketcheck'));
+        $context->registerService(\OCA\Ticketcheck\ConfigTransfer\TransferPendingStore::class, fn ($c) => new \OCA\Ticketcheck\ConfigTransfer\TransferPendingStore($c->get(IRootFolder::class), $c->get(\OCP\IConfig::class), 'ticketcheck', $c->get(\Psr\Log\LoggerInterface::class)));
         $context->registerService(\OCA\Ticketcheck\ConfigTransfer\TransferReceiptStore::class, fn ($c) => new \OCA\Ticketcheck\ConfigTransfer\TransferReceiptStore($c->get(\OCP\IConfig::class), 'ticketcheck'));
         $context->registerService(\OCA\Ticketcheck\ConfigTransfer\TransferService::class, function ($c): \OCA\Ticketcheck\ConfigTransfer\TransferService {
             return new \OCA\Ticketcheck\ConfigTransfer\TransferService(
