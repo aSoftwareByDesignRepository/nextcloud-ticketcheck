@@ -2919,7 +2919,10 @@ a.helpdesk-btn--success:hover {
 
 .helpdesk-btn--ghost,
 button.helpdesk-btn--ghost,
-a.helpdesk-btn--ghost {
+a.helpdesk-btn--ghost,
+.tc-btn--ghost,
+button.tc-btn--ghost,
+a.tc-btn--ghost {
     background: transparent;
     color: var(--color-main-text);
     border-color: transparent;
@@ -2927,7 +2930,10 @@ a.helpdesk-btn--ghost {
 
 .helpdesk-btn--ghost:hover,
 button.helpdesk-btn--ghost:hover,
-a.helpdesk-btn--ghost:hover {
+a.helpdesk-btn--ghost:hover,
+.tc-btn--ghost:hover,
+button.tc-btn--ghost:hover,
+a.tc-btn--ghost:hover {
     background: var(--color-background-hover);
 }
 
@@ -19694,14 +19700,14 @@ textarea {
    semantic fills keep their semantic edge; ghost/text/icon stay frameless.
    (#app-content button:not() at (1,1,1) would otherwise beat the variant
    rules at (0,1,1)/(0,1,0) — learned class: cascade-guard :not() drift.) */
-#app-content button:not(.primary, .error, .warning, .success, .danger, .button-vue, .helpdesk-btn--primary, .helpdesk-btn--danger, .helpdesk-btn--success, .helpdesk-btn--warning, .helpdesk-btn--ghost, .helpdesk-btn--text, .helpdesk-btn--icon, .tc-btn--primary, .tc-btn--danger),
+#app-content button:not(.primary, .error, .warning, .success, .danger, .button-vue, .helpdesk-btn--primary, .helpdesk-btn--danger, .helpdesk-btn--success, .helpdesk-btn--warning, .helpdesk-btn--ghost, .helpdesk-btn--text, .helpdesk-btn--icon, .tc-btn--primary, .tc-btn--danger, .tc-btn--ghost),
 #app-content .button:not(.primary, .error, .warning, .success, .danger),
 /* App dialogs (dialog.helpdesk-dialog / .tc-modal / .tc-dialog) are appended
    to document.body — outside #app-content — so they need the same baseline. */
 :is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) input:not([type='range'], [type='hidden'], [type='color'], [type='file'], [type='image'], [type='submit'], [type='button'], [type='reset'], .form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
 :is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) select:not(.form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
 :is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) textarea:not(.form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
-:is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) button:not(.primary, .error, .warning, .success, .danger, .button-vue, .helpdesk-btn--primary, .helpdesk-btn--danger, .helpdesk-btn--success, .helpdesk-btn--warning, .helpdesk-btn--ghost, .helpdesk-btn--text, .helpdesk-btn--icon, .tc-btn--primary, .tc-btn--danger),
+:is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) button:not(.primary, .error, .warning, .success, .danger, .button-vue, .helpdesk-btn--primary, .helpdesk-btn--danger, .helpdesk-btn--success, .helpdesk-btn--warning, .helpdesk-btn--ghost, .helpdesk-btn--text, .helpdesk-btn--icon, .tc-btn--primary, .tc-btn--danger, .tc-btn--ghost),
 :is(.oc-dialog, dialog.helpdesk-dialog, .helpdesk-modal, .tc-modal, .tc-dialog) .button:not(.primary, .error, .warning, .success, .danger) {
 	border-color: var(--tc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
