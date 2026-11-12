@@ -293,7 +293,7 @@ OC.L10N.register(
 	"bulk_delete_confirm" : "删除 {count} 个工单？\n\n此操作无法撤销！",
 	"bulk_priority_prompt" : "输入优先级（low\/normal\/high\/urgent）：",
 	"bulk_status_prompt" : "输入状态（new\/in progress\/waiting\/done）：",
-	"bulk_update_partial" : "{total} 个工单中已更新 {succeeded} 个；{failed} 个失败：{reasons}",
+	"bulk_update_partial" : "{succeeded} 个工单已更新（共 {total} 个）；{failed} 个失败：{reasons}",
 	"bulk_updated_tickets" : "已更新 {count} 个工单",
 	"By" : "按",
 	"Can't find what you're looking for?" : "找不到您要的内容？",

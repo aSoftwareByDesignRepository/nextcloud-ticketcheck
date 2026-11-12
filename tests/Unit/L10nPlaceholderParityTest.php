@@ -20,9 +20,41 @@ final class L10nPlaceholderParityTest extends TestCase
 		$this->root = dirname(__DIR__, 2);
 	}
 
+	/**
+	 * Shipped catalogs covered by the roster below. A new l10n/<locale>.json
+	 * that is not listed here is a silent-skip blind spot — the guard test
+	 * fails on it.
+	 *
+	 * @return list<string>
+	 */
+	private function rosteredLocales(): array
+	{
+		return ['en', 'de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR', 'pt', 'tr', 'zh_CN', 'zh_TW'];
+	}
+
+	public function testRosterCoversEveryShippedCatalog(): void
+	{
+		$shipped = array_map(
+			static fn (string $p): string => basename($p, '.json'),
+			glob($this->root . '/l10n/*.json') ?: [],
+		);
+		$unrostered = array_values(array_diff($shipped, $this->rosteredLocales()));
+		self::assertSame(
+			[],
+			$unrostered,
+			'shipped l10n catalogs missing from the parity test roster: ' . implode(', ', $unrostered),
+		);
+		foreach ($this->rosteredLocales() as $locale) {
+			self::assertFileExists(
+				$this->root . '/l10n/' . $locale . '.json',
+				'rostered locale has no shipped catalog: ' . $locale,
+			);
+		}
+	}
+
 	public function testFooterLocalesKeepEnglishPlaceholders(): void
 	{
-		$locales = ['de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR', 'pt', 'tr'];
+		$locales = array_values(array_diff($this->rosteredLocales(), ['en']));
 		$en = $this->loadTranslations('en');
 		self::assertNotEmpty($en);
 		foreach ($locales as $locale) {
@@ -58,7 +90,7 @@ final class L10nPlaceholderParityTest extends TestCase
 	 */
 	public function testPluralMsgidsAreRealArraysInEveryLocale(): void
 	{
-		$locales = ['en', 'de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR', 'pt', 'tr'];
+		$locales = $this->rosteredLocales();
 		foreach ($locales as $locale) {
 			$path = $this->root . '/l10n/' . $locale . '.json';
 			self::assertFileExists($path);
