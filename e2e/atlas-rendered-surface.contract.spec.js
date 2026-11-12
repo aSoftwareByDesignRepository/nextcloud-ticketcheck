@@ -66,7 +66,10 @@ const GUEST_SURFACES = [
 	['/apps/ticketcheck/portal', 'portal home'],
 	['/apps/ticketcheck/portal/tickets/create', 'portal create ticket'],
 	['/apps/ticketcheck/portal/kb', 'portal kb list'],
-	['/apps/ticketcheck/portal/change-password', 'portal change password'],
+	// Identity guests have no password — /portal/change-password redirects them
+	// to the sign-in/sessions page (D-T13; redirect leg lives in
+	// guest-portal-smoke.spec.js). The surface under contract is the target.
+	['/apps/ticketcheck/portal/sign-in', 'portal sign-in & sessions'],
 	['/apps/ticketcheck/portal/email-preferences', 'portal email preferences'],
 ];
 
@@ -83,7 +86,7 @@ test.describe('Rendered-surface contract — guest portal', () => {
 				// Intentional marker-less designs on guest pages: password-step
 				// badges, requirement rows (check icons), the prefs list, and
 				// tc-card-list — a semantic <ul> whose <li>s render as cards.
-				listAllow: '.portal-password__steps, .portal-password__requirements-list, .portal-email-prefs__list, .tc-card-list',
+				listAllow: '.portal-password__steps, .portal-password__requirements-list, .portal-email-prefs__list, .tc-card-list, .tc-session-list',
 			});
 			await assertIconsAcrossSchemes(page);
 		});

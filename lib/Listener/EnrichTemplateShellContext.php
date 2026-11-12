@@ -277,6 +277,7 @@ class EnrichTemplateShellContext implements IEventListener
 			'guest-edit',
 			'kb-form',
 			'portal-password',
+			'portal-signin',
 			'portal-email-prefs',
 			'access-denied',
 		];

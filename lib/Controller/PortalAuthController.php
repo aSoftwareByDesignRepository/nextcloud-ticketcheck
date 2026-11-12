@@ -18,6 +18,7 @@ use OCA\Ticketcheck\Db\GuestAuditMapper;
 use OCA\Ticketcheck\Db\GuestIdentityMapper;
 use OCA\Ticketcheck\Service\GuestAuthConfig;
 use OCA\Ticketcheck\Service\GuestMailOutboxService;
+use OCA\Ticketcheck\Service\GuestPortalPageService;
 use OCA\Ticketcheck\Service\PortalActorResolver;
 use OCA\Ticketcheck\Service\PortalOtpService;
 use OCA\Ticketcheck\Service\PortalSessionService;
@@ -54,6 +55,7 @@ class PortalAuthController extends Controller
         private readonly IURLGenerator $urlGenerator,
         private readonly IFactory $l10nFactory,
         private readonly IThrottler $throttler,
+        private readonly GuestPortalPageService $portalPages,
     ) {
         parent::__construct($appName, $request);
     }
@@ -235,10 +237,12 @@ class PortalAuthController extends Controller
                 'last_seen' => $s->getLastSeenAt()?->format('Y-m-d H:i'),
             ];
         }
-        return $this->renderPortalPage('portal/sign-in', 'portal-signin', [
+        $masked = self::maskEmail((string)$identity->getEmail());
+        $l = $this->l10nFactory->get($this->appName);
+        return $this->portalPages->render('portal/sign-in', 'portal-signin', [
             'sessions' => $sessions,
-            'maskedEmail' => self::maskEmail((string)$identity->getEmail()),
-        ]);
+            'maskedEmail' => $masked,
+        ], $l->t('portal_signin_title'), $l->t('portal_signin_lead', [$masked]));
     }
 
     #[PublicPage]

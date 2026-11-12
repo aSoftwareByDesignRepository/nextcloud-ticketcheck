@@ -66,6 +66,7 @@ $pageIcons = [
 	'portal-kb' => 'book',
 	'portal-kb-article' => 'book',
 	'portal-password' => 'lock',
+	'portal-signin' => 'lock',
 	'portal-email-prefs' => 'mail',
 	'rate-limit' => 'clock',
 	'error' => 'alert-triangle',

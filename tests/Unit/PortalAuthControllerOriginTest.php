@@ -10,6 +10,7 @@ use OCA\Ticketcheck\Db\GuestIdentity;
 use OCA\Ticketcheck\Db\GuestIdentityMapper;
 use OCA\Ticketcheck\Service\GuestAuthConfig;
 use OCA\Ticketcheck\Service\GuestMailOutboxService;
+use OCA\Ticketcheck\Service\GuestPortalPageService;
 use OCA\Ticketcheck\Service\PortalActorResolver;
 use OCA\Ticketcheck\Service\PortalOtpService;
 use OCA\Ticketcheck\Service\PortalSessionService;
@@ -70,6 +71,7 @@ class PortalAuthControllerOriginTest extends TestCase
 			$this->createMock(IURLGenerator::class),
 			$this->createMock(IFactory::class),
 			$throttler,
+			$this->createMock(GuestPortalPageService::class),
 		);
 	}
 

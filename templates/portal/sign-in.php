@@ -1,12 +1,9 @@
 <?php
 /** @var \OCP\IL10N $l */
 $sessions = is_array($_['sessions'] ?? null) ? $_['sessions'] : [];
-$masked = (string)($_['maskedEmail'] ?? '');
 ?>
+<?php include __DIR__ . '/../common/page-start.php'; ?>
 <div class="tc-portal-signin" data-page="portal-signin">
-	<h1><?php p($l->t('portal_signin_title')); ?></h1>
-	<p class="tc-page-lead"><?php p($l->t('portal_signin_lead', [$masked])); ?></p>
-
 	<section aria-labelledby="tc-sessions-h">
 		<h2 id="tc-sessions-h"><?php p($l->t('portal_sessions_title')); ?></h2>
 		<ul class="tc-session-list" data-tc-session-list>
@@ -32,3 +29,4 @@ $masked = (string)($_['maskedEmail'] ?? '');
 		<div role="status" aria-live="polite" id="tc-resend-status"></div>
 	</section>
 </div>
+<?php include __DIR__ . '/../common/page-end.php'; ?>
