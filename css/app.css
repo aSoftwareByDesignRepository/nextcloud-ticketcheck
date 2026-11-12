@@ -3008,6 +3008,39 @@ a.helpdesk-btn--icon {
     padding: 0;
 }
 
+/* ── Overlay close-control armor ───────────────────────────────────
+ * Same mechanism as the variant armor above: <button
+ * class="tc-modal__close"> renders inside the body-mounted .tc-modal
+ * overlay and <button class="tc-toast__close"> inside the body-mounted
+ * .tc-toasts/#tc-toasts stack (both appended to document.body, outside
+ * #app-content.tc-app), so the .tc-btn--* scope list cannot reach them
+ * and the bare (0,1,0) class rules lose to core's button repaint
+ * (width:130px / pale fill / border / padding at 0-1-1,
+ * margin-inline-start:0 at 0-2-1). The overlay-scoped selectors pin
+ * every repainted property !important
+ * (overlay_toast_button_armor_gap; donor shape: dutycheck
+ * .dc-modal button.dc-modal__close / .dc-toasts button.dc-toast__close). */
+.tc-modal button.tc-modal__close {
+    width: auto !important;
+    margin: 0 !important;
+    padding: var(--tc-space-2) !important;
+    background: transparent !important;
+    border: 0 !important;
+    min-width: 44px;
+    min-height: 44px;
+}
+.tc-toasts button.tc-toast__close,
+#tc-toasts button.tc-toast__close {
+    width: auto !important;
+    margin: 0 !important;
+    margin-inline-start: auto !important;
+    padding: var(--tc-space-2) !important;
+    background: transparent !important;
+    border: 0 !important;
+    min-width: 44px;
+    min-height: 44px;
+}
+
 /* ==============================================
    PART 8: FORM CONTROLS
    ============================================== */
