@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.6.1 - 2026-11-13
+
+### Fixed
+
+- re-sync pack — promote <=480px sheet rule to dialog.tc-dialog
+- margin:auto on pack dialog — NC core reset uncenters top-layer dialogs
+- render sign-in/sessions page inside the portal shell
+- zh_* in parity rosters + bidirectional catalog guards
+- armor body-mounted overlay close controls against core repaint
+- sync config-transfer pack — schema cache, file-input specificity, sheet clip
+- armor .tc-btn--ghost — variant rule + cascade-guard exclusion
+- catalog + translate 21 runtime strings invisible to coverage gate
+- pack re-sync — positional vsprintf interpolation in js t() helper
+- pack re-sync markQueued/closed-dialog + probe leg emitters
+- catalog transfer strings + synced pack hardening
+- nl Resources label consistency + form rhythm classes
+- use tc-space tokens in guest-portal + exempt pre-auth templates
+- realign catalog key order to en.json after kb delta
+- knowledge-base service/editor + portal snapshots
+- heal stranded pre-flag guest pins once at upgrade
+- provenance-gate guest-pin self-heal + portal error ink
+- keep block-tail fail-closed; pin group-ensure flag on verify
+- unpin guest zero-quota on removal too
+- unpin stale defaultapp on removal + harden login path
+- SLA targets table scrolls inside tc-table-wrap--form at <640px
+- staff-page wizard chrome + modal field skin (cramped_form_controls sweep)
+- SLA form controls carry family skin (cramped_form_controls)
+- tr plural rule, %n view keys, atlas authz coverage
+- field-level SLA errors + post-merge papercuts
+- deactivated accounts leak into escalation targets + policy preview
+- migrated NC guests got empty portal — isGuest() group-checked canonical actor
+- OAuth Connect dead for every admin — GET oauth/begin 412
+- OTP send dead on ported hosts, migration wizard 412 on GET
+- r27 closeout — unhide OTP code block (dead-end), regression spec
+- r26 closeout — opaque auth card + migration wizard chrome
+- r26 critic closeout — grant/revoke referent resolution, reused flag, wizard craft wave
+- harden guest-portal delta — 404 uniformity, unique-conflict paths, l10n
+- check the remote peer address after connecting
+
+### Added
+
+- config & data transfer — encrypted test→prod pack
+- queueCounts gains unassigned/SLA-breach/hasTickets for Home badge
+- configurable SLA targets per priority and business hours
+- add Turkish (tr) translation
+
+### Changed
+
+- pack re-sync — replace-confirm token width (cramped_form_controls)
+- l10n: complete translations across the app language set
+- cover sla section in settings multipage spec
+- l10n(tr): complete catalog against current main + canonical format
+- change-password leg asserts migrated-guest sessions redirect (D-T13)
+- sidebar-stats leg uses a page that renders for migrated guests
+- pin e2e multipage spec list to routable catalog — resources leg missing
+- release notes drafted from post-tag commits
+
 ## Unreleased
 
 ### Fixed
