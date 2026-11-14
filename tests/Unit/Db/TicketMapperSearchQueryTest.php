@@ -15,7 +15,6 @@ class TicketMapperSearchQueryTest extends TestCase
     {
         $mapper = new TicketMapper($this->createMock(IDBConnection::class));
         $method = new ReflectionMethod(TicketMapper::class, 'normalizeTicketSearchQuery');
-        $method->setAccessible(true);
 
         $this->assertSame('HD-001', $method->invoke($mapper, '#HD-001'));
         $this->assertSame('HD-001', $method->invoke($mapper, 'HD-001 — Printer offline'));

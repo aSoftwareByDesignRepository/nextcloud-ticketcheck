@@ -177,7 +177,7 @@ $cancelHref = $isEdit && $cid > 0
                 </section>
 
                 <div class="helpdesk-form-actions tc-customer-form__actions">
-                    <a href="<?php p($cancelHref); ?>" class="helpdesk-btn helpdesk-btn--secondary"><?php p($l->t('cancel')); ?></a>
+                    <a href="<?php p($cancelHref); ?>" class="helpdesk-btn helpdesk-btn--secondary"><?php p($l->t('cancel_button')); ?></a>
                     <button type="submit" id="customer-form-submit" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--lg">
                         <?php print_unescaped(IconCatalog::render('save')); ?>
                         <span class="tc-customer-form-submit__text"><?php p($isEdit ? $l->t('update_customer') : $l->t('create_customer')); ?></span>

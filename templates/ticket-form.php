@@ -443,7 +443,7 @@ foreach ($categoryOptions as $opt) {
                 <div class="helpdesk-form-actions ticket-form-actions">
                     <a href="<?php p($_['urlGenerator']->linkToRoute('ticketcheck.ticket.index')); ?>"
                         class="helpdesk-btn helpdesk-btn--secondary ticket-form-actions__cancel">
-                        <?php p($l->t('cancel')); ?>
+                        <?php p($l->t('cancel_button')); ?>
                     </a>
                     <button type="submit" id="ticket-form-submit" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--lg ticket-form-actions__submit">
                         <span class="ticket-form-submit__inner">

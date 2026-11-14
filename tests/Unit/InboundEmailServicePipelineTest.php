@@ -534,7 +534,6 @@ class InboundEmailServicePipelineTest extends TestCase
 		// Rebuild with the current mapper mock (tests swap it per-case).
 		$ref = new \ReflectionClass($this->service);
 		$prop = $ref->getProperty('inboundMapper');
-		$prop->setAccessible(true);
 		$prop->setValue($this->service, $this->inboundMapper);
 		return $this->service;
 	}

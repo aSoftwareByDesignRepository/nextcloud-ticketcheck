@@ -683,7 +683,6 @@ class EmailServiceWorkflowTest extends TestCase
     private function invokeThreadAnchor(EmailService $service, ?int $ticketId, ?string $customerEmail): array
     {
         $m = new \ReflectionMethod(EmailService::class, 'buildThreadAnchor');
-        $m->setAccessible(true);
         return $m->invoke($service, $ticketId, $customerEmail);
     }
 

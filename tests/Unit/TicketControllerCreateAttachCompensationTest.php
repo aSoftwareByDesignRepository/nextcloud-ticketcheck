@@ -277,7 +277,6 @@ class TicketControllerCreateAttachCompensationTest extends TestCase
 			->with(91);
 
 		$method = new \ReflectionMethod(TicketController::class, 'handleMultipleFileUploads');
-		$method->setAccessible(true);
 
 		try {
 			$this->expectException(\Error::class);

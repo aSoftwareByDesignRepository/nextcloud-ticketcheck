@@ -66,7 +66,6 @@ class NotificationJobOpenTicketsTest extends TestCase
         );
 
         $method = new \ReflectionMethod($job, 'run');
-        $method->setAccessible(true);
         $method->invoke($job, null);
     }
 }

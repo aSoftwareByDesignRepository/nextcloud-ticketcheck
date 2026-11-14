@@ -204,7 +204,6 @@ class ActivityEventServiceTest extends TestCase
         $this->groupManager->method('isAdmin')->willReturn(false);
 
         $resolve = new \ReflectionMethod(ActivityEventService::class, 'resolveRecipientUserIds');
-        $resolve->setAccessible(true);
         /** @var list<string> $publicRecipients */
         $publicRecipients = $resolve->invoke($this->service, $ticket, 'agent1', false);
         self::assertNotContains('watcher_customer', $publicRecipients);
@@ -241,7 +240,6 @@ class ActivityEventServiceTest extends TestCase
         $this->groupManager->method('isAdmin')->willReturn(false);
 
         $resolve = new \ReflectionMethod(ActivityEventService::class, 'resolveRecipientUserIds');
-        $resolve->setAccessible(true);
         /** @var list<string> $internalRecipients */
         $internalRecipients = $resolve->invoke($this->service, $ticket, 'agent1', true);
         self::assertSame(['agent1'], $internalRecipients);

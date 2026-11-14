@@ -71,16 +71,24 @@ $lastReceipt = is_array($_['transferLastReceipt'] ?? null) ? $_['transferLastRec
 	</p>
 	<?php endif; ?>
 	<form id="tc-transfer-import-form" class="tc-form" novalidate>
-		<fieldset class="tc-form-row tc-fieldset">
+		<fieldset class="tc-form-row tc-fieldset" aria-describedby="tc-transfer-replace-hint">
 			<legend><?php p($l->t('Mode')); ?></legend>
-			<label class="tc-radio">
-				<input type="radio" name="mode" value="merge" checked>
-				<span><strong><?php p($l->t('Merge')); ?></strong> — <?php p($l->t('add and update; nothing is deleted')); ?></span>
-			</label>
-			<label class="tc-radio tc-radio--danger">
-				<input type="radio" name="mode" value="replace" <?php if (!$isSystemAdmin): ?>disabled<?php endif; ?>>
-				<span><strong><?php p($l->t('Replace')); ?></strong> — <?php p($l->t('make identical to the file; prod-only rows are deleted')); ?></span>
-			</label>
+			<div class="tc-choice-cards">
+				<label class="tc-choice-card">
+					<input type="radio" name="mode" value="merge" checked>
+					<span class="tc-choice-card__copy">
+						<span class="tc-choice-card__title"><?php p($l->t('Merge')); ?></span>
+						<span class="tc-choice-card__hint"><?php p($l->t('add and update; nothing is deleted')); ?></span>
+					</span>
+				</label>
+				<label class="tc-choice-card tc-choice-card--danger">
+					<input type="radio" name="mode" value="replace" <?php if (!$isSystemAdmin): ?>disabled<?php endif; ?>>
+					<span class="tc-choice-card__copy">
+						<span class="tc-choice-card__title"><?php p($l->t('Replace')); ?></span>
+						<span class="tc-choice-card__hint"><?php p($l->t('make identical to the file; prod-only rows are deleted')); ?></span>
+					</span>
+				</label>
+			</div>
 			<p class="tc-form-row__hint" id="tc-transfer-replace-hint">
 				<?php if ($isSystemAdmin): ?>
 					<?php p($l->t('Replace needs maintenance mode ON (occ maintenance:mode --on) — you will type REPLACE in the preview to confirm.')); ?>

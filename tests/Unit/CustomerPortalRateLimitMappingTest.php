@@ -113,7 +113,6 @@ class CustomerPortalRateLimitMappingTest extends TestCase
 		);
 
 		$method = new \ReflectionMethod(CustomerPortalController::class, 'runGuestPortalActionWithRateLimit');
-		$method->setAccessible(true);
 
 		$result = $method->invoke(
 			$this->controller,
@@ -137,7 +136,6 @@ class CustomerPortalRateLimitMappingTest extends TestCase
 		);
 
 		$method = new \ReflectionMethod(CustomerPortalController::class, 'runGuestPortalActionWithRateLimit');
-		$method->setAccessible(true);
 
 		$result = $method->invoke(
 			$this->controller,

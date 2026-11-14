@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const submitBtn = this.querySelector('button[type="submit"]');
-            setButtonBusy(submitBtn, true, 'saving');
+            setButtonBusy(submitBtn, true, 'Saving…');
 
             requestJson('POST', '/apps/ticketcheck/settings/email', data)
                 .then(data => {
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     announceSettings(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'error_saving_settings') }), 'error');
                 })
                 .finally(() => {
-                    setButtonBusy(submitBtn, false, 'saving', 'save_settings');
+                    setButtonBusy(submitBtn, false, 'Saving…', 'save_settings');
                 });
         });
     }
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             const submitBtn = this.querySelector('button[type="submit"]');
-            setButtonBusy(submitBtn, true, 'saving');
+            setButtonBusy(submitBtn, true, 'Saving…');
 
             requestJson('POST', '/apps/ticketcheck/settings/knowledge-base', data)
                 .then((resp) => {
@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     announceSettings(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'error_saving_settings') }), 'error');
                 })
                 .finally(() => {
-                    setButtonBusy(submitBtn, false, 'saving', 'save_settings');
+                    setButtonBusy(submitBtn, false, 'Saving…', 'save_settings');
                 });
         });
     }
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             const submitBtn = this.querySelector('button[type="submit"]');
-            setButtonBusy(submitBtn, true, 'saving');
+            setButtonBusy(submitBtn, true, 'Saving…');
 
             requestJson('POST', '/apps/ticketcheck/settings/sla', data)
                 .then((resp) => {
@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     announceSettings(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'error_saving_settings') }), 'error');
                 })
                 .finally(() => {
-                    setButtonBusy(submitBtn, false, 'saving', 'save_settings');
+                    setButtonBusy(submitBtn, false, 'Saving…', 'save_settings');
                 });
         });
     }
@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const submitBtn = this.querySelector('button[type="submit"]');
-            setButtonBusy(submitBtn, true, 'saving');
+            setButtonBusy(submitBtn, true, 'Saving…');
 
             saveAppAccess(data)
                 .then((resp) => {
@@ -574,7 +574,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             return;
                         }
                         const proceed = await C.confirmDialog({
-                            title: t('ticketcheck', 'confirm'),
+                            title: t('ticketcheck', 'Confirm'),
                             body: warningMessage,
                             danger: true,
                         });
@@ -597,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     announceSettings(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'error_saving_settings') }), 'error');
                 })
                 .finally(() => {
-                    setButtonBusy(submitBtn, false, 'saving', 'save_settings');
+                    setButtonBusy(submitBtn, false, 'Saving…', 'save_settings');
                 });
         });
     }
@@ -721,7 +721,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 input.focus();
                 return;
             }
-            setButtonBusy(addBtn, true, 'saving');
+            setButtonBusy(addBtn, true, 'Saving…');
             requestJson('POST', '/apps/ticketcheck/api/settings/kb-categories', { name }).then(data => {
                 if (data.success && data.category && list) {
                     const li = createCategoryListItem(data.category);

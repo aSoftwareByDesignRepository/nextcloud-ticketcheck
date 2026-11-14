@@ -79,7 +79,7 @@ $assignableUsers = is_array($_['assignableUsers'] ?? null) ? $_['assignableUsers
 					</div>
 					<div class="helpdesk-form-actions tc-field--full-width">
 						<button type="submit" class="helpdesk-btn helpdesk-btn--primary"><?php p($l->t('save')); ?></button>
-						<button type="button" id="escalation-rule-cancel-btn" class="helpdesk-btn helpdesk-btn--ghost"><?php p($l->t('cancel')); ?></button>
+						<button type="button" id="escalation-rule-cancel-btn" class="helpdesk-btn helpdesk-btn--ghost"><?php p($l->t('cancel_button')); ?></button>
 					</div>
 				</form>
 			</div>

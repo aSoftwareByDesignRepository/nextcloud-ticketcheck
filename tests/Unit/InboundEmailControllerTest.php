@@ -66,7 +66,6 @@ class InboundEmailControllerTest extends TestCase
         $timestamp = (string) time();
         $signature = hash_hmac('sha256', $timestamp . '.' . $body, $secret);
         $ref = new \ReflectionProperty(InboundEmailController::class, 'rawBody');
-        $ref->setAccessible(true);
         $ref->setValue($this->controller, $body);
 
         return [$timestamp, $signature, $body];
@@ -339,7 +338,6 @@ class InboundEmailControllerTest extends TestCase
         );
 
         $method = new \ReflectionMethod(InboundEmailController::class, 'buildReplayCacheKey');
-        $method->setAccessible(true);
 
         $basePayload = [
             'to' => 'support+123@example.com',
@@ -364,7 +362,6 @@ class InboundEmailControllerTest extends TestCase
         );
 
         $method = new \ReflectionMethod(InboundEmailController::class, 'buildReplayCacheKey');
-        $method->setAccessible(true);
 
         $signature = [
             'timestamp' => '1710000000',
@@ -395,7 +392,6 @@ class InboundEmailControllerTest extends TestCase
         ], JSON_THROW_ON_ERROR);
         $timestamp = (string) time();
         $ref = new \ReflectionProperty(InboundEmailController::class, 'rawBody');
-        $ref->setAccessible(true);
         $ref->setValue($this->controller, $body);
 
         $this->request->method('getMethod')->willReturn('POST');
@@ -762,7 +758,6 @@ class InboundEmailControllerTest extends TestCase
             $this->createMock(LoggerInterface::class),
         );
         $ref = new \ReflectionProperty(InboundEmailController::class, 'rawBody');
-        $ref->setAccessible(true);
         $ref->setValue($controller, json_encode([
             'to' => 'support+123@example.com',
             'from' => 'user@example.org',

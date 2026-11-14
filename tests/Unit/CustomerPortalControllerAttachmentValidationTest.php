@@ -126,7 +126,6 @@ class CustomerPortalControllerAttachmentValidationTest extends TestCase
         $this->ticketService->method('getComments')->with(60, false)->willReturn([$comment]);
 
         $method = new \ReflectionMethod(CustomerPortalController::class, 'commentBelongsToTicket');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, 60, 31);
 
         $this->assertTrue($result);
@@ -139,7 +138,6 @@ class CustomerPortalControllerAttachmentValidationTest extends TestCase
         $this->ticketService->method('getComments')->with(60, false)->willReturn([$comment]);
 
         $method = new \ReflectionMethod(CustomerPortalController::class, 'commentBelongsToTicket');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, 60, 31);
 
         $this->assertFalse($result);
@@ -148,7 +146,6 @@ class CustomerPortalControllerAttachmentValidationTest extends TestCase
     public function testValidateGuestUploadedFileRejectsOversizedFile(): void
     {
         $method = new \ReflectionMethod(CustomerPortalController::class, 'validateGuestUploadedFile');
-        $method->setAccessible(true);
 
         $result = $method->invoke($this->controller, [
             'name' => 'large.pdf',
@@ -163,7 +160,6 @@ class CustomerPortalControllerAttachmentValidationTest extends TestCase
     public function testValidateGuestUploadedFileRejectsDisallowedExtension(): void
     {
         $method = new \ReflectionMethod(CustomerPortalController::class, 'validateGuestUploadedFile');
-        $method->setAccessible(true);
 
         $result = $method->invoke($this->controller, [
             'name' => 'payload.php',
@@ -181,7 +177,6 @@ class CustomerPortalControllerAttachmentValidationTest extends TestCase
             ->willThrowException(new \Exception('ticket_not_found'));
 
         $method = new \ReflectionMethod(CustomerPortalController::class, 'processSingleFileUpload');
-        $method->setAccessible(true);
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('ticket_not_found');
@@ -200,7 +195,6 @@ class CustomerPortalControllerAttachmentValidationTest extends TestCase
             ->willThrowException(new \Exception('Ticket not found'));
 
         $method = new \ReflectionMethod(CustomerPortalController::class, 'processSingleFileUpload');
-        $method->setAccessible(true);
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Ticket not found');
@@ -216,7 +210,6 @@ class CustomerPortalControllerAttachmentValidationTest extends TestCase
     public function testIsUniformTicketNotFoundAcceptsLegacyAndCanonicalMessages(): void
     {
         $method = new \ReflectionMethod(CustomerPortalController::class, 'isUniformTicketNotFound');
-        $method->setAccessible(true);
 
         self::assertTrue($method->invoke($this->controller, new \Exception('ticket_not_found')));
         self::assertTrue($method->invoke($this->controller, new \Exception('Ticket not found')));
@@ -229,7 +222,6 @@ class CustomerPortalControllerAttachmentValidationTest extends TestCase
             ->willThrowException(new \RuntimeException('disk full'));
 
         $method = new \ReflectionMethod(CustomerPortalController::class, 'processSingleFileUpload');
-        $method->setAccessible(true);
 
         $result = $method->invoke($this->controller, 42, [
             'name' => 'note.txt',

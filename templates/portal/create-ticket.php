@@ -355,7 +355,7 @@ if ($activeProjectCount === 1) {
                         <div class="helpdesk-form-actions ticket-form-actions portal-create__actions">
                             <a href="<?php p($_['urlGenerator']->linkToRoute('ticketcheck.customerPortal.index')); ?>"
                                 class="helpdesk-btn helpdesk-btn--secondary ticket-form-actions__cancel">
-                                <?php p($l->t('cancel')); ?>
+                                <?php p($l->t('cancel_button')); ?>
                             </a>
                             <button type="submit" id="portal-create-submit" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--lg ticket-form-actions__submit">
                                 <span class="ticket-form-submit__inner">

@@ -998,7 +998,6 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 							foreach (['published', 'isPublished', 'status'] as $prop) {
 								if ($refA->hasProperty($prop)) {
 									$pr = $refA->getProperty($prop);
-									$pr->setAccessible(true);
 									if ($prop === 'status') {
 										$pr->setValue($a, 'published');
 									} else {

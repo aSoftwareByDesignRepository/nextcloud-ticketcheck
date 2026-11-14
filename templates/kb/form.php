@@ -184,7 +184,7 @@ $renderedNames = [];
                 </section>
 
                 <div class="helpdesk-form-actions tc-kb-form__actions">
-                    <a href="<?php p($cancelHref); ?>" class="helpdesk-btn helpdesk-btn--secondary"><?php p($l->t('cancel')); ?></a>
+                    <a href="<?php p($cancelHref); ?>" class="helpdesk-btn helpdesk-btn--secondary"><?php p($l->t('cancel_button')); ?></a>
                     <button type="submit" id="kb-form-submit" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--lg">
                         <span class="tc-kb-form-submit__text"><?php p($isEdit ? $l->t('update_article') : $l->t('create_article')); ?></span>
                     </button>

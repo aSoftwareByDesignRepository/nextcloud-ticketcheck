@@ -73,7 +73,7 @@
                 }
                 const originalYesLabel = yesBtn.textContent;
                 setFeedbackButtonsBusy(true);
-                yesBtn.textContent = '' + t('ticketcheck', 'saving');
+                yesBtn.textContent = '' + t('ticketcheck', 'Saving…');
 
                 const api = window.TicketCheckApi;
                 if (!api || typeof api.requestUrl !== 'function') {

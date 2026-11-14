@@ -28,7 +28,7 @@ $accountDeletionUrl = (string)($_['accountDeletionUrl'] ?? '');
                     data-msg-error="<?php p($l->t('error_saving_settings')); ?>"
                     data-msg-token="<?php p($l->t('token_expired_reload')); ?>"
                     data-msg-generic-error="<?php p($l->t('an_error_occurred')); ?>"
-                    data-msg-saving="<?php p($l->t('saving')); ?>"
+                    data-msg-saving="<?php p($l->t('Saving…')); ?>"
                     novalidate>
 
                     <div class="portal-email-prefs__panel helpdesk-card helpdesk-card--static">
@@ -80,7 +80,7 @@ $accountDeletionUrl = (string)($_['accountDeletionUrl'] ?? '');
                     data-msg-deletion-confirm-title="<?php p($l->t('account_deletion_confirm_title')); ?>"
                     data-msg-deletion-confirm-body="<?php p($l->t('account_deletion_confirm_body')); ?>"
                     data-msg-deletion-confirm-action="<?php p($l->t('account_deletion_confirm_action')); ?>"
-                    data-msg-deletion-cancel="<?php p($l->t('cancel')); ?>">
+                    data-msg-deletion-cancel="<?php p($l->t('cancel_button')); ?>">
                     <div class="helpdesk-card__body portal-email-prefs__danger-body">
                         <div class="portal-email-prefs__danger-icon" aria-hidden="true">
                             <?php print_unescaped(IconCatalog::render('alert-triangle')); ?>

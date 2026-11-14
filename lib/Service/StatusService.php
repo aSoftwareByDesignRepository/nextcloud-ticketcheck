@@ -51,7 +51,7 @@ class StatusService
             'new' => $this->l10n->t('new'),
             'in_progress' => $this->l10n->t('in_progress'),
             'waiting' => $this->l10n->t('waiting'),
-            'done' => $this->l10n->t('done'),
+            'done' => $this->l10n->t('status_done'),
         ];
         return $map[$status] ?? ucfirst(str_replace('_', ' ', $status));
     }

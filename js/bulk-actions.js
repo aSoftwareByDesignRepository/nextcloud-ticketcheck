@@ -583,7 +583,7 @@
         if (!C || typeof C.confirmDialog !== 'function') {
             return;
         }
-        const ok = await C.confirmDialog({ title: t('ticketcheck', 'confirm'), body: closeConfirm, danger: true });
+        const ok = await C.confirmDialog({ title: t('ticketcheck', 'Confirm'), body: closeConfirm, danger: true });
         if (!ok) return;
 
         bulkUpdateTickets('status', { status: 'done' });
@@ -639,7 +639,7 @@
             return;
         }
         const ok = await C.confirmDialog({
-            title: t('ticketcheck', 'confirm'),
+            title: t('ticketcheck', 'Confirm'),
             body: deleteConfirm,
             danger: true,
             confirmLabel: t('ticketcheck', 'delete'),

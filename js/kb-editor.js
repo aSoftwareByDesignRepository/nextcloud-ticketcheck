@@ -707,7 +707,7 @@
                         return;
                     }
                     const confirmed = await C.confirmDialog({
-                        title: t('ticketcheck', 'confirm'),
+                        title: t('ticketcheck', 'Confirm'),
                         body: warning,
                     });
                     if (!confirmed) {
@@ -781,7 +781,7 @@
                 const originalSubmitText = submitBtn ? submitBtn.textContent : '';
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.textContent = t('ticketcheck', 'saving');
+                    submitBtn.textContent = t('ticketcheck', 'Saving…');
                 }
 
                 const savePromise = articleId

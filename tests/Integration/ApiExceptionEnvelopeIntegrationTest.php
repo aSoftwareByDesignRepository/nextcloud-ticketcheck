@@ -48,7 +48,6 @@ final class ApiExceptionEnvelopeIntegrationTest extends TestCase
 	{
 		$server = \OC::$server;
 		$prop = new \ReflectionProperty($server, 'appContainers');
-		$prop->setAccessible(true);
 		$map = $prop->getValue($server);
 		$key = strtolower(\OC\AppFramework\App::buildAppNamespace(Application::APP_ID));
 		$this->assertArrayHasKey($key, $map, 'ticketcheck app container must be registered');
@@ -105,7 +104,6 @@ final class ApiExceptionEnvelopeIntegrationTest extends TestCase
 			}
 
 			$mProp = new \ReflectionProperty($md, 'middlewares');
-			$mProp->setAccessible(true);
 			$classes = array_map(static fn ($m) => $m::class, $mProp->getValue($md));
 			$this->assertContains(ApiExceptionMiddleware::class, $classes, 'catch-all missing from live dispatcher');
 
@@ -126,7 +124,6 @@ final class ApiExceptionEnvelopeIntegrationTest extends TestCase
 			// the full beforeController pass).
 			$stub = new ApiEnvelopeProbeController();
 			$cProp = new \ReflectionProperty($md, 'middlewareCounter');
-			$cProp->setAccessible(true);
 			$cProp->setValue($md, count($mProp->getValue($md)));
 			$res = $md->afterException($stub, 'probe', new \RuntimeException('atlas envelope probe'));
 

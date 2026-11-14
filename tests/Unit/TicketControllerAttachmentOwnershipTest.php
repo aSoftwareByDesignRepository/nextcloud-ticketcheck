@@ -114,7 +114,6 @@ class TicketControllerAttachmentOwnershipTest extends TestCase
         $this->ticketService->method('getComments')->with(99, false)->willReturn([$comment]);
 
         $method = new \ReflectionMethod(TicketController::class, 'commentBelongsToTicket');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, 99, 12);
 
         $this->assertTrue($result);
@@ -132,7 +131,6 @@ class TicketControllerAttachmentOwnershipTest extends TestCase
             ->willReturn([$comment]);
 
         $method = new \ReflectionMethod(TicketController::class, 'commentBelongsToTicket');
-        $method->setAccessible(true);
         $this->assertTrue($method->invoke($this->controller, 99, 44));
     }
 
@@ -144,7 +142,6 @@ class TicketControllerAttachmentOwnershipTest extends TestCase
         $this->ticketService->method('getComments')->with(99, false)->willReturn([$comment]);
 
         $method = new \ReflectionMethod(TicketController::class, 'commentBelongsToTicket');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, 99, 12);
 
         $this->assertFalse($result);

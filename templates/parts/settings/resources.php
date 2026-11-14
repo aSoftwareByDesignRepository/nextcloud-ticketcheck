@@ -71,7 +71,7 @@ $tcRes = is_array($_['ticketResources'] ?? null) ? $_['ticketResources'] : [];
 									<?php endforeach; ?>
 								</select>
 								<button type="button" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--sm" data-action="rename-save"><?php p($l->t('save')); ?></button>
-								<button type="button" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm" data-action="rename-cancel"><?php p($l->t('cancel')); ?></button>
+								<button type="button" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm" data-action="rename-cancel"><?php p($l->t('cancel_button')); ?></button>
 							</div>
 							<div class="tc-resource-item__delete-confirm" hidden>
 								<span class="tc-resource-delete-text">
@@ -85,7 +85,7 @@ $tcRes = is_array($_['ticketResources'] ?? null) ? $_['ticketResources'] : [];
 										<?php endif; endforeach; ?>
 								</select>
 								<button type="button" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--sm" data-action="delete-confirm"><?php p($l->t('delete')); ?></button>
-								<button type="button" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm" data-action="delete-cancel"><?php p($l->t('cancel')); ?></button>
+								<button type="button" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm" data-action="delete-cancel"><?php p($l->t('cancel_button')); ?></button>
 							</div>
 						</li>
 					<?php endforeach; ?>

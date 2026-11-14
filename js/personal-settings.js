@@ -180,9 +180,9 @@ document.addEventListener('DOMContentLoaded', function () {
             submitBtn.disabled = true;
             submitBtn.setAttribute('aria-busy', 'true');
             if (submitLabelEl) {
-                submitLabelEl.textContent = formMessage('msgSaving', 'saving', 'Saving...');
+                submitLabelEl.textContent = formMessage('msgSaving', 'Saving…', 'Saving...');
             } else if (submitLabel) {
-                submitBtn.textContent = formMessage('msgSaving', 'saving', 'Saving...');
+                submitBtn.textContent = formMessage('msgSaving', 'Saving…', 'Saving...');
             }
         }
         form.setAttribute('aria-busy', 'true');
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
     prefCheckboxes.forEach(function (cb) {
         cb.addEventListener('change', function () {
             if (statusEl) {
-                statusEl.textContent = formMessage('msgSaving', 'saving', 'Saving...');
+                statusEl.textContent = formMessage('msgSaving', 'Saving…', 'Saving...');
                 statusEl.className = statusBaseClass;
             }
             queueAutosave();
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const confirmTitle = dangerMessage('msgDeletionConfirmTitle', 'account_deletion_confirm_title', 'Request account deletion?');
             const confirmBody = dangerMessage('msgDeletionConfirmBody', 'account_deletion_confirm_body', '');
             const confirmAction = dangerMessage('msgDeletionConfirmAction', 'account_deletion_confirm_action', 'Send request');
-            const cancelLabel = dangerMessage('msgDeletionCancel', 'cancel', 'Cancel');
+            const cancelLabel = dangerMessage('msgDeletionCancel', 'cancel_button', 'Cancel');
 
             const runRequest = function () {
                 btn.disabled = true;

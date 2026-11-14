@@ -127,7 +127,7 @@
 			if (!submitBtn) {
 				return;
 			}
-			const msgChanging = typeof t === 'function' ? t('ticketcheck', 'saving') : 'Saving…';
+			const msgChanging = typeof t === 'function' ? t('ticketcheck', 'Saving…') : 'Saving…';
 			submitBtn.disabled = !!busy;
 			if (busy) {
 				submitBtn.setAttribute('aria-busy', 'true');

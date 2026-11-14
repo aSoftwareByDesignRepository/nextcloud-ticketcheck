@@ -79,7 +79,6 @@ class InputPayloadMergeRegressionTest extends TestCase
     private function invokePrivate(object $instance, string $method, array $args): mixed
     {
         $ref = new \ReflectionMethod($instance, $method);
-        $ref->setAccessible(true);
         return $ref->invokeArgs($instance, $args);
     }
 }

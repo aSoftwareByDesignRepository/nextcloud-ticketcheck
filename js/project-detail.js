@@ -183,7 +183,7 @@
             return;
         }
         const confirmed = await C.confirmDialog({
-            title: t('ticketcheck', 'confirm'),
+            title: t('ticketcheck', 'Confirm'),
             body: tSafe('remove_member_confirm', 'Remove this team member from the project?\n\nThey will lose access to project tickets.'),
             danger: true,
         });
@@ -536,7 +536,7 @@
             return;
         }
         const confirmed = await C.confirmDialog({
-            title: t('ticketcheck', 'confirm'),
+            title: t('ticketcheck', 'Confirm'),
             body: confirmMessage,
             danger: true,
         });

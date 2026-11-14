@@ -60,7 +60,6 @@ class SLAMonitorJobTest extends TestCase
         $job = $this->buildJob($commentMapper, $groupManager);
 
         $method = new \ReflectionMethod(SLAMonitorJob::class, 'ticketHasStaffPublicResponse');
-        $method->setAccessible(true);
 
         $this->assertFalse($method->invoke($job, $ticket));
     }
@@ -94,7 +93,6 @@ class SLAMonitorJobTest extends TestCase
         $job = $this->buildJob($commentMapper, $groupManager);
 
         $method = new \ReflectionMethod(SLAMonitorJob::class, 'ticketHasStaffPublicResponse');
-        $method->setAccessible(true);
 
         $this->assertTrue($method->invoke($job, $ticket));
     }
@@ -462,7 +460,6 @@ class SLAMonitorJobTest extends TestCase
     private function invokeRun(SLAMonitorJob $job): void
     {
         $method = new \ReflectionMethod(SLAMonitorJob::class, 'run');
-        $method->setAccessible(true);
         $method->invoke($job, null);
     }
 

@@ -42,7 +42,6 @@ final class UpgradeBackupRestoreAppDataTest extends TestCase
 	private function invoke(object $service, string $method, mixed ...$args): mixed
 	{
 		$ref = new ReflectionMethod($service, $method);
-		$ref->setAccessible(true);
 		return $ref->invoke($service, ...$args);
 	}
 

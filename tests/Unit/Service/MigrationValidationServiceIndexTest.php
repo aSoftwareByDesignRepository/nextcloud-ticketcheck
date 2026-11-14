@@ -27,7 +27,6 @@ class MigrationValidationServiceIndexTest extends TestCase
         $table->addIndex(['status'], 'hd_status_idx');
 
         $m = new ReflectionMethod(MigrationValidationService::class, 'tableHasIndexNamed');
-        $m->setAccessible(true);
 
         self::assertTrue($m->invoke(null, $table, 'HD_STATUS_IDX'));
         self::assertFalse($m->invoke(null, $table, 'hd_missing_idx'));
@@ -50,7 +49,6 @@ class MigrationValidationServiceIndexTest extends TestCase
 
         $svc = new MigrationValidationService($db, $logger, $config);
         $ref = new ReflectionMethod(MigrationValidationService::class, 'findIntrospectedTable');
-        $ref->setAccessible(true);
 
         $found = $ref->invoke($svc, $schema, 'helpdesk_tickets');
         self::assertNotNull($found);

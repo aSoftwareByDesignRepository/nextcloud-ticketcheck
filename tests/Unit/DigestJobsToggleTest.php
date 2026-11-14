@@ -134,7 +134,6 @@ class DigestJobsToggleTest extends TestCase
         );
 
         $method = new \ReflectionMethod($job, 'sendDigestEmail');
-        $method->setAccessible(true);
         $method->invoke($job, 'agent@example.com', [
             'agentUid' => 'agent-de',
             'agentName' => 'Agent DE',
@@ -220,7 +219,6 @@ class DigestJobsToggleTest extends TestCase
     private function invokeProtectedRun(object $job): void
     {
         $method = new \ReflectionMethod($job, 'run');
-        $method->setAccessible(true);
         $method->invoke($job, null);
     }
 }

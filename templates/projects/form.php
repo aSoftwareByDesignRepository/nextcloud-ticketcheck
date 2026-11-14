@@ -216,7 +216,7 @@ if ($showMemberPicker) {
                 <?php endif; ?>
 
                 <div class="helpdesk-form-actions tc-project-form__actions">
-                    <a href="<?php p($cancelHref); ?>" class="helpdesk-btn helpdesk-btn--secondary"><?php p($l->t('cancel')); ?></a>
+                    <a href="<?php p($cancelHref); ?>" class="helpdesk-btn helpdesk-btn--secondary"><?php p($l->t('cancel_button')); ?></a>
                     <button type="submit" id="project-form-submit" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--lg">
                         <?php print_unescaped(IconCatalog::render('save')); ?>
                         <span class="tc-project-form-submit__text"><?php p($isEdit ? $l->t('update_project') : $l->t('create_project')); ?></span>

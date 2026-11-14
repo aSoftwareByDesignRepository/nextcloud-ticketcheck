@@ -48,7 +48,6 @@ class GuestUserControllerSecurityTest extends TestCase
         $controller = $this->buildControllerForResolveGuest($userManager, $groupManager);
 
         $method = new \ReflectionMethod(GuestUserController::class, 'resolveGuestAccount');
-        $method->setAccessible(true);
 
         $this->assertNotNull($method->invoke($controller, 'guest1'));
         $this->assertNull($method->invoke($controller, 'agent1'));
@@ -66,7 +65,6 @@ class GuestUserControllerSecurityTest extends TestCase
         $ref = new \ReflectionClass(GuestUserController::class);
         foreach (['userManager' => $userManager, 'groupManager' => $groupManager] as $prop => $value) {
             $property = $ref->getProperty($prop);
-            $property->setAccessible(true);
             $property->setValue($controller, $value);
         }
 

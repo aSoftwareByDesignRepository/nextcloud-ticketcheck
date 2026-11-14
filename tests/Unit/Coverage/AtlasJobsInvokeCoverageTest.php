@@ -32,7 +32,6 @@ final class AtlasJobsInvokeCoverageTest extends TestCase
 		$job = new EscalationJob($time, $escalation, $logger, $locking);
 		$ref = new ReflectionClass($job);
 		$method = $ref->getMethod('run');
-		$method->setAccessible(true);
 		$method->invoke($job, null);
 		self::assertTrue(true);
 	}
@@ -60,7 +59,6 @@ final class AtlasJobsInvokeCoverageTest extends TestCase
 		}
 		$job = $refClass->newInstanceArgs($args);
 		$method = $refClass->getMethod('run');
-		$method->setAccessible(true);
 		try {
 			$method->invoke($job, null);
 		} catch (\Throwable) {
@@ -99,7 +97,6 @@ final class AtlasJobsInvokeCoverageTest extends TestCase
 		}
 		$job = $refClass->newInstanceArgs($args);
 		$method = $refClass->getMethod('run');
-		$method->setAccessible(true);
 		try {
 			$method->invoke($job, null);
 		} catch (\Throwable) {
@@ -130,7 +127,6 @@ final class AtlasJobsInvokeCoverageTest extends TestCase
 		}
 		$job = $refClass->newInstanceArgs($args);
 		$method = $refClass->getMethod('run');
-		$method->setAccessible(true);
 		try {
 			$method->invoke($job, null);
 		} catch (\Throwable) {

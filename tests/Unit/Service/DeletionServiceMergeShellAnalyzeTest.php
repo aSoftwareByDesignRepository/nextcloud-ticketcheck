@@ -65,7 +65,6 @@ class DeletionServiceMergeShellAnalyzeTest extends TestCase
 		);
 
 		$method = new \ReflectionMethod(DeletionService::class, 'analyzeTicketDependencies');
-		$method->setAccessible(true);
 		$result = $method->invoke($service, 20, [
 			'dependencies' => [],
 			'total_affected' => 0,

@@ -497,7 +497,7 @@ $localeFormat = $_['localeFormat'] ?? null;
             </div>
         </div>
         <div class="helpdesk-form-actions ticket-detail-dialog-actions">
-            <button type="button" class="helpdesk-btn helpdesk-btn--ghost" id="merge-dialog-cancel"><?php p($l->t('cancel')); ?></button>
+            <button type="button" class="helpdesk-btn helpdesk-btn--ghost" id="merge-dialog-cancel"><?php p($l->t('cancel_button')); ?></button>
             <button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="merge-dialog-submit" disabled><?php p($l->t('merge')); ?></button>
         </div>
     </form>
@@ -511,7 +511,7 @@ $localeFormat = $_['localeFormat'] ?? null;
         <div id="split-tickets-container"></div>
         <button type="button" class="helpdesk-btn helpdesk-btn--ghost" id="split-add-another"><?php p($l->t('split_add_another')); ?></button>
         <div class="helpdesk-form-actions ticket-detail-dialog-actions">
-            <button type="button" class="helpdesk-btn helpdesk-btn--ghost" id="split-dialog-cancel"><?php p($l->t('cancel')); ?></button>
+            <button type="button" class="helpdesk-btn helpdesk-btn--ghost" id="split-dialog-cancel"><?php p($l->t('cancel_button')); ?></button>
             <button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="split-dialog-submit"><?php p($l->t('split_ticket')); ?></button>
         </div>
     </form>
@@ -570,7 +570,7 @@ $localeFormat = $_['localeFormat'] ?? null;
             <p class="helpdesk-form-help"><?php p($l->t('link_type_help')); ?></p>
         </div>
         <div class="helpdesk-form-actions ticket-detail-dialog-actions">
-            <button type="button" class="helpdesk-btn helpdesk-btn--ghost" id="add-link-cancel"><?php p($l->t('cancel')); ?></button>
+            <button type="button" class="helpdesk-btn helpdesk-btn--ghost" id="add-link-cancel"><?php p($l->t('cancel_button')); ?></button>
             <button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="add-link-submit" disabled><?php p($l->t('add_link')); ?></button>
         </div>
     </form>
@@ -606,7 +606,7 @@ $localeFormat = $_['localeFormat'] ?? null;
             <div id="add-watcher-search-results" class="tc-select-combobox__results" role="listbox" aria-label="<?php p($l->t('add_watcher')); ?>" hidden></div>
         </div>
         <div class="helpdesk-form-actions ticket-detail-dialog-actions">
-            <button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="add-watcher-cancel"><?php p($l->t('cancel')); ?></button>
+            <button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="add-watcher-cancel"><?php p($l->t('cancel_button')); ?></button>
             <button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="add-watcher-submit" disabled><?php p($l->t('add_watcher')); ?></button>
         </div>
     </form>

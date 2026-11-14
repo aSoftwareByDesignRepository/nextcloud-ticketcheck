@@ -30,7 +30,6 @@ class GuestUserControllerGrantFailureTest extends TestCase
         $controller = $this->buildController($mapper, $userSession);
 
         $method = new \ReflectionMethod(GuestUserController::class, 'grantProjectAccessBatch');
-        $method->setAccessible(true);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('3');
@@ -49,7 +48,6 @@ class GuestUserControllerGrantFailureTest extends TestCase
         $controller = $this->buildController($mapper, $userSession);
 
         $method = new \ReflectionMethod(GuestUserController::class, 'grantProjectAccessBatch');
-        $method->setAccessible(true);
 
         // Must not throw — re-granting an existing grant is a no-op.
         $method->invoke($controller, 'guest1', [3], 'unit test');
@@ -74,7 +72,6 @@ class GuestUserControllerGrantFailureTest extends TestCase
         $controller = $this->buildController($mapper, $userSession);
 
         $method = new \ReflectionMethod(GuestUserController::class, 'grantProjectAccessBatch');
-        $method->setAccessible(true);
 
         try {
             $method->invoke($controller, 'guest1', [3, 7, 9], 'unit test');
@@ -100,7 +97,6 @@ class GuestUserControllerGrantFailureTest extends TestCase
             'logger' => $this->createMock(LoggerInterface::class),
         ] as $prop => $value) {
             $property = $ref->getProperty($prop);
-            $property->setAccessible(true);
             $property->setValue($controller, $value);
         }
 

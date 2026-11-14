@@ -145,7 +145,7 @@
 		noDeps.appendChild(text);
 		fragment.appendChild(noDeps);
 		fragment.appendChild(buildActionsBlock([
-			createActionButton('ghost', tr('cancel', 'Cancel'), 'cancel'),
+			createActionButton('ghost', tr('cancel_button', 'Cancel'), 'cancel'),
 			createActionButton('danger', tr('delete', 'Delete'), 'cascade'),
 		]));
 		return fragment;
@@ -169,7 +169,7 @@
 		fragment.appendChild(depsSection);
 
 		const buttons = [];
-		buttons.push(createActionButton('ghost', tr('cancel', 'Cancel'), 'cancel'));
+		buttons.push(createActionButton('ghost', tr('cancel_button', 'Cancel'), 'cancel'));
 		if (!currentDependencies.can_delete && !currentDependencies.requires_cascade) {
 			buttons.push(createActionButton('warning', tr('block_deletion', 'Block deletion'), 'block'));
 		}

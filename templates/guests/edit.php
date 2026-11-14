@@ -154,7 +154,7 @@ $cancelHref = $_['urlGenerator']->linkToRoute('ticketcheck.guestUser.index');
                 </section>
 
                 <div class="helpdesk-form-actions tc-guest-form__actions">
-                    <a href="<?php p($cancelHref); ?>" class="helpdesk-btn helpdesk-btn--secondary"><?php p($l->t('cancel')); ?></a>
+                    <a href="<?php p($cancelHref); ?>" class="helpdesk-btn helpdesk-btn--secondary"><?php p($l->t('cancel_button')); ?></a>
                     <button type="button" id="guest-reset-password" class="helpdesk-btn helpdesk-btn--secondary"
                         aria-describedby="guest-reset-password-hint">
                         <?php print_unescaped(IconCatalog::render('mail')); ?>

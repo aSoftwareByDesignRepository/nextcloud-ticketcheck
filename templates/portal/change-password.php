@@ -140,7 +140,7 @@ $requirementItems = [
                         <div class="portal-password__actions helpdesk-form-actions">
                             <a href="<?php p($_['urlGenerator']->linkToRoute('ticketcheck.customerPortal.index')); ?>"
                                 class="helpdesk-btn helpdesk-btn--secondary">
-                                <?php p($l->t('cancel')); ?>
+                                <?php p($l->t('cancel_button')); ?>
                             </a>
                             <button type="submit" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--lg" data-submit-label="<?php p($l->t('change_password')); ?>">
                                 <?php p($l->t('change_password')); ?>

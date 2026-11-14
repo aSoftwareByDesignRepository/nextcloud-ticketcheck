@@ -60,7 +60,7 @@ class Provider implements IProvider
         };
 
         $event->setParsedSubject($parsedSubject)
-            ->setIcon($this->urlGenerator->getAbsoluteURL($this->urlGenerator->imagePath(Application::APP_ID, 'app.svg')));
+            ->setIcon($this->urlGenerator->getAbsoluteURL($this->urlGenerator->imagePath(Application::APP_ID, 'app-dark.svg')));
 
         if ($previousEvent !== null) {
             $event->setChildEvent($previousEvent);
