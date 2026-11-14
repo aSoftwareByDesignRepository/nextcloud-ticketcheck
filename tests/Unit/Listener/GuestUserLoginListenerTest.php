@@ -22,6 +22,9 @@ use Psr\Log\LoggerInterface;
  * an admin-set '0 B' quota (upload-disabled account) or an admin-pinned
  * defaultapp must survive both the login self-heal and the group-removal
  * path (self_heal_write_outside_managed_domain).
+ * GH #4: the marker-less pre-flag cohort additionally heals via the
+ * '999.0.0' firstrunwizard sentinel — the app's own magic value — when the
+ * one-shot upgrade repair never reached the user.
  */
 class GuestUserLoginListenerTest extends TestCase
 {
@@ -84,9 +87,9 @@ class GuestUserLoginListenerTest extends TestCase
         $listener->handle($this->loginEvent($this->user('alice')));
 
         $this->assertSame([
+            ['alice', 'ticketcheck', 'portal_pins', '1'],
             ['alice', 'core', 'defaultapp', 'ticketcheck'],
             ['alice', 'firstrunwizard', 'show', '999.0.0'],
-            ['alice', 'ticketcheck', 'portal_pins', '1'],
         ], $writes);
     }
 
@@ -119,6 +122,60 @@ class GuestUserLoginListenerTest extends TestCase
             ['bob', 'files', 'quota'],
             ['bob', 'ticketcheck', 'portal_pins'],
             ['bob', 'ticketcheck', 'guest_created_at'],
+        ], $deletes->getArrayCopy());
+    }
+
+    public function testPreFlagPinPairIsHealedOnLoginWithoutMarkers(): void
+    {
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isInGroup')->willReturn(false);
+
+        // GH #4 cohort: pre-flag member pin (<=2.6.0 wrote the
+        // defaultapp+firstrunwizard pair without provenance markers) on a
+        // user who left the group and whose one-shot upgrade repair never
+        // reached her. The '999.0.0' sentinel is ours alone, so the pair is
+        // proven app state and both values go — the admin-set quota stays.
+        [$config, $deletes] = $this->configStore('lisa', [
+            'core|defaultapp' => 'ticketcheck',
+            'firstrunwizard|show' => '999.0.0',
+            'files|quota' => '5 GB',
+        ]);
+
+        $listener = new GuestUserLoginListener(
+            $groupManager,
+            $config,
+            $this->createMock(LoggerInterface::class),
+        );
+        $listener->handle($this->loginEvent($this->user('lisa')));
+
+        $this->assertSame([
+            ['lisa', 'core', 'defaultapp'],
+            ['lisa', 'firstrunwizard', 'show'],
+        ], $deletes->getArrayCopy());
+    }
+
+    public function testLoneWizardSentinelIsClearedWithoutMarkers(): void
+    {
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isInGroup')->willReturn(false);
+
+        // Only the sentinel survives (defaultapp already cleaned): '999.0.0'
+        // is provably ours, so it is deleted — while a foreign defaultapp
+        // pin for a staff user is left alone.
+        [$config, $deletes] = $this->configStore('mia', [
+            'core|defaultapp' => 'dashboard',
+            'firstrunwizard|show' => '999.0.0',
+        ]);
+
+        $listener = new GuestUserLoginListener(
+            $groupManager,
+            $config,
+            $this->createMock(LoggerInterface::class),
+        );
+        $listener->handle($this->loginEvent($this->user('mia')));
+
+        $this->assertSame([
+            ['mia', 'firstrunwizard', 'show'],
         ], $deletes->getArrayCopy());
     }
 

@@ -51,17 +51,19 @@ class GuestUserLoginListener implements IEventListener
         // best-effort pin is a convenience, not a gate; it retries next login.
         try {
             if ($this->groupManager->isInGroup($userId, self::GROUP_GUESTS)) {
+                // Provenance flag FIRST: clearGuestPins() may only unpin
+                // values the app wrote itself, and stored-value equality
+                // cannot prove authorship. Writing it before the pins
+                // guarantees a mid-sequence write failure can never strand
+                // an unmarked pin that no cleanup path will ever touch.
+                $this->config->setUserValue($userId, 'ticketcheck', self::PORTAL_PINS_KEY, '1');
+
                 // Set default app for this user to helpdesk portal
                 // This ensures they're redirected after login completes
                 $this->config->setUserValue($userId, 'core', 'defaultapp', self::DEFAULT_APP);
 
                 // Disable firstrunwizard for guest users to prevent welcome modal
                 $this->config->setUserValue($userId, 'firstrunwizard', 'show', self::FIRSTRUN_SUPPRESS_VERSION);
-
-                // Provenance flag: clearGuestPins() may only unpin values the
-                // app wrote itself, and stored-value equality cannot prove
-                // authorship.
-                $this->config->setUserValue($userId, 'ticketcheck', self::PORTAL_PINS_KEY, '1');
                 return;
             }
 
@@ -95,8 +97,12 @@ class GuestUserLoginListener implements IEventListener
      * fully the admin's again, so a '0 B' quota set on it afterwards stays
      * put. Accounts the app never created keep every user value untouched —
      * in particular files.quota is never deleted for them.
-     * Pins written before these markers existed (pre-flag member logins) are
-     * healed once by the UnpinLegacyGuestPins post-migration repair step.
+     * Pins written before these markers existed (pre-flag member logins) were
+     * meant to be healed once by the UnpinLegacyGuestPins post-migration
+     * repair step — but that step is one-shot and silent failures leave no
+     * runtime fallback (GH #4). The '999.0.0' firstrunwizard value doubles as
+     * provenance there: it is our sentinel and can only exist where the app
+     * wrote the pair, so it un-pins defaultapp for non-members on its own.
      */
     public static function clearGuestPins(IConfig $config, string $userId): void
     {
@@ -108,10 +114,21 @@ class GuestUserLoginListener implements IEventListener
         $hasPinsFlag = $config->getUserValue($userId, 'ticketcheck', self::PORTAL_PINS_KEY, '') === '1';
         $pinsOurs = $appCreated || $hasPinsFlag;
 
-        if ($pinsOurs && $config->getUserValue($userId, 'core', 'defaultapp') === self::DEFAULT_APP) {
+        // Sentinel-pair provenance for the pre-flag cohort: '999.0.0' is this
+        // app's magic value — nothing else ever writes it — so a non-member
+        // carrying it proves the <=2.6.0 member-login code wrote the whole
+        // defaultapp+firstrunwizard pair, even when the provenance markers
+        // were never stamped or were lost (GH #4: the one-shot upgrade repair
+        // is the only other healer for marker-less pins, and any instance it
+        // misses stays trapped forever). A lone defaultapp=ticketcheck with
+        // neither sentinel nor markers is still preserved: it can be an
+        // admin's deliberate pin for a staff user.
+        $wizardPinned = $config->getUserValue($userId, 'firstrunwizard', 'show') === self::FIRSTRUN_SUPPRESS_VERSION;
+
+        if (($pinsOurs || $wizardPinned) && $config->getUserValue($userId, 'core', 'defaultapp') === self::DEFAULT_APP) {
             $config->deleteUserValue($userId, 'core', 'defaultapp');
         }
-        if ($pinsOurs && $config->getUserValue($userId, 'firstrunwizard', 'show') === self::FIRSTRUN_SUPPRESS_VERSION) {
+        if ($wizardPinned) {
             $config->deleteUserValue($userId, 'firstrunwizard', 'show');
         }
         // The quota pin is strictly marker-gated: only an app-created

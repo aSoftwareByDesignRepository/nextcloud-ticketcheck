@@ -117,6 +117,63 @@ class UnpinLegacyGuestPinsTest extends TestCase
         $step->run($output);
     }
 
+    public function testMemberLookupFailureStillUnpins(): void
+    {
+        // GH #4 resilience: a throwing group backend must not abort the
+        // heal — every pinned uid is treated as a non-member (current
+        // members re-pin themselves at next login anyway).
+        $config = $this->createMock(IConfig::class);
+        $config->method('getUsersForUserValue')->willReturnMap([
+            ['core', 'defaultapp', 'ticketcheck', ['lisa']],
+            ['firstrunwizard', 'show', '999.0.0', ['lisa']],
+        ]);
+        $config->method('getUserValue')->willReturnMap([
+            ['lisa', 'core', 'defaultapp', '', 'ticketcheck'],
+            ['lisa', 'firstrunwizard', 'show', '', '999.0.0'],
+        ]);
+        $deletes = new \ArrayObject();
+        $config->method('deleteUserValue')
+            ->willReturnCallback(static function (string $u, string $app, string $key) use ($deletes): void {
+                $deletes->append([$u, $app, $key]);
+            });
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())->method('warning');
+
+        $gm = $this->createMock(IGroupManager::class);
+        $gm->method('get')->willThrowException(new \RuntimeException('group backend down'));
+
+        $step = new UnpinLegacyGuestPins($config, $gm, $logger);
+        $step->run($this->outputMock());
+
+        $this->assertSame([
+            ['lisa', 'core', 'defaultapp'],
+            ['lisa', 'firstrunwizard', 'show'],
+        ], $deletes->getArrayCopy());
+    }
+
+    public function testPinEnumerationFailureAbortsCleanly(): void
+    {
+        $config = $this->createMock(IConfig::class);
+        $config->method('getUsersForUserValue')
+            ->willThrowException(new \RuntimeException('db gone'));
+        $config->expects($this->never())->method('deleteUserValue');
+        $config->expects($this->never())->method('setUserValue');
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())->method('error');
+
+        $gm = $this->createMock(IGroupManager::class);
+        $this->memberGroup([], $gm);
+
+        $output = $this->createMock(IOutput::class);
+        $output->expects($this->once())->method('warning');
+
+        $step = new UnpinLegacyGuestPins($config, $gm, $logger);
+        $step->run($output); // must not throw — repair steps share the upgrade process
+        $this->assertTrue(true);
+    }
+
     public function testPerUserFailureIsLoggedNotThrown(): void
     {
         $config = $this->createMock(IConfig::class);

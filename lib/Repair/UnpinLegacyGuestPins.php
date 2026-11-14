@@ -15,10 +15,11 @@ declare(strict_types=1);
  * UI to revert it.
  *
  * This repair enumerates exactly the uids carrying the app's pin values:
- *   - non-members: the pins are deleted outright (the once-only documented
- *     exception to strict provenance — the defaultapp value points into
- *     this app and '999.0.0' is our firstrunwizard sentinel; an admin who
- *     occ-pinned a non-member to the portal loses that pin once).
+ *   - non-members: the pins are deleted outright (the documented exception
+ *     to strict provenance — the defaultapp value points into this app and
+ *     '999.0.0' is our firstrunwizard sentinel; an admin who occ-pinned a
+ *     non-member to the portal loses that pin, and must re-set it if they
+ *     re-pin — this step runs on every app update).
  *   - current members missing the flag: ticketcheck.portal_pins='1' is
  *     stamped so the runtime gate owns their app-written pins when they
  *     later leave the group.
@@ -57,15 +58,39 @@ class UnpinLegacyGuestPins implements IRepairStep
 
     public function run(IOutput $output): void
     {
-        $members = $this->guestMemberUids();
+        // The member lookup is best-effort: if the group backend throws,
+        // treat every pinned uid as a non-member. Current members re-pin
+        // themselves at their next login anyway (with the provenance flag),
+        // so a transient unpin is harmless — while aborting here would
+        // strand the entire legacy cohort this step exists to heal.
+        try {
+            $members = $this->guestMemberUids();
+        } catch (\Throwable $e) {
+            $members = [];
+            $this->logger->warning('UnpinLegacyGuestPins: helpdesk_customers member lookup failed, unpinning all pinned users', [
+                'exception' => $e,
+            ]);
+        }
         $healed = 0;
         $flagged = 0;
         $failed = 0;
 
-        $pinned = array_merge(
-            $this->config->getUsersForUserValue('core', 'defaultapp', 'ticketcheck'),
-            $this->config->getUsersForUserValue('firstrunwizard', 'show', '999.0.0'),
-        );
+        try {
+            $pinned = array_merge(
+                $this->config->getUsersForUserValue('core', 'defaultapp', 'ticketcheck'),
+                $this->config->getUsersForUserValue('firstrunwizard', 'show', '999.0.0'),
+            );
+        } catch (\Throwable $e) {
+            // Without the pin carriers there is nothing safe to heal — a
+            // throw here must not break the upgrade (Repair only swallows
+            // \Exception per step, and later steps in the list would be
+            // skipped if this one escaped).
+            $this->logger->error('UnpinLegacyGuestPins: pin enumeration failed', [
+                'exception' => $e,
+            ]);
+            $output->warning('Ticketcheck: could not enumerate legacy guest portal pins — see log.');
+            return;
+        }
 
         foreach (array_unique($pinned) as $uid) {
             try {

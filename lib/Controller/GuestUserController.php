@@ -394,6 +394,12 @@ class GuestUserController extends Controller
 
                         $user->setDisplayName($displayName);
                         $user->setEMailAddress($email);
+                        // Provenance marker FIRST: files.quota + core.defaultapp
+                        // below are only ever cleaned up where this marker proves
+                        // app authorship (GuestUserLoginListener::clearGuestPins is
+                        // marker-gated for quota) — a partial write must never
+                        // strand an unmarked '0 B' quota no path will ever heal.
+                        $this->config->setUserValue($username, 'ticketcheck', 'guest_created_at', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
                         $user->setQuota('0 B');
 
                         $guestGroup = $this->groupManager->get('helpdesk_customers');
@@ -408,7 +414,6 @@ class GuestUserController extends Controller
                         $config = $this->config;
                         $config->setUserValue($username, 'core', 'enabled', 'true');
                         $config->setUserValue($username, 'files', 'quota', '0 B');
-                        $config->setUserValue($username, 'ticketcheck', 'guest_created_at', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
                         $preferredLanguage = $this->resolvePreferredGuestLanguage($l);
                         if ($preferredLanguage !== '') {
                             $config->setUserValue($username, 'core', 'lang', $preferredLanguage);

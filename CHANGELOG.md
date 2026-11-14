@@ -66,6 +66,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Former guests whose `core.defaultapp` pin was written without provenance
+  markers (pre-flag releases) and whom the one-time upgrade repair never
+  reached now self-heal at their next login: the `firstrunwizard` `999.0.0`
+  sentinel — a value only this app writes — now doubles as provenance for
+  the pin pair, so a marker-less former member is unpinned instead of being
+  trapped in a portal redirect loop forever (issue #4 follow-up). The
+  `portal_pins` provenance flag is also stamped before the pins themselves,
+  so a mid-write failure can no longer strand an unmarked pin, and the
+  upgrade repair no longer aborts the whole heal when the group-backend
+  member lookup or the pin enumeration throws
+- Guest creation now stamps the `guest_created_at` provenance marker before
+  the `0 B` quota it vouches for, matching the login path: a crash mid-write
+  can no longer strand an upload-disabled account whose quota pin no
+  cleanup path would ever touch
 - Users removed from `helpdesk_customers` no longer stay pinned to the
   TicketCheck portal: the `core.defaultapp` user value the app sets at
   guest login is now cleared on group removal and self-heals on the next
