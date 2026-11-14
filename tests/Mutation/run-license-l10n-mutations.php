@@ -19,12 +19,12 @@ function run_license_l10n_tests(string $appRoot, string $phpunit): int
 	$cmd = 'php -d opcache.enable_cli=0 -d opcache.enable=0 '
 		. escapeshellarg($phpunit)
 		. ' -c ' . escapeshellarg($appRoot . '/phpunit.xml')
-		. ' --filter LicenseUiStringsL10nParityTest';
+		. ' --filter LicensePageL10nParityTest';
 	passthru($cmd, $code);
 	return (int)$code;
 }
 
-echo "== baseline LicenseUiStringsL10nParityTest ==\n";
+echo "== baseline LicensePageL10nParityTest ==\n";
 if (run_license_l10n_tests($appRoot, $phpunit) !== 0) {
 	fwrite(STDERR, "Baseline must pass\n");
 	exit(1);

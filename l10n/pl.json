@@ -1,6 +1,6 @@
 {
 	"translations": {
-		"%1$d of %2$d device slots in use.": "Użyto %1$d z %2$d miejsc na urządzenia.",
+		"%1$d of %2$d device slots in use.": "Użyto %1$d z %2$d miejsc dla urządzeń.",
 		"%1$d of %2$d seats assigned": "%1$d z %2$d miejsc przypisanych",
 		"%1$s (%2$s)": "%1$s (%2$s)",
 		"%d row(s) need a value on this instance": "%d wierszy wymaga wartości na tej instancji",
@@ -36,7 +36,7 @@
 		"Added comment to ticket %s": "Dodano komentarz do zgłoszenia %s",
 		"Added internal note to ticket %s": "Dodano notatkę wewnętrzną do zgłoszenia %s",
 		"Additional invoiceable options": "Dodatkowe opcje płatne",
-		"All device slots are in use. Revoke a device or upgrade your license.": "Wszystkie miejsca na urządzenia są zajęte. Odwołaj urządzenie albo rozszerz licencję.",
+		"All device slots are in use. Revoke a device or upgrade your license.": "Wszystkie miejsca dla urządzeń są zajęte. Odwołaj urządzenie albo rozszerz licencję.",
 		"All licensed seats are assigned. Remove a seat or upgrade the license.": "Wszystkie licencjonowane miejsca są przypisane. Usuń miejsce lub uaktualnij licencję.",
 		"All mobile seats are assigned. Remove a user or upgrade your license.": "Wszystkie miejsca mobilne są przypisane. Usuń użytkownika lub uaktualnij licencję.",
 		"An error occurred": "Wystąpił błąd",

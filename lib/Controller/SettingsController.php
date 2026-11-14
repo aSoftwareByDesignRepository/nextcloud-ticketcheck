@@ -16,7 +16,6 @@ use OCA\Ticketcheck\Db\EscalationRuleMapper;
 use OCA\Ticketcheck\Db\Ticket;
 use OCA\Ticketcheck\Service\FrontEndAssetService;
 use OCA\Ticketcheck\Service\LicenseService;
-use OCA\Ticketcheck\Service\LicenseUiStrings;
 use OCA\Ticketcheck\Service\LocaleFormatService;
 use OCA\Ticketcheck\Service\NavigationContextService;
 use OCA\Ticketcheck\Service\PermissionService;
@@ -305,7 +304,7 @@ class SettingsController extends Controller
                 'slaSettings' => $this->slaPolicy->settingsPayload(),
                 'slaTimezones' => \DateTimeZone::listIdentifiers(),
             ],
-            'license' => $this->licenseSettingsExtras($l),
+            'license' => $this->licenseSettingsExtras(),
             'support' => [
                 'supportUsLinks' => new SupportUsLinks(
                     'TicketCheck',
@@ -415,7 +414,7 @@ class SettingsController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function licenseSettingsExtras(IL10N $l): array
+    private function licenseSettingsExtras(): array
     {
         $licenseStatus = null;
         $licenseSeatsList = null;
@@ -431,7 +430,6 @@ class SettingsController extends Controller
         return [
             'licenseStatus' => $licenseStatus,
             'licenseSeatsList' => $licenseSeatsList,
-            'licenseI18n' => LicenseUiStrings::forPanel($l),
             'licenseApiUrl' => $licenseApiUrl,
             'licenseClearUrl' => $licenseApiUrl,
             'licenseSeatsUrl' => $licenseSeatsUrl,

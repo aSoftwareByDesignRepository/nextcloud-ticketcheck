@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace OCA\Ticketcheck\Tests\Unit\Service;
 
-use OCA\Ticketcheck\Service\LicenseUiStrings;
-use OCP\IL10N;
 use PHPUnit\Framework\TestCase;
 
 /**
- * TKC2 mobile license panel must ship EN+DE for every {@see LicenseUiStrings} msgid.
- * Missing DE entries fall back to English in the UI — the exact bug operators reported.
+ * The shared license page (_shared/license-page, synced copy under
+ * templates/common/license-page.php) renders through the app catalog — every
+ * msgid the synced template emits must have EN+DE entries, or a DE session
+ * silently falls back to English (the exact bug operators reported).
+ *
+ * Sources the LIVE msgid set from the synced template itself: the $i18nMsgids
+ * block (JS-visible keys) plus direct $l->t() calls, the app-side wrapper
+ * (parts/license-panel.php), and the live settings-section heading
+ * ('Mobile license' via SettingsSectionCatalog).
  */
-final class LicenseUiStringsL10nParityTest extends TestCase
+final class LicensePageL10nParityTest extends TestCase
 {
 	private string $root;
 
@@ -22,23 +27,27 @@ final class LicenseUiStringsL10nParityTest extends TestCase
 	}
 
 	/** @return list<string> */
-	private function catalogMsgids(): array
+	private function liveLicenseMsgids(): array
 	{
-		$l = $this->createMock(IL10N::class);
-		$l->method('t')->willReturnCallback(static fn (string $s): string => $s);
-		return array_values(LicenseUiStrings::forPanel($l));
-	}
-
-	/** @return list<string> */
-	private function panelExtraMsgids(): array
-	{
-		$panel = (string)file_get_contents($this->root . '/templates/parts/license-panel.php');
-		preg_match_all("/\\\$l->t\\('((?:\\\\.|[^'\\\\])*)'\\)/", $panel, $m);
-		$out = [];
-		foreach ($m[1] as $raw) {
-			$out[] = str_replace("\\'", "'", $raw);
+		$ids = [];
+		foreach (['/templates/common/license-page.php', '/templates/parts/license-panel.php'] as $rel) {
+			$tpl = (string)file_get_contents($this->root . $rel);
+			if (preg_match('/\$i18nMsgids = \[\n(.*?)\n\];/s', $tpl, $b)) {
+				preg_match_all("/=>\s*'((?:\\\\.|[^'\\\\])*)'/", $b[1], $m);
+				foreach ($m[1] as $raw) {
+					$ids[] = str_replace("\\'", "'", $raw);
+				}
+			}
+			preg_match_all("/\\\$l->t\('((?:\\\\.|[^'\\\\])*)'/", $tpl, $m2);
+			foreach ($m2[1] as $raw) {
+				$ids[] = str_replace("\\'", "'", $raw);
+			}
 		}
-		return array_values(array_unique($out));
+		// Live settings-section heading (SettingsSectionCatalog 'license' entry).
+		$ids[] = 'Mobile license';
+		$ids = array_values(array_unique($ids));
+		self::assertNotEmpty($ids, 'license page msgid extraction must not come back empty');
+		return $ids;
 	}
 
 	/** @return array<string, string> */
@@ -53,10 +62,9 @@ final class LicenseUiStringsL10nParityTest extends TestCase
 		return $t;
 	}
 
-	public function testEveryLicenseUiStringExistsInEnAndDe(): void
+	public function testEveryLicensePageMsgidExistsInEnAndDe(): void
 	{
-		$msgids = array_values(array_unique(array_merge($this->catalogMsgids(), $this->panelExtraMsgids())));
-		self::assertNotEmpty($msgids);
+		$msgids = $this->liveLicenseMsgids();
 
 		$en = $this->loadTranslations('en');
 		$de = $this->loadTranslations('de');
@@ -70,7 +78,7 @@ final class LicenseUiStringsL10nParityTest extends TestCase
 			}
 			if (!array_key_exists($id, $de)) {
 				$missingDe[] = $id;
-			} elseif ($de[$id] === $id && !in_array($id, ['TKC2.…', 'Person'], true)) {
+			} elseif ($de[$id] === $id && !in_array($id, ['TKC2.…', 'Person', 'Status'], true)) {
 				$englishInDe[] = $id;
 			}
 		}
@@ -82,7 +90,7 @@ final class LicenseUiStringsL10nParityTest extends TestCase
 
 	public function testDeJsRegistersSameLicenseKeys(): void
 	{
-		$msgids = $this->catalogMsgids();
+		$msgids = $this->liveLicenseMsgids();
 		$js = (string)file_get_contents($this->root . '/l10n/de.js');
 		$missing = [];
 		foreach ($msgids as $id) {
@@ -92,7 +100,7 @@ final class LicenseUiStringsL10nParityTest extends TestCase
 				$missing[] = $id;
 			}
 		}
-		self::assertSame([], $missing, 'de.js must register every LicenseUiStrings msgid');
+		self::assertSame([], $missing, 'de.js must register every live license-page msgid');
 	}
 
 	public function testGermanMobileLicenseHeadingIsTranslated(): void

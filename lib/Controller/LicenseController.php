@@ -109,14 +109,7 @@ class LicenseController extends Controller
 		}
 	}
 
-	/**
-	 * Directory search for seat assignment (agents/admins only; never guests).
-	 *
-	 * Intentional product scope: TicketCheck Mobile seats are for helpdesk
-	 * staff, not portal customers. Searching the full Nextcloud directory would
-	 * offer customer accounts as seat candidates.
-	 */
-		#[NoAdminRequired]
+	#[NoAdminRequired]
 	public function removeSeatPost(): JSONResponse
 	{
 		try {
@@ -129,7 +122,14 @@ class LicenseController extends Controller
 		}
 	}
 
-#[NoAdminRequired]
+	/**
+	 * Directory search for seat assignment (agents/admins only; never guests).
+	 *
+	 * Intentional product scope: TicketCheck Mobile seats are for helpdesk
+	 * staff, not portal customers. Searching the full Nextcloud directory would
+	 * offer customer accounts as seat candidates.
+	 */
+	#[NoAdminRequired]
 	public function searchUsers(): JSONResponse
 	{
 		try {
