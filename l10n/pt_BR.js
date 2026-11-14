@@ -2357,7 +2357,7 @@ OC.L10N.register(
 	"status_open" : "Abrir",
 	"status_resolved" : "Resolvido",
 	"status_sort" : "Status",
-	"status_updated" : "Status atualizado com sucesso",
+	"status_updated" : "Estado atualizado com sucesso",
 	"status_waiting" : "Esperando",
 	"status_working" : "Trabalhando",
 	"statuses" : "Status",
