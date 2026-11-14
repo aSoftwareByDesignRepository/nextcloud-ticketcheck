@@ -507,6 +507,7 @@
 		"app_access_controls": "Uygulama erişim denetimleri",
 		"app_access_controls_help": "Nextcloud gruplarını arayıp ekleyin. Kullanıcılar yukarıdaki etkin kapsamlardan birine uymalı ve bir TicketCheck rolüne (yönetici, temsilci ya da müşteri) sahip olmalıdır.",
 		"app_access_group_added": "{name} eklendi",
+		"app_access_group_missing": "Grup bulunamadı",
 		"app_access_groups_search_no_results": "Eşleşen grup bulunamadı.",
 		"app_access_groups_search_placeholder": "Nextcloud grubu arayın…",
 		"app_access_groups_search_results_count": "{count} grup bulundu",

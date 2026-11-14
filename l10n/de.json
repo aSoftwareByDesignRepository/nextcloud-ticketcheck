@@ -507,6 +507,7 @@
 		"app_access_controls": "App-Zugriffskontrolle",
 		"app_access_controls_help": "Nextcloud-Gruppen suchen und hinzufügen. Benutzer müssen zu einem aktivierten Bereich oben gehören und eine TicketCheck-Rolle haben (Admin, Agent oder Kunde).",
 		"app_access_group_added": "{name} hinzugefügt",
+		"app_access_group_missing": "Gruppe nicht gefunden",
 		"app_access_groups_search_no_results": "Keine passenden Gruppen gefunden.",
 		"app_access_groups_search_placeholder": "Nextcloud-Gruppen suchen…",
 		"app_access_groups_search_results_count": "{count} Gruppen gefunden",

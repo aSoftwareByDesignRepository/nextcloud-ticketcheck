@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- A non-member carrying `core.defaultapp=ticketcheck` with no provenance at
+  all (no flag, marker, or firstrunwizard sentinel — e.g. a mid-write
+  leftover) is now unpinned at the next login too, matching the upgrade
+  repair step's every-update policy instead of staying trapped until the
+  next release (issue #4 follow-up). `files.quota` remains marker-gated so
+  admin-set `0 B` quotas are still never touched
+- Customer-side comments now actually trigger companion notifications: a
+  stale `$user` reference left over from the actor refactor made the
+  notification call throw inside its own soft-fail handler, so
+  `notifyPublicComment` silently never ran for `addComment` replies
+- Settings group pickers (extra groups + requester groups) now flag
+  deleted Nextcloud groups with a "Group not found" badge instead of an
+  indistinguishable raw group id, so admins can spot and remove stale
+  access config
+- Dual-role staff (staff group + `helpdesk_requesters`) no longer dead-end
+  on their own customer-side tickets: `canPortalViewTicket` unions
+  requester-scoped access with staff visibility, so the "My requests"
+  deep-link, replies and attachments now work for project members too.
+  Dual-role staff may rate their own done tickets (but never other
+  customers'), and `/portal/logout` + `/portal/change-password` no longer
+  end or misrender their NC-managed session
+
 ## 2.6.2 - 2026-11-14
 
 ### Fixed

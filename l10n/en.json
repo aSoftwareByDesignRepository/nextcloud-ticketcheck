@@ -507,6 +507,7 @@
 		"app_access_controls": "App Access Controls",
 		"app_access_controls_help": "Search and add Nextcloud groups. Users must match one enabled scope above and have a TicketCheck role (admin, agent, or customer).",
 		"app_access_group_added": "Added {name}",
+		"app_access_group_missing": "Group not found",
 		"app_access_groups_search_no_results": "No matching groups found.",
 		"app_access_groups_search_placeholder": "Search Nextcloud groups…",
 		"app_access_groups_search_results_count": "{count} groups found",

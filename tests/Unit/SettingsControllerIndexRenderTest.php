@@ -202,6 +202,50 @@ class SettingsControllerIndexRenderTest extends TestCase
 		self::assertTrue((bool)($params['isAdmin'] ?? false));
 	}
 
+	public function testAccessPickerFlagsDeletedGroupsAsMissing(): void
+	{
+		// Stale config hygiene: a group removed from Nextcloud but still listed
+		// in requester/extra groups must carry `missing=true` so the picker
+		// renders a "not found" badge instead of an indistinguishable raw gid.
+		$permission = $this->createMock(PermissionService::class);
+		$permission->method('canManageSettings')->willReturn(true);
+		$permission->method('getAppAccessSettings')->willReturn([
+			'extra_groups' => ['old-gid'],
+			'requester_groups' => ['teachers', 'ghost-gid'],
+			'allow_helpdesk_admins' => true,
+			'allow_helpdesk_agents' => true,
+			'allow_helpdesk_customers' => true,
+			'access_restriction_enabled' => false,
+			'access_allowed_user_ids' => [],
+			'app_admin_user_ids' => [],
+		]);
+
+		$liveGroup = $this->createMock(\OCP\IGroup::class);
+		$liveGroup->method('getDisplayName')->willReturn('Teachers');
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('get')->willReturnCallback(
+			static fn (string $gid): ?\OCP\IGroup => $gid === 'teachers' ? $liveGroup : null
+		);
+
+		$assets = $this->createMock(FrontEndAssetService::class);
+		$assets->method('registerForPage');
+
+		$response = $this->makeController($permission, $assets, null, null, null, $groupManager)->section('access');
+		$params = $response->getParams();
+
+		$requester = $params['appAccessRequesterGroupsPicker'] ?? null;
+		self::assertIsArray($requester);
+		self::assertSame(
+			[
+				['id' => 'teachers', 'displayName' => 'Teachers', 'missing' => false],
+				['id' => 'ghost-gid', 'displayName' => 'ghost-gid', 'missing' => true],
+			],
+			$requester
+		);
+		$extra = $params['appAccessExtraGroupsPicker'] ?? null;
+		self::assertSame([['id' => 'old-gid', 'displayName' => 'old-gid', 'missing' => true]], $extra);
+	}
+
 	public function testSectionKbCategoriesEnsuresDefaultAndSkipsLicenseData(): void
 	{
 		$permission = $this->createMock(PermissionService::class);

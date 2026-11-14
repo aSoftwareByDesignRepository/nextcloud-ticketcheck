@@ -505,6 +505,7 @@
 		"app_access_controls": "應用訪問控制",
 		"app_access_controls_help": "搜尋並新增 Nextcloud 群組。使用者須匹配一個已啟用範圍",
 		"app_access_group_added": "已新增 {name}",
+		"app_access_group_missing": "找不到群組",
 		"app_access_groups_search_no_results": "未找到匹配群組。",
 		"app_access_groups_search_placeholder": "搜尋 Nextcloud 群組…",
 		"app_access_groups_search_results_count": "找到 {count} 個群組",

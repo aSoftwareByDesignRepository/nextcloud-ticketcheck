@@ -11488,6 +11488,19 @@ aside.portal-help-tip {
 	outline: 3px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 60%, transparent);
 	outline-offset: 1px;
 }
+.tc-chip--missing {
+	border-style: dashed;
+	border-color: var(--color-element-warning, var(--color-warning, #eca700));
+}
+.tc-chip__badge {
+	font-size: var(--tc-fs-xs, 0.75rem);
+	font-weight: 600;
+	padding: 0 var(--tc-space-2);
+	border-radius: var(--tc-radius-pill, 999px);
+	background: color-mix(in srgb, var(--color-element-warning, var(--color-warning, #eca700)) 18%, var(--color-main-background, #fff));
+	color: var(--color-main-text, #1d1d1d);
+	white-space: nowrap;
+}
 
 .tc-user-search-results {
 	display: flex;
@@ -13191,6 +13204,19 @@ body.tc-modal-open {
 .tc-chip__remove:focus-visible {
 	outline: 3px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 60%, transparent);
 	outline-offset: 1px;
+}
+.tc-chip--missing {
+	border-style: dashed;
+	border-color: var(--color-element-warning, var(--color-warning, #eca700));
+}
+.tc-chip__badge {
+	font-size: var(--tc-fs-xs, 0.75rem);
+	font-weight: 600;
+	padding: 0 var(--tc-space-2);
+	border-radius: var(--tc-radius-pill, 999px);
+	background: color-mix(in srgb, var(--color-element-warning, var(--color-warning, #eca700)) 18%, var(--color-main-background, #fff));
+	color: var(--color-main-text, #1d1d1d);
+	white-space: nowrap;
 }
 
 .tc-user-search-results {

@@ -52,6 +52,7 @@
 				selected.set(String(item.id), {
 					id: String(item.id),
 					displayName: String(item.displayName || item.id),
+					missing: item.missing === true,
 				});
 			});
 		}
@@ -101,6 +102,13 @@
 				body.appendChild(name);
 				if (group.displayName !== group.id) {
 					body.appendChild(id);
+				}
+				if (group.missing === true) {
+					li.classList.add('tc-chip--missing');
+					const badge = document.createElement('span');
+					badge.className = 'tc-chip__badge';
+					badge.textContent = tSafe('app_access_group_missing', 'Group not found');
+					body.appendChild(badge);
 				}
 
 				const removeBtn = document.createElement('button');

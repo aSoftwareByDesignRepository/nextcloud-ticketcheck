@@ -507,6 +507,7 @@
 		"app_access_controls": "Controlli di accesso all'app",
 		"app_access_controls_help": "Cerca e aggiungi gruppi Nextcloud. Gli utenti devono corrispondere a uno scopo abilitato sopra e avere un ruolo di TicketCheck (admin, agente o cliente).",
 		"app_access_group_added": "Aggiunto {name}",
+		"app_access_group_missing": "Gruppo non trovato",
 		"app_access_groups_search_no_results": "Nessun gruppo di corrispondenza trovato.",
 		"app_access_groups_search_placeholder": "Cerca gruppi Nextcloud...",
 		"app_access_groups_search_results_count": "Gruppi {count} trovati",

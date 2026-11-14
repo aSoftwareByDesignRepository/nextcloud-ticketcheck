@@ -2163,6 +2163,9 @@ class SettingsController extends Controller
             $items[] = [
                 'id' => $gid,
                 'displayName' => $displayName,
+                // Deleted/stale groups stay removable but get a "not found"
+                // badge in the chip so admins can spot dead config.
+                'missing' => $group === null,
             ];
         }
         return $items;

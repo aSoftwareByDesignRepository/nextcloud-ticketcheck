@@ -507,6 +507,7 @@
 		"app_access_controls": "Åtkomstkontroller",
 		"app_access_controls_help": "Sök och lägg till Nextcloud-grupper. Användare måste matcha ett aktiverat omfång ovan och ha en TicketCheck-roll (administratör, agent eller kund).",
 		"app_access_group_added": "Tillagd {name}",
+		"app_access_group_missing": "Gruppen hittades inte",
 		"app_access_groups_search_no_results": "Inga matchande grupper hittades.",
 		"app_access_groups_search_placeholder": "Sök Nextcloud-grupper...",
 		"app_access_groups_search_results_count": "{count}-grupper hittades",

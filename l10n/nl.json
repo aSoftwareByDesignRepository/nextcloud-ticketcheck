@@ -507,6 +507,7 @@
 		"app_access_controls": "Toegangscontrole voor apps",
 		"app_access_controls_help": "Nextcloud-groepen zoeken en toevoegen. Gebruikers moeten overeenkomen met een ingeschakelde scope hierboven en hebben een TicketCheck rol (admin, agent, of klant).",
 		"app_access_group_added": "Toegevoegd {name}",
+		"app_access_group_missing": "Groep niet gevonden",
 		"app_access_groups_search_no_results": "Geen overeenkomende groepen gevonden.",
 		"app_access_groups_search_placeholder": "Nextcloud-groepen zoeken...",
 		"app_access_groups_search_results_count": "{count}-groepen gevonden",
