@@ -756,10 +756,6 @@ class TicketService
     }
 
     /**
-     * @param \OCP\IUser $user
-     * @param null|callable(Ticket):void $assertAuthorized
-     */
-    /**
      * @param array{0:string,1:string,2:?string} $actor [uid, displayName, email]
      * @param null|callable(Ticket):void $assertAuthorized
      */
@@ -831,7 +827,7 @@ class TicketService
             if (!$isInternal) {
                 try {
                     $freshTicket = $this->ticketMapper->find($ticketId);
-                    $this->companionNotifications->notifyPublicComment($freshTicket, $user->getUID());
+                    $this->companionNotifications->notifyPublicComment($freshTicket, $actorUid);
                 } catch (\Throwable $notifyError) {
                     $this->logger->warning('TicketCheck public comment notification failed', [
                         'ticket_id' => $ticketId,
