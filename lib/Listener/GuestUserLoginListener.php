@@ -72,8 +72,9 @@ class GuestUserLoginListener implements IEventListener
             // or admin UI to revert it (issue #5). PostLoginEvent fires before
             // the post-login redirect resolves, so clearing here already fixes
             // this login's landing page. The guest zero-quota isolation write
-            // gets the same treatment — but only on accounts the app provably
-            // created or pinned; admin-set values are never touched.
+            // gets the same treatment — but stays marker-gated: admin-set
+            // quotas are never touched (defaultapp=ticketcheck is the sole
+            // value-scoped exception, see clearGuestPins).
             self::clearGuestPins($this->config, $userId);
         } catch (\Throwable $e) {
             $this->logger->error('GuestUserLoginListener failed', [
@@ -84,10 +85,14 @@ class GuestUserLoginListener implements IEventListener
     }
 
     /**
-     * Undo the guest isolation pins — but only state the app provably wrote.
-     * Stored-value equality is not provenance: '0 B' is a legitimate admin
-     * quota (upload-disabled accounts) and defaultapp=ticketcheck can be an
-     * admin's deliberate choice. Two markers establish authorship instead:
+     * Undo the guest isolation pins. Stored-value equality is not
+     * provenance — '0 B' is a legitimate admin quota (upload-disabled
+     * accounts) — so quota and the pin set stay marker-gated. The sole
+     * exception is core.defaultapp=ticketcheck on a non-member: the
+     * upgrade repair already deletes it unconditionally on every app
+     * update, so the runtime matches that policy instead of letting a
+     * provenance-less pin trap a user until the next release. Two
+     * markers establish authorship for the gated values:
      *  - ticketcheck.guest_created_at — stamped in the same write block as the
      *    '0 B' quota + defaultapp pins at guest creation; its presence proves
      *    the account (and therefore its quota pin) came from this app.
@@ -100,9 +105,9 @@ class GuestUserLoginListener implements IEventListener
      * Pins written before these markers existed (pre-flag member logins) were
      * meant to be healed once by the UnpinLegacyGuestPins post-migration
      * repair step — but that step is one-shot and silent failures leave no
-     * runtime fallback (GH #4). The '999.0.0' firstrunwizard value doubles as
-     * provenance there: it is our sentinel and can only exist where the app
-     * wrote the pair, so it un-pins defaultapp for non-members on its own.
+     * runtime fallback (GH #4). The '999.0.0' firstrunwizard value is this
+     * app's own sentinel — nothing else ever writes it — so it is deleted
+     * whenever found on a non-member, no markers required.
      */
     public static function clearGuestPins(IConfig $config, string $userId): void
     {
@@ -112,7 +117,6 @@ class GuestUserLoginListener implements IEventListener
 
         $appCreated = $config->getUserValue($userId, 'ticketcheck', self::GUEST_MARKER_KEY, '') !== '';
         $hasPinsFlag = $config->getUserValue($userId, 'ticketcheck', self::PORTAL_PINS_KEY, '') === '1';
-        $pinsOurs = $appCreated || $hasPinsFlag;
 
         // Sentinel-pair provenance for the pre-flag cohort: '999.0.0' is this
         // app's magic value — nothing else ever writes it — so a non-member
@@ -120,12 +124,19 @@ class GuestUserLoginListener implements IEventListener
         // defaultapp+firstrunwizard pair, even when the provenance markers
         // were never stamped or were lost (GH #4: the one-shot upgrade repair
         // is the only other healer for marker-less pins, and any instance it
-        // misses stays trapped forever). A lone defaultapp=ticketcheck with
-        // neither sentinel nor markers is still preserved: it can be an
-        // admin's deliberate pin for a staff user.
+        // misses stays trapped forever).
         $wizardPinned = $config->getUserValue($userId, 'firstrunwizard', 'show') === self::FIRSTRUN_SUPPRESS_VERSION;
 
-        if (($pinsOurs || $wizardPinned) && $config->getUserValue($userId, 'core', 'defaultapp') === self::DEFAULT_APP) {
+        // defaultapp pointing at this app on a non-member is always removed —
+        // provenance is not required here. UnpinLegacyGuestPins already
+        // deletes this exact value for every non-member on every app update,
+        // so a strict gate could never actually preserve an admin's occ pin
+        // long-term; it only kept our own stranded pins trapping users until
+        // the next release. A non-member defaultapp=ticketcheck has no
+        // supported producer outside this app: every app write path pairs it
+        // with provenance, and a bare pin is either a mid-write leftover or
+        // an admin occ pin the upgrade repair would remove anyway.
+        if ($config->getUserValue($userId, 'core', 'defaultapp') === self::DEFAULT_APP) {
             $config->deleteUserValue($userId, 'core', 'defaultapp');
         }
         if ($wizardPinned) {

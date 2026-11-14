@@ -17,11 +17,14 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Issue #5: pinning defaultapp=ticketcheck must never 500 a login, and the
- * pin must be cleared once the user leaves helpdesk_customers — but only
- * when the app provably wrote it. Stored-value equality is not provenance:
- * an admin-set '0 B' quota (upload-disabled account) or an admin-pinned
- * defaultapp must survive both the login self-heal and the group-removal
- * path (self_heal_write_outside_managed_domain).
+ * pin must be cleared once the user leaves helpdesk_customers. Stored-value
+ * equality is not provenance, so quota stays marker-gated: an admin-set
+ * '0 B' quota (upload-disabled account) must survive both the login
+ * self-heal and the group-removal path (self_heal_write_outside_managed_domain).
+ * defaultapp=ticketcheck is the one value-scoped exception — the upgrade
+ * repair already removes it for every non-member on each app update, so
+ * the runtime applies the same policy rather than strand users between
+ * releases.
  * GH #4: the marker-less pre-flag cohort additionally heals via the
  * '999.0.0' firstrunwizard sentinel — the app's own magic value — when the
  * one-shot upgrade repair never reached the user.
@@ -179,14 +182,16 @@ class GuestUserLoginListenerTest extends TestCase
         ], $deletes->getArrayCopy());
     }
 
-    public function testUnprovenancedStalePinIsPreservedOnLogin(): void
+    public function testBarePinIsHealedButAdminQuotaStays(): void
     {
         $groupManager = $this->createMock(IGroupManager::class);
         $groupManager->method('isInGroup')->willReturn(false);
 
-        // Never-guest user pinned to defaultapp=ticketcheck by an admin (or a
-        // pre-flag app write): no marker, no portal_pins flag — the app cannot
-        // prove authorship, so nothing is deleted.
+        // Non-member pinned to defaultapp=ticketcheck with no provenance at
+        // all (mid-write leftover or an admin occ pin): the value points at
+        // this app, so the pin goes — same policy as the every-update
+        // repair step. The admin-set '0 B' quota stays: only the
+        // guest_created_at marker proves app authorship there.
         [$config, $deletes] = $this->configStore('carol', [
             'core|defaultapp' => 'ticketcheck',
             'files|quota' => '0 B',
@@ -199,7 +204,9 @@ class GuestUserLoginListenerTest extends TestCase
         );
         $listener->handle($this->loginEvent($this->user('carol')));
 
-        $this->assertSame([], $deletes->getArrayCopy());
+        $this->assertSame([
+            ['carol', 'core', 'defaultapp'],
+        ], $deletes->getArrayCopy());
     }
 
     public function testFlaggedExMemberPinsAreClearedButQuotaStays(): void
@@ -341,14 +348,15 @@ class GuestUserLoginListenerTest extends TestCase
         ], $deletes->getArrayCopy());
     }
 
-    public function testGroupRemovalPreservesUnprovenancedMember(): void
+    public function testGroupRemovalClearsBarePinButKeepsQuota(): void
     {
         $group = $this->createMock(IGroup::class);
         $group->method('getGID')->willReturn('helpdesk_customers');
 
-        // Marker-less member with values the app cannot prove it wrote
-        // (admin-set '0 B' quota + admin-pinned defaultapp, or a pre-flag pin
-        // on a member who never logged in while flagged): preserve all.
+        // Marker-less removal: defaultapp=ticketcheck is unpinned even
+        // without provenance (parity with the every-update repair step),
+        // while the admin-set '0 B' quota survives — quota stays
+        // marker-gated.
         [$config, $deletes] = $this->configStore('erin2', [
             'core|defaultapp' => 'ticketcheck',
             'files|quota' => '0 B',
@@ -360,7 +368,9 @@ class GuestUserLoginListenerTest extends TestCase
         );
         $listener->handle(new UserRemovedEvent($group, $this->user('erin2')));
 
-        $this->assertSame([], $deletes->getArrayCopy());
+        $this->assertSame([
+            ['erin2', 'core', 'defaultapp'],
+        ], $deletes->getArrayCopy());
     }
 
     public function testGroupRemovalIgnoresOtherGroups(): void

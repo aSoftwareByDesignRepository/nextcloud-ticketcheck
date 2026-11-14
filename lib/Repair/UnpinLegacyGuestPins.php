@@ -8,11 +8,10 @@ declare(strict_types=1);
  * Released <=2.6.0 code pinned core.defaultapp='ticketcheck' and
  * firstrunwizard.show='999.0.0' at every helpdesk_customers member login
  * without stamping any provenance. The runtime self-heal
- * (GuestUserLoginListener::clearGuestPins) is deliberately provenance-
- * gated — it only unpins state the app provably wrote — which leaves
- * marker-less members who left the group before their first post-upgrade
- * login permanently trapped on the portal: neither key has a user/admin
- * UI to revert it.
+ * (GuestUserLoginListener::clearGuestPins) removes defaultapp=ticketcheck
+ * on any non-member on its own — same policy as this step — but only when
+ * the user actually logs in again; neither key has a user/admin UI to
+ * revert it, so dormant accounts still need this pass.
  *
  * This repair enumerates exactly the uids carrying the app's pin values:
  *   - non-members: the pins are deleted outright (the documented exception
