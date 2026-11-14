@@ -68,14 +68,22 @@ final class L10nPlaceholderParityTest extends TestCase
 				if ($needPrintf === [] && $needNamed === []) {
 					continue;
 				}
+				$actualPrintf = $this->printfTokens($tr[$key]);
+				$expectedSorted = $needPrintf;
+				sort($expectedSorted);
+				sort($actualPrintf);
 				self::assertSame(
-					$needPrintf,
-					$this->printfTokens($tr[$key]),
+					$expectedSorted,
+					$actualPrintf,
 					$locale . ' dropped printf placeholders on ' . $key,
 				);
+				$actualNamed = $this->namedTokens($tr[$key]);
+				$expectedNamed = $needNamed;
+				sort($expectedNamed);
+				sort($actualNamed);
 				self::assertSame(
-					$needNamed,
-					$this->namedTokens($tr[$key]),
+					$expectedNamed,
+					$actualNamed,
 					$locale . ' dropped named placeholders on ' . $key,
 				);
 			}

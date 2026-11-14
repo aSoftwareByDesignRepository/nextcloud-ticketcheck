@@ -2,19 +2,12 @@
 /**
  * Settings sub-page: Mobile license (TKC2 seats).
  *
+ * Data is provided by SettingsController via $_; the license UX is the canonical
+ * shared Check-family license page (parts/license-panel.php wraps
+ * templates/common/license-page.php synced from _shared/license-page).
+ *
  * @var array $_
  * @var \OCP\IL10N $l
  */
-
-$licenseStatus = $_['licenseStatus'] ?? null;
-$licenseSeatsList = $_['licenseSeatsList'] ?? null;
-$licenseI18n = $_['licenseI18n'] ?? null;
-$licenseApiUrl = (string) ($_['licenseApiUrl'] ?? '');
-$licenseClearUrl = (string) ($_['licenseClearUrl'] ?? $licenseApiUrl);
-$licenseSeatsUrl = (string) ($_['licenseSeatsUrl'] ?? '');
-$licenseAssignSeatUrl = (string) ($_['licenseAssignSeatUrl'] ?? $licenseSeatsUrl);
-$licenseRemoveSeatBase = (string) ($_['licenseRemoveSeatBase'] ?? ($licenseSeatsUrl !== '' ? rtrim($licenseSeatsUrl, '/') . '/' : ''));
-$licenseSearchUsersUrl = (string) ($_['licenseSearchUsersUrl'] ?? '');
-$requesttoken = (string) ($_['requesttoken'] ?? '');
 
 include dirname(__DIR__) . '/license-panel.php';

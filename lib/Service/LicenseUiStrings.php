@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * All user-facing strings for the license settings panel (TKC2 mobile seats).
- * Single place for l10n so the SSR panel and license-settings.js use the same wording.
+ * Single place for l10n so the SSR panel and license-page.js use the same wording.
  *
  * @copyright Copyright (c) 2026, Lara Raffel, Alexander Mäule and Hauke Klünder
  * @license AGPL-3.0-or-later
@@ -36,7 +36,7 @@ class LicenseUiStrings
 			'validUntilNone' => $l->t('No license applied'),
 			'seatsMeterLabel' => $l->t('Mobile seats used'),
 			// "{used}" / "{total}" are literal placeholders (not gettext %-params): the string is
-			// also shipped to license-settings.js as a client-side template, and Nextcloud's
+			// also shipped to license-page.js as a client-side template, and Nextcloud's
 			// L10N::t() would run vsprintf() on %-placeholders even without arguments (ValueError).
 			'seatsUsedText' => $l->t('{used} of {total} seats used'),
 			'mobileAppComingSoon' => $l->t('The official TicketCheck mobile app is available. Assign seats below so staff can sign in.'),

@@ -304,6 +304,7 @@ return [
         ['name' => 'license#seats', 'url' => '/api/license/seats', 'verb' => 'GET'],
         ['name' => 'license#assignSeat', 'url' => '/api/license/seats', 'verb' => 'POST'],
         ['name' => 'license#removeSeat', 'url' => '/api/license/seats/{uid}', 'verb' => 'DELETE'],
+        ['name' => 'license#removeSeatPost', 'url' => '/api/license/seats/remove', 'verb' => 'POST'],
         ['name' => 'license#searchUsers', 'url' => '/api/license/search-users', 'verb' => 'GET'],
 
         // Companion mobile API (S0) — Basic auth gated by ClientLicenseMiddleware

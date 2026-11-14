@@ -173,8 +173,8 @@ class FrontEndAssetService
 				Util::addScript(Application::APP_ID, 'app-access-users-picker');
 			}
 			if ($settingsSection === 'license') {
-				Util::addStyle(Application::APP_ID, 'license-settings');
-				Util::addScript(Application::APP_ID, 'license-settings');
+				Util::addStyle(Application::APP_ID, 'common/license-page');
+				Util::addScript(Application::APP_ID, 'common/license-page');
 			}
 			if ($settingsSection === 'inbound-mail') {
 				Util::addScript(Application::APP_ID, 'settings-inbound-mail');

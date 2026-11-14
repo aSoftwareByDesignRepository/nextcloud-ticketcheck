@@ -32,12 +32,12 @@ function run_license_panel_tests(string $appRoot, string $phpunitLocal, string $
 
 function run_license_js_tests(string $appRoot): int
 {
-	$cmd = 'node --test ' . escapeshellarg($appRoot . '/tests/js/license-settings.test.mjs');
+	$cmd = 'node --test ' . escapeshellarg($appRoot . '/tests/js/license-page.test.mjs');
 	passthru($cmd, $code);
 	return (int)$code;
 }
 
-echo "== baseline LicensePanelContractTest + license-settings.test.mjs ==\n";
+echo "== baseline LicensePanelContractTest + license-page.test.mjs ==\n";
 if (run_license_panel_tests($appRoot, $phpunitLocal, $dockerCompose, $useDockerPhpunit) !== 0) {
 	fwrite(STDERR, "PHPUnit baseline must pass\n");
 	exit(1);
@@ -47,8 +47,8 @@ if (run_license_js_tests($appRoot) !== 0) {
 	exit(1);
 }
 
-$cssPath = $appRoot . '/css/license-settings.css';
-$jsPath = $appRoot . '/js/license-settings.js';
+$cssPath = $appRoot . '/css/common/license-page.css';
+$jsPath = $appRoot . '/js/common/license-page.js';
 $cssBackup = $cssPath . '.mutation-bak';
 $jsBackup = $jsPath . '.mutation-bak';
 
