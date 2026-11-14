@@ -111,6 +111,21 @@ $checks = [
             return true;
         }',
 	],
+	[
+		'name' => 'dualrole-portal-union-removed',
+		'from' => '        if ($userId !== \'\'
+            && !$this->isGuest()
+            && $this->isRequesterGroupMember($userId)
+            && $this->isRequesterScopedTicket($ticket, $userId)) {
+            return true;
+        }',
+		'to' => '        if (false && $userId !== \'\'
+            && !$this->isGuest()
+            && $this->isRequesterGroupMember($userId)
+            && $this->isRequesterScopedTicket($ticket, $userId)) {
+            return true;
+        }',
+	],
 ];
 
 $phpunit = $root . '/vendor/bin/phpunit';

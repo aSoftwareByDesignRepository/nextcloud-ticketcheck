@@ -553,6 +553,50 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $this->assertInstanceOf(\OCP\AppFramework\Http\RedirectResponse::class, $response);
     }
 
+    public function testLogoutNoOpsForNcManagedPortalUser(): void
+    {
+        // NN-07: requesters and dual-role staff live on their NC session —
+        // portal logout must redirect to portal home, never kill it.
+        $this->permissionService->method('isNcManagedPortalUser')->willReturn(true);
+
+        $userSession = $this->createMock(IUserSession::class);
+        $userSession->expects($this->never())->method('logout');
+
+        $urlGenerator = $this->createMock(IURLGenerator::class);
+        $urlGenerator->expects($this->once())
+            ->method('linkToRoute')
+            ->with('ticketcheck.customerPortal.index')
+            ->willReturn('/apps/ticketcheck/portal');
+
+        $controller = $this->buildControllerWithRequest(
+            $this->createMock(IRequest::class),
+            $userSession,
+            null,
+            null,
+            $urlGenerator,
+        );
+
+        $response = $controller->logout();
+
+        $this->assertSame('/apps/ticketcheck/portal', $response->getRedirectURL());
+    }
+
+    public function testChangePasswordRedirectsNcManagedPortalUser(): void
+    {
+        // NN-07: the portal password page is meaningless for any NC-managed
+        // account — requester or dual-role staff — so redirect to portal home.
+        $this->permissionService->method('isNcManagedPortalUser')->willReturn(true);
+        $this->urlGenerator->expects($this->once())
+            ->method('linkToRoute')
+            ->with('ticketcheck.customerPortal.index')
+            ->willReturn('/apps/ticketcheck/portal');
+
+        $response = $this->controller->changePassword();
+
+        $this->assertInstanceOf(RedirectResponse::class, $response);
+        $this->assertSame('/apps/ticketcheck/portal', $response->getRedirectURL());
+    }
+
     public function testSetLanguageRejectsInvalidLanguageCode(): void
     {
         $request = $this->createMock(IRequest::class);
@@ -661,6 +705,59 @@ class CustomerPortalControllerPortalSecurityTest extends TestCase
         $response = $controller->addReply(12);
 
         $this->assertSame(200, $response->getStatus());
+    }
+
+    public function testSubmitSurveyAllowsDualRoleStaffOnOwnScopedTicket(): void
+    {
+        // E-24/D-R10: dual-role staff (isRequester()=false via staff
+        // precedence) still rate their own requester-scoped tickets — the
+        // portal detail shows them the survey form, so submit must not 404.
+        $this->isGuestForTest = false;
+        $ticket = new Ticket();
+        $ticket->setId(9);
+        $ticket->setStatus(Ticket::STATUS_DONE);
+        $this->ticketMapper->method('find')->with(9)->willReturn($ticket);
+        $this->ticketService->method('getActiveTicket')->with(9)->willReturn($ticket);
+        $this->permissionService->method('isRequesterGroupMember')->willReturn(true);
+        $this->permissionService->method('isRequesterScopedTicket')->willReturn(true);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(true);
+        $this->surveyService->expects($this->once())->method('submitSurvey');
+
+        $request = $this->createMock(IRequest::class);
+        $request->method('getParam')->willReturnCallback(static fn(string $name, $default = null) => match ($name) {
+            'rating' => 5,
+            'comment' => '',
+            default => $default,
+        });
+
+        $controller = $this->buildControllerWithRequest($request);
+        $response = $controller->submitSurvey(9);
+
+        $this->assertSame(200, $response->getStatus());
+    }
+
+    public function testSubmitSurveyDeniesDualRoleStaffOnForeignTicket(): void
+    {
+        // CSAT must stay customer-side: a dual-role staff member who can
+        // view someone else's ticket via staff scope must NOT rate it here.
+        $this->isGuestForTest = false;
+        $ticket = new Ticket();
+        $ticket->setId(9);
+        $ticket->setStatus(Ticket::STATUS_DONE);
+        $this->ticketMapper->method('find')->with(9)->willReturn($ticket);
+        $this->permissionService->method('isRequesterGroupMember')->willReturn(true);
+        $this->permissionService->method('isRequesterScopedTicket')->willReturn(false);
+        $this->permissionService->method('canPortalViewTicket')->willReturn(true); // staff visibility
+        $this->surveyService->expects($this->never())->method('submitSurvey');
+
+        $request = $this->createMock(IRequest::class);
+        $request->method('getParam')->willReturnCallback(static fn(string $name, $default = null) => $name === 'rating' ? 5 : $default);
+
+        $controller = $this->buildControllerWithRequest($request);
+        $response = $controller->submitSurvey(9);
+
+        $this->assertSame(404, $response->getStatus());
+        $this->assertSame('ticket_not_found', $response->getData()['error'] ?? null);
     }
 
     public function testSubmitSurveyReturnsNotFoundWhenGuestCannotViewTicket(): void

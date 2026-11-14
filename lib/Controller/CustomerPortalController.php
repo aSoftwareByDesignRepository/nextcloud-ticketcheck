@@ -1147,8 +1147,9 @@ class CustomerPortalController extends Controller
             // between 400 (wrong status) and 403 (no permission) would let
             // an attacker enumerate ticket ids belonging to other guests.
             // CSAT is portal-only: staff must not pollute ratings. Internal
-            // requesters rate like customers (spec E-24).
-            if (!$this->isPortalScopedActor()
+            // requesters rate like customers (spec E-24); dual-role staff may
+            // rate only their own requester-scoped tickets (D-R10).
+            if (!$this->isCustomerSideSurveyActor($ticket)
                 || !$this->permissionService->canPortalViewTicket($ticket)) {
                 return new JSONResponse([
                     'error' => $l->t('ticket_not_found'),
@@ -1186,7 +1187,7 @@ class CustomerPortalController extends Controller
                 $comment === '' ? null : $comment,
                 function (\OCA\Ticketcheck\Db\Ticket $fresh): void {
                     // Uniform 404 for missing/inaccessible (no enumeration via 403).
-                    if (!$this->isPortalScopedActor()
+                    if (!$this->isCustomerSideSurveyActor($fresh)
                         || !$this->permissionService->canPortalViewTicket($fresh)) {
                         throw new \InvalidArgumentException('ticket_not_found');
                     }
@@ -1909,9 +1910,10 @@ class CustomerPortalController extends Controller
     #[NoCSRFRequired]
     public function changePassword(): TemplateResponse|RedirectResponse
     {
-        // Internal requesters have an NC-managed account, not an app-managed
-        // one (NN-07): the portal password page is meaningless to them.
-        if ($this->permissionService->isRequester()) {
+        // All NC-managed portal users (requesters AND dual-role staff) have an
+        // NC-managed account, not an app-managed one (NN-07): the portal
+        // password page is meaningless to them.
+        if ($this->permissionService->isNcManagedPortalUser()) {
             return new RedirectResponse($this->urlGenerator->linkToRoute('ticketcheck.customerPortal.index'));
         }
         // Passwordless identities have no password — D-T13 routes them to the
@@ -2385,9 +2387,10 @@ class CustomerPortalController extends Controller
     #[NoCSRFRequired]
         public function logout(): \OCP\AppFramework\Http\RedirectResponse
     {
-        // Portal logout ends an app/portal session — an internal requester's
-        // session is their NC session (NN-07): no-op back to the portal home.
-        if ($this->permissionService->isRequester()) {
+        // Portal logout ends an app/portal session — every NC-managed portal
+        // user's session is their NC session (NN-07): no-op back to the
+        // portal home. Covers requesters and dual-role staff.
+        if ($this->permissionService->isNcManagedPortalUser()) {
             return new \OCP\AppFramework\Http\RedirectResponse(
                 $this->urlGenerator->linkToRoute('ticketcheck.customerPortal.index')
             );
@@ -2448,6 +2451,24 @@ class CustomerPortalController extends Controller
     private function isPortalScopedActor(): bool
     {
         return $this->permissionService->isGuest() || $this->permissionService->isRequester();
+    }
+
+    /**
+     * Customer-side survey scope: guests and requesters rate what their
+     * portal scope can see; dual-role staff may rate only their own
+     * requester-scoped tickets — never other customers' (spec E-24/D-R10).
+     *
+     * @param \OCA\Ticketcheck\Db\Ticket $ticket
+     */
+    private function isCustomerSideSurveyActor($ticket): bool
+    {
+        if ($this->isPortalScopedActor()) {
+            return true;
+        }
+        $userId = (string)($this->permissionService->getCurrentUserId() ?? '');
+        return $userId !== ''
+            && $this->permissionService->isRequesterGroupMember($userId)
+            && $this->permissionService->isRequesterScopedTicket($ticket, $userId);
     }
 
     /**

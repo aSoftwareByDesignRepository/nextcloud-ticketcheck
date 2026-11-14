@@ -271,6 +271,48 @@ final class PermissionServiceRequesterScopeTest extends TestCase
 		self::assertFalse($svc->canViewTicketWithProjectAccess($own));
 	}
 
+	// ── Dual-role staff portal union (D-R10/D-R22) ────────────────────────
+// Dual-role staff keep staff scope (isRequester()=false) but must still
+// reach their own customer-side tickets on portal routes — the "My
+// requests" deep-link and reply path must not dead-end.
+
+	public function testDualRoleProjectMemberSeesOwnRequesterTicketViaPortal(): void
+	{
+		$svc = $this->service(
+			user: $this->user('pm', 'pm@x.io'),
+			groupsOf: ['pm' => ['helpdesk_requesters']],
+			projectMemberCount: 1,
+		);
+		self::assertFalse($svc->isRequester()); // staff precedence
+		$own = $this->ticket('pm', 'pm@x.io');
+		// Staff visibility alone denies the no-project ticket…
+		self::assertFalse($svc->canViewTicketWithProjectAccess($own));
+		// …but the portal union keeps their own request reachable.
+		self::assertTrue($svc->canPortalViewTicket($own));
+	}
+
+	public function testDualRoleAgentKeepsStaffVisibilityOnPortal(): void
+	{
+		// Union must never subtract: a dual-role agent still sees all tickets
+		// via staff scope, even ones requester scoping would deny.
+		$svc = $this->service(
+			user: $this->user('dual', 'dual@x.io'),
+			groupsOf: ['dual' => ['helpdesk_agents', 'helpdesk_requesters']],
+		);
+		self::assertFalse($svc->isRequester());
+		self::assertTrue($svc->canPortalViewTicket($this->ticket('other', 'other@x.io')));
+	}
+
+	public function testDualRoleProjectMemberCannotSeeForeignTicketOnPortal(): void
+	{
+		$svc = $this->service(
+			user: $this->user('pm', 'pm@x.io'),
+			groupsOf: ['pm' => ['helpdesk_requesters']],
+			projectMemberCount: 1,
+		);
+		self::assertFalse($svc->canPortalViewTicket($this->ticket('other', 'other@x.io')));
+	}
+
 	// ── Config parsing (§10/§11) ────────────────────────────────────────────
 
 	public function testMalformedRequesterGroupsJsonEvaluatesEmpty(): void

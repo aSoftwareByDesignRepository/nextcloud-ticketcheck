@@ -1213,8 +1213,9 @@ class PermissionService
     /**
      * Portal-only ticket view for the current actor (spec D-R05/D-R15).
      * Requesters get guest-derived scoping on their uid via
-     * isRequesterScopedTicket(); every other actor falls through to the
-     * normal guest/staff check.
+     * isRequesterScopedTicket(); dual-role staff get the same scoping
+     * UNIONED with their staff visibility (never a subtraction); every
+     * other actor falls through to the normal guest/staff check.
      *
      * Portal paths must use this — never canViewTicketWithProjectAccess —
      * so requester scoping stays off the staff routes (US-R05 AC-1/NN-02).
@@ -1223,9 +1224,20 @@ class PermissionService
      */
     public function canPortalViewTicket($ticket): bool
     {
+        $userId = (string)($this->getCurrentUserId() ?? '');
         if ($this->isRequester()) {
-            $userId = (string)($this->getCurrentUserId() ?? '');
             return $this->isRequesterScopedTicket($ticket, $userId);
+        }
+        // Dual-role staff (requester group + staff scope): union their own
+        // customer-side tickets with staff visibility — never a subtraction
+        // (spec D-R10/D-R22). Without this, a project member's no-project
+        // self-request dead-ends on the portal detail/reply path even though
+        // "My requests" lists it.
+        if ($userId !== ''
+            && !$this->isGuest()
+            && $this->isRequesterGroupMember($userId)
+            && $this->isRequesterScopedTicket($ticket, $userId)) {
+            return true;
         }
         return $this->canViewTicketWithProjectAccess($ticket);
     }
