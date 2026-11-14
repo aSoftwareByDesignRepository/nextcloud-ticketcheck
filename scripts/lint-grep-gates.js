@@ -94,10 +94,13 @@ const gates = [
 	},
 	{
 		// Templates must use IconCatalog / data-lucide — not hand-rolled SVG.
+		// license-page.php is exempt: it is a canonical _shared pack file
+		// synced into ~15 apps, most of which have no icons.js/IconCatalog,
+		// so inline SVG is its only portable icon mechanism.
 		name: 'no inline <svg> in templates',
 		pattern: '<svg\\b',
 		glob: 'templates',
-		extraArgs: '--glob "!templates/layout.guest.php"',
+		extraArgs: '--glob "!templates/layout.guest.php" --glob "!templates/common/license-page.php"',
 	},
 	{
 		// Guest portal must rely on `tc-*` body/html classes (set by

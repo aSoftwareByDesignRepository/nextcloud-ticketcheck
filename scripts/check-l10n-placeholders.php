@@ -74,7 +74,19 @@ foreach ($enT as $key => $enVal) {
 		}
 
 		$valPrintf = tcPrintfPlaceholders($val);
-		if ($enPrintf !== $valPrintf) {
+		// Positional placeholders (%1$s, %2$d …) bind by index, so word-order
+		// reorders (Turkish SOV etc.) are legitimate — compare as a multiset.
+		// Non-positional sequences still compare strictly: %s %d swapped is a
+		// real bug the multiset would hide.
+		$enCmp = $enPrintf;
+		$valCmp = $valPrintf;
+		if ($enPrintf !== [] && $valPrintf !== []
+			&& preg_grep('/^%\d+\$/', $enPrintf, PREG_GREP_INVERT) === []
+			&& preg_grep('/^%\d+\$/', $valPrintf, PREG_GREP_INVERT) === []) {
+			sort($enCmp);
+			sort($valCmp);
+		}
+		if ($enCmp !== $valCmp) {
 			$failed = true;
 			fwrite(STDERR, "{$lang}.json printf placeholder mismatch for key: $key\n");
 			fwrite(STDERR, '  expected: ' . implode(', ', $enPrintf) . "\n");
@@ -82,6 +94,8 @@ foreach ($enT as $key => $enVal) {
 		}
 
 		$valNamed = tcNamedPlaceholders($val);
+		sort($enNamed);
+		sort($valNamed);
 		if ($enNamed !== $valNamed) {
 			$failed = true;
 			fwrite(STDERR, "{$lang}.json named placeholder mismatch for key: $key\n");

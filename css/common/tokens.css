@@ -42,6 +42,7 @@
 
 	--tc-touch-min: 44px;
 	--tc-touch-lg: 48px;
+	--tc-touch: var(--tc-touch-min);
 	--tc-tab-num: tabular-nums;
 	--tc-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 	--tc-gdpr-banner-offset: 0px;

@@ -367,10 +367,10 @@ test('funding wordmark inverts under every dark theme path', () => {
 })
 
 test('forced-colors media queries cover license, redirect, and app shell', () => {
-	const license = readFileSync(join(cssRoot, 'license-settings.css'), 'utf8')
+	const license = readFileSync(join(cssRoot, 'common', 'license-page.css'), 'utf8')
 	const redirect = readFileSync(join(cssRoot, 'redirect.css'), 'utf8')
 	const app = readFileSync(join(cssRoot, 'app.css'), 'utf8')
-	assert.match(license, /@media\s*\(\s*forced-colors:\s*active\s*\)/, 'license-settings.css needs forced-colors')
+	assert.match(license, /@media\s*\(\s*forced-colors:\s*active\s*\)/, 'common/license-page.css needs forced-colors')
 	assert.match(redirect, /@media\s*\(\s*forced-colors:\s*active\s*\)/, 'redirect.css needs forced-colors')
 	assert.match(app, /@media\s*\(\s*forced-colors:\s*active\s*\)[\s\S]*helpdesk-btn/, 'app.css needs forced-colors for buttons')
 })
