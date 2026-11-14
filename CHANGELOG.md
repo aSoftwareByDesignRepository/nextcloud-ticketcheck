@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.6.2 - 2026-11-14
+
+### Fixed
+
+- Former guests whose `core.defaultapp` pin was written without provenance
+  markers (pre-flag releases) and whom the one-time upgrade repair never
+  reached now self-heal at their next login: the `firstrunwizard` `999.0.0`
+  sentinel — a value only this app writes — now doubles as provenance for
+  the pin pair, so a marker-less former member is unpinned instead of being
+  trapped in a portal redirect loop forever (issue #4 follow-up). The
+  `portal_pins` provenance flag is also stamped before the pins themselves,
+  so a mid-write failure can no longer strand an unmarked pin, and the
+  upgrade repair no longer aborts the whole heal when the group-backend
+  member lookup or the pin enumeration throws
+- Guest creation now stamps the `guest_created_at` provenance marker before
+  the `0 B` quota it vouches for, matching the login path: a crash mid-write
+  can no longer strand an upload-disabled account whose quota pin no
+  cleanup path would ever touch
+
+### Added
+
+- converge on shared family license page (_shared/license-page)
+
 ## 2.6.1 - 2026-11-13
 
 ### Fixed
@@ -43,43 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - r26 critic closeout — grant/revoke referent resolution, reused flag, wizard craft wave
 - harden guest-portal delta — 404 uniformity, unique-conflict paths, l10n
 - check the remote peer address after connecting
-
-### Added
-
-- config & data transfer — encrypted test→prod pack
-- queueCounts gains unassigned/SLA-breach/hasTickets for Home badge
-- configurable SLA targets per priority and business hours
-- add Turkish (tr) translation
-
-### Changed
-
-- pack re-sync — replace-confirm token width (cramped_form_controls)
-- l10n: complete translations across the app language set
-- cover sla section in settings multipage spec
-- l10n(tr): complete catalog against current main + canonical format
-- change-password leg asserts migrated-guest sessions redirect (D-T13)
-- sidebar-stats leg uses a page that renders for migrated guests
-- pin e2e multipage spec list to routable catalog — resources leg missing
-- release notes drafted from post-tag commits
-
-## Unreleased
-
-### Fixed
-
-- Former guests whose `core.defaultapp` pin was written without provenance
-  markers (pre-flag releases) and whom the one-time upgrade repair never
-  reached now self-heal at their next login: the `firstrunwizard` `999.0.0`
-  sentinel — a value only this app writes — now doubles as provenance for
-  the pin pair, so a marker-less former member is unpinned instead of being
-  trapped in a portal redirect loop forever (issue #4 follow-up). The
-  `portal_pins` provenance flag is also stamped before the pins themselves,
-  so a mid-write failure can no longer strand an unmarked pin, and the
-  upgrade repair no longer aborts the whole heal when the group-backend
-  member lookup or the pin enumeration throws
-- Guest creation now stamps the `guest_created_at` provenance marker before
-  the `0 B` quota it vouches for, matching the login path: a crash mid-write
-  can no longer strand an upload-disabled account whose quota pin no
-  cleanup path would ever touch
 - Users removed from `helpdesk_customers` no longer stay pinned to the
   TicketCheck portal: the `core.defaultapp` user value the app sets at
   guest login is now cleared on group removal and self-heals on the next
@@ -120,6 +106,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   managers plus an NC-admin-only link to user management, and a quiet
   "managed by project admins" hint for everyone else (customer report
   2026-11-04)
+
+### Added
+
+- config & data transfer — encrypted test→prod pack
+- queueCounts gains unassigned/SLA-breach/hasTickets for Home badge
+- configurable SLA targets per priority and business hours
+- add Turkish (tr) translation
+
+### Changed
+
+- pack re-sync — replace-confirm token width (cramped_form_controls)
+- l10n: complete translations across the app language set
+- cover sla section in settings multipage spec
+- l10n(tr): complete catalog against current main + canonical format
+- change-password leg asserts migrated-guest sessions redirect (D-T13)
+- sidebar-stats leg uses a page that renders for migrated guests
+- pin e2e multipage spec list to routable catalog — resources leg missing
+- release notes drafted from post-tag commits
 
 ## 2.6.0 - 2026-11-03
 
