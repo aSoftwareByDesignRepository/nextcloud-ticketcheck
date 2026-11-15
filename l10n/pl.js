@@ -312,7 +312,7 @@ OC.L10N.register(
 	"Something went wrong. Please try again." : "Coś poszło nie tak. Spróbuj ponownie.",
 	"Source code on GitHub" : "Kod źródłowy na GitHub",
 	"Starting…" : "Uruchamianie…",
-	"Status" : "Stan",
+	"Status" : "Status",
 	"Status changed on %s" : "Status zmieniony w %s",
 	"Status changed to waiting. Open TicketCheck to continue." : "Status zmieniony na oczekujące. Otwórz TicketCheck, aby kontynuować.",
 	"Strong passphrase." : "Silna fraza.",
