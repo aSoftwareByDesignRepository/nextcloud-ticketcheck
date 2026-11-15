@@ -32,7 +32,11 @@ test('seat removal is a POST with explicit confirmation dialog', () => {
 	const js = readFileSync(join(root, 'js', 'common', 'license-page.js'), 'utf8');
 	assert.match(js, /apiRemoveSeat/);
 	assert.match(js, /openConfirm/);
-	assert.match(js, /removeSeatConfirm/);
+	// Pack refactored to the generic confirm modal — assert the seat-remove
+	// flow binds the danger confirm with the real l10n copy, not a stale
+	// helper identifier.
+	assert.match(js, /-seat-remove/);
+	assert.match(js, /Remove mobile seat for this person\?/);
 });
 
 test('old bespoke license assets are gone', () => {
