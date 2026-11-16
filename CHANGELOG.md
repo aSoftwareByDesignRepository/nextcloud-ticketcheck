@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Fixed
+- App-Access user picker: visible "Searching / no matches / search failed" status (aria-live) instead of a silently empty dropdown; Enter picks the highlighted or first result; in-flight searches are aborted on short queries (same for the group picker).
 
 - A non-member carrying `core.defaultapp=ticketcheck` with no provenance at
   all (no flag, marker, or firstrunwizard sentinel — e.g. a mid-write

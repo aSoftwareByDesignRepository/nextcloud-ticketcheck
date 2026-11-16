@@ -58,13 +58,18 @@ $appAccess = $_['appAccessSettings'] ?? [];
 									aria-autocomplete="list"
 									aria-controls="app-access-allowed-users-results"
 									aria-expanded="false"
-									aria-describedby="app-access-allowed-users-help">
+									aria-describedby="app-access-allowed-users-help app-access-allowed-users-search-status">
 								<div id="app-access-allowed-users-results"
 									class="tc-select-combobox__results tc-group-picker__results"
 									role="listbox"
 									aria-label="<?php p($l->t('app_access_allowed_users')); ?>"
 									hidden></div>
 							</div>
+							<p id="app-access-allowed-users-search-status"
+								class="tc-select-combobox__status"
+								role="status"
+								aria-live="polite"
+								hidden></p>
 							<span id="app-access-allowed-users-help" class="helpdesk-form-help"><?php p($l->t('app_access_allowed_users_help')); ?></span>
 						</div>
 						<div class="helpdesk-form-group tc-field tc-field--full-width tc-group-picker"
@@ -89,13 +94,18 @@ $appAccess = $_['appAccessSettings'] ?? [];
 									aria-autocomplete="list"
 									aria-controls="app-access-app-admins-results"
 									aria-expanded="false"
-									aria-describedby="app-access-app-admins-help">
+									aria-describedby="app-access-app-admins-help app-access-app-admins-search-status">
 								<div id="app-access-app-admins-results"
 									class="tc-select-combobox__results tc-group-picker__results"
 									role="listbox"
 									aria-label="<?php p($l->t('app_access_app_admins')); ?>"
 									hidden></div>
 							</div>
+							<p id="app-access-app-admins-search-status"
+								class="tc-select-combobox__status"
+								role="status"
+								aria-live="polite"
+								hidden></p>
 							<span id="app-access-app-admins-help" class="helpdesk-form-help"><?php p($l->t('app_access_app_admins_help')); ?></span>
 						</div>
 						<div class="helpdesk-form-group tc-field tc-field--checkbox tc-field--full-width">

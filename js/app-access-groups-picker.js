@@ -221,6 +221,10 @@
 		function runSearch() {
 			const q = searchInput.value.trim();
 			if (q.length < 1) {
+				if (abortController) {
+					abortController.abort();
+					abortController = null;
+				}
 				closeResults();
 				setStatus('');
 				return;
@@ -280,9 +284,10 @@
 				resultItems[activeIndex].scrollIntoView({ block: 'nearest' });
 				return;
 			}
-			if (event.key === 'Enter' && activeIndex >= 0 && resultItems[activeIndex]) {
+			if (event.key === 'Enter' && resultItems.length) {
 				event.preventDefault();
-				resultItems[activeIndex].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0 }));
+				const pick = activeIndex >= 0 && resultItems[activeIndex] ? resultItems[activeIndex] : resultItems[0];
+				pick.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0 }));
 			}
 		});
 

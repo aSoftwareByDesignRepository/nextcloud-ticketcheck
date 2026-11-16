@@ -46,6 +46,7 @@
 		const chipList = document.getElementById(cfg.chipsId);
 		const searchInput = document.getElementById(cfg.searchId);
 		const resultsEl = document.getElementById(cfg.resultsId);
+		const statusEl = document.getElementById(cfg.searchId + '-status');
 		if (!hiddenInput || !chipList || !searchInput || !resultsEl) {
 			return;
 		}
@@ -74,6 +75,16 @@
 		let abortController = null;
 		let activeIndex = -1;
 		let resultItems = [];
+
+		function setStatus(message, isError) {
+			if (!statusEl) {
+				return;
+			}
+			const text = message || '';
+			statusEl.textContent = text;
+			statusEl.hidden = text === '';
+			statusEl.classList.toggle('tc-select-combobox__status--error', Boolean(isError));
+		}
 
 		function syncHiddenInput() {
 			hiddenInput.value = Array.from(selected.keys()).join(',');
@@ -131,6 +142,7 @@
 			if (!user || !user.id || selected.has(user.id)) {
 				searchInput.value = '';
 				closeResults();
+				setStatus('');
 				return;
 			}
 			selected.set(user.id, {
@@ -141,6 +153,7 @@
 			renderChips();
 			searchInput.value = '';
 			closeResults();
+			setStatus(tSafe(cfg.addedKey, cfg.addedFallback, { name: user.displayName || user.id }), false);
 			searchInput.focus();
 		}
 
@@ -153,6 +166,10 @@
 			});
 			if (!available.length) {
 				closeResults();
+				const q = searchInput.value.trim();
+				if (q.length >= 2) {
+					setStatus(tSafe('No matching people found.', 'No matching people found.'), false);
+				}
 				return;
 			}
 			available.forEach(function (user, index) {
@@ -192,13 +209,19 @@
 		function runSearch() {
 			const q = searchInput.value.trim();
 			if (q.length < 2) {
+				if (abortController) {
+					abortController.abort();
+					abortController = null;
+				}
 				closeResults();
+				setStatus(q.length === 1 ? tSafe('Type at least 2 characters…', 'Type at least 2 characters…') : '');
 				return;
 			}
 			if (abortController) {
 				abortController.abort();
 			}
 			abortController = typeof AbortController !== 'undefined' ? new AbortController() : null;
+			setStatus(tSafe('Searching…', 'Searching…'), false);
 			window.TicketCheckApi.get('/apps/ticketcheck/api/settings/users/search', { q: q }, abortController ? { signal: abortController.signal } : undefined)
 				.then(function (data) {
 					if (!data || !data.success) {
@@ -211,6 +234,7 @@
 						return;
 					}
 					closeResults();
+					setStatus(err.message || tSafe('Search failed. Please try again.', 'Search failed. Please try again.'), true);
 				});
 		}
 
@@ -241,9 +265,10 @@
 				searchInput.setAttribute('aria-activedescendant', resultItems[activeIndex].id);
 				return;
 			}
-			if (event.key === 'Enter' && activeIndex >= 0 && resultItems[activeIndex]) {
+			if (event.key === 'Enter' && resultItems.length) {
 				event.preventDefault();
-				resultItems[activeIndex].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0 }));
+				const pick = activeIndex >= 0 && resultItems[activeIndex] ? resultItems[activeIndex] : resultItems[0];
+				pick.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0 }));
 			}
 		});
 		document.addEventListener('pointerdown', function (event) {
