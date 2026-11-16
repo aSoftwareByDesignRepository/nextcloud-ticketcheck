@@ -505,7 +505,7 @@
             }
             fileCountText.style.color = '';
             fileCountText.style.fontWeight = '';
-            fileCountText.textContent = tFormat('files_selected_count', '{count} file(s) selected', {
+            fileCountText.textContent = tFormat('files_selected_count', 'Selected files: {count}', {
                 count: String(selectedFiles.length),
             });
         }

@@ -3,18 +3,12 @@
 		"%1$d of %2$d device slots in use.": "%1$d af %2$d enhedspladser i brug.",
 		"%1$d of %2$d seats assigned": "%1$d af %2$d pladser tildelt",
 		"%1$s (%2$s)": "%1$s (%2$s)",
-		"%d row(s) need a value on this instance": "%d række(r) kræver en værdi på denne instans",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "%d række(r) sprunget over og %d reference(r) uopløst — se grupperne nedenfor.",
 		"%n ticket total": "%n sag i alt",
 		"%n tickets total": "%n sager i alt",
 		"%n view": "%n visning",
 		"%n views": "%n visninger",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s forbliver gratis (AGPL) på Nextcloud. Fejlrapporter og idéer på GitHub er velkomne — det er gratis open source-support. Hvis organisationen har brug for fakturerbar hjælp — eller officielle mobile licenser — vælg en mulighed nedenfor:",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s forbliver gratis (AGPL) på Nextcloud. Fejlrapporter og idéer på GitHub er velkomne — det er gratis open source-support. Hvis organisationen har brug for fakturerbar hjælp, vælg en mulighed nedenfor:",
-		"(%d env-bound value(s) emptied)": "(%d instansbundne værdier tømt)",
-		"(%d filtered)": "(%d filtreret)",
-		"(%d secret(s) redacted)": "(%d hemmelighed(er) sløret)",
-		"(%d unresolved ref)": "(%d uopløst reference)",
 		"(opens in a new tab)": "(åbner i en ny fane)",
 		"(unknown — skipped)": "(ukendt — sprunget over)",
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Der er gemt en licensnøgle, men denne server kan ikke verificere signaturen med leverandørens offentlige nøgle. Companion-apps afviser licensen, indtil nøglen er signet med den matchende leverandørnøgle. Anvend en korrekt signeret licens igen, eller kontakt support, hvis problemet fortsætter efter en app-opdatering.",
@@ -169,6 +163,7 @@
 		"Label": "Etiket",
 		"Last Updated": "Senest opdateret",
 		"Last transfer": "Seneste overførsel",
+		"Ledger bookings in this workspace run from {monthFrom} through {monthTo}.": "Hovedbogsposteringer i dette arbejdsområde løber fra {monthFrom} til {monthTo}.",
 		"License": "Licens",
 		"License expires soon": "Licens udløber snart",
 		"License key": "Licensnøgle",
@@ -202,7 +197,9 @@
 		"New pairing code generated.": "Ny parringskode genereret.",
 		"New reply on %s": "Nyt svar på %s",
 		"Nextcloud instance ID": "Nextcloud-instans-ID",
+		"No bookings in this date range yet.": "Ingen posteringer i dette datointerval endnu.",
 		"No devices registered yet.": "Ingen enheder registreret endnu.",
+		"No ledger transactions yet—each month is empty until you post one.": "Ingen hovedbogstransaktioner endnu—hver måned er tom, indtil registrerer én.",
 		"No license applied": "Ingen licens gemt",
 		"No license yet": "Ingen licens endnu",
 		"No matching people found.": "Ingen matchende personer fundet.",
@@ -211,8 +208,12 @@
 		"No seats assigned yet.": "Ingen pladser tildelt endnu.",
 		"No, still need help": "Nej, jeg har stadig brug for hjælp",
 		"Not configured": "Ikke konfigureret",
+		"Nothing booked for {monthLabel}. That calendar month is after your latest ledger booking ({monthTo}).": "Intet bogført for {monthLabel}. Den kalendermåned ligger efter seneste hovedbogspostering ({monthTo}).",
+		"Nothing booked for {monthLabel}. That calendar month is before your first ledger booking ({monthFrom}).": "Intet bogført for {monthLabel}. Den kalendermåned ligger før første hovedbogspostering ({monthFrom}).",
+		"Nothing booked for {monthLabel}. You can still plan budgets and use month tools.": "Intet bogført for {monthLabel}. det er muligt at stadig planlægge budgetter og bruge månedsværktøjer.",
 		"OK — a longer passphrase is safer.": "OK — en længere adgangssætning er sikrere.",
 		"Official mobile & terminal licenses": "Officielle mobile- og terminallicenser",
+		"One booking in the ledger for {monthLabel}.": "Én postering i hovedbogen for {monthLabel}.",
 		"Open GitHub Issues": "Åbn GitHub Issues",
 		"Open InvoiceCheck": "Åbn InvoiceCheck",
 		"Open TicketCheck to work on this ticket.": "Åbn TicketCheck for at arbejde på denne sag.",
@@ -242,7 +243,7 @@
 		"Project": "Projekt",
 		"Project #%s": "Projekt #%s",
 		"Prototype Fund": "Prototype Fund",
-		"Provide this ID when ordering a license so the key can be bound to this server.": "Angiv dette ID, Når bestiller en licens, så nøglen kan knyttes til denne server.",
+		"Provide this ID when ordering a license so the key can be bound to this server.": "Angiv dette ID, når du afgiver en licensordre, så nøglen kan knyttes til denne server.",
 		"Public funding": "Offentlig finansiering",
 		"Purchase or renew": "Køb eller forny",
 		"Purchase or renew license": "Køb eller forny licens",
@@ -329,7 +330,6 @@
 		"This file is older than the last import on this instance.": "Denne fil er ældre end den seneste import på denne instans.",
 		"This file was exported from a newer app version. Update this app first.": "Denne fil blev eksporteret fra en nyere app-version. Opdatér appen først.",
 		"This file was exported from this instance.": "Denne fil blev eksporteret fra denne instans.",
-		"This license expires in {days} day(s). Renew soon to avoid an interruption for your mobile seats.": "Denne licens udløber om {days} dag(e). Forny snart for at undgå afbrydelse af mobilsæder.",
 		"This person already has a seat.": "Denne person har allerede en plads.",
 		"This seat exceeds the current license limit. It stays assigned but has no mobile access until you remove a seat or upgrade.": "Denne plads overskrider den aktuelle licensgrænse. Den forbliver tildelt, men har ingen mobiladgang, før en plads fjernes eller der opgraderes.",
 		"This server’s Nextcloud instance ID (for support / sales reference). Licenses are not instance-bound.": "Denne servers Nextcloud-instans-ID (til support-/salgsreference). Licenser er ikke bundet til en instans.",
@@ -371,7 +371,6 @@
 		"View Ticket Details": "Vis Sagsdetaljer",
 		"Waiting": "Venter",
 		"Waiting for the job…": "Venter på jobbet…",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "Advarsel: %d række(r) slettes permanent, derefter indlæses fildataene.",
 		"Writing data": "Skriver data",
 		"Writing settings": "Skriver indstillinger",
 		"Yes, this helped": "Ja, det hjalp.",
@@ -393,6 +392,54 @@
 		"_%n view_::_%n views_": [
 			"%n visning",
 			"%n visninger"
+		],
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 instansbunden værdi tømt)",
+			"(%n instansbundne værdier tømt)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(1 filtreret)",
+			"(%n filtreret)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(1 hemmelighed sløret)",
+			"(%n hemmeligheder sløret)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 uopløst reference)",
+			"(%n uopløste referencer)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 reference uopløst — se grupperne nedenfor.",
+			"%n referencer uopløst — se grupperne nedenfor."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 række kræver en værdi på denne instans",
+			"%n rækker kræver en værdi på denne instans"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"1 række sprunget over.",
+			"%n rækker sprunget over."
+		],
+		"_1 ticket has been open for more than 7 days_::_%n tickets have been open for more than 7 days_": [
+			"1 sag har været åben i mere end 7 dage",
+			"%n sager har været åbne i mere end 7 dage"
+		],
+		"_1 urgent ticket with no updates for 2+ days requires immediate attention!_::_%n urgent tickets with no updates for 2+ days require immediate attention!_": [
+			"1 akut sag uden opdateringer i 2+ dage kræver øjeblikkelig opmærksomhed!",
+			"%n akutte sager uden opdateringer i 2+ dage kræver øjeblikkelig opmærksomhed!"
+		],
+		"_Delete this resource? It will be removed from 1 linked ticket._::_Delete this resource? It will be removed from %n linked tickets._": [
+			"Slet denne ressource? Den fjernes fra 1 tilknyttet sag.",
+			"Slet denne ressource? Den fjernes fra %n tilknyttede sager."
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Advarsel: 1 række slettes permanent, derefter indlæses fildataene.",
+			"Advarsel: %n rækker slettes permanent, derefter indlæses fildataene."
+		],
+		"_Warning: this policy will block 1 currently allowed non-admin user.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_::_Warning: this policy will block %n currently allowed non-admin users.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_": [
+			"Advarsel: Denne politik vil blokere 1 i øjeblikket tilladt ikke-admin bruger.\n\nStikprøve af berørte brugere:\n{users}\n\nVil du alligevel anvende den?",
+			"Advarsel: Denne politik vil blokere %n i øjeblikket tilladte ikke-admin brugere.\n\nStikprøve af berørte brugere:\n{users}\n\nVil du alligevel anvende den?"
 		],
 		"abandon_reason": "Årsag til afbrydelse",
 		"abandon_uid": "Afbryd",
@@ -511,7 +558,6 @@
 		"app_access_groups_search_no_results": "Ingen matchende grupper fundet.",
 		"app_access_groups_search_placeholder": "Søg i Nextcloud grupper...",
 		"app_access_groups_search_results_count": "{count}- grupper fundet",
-		"app_access_lockout_warning_confirm": "Advarsel: Denne politik vil blokere {count} i øjeblikket tilladt ikke-admin bruger (er). Stikprøve berørte brugere:\n{users} Vil alligevel anvende den?",
 		"app_access_mode_help": "Ruller nedenfor gælder stadig efter døren. Begrænset med en tom tillow- liste blokke personale; gæster ophold tilladt, når kunderne skifte er på.",
 		"app_access_mode_label": "Adgangstilstand (mappedør)",
 		"app_access_mode_open": "Åbn - enhver med en aktiveret TicketCheck rolle nedenfor kan åbne app",
@@ -782,6 +828,8 @@
 		"creating_guest_user": "Oprettelse af gæstebruger...",
 		"creating_ticket_uploading_files": "Oprettelse af sag- og uploadfiler...",
 		"creating_ticket_uploading_files_notice": "Oprettelse af sag og uploade filer... Vent venligst, luk ikke denne side!",
+		"creating_upload_notice": "Vent venligst, luk ikke denne side!",
+		"creating_uploading": "Oprettelse af sag og upload af filer...",
 		"critical_blocking_work": "Kritisk - Blokere mit arbejde!",
 		"current_password": "Nuværende adgangskode",
 		"current_password_required": "Aktuel adgangskode er påkrævet",
@@ -941,12 +989,10 @@
 		"digest_new_this_week": "nye sager oprettet",
 		"digest_new_tickets_24h": "Nye sager (sidste 24 timer)",
 		"digest_old_open": "Gamle åbne sager (7 + dage)",
-		"digest_old_open_desc": "%d sag (r) har været åben i mere end 7 dage",
 		"digest_open": "Åben",
 		"digest_overall_stats": "Samlet statistik",
 		"digest_resolved_this_week": "sager løst",
 		"digest_stalled_urgent": "Starter urgent sager",
-		"digest_stalled_urgent_desc": "%d akut sag (r) uden opdateringer i 2 + dage kræver øjeblikkelig opmærksomhed!",
 		"digest_total_tickets": "Sager i alt",
 		"digest_weekly_activity": "Denne uges aktivitet",
 		"digest_weekly_summary": "Rapport for uge slutter %s",
@@ -2114,6 +2160,7 @@
 		"recent_ticket_activity": "Seneste ticket aktivitet",
 		"recent_tickets": "Seneste sager",
 		"recently_created": "nyligt oprettet",
+		"redirect_failed": "Sag oprettet, men omdirigering mislykkedes. Opdater siden.",
 		"redirect_page_status": "Tager til den næste side...",
 		"redirect_page_title": "Omdirigerer",
 		"refresh_access_preview": "Genopfrisk forhåndsvisning af adgang",
@@ -2165,7 +2212,6 @@
 		"resource": "Ressource",
 		"resource_added": "Ressource tilføjet.",
 		"resource_busy": "En anden ændring er i gang. Prøv igen.",
-		"resource_delete_confirm": "Slet denne ressource? Den fjernes fra {count} sag(er).",
 		"resource_deleted": "Ressource slettet.",
 		"resource_detach_only": "Fjern kun",
 		"resource_import_invalid": "Ugyldig importfil.",
@@ -2246,6 +2292,7 @@
 		"search_results": "Søgeresultater",
 		"search_results_for": "Søgeresultater for",
 		"search_tickets": "Søgesagter...",
+		"searching": "Søger…",
 		"secure_limited": "Sikker & begrænset",
 		"secure_limited_desc": "Ingen adgang til andre Nextcloud apps",
 		"select_a_customer": "Vælg en kunde",
@@ -2371,6 +2418,7 @@
 		"still_need_help": "Har stadig brug for hjælp?",
 		"submit": "Send",
 		"success": "Succes",
+		"success_redirect": "Sag oprettet. Omdirigerer…",
 		"support_dashboard": "Support-dashboard",
 		"support_email_placeholder": "support@example.com",
 		"support_portal": "Støtte Portal",
@@ -2417,7 +2465,9 @@
 		"the mobile companion app": "mobil-companion-appen",
 		"these_tickets_require_immediate_action": "Disse sager kræver øjeblikkelig handling. Klik for at gennemgå.",
 		"this_action_cannot_be_undone": "Denne handling kan ikke fortrydes.",
+		"this_customer": "denne kunde",
 		"this_guest": "denne gæst",
+		"this_project": "dette projekt",
 		"this_will_remove_all_data": "Dette vil også fjerne alle deres projekter og sager!",
 		"this_will_remove_projects_tickets": "Dette vil også fjerne alle deres projekter og sager!",
 		"this_will_remove_tickets": "Dette vil også fjerne alle sager i dette projekt!",
@@ -2609,6 +2659,8 @@
 		"your_projects": "Dine projekter",
 		"your_support_tickets": "Dine supportsager",
 		"your_tickets": "Dine sager",
+		"{count} bookings fall into this date range. Pick a calendar month to focus one month.": "{count} posteringer falder i dette datointerval. Vælg en kalendermåned for at fokusere på én måned.",
+		"{count} bookings in the ledger for {monthLabel}.": "{count} posteringer i hovedbogen for {monthLabel}.",
 		"{used} of {total} seats used": "{used} af {total} brugte sæder"
 	}
 }

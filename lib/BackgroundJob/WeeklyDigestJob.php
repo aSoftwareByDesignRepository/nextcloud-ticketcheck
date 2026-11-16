@@ -402,7 +402,7 @@ class WeeklyDigestJob extends TimedJob
             <div class="section warning">
                 <h3><span class="alert-icon">⚠️</span> ' . htmlspecialchars($l->t('digest_stalled_urgent')) . '</h3>
                 <p style="color: #d32f2f; margin-bottom: 15px;">
-                    ' . htmlspecialchars($l->t('digest_stalled_urgent_desc', [$count])) . '
+                    ' . htmlspecialchars($l->n('1 urgent ticket with no updates for 2+ days requires immediate attention!', '%n urgent tickets with no updates for 2+ days require immediate attention!', $count)) . '
                 </p>
                 <ul class="ticket-list">';
             foreach ($data['stalledUrgentTickets'] as $ticket) {
@@ -427,7 +427,7 @@ class WeeklyDigestJob extends TimedJob
             <div class="section info">
                 <h3>⏰ ' . htmlspecialchars($l->t('digest_old_open')) . '</h3>
                 <p style="color: #f57c00; margin-bottom: 15px;">
-                    ' . htmlspecialchars($l->t('digest_old_open_desc', [$totalOld])) . '
+                    ' . htmlspecialchars($l->n('1 ticket has been open for more than 7 days', '%n tickets have been open for more than 7 days', $totalOld)) . '
                 </p>
                 <ul class="ticket-list">';
             foreach (array_slice($data['oldOpenTickets'], 0, 10) as $ticket) {

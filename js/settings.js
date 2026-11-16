@@ -30,6 +30,21 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Plural-aware translate — window.n resolves the _sg_::_pl_ combined
+    // catalog key and substitutes %n. Singular msgids carry the literal '1',
+    // plurals carry %n. Never '(s)'-hack a count into a single msgid.
+    function nText(singular, plural, count, vars) {
+        const c = Number.isFinite(Number(count)) ? Number(count) : 0;
+        if (typeof window.n === 'function') {
+            return window.n('ticketcheck', singular, plural, c, vars || {});
+        }
+        let text = String(c === 1 ? singular : plural).replace('%n', String(c));
+        Object.keys(vars || {}).forEach(function (k) {
+            text = text.split('{' + k + '}').join(String(vars[k]));
+        });
+        return text;
+    }
+
     const SETTINGS_SCROLL_KEY = 'ticketcheck:settings:scrollY';
     const list = document.getElementById('kb-category-list');
 
@@ -565,10 +580,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         const impact = err.payload.impact;
                         const affected = impact.affected_non_admin_users || [];
                         const sample = affected.slice(0, 10).map((u) => `${u.display_name} (${u.uid})`).join('\n');
-                        const warningMessage = t('ticketcheck', 'app_access_lockout_warning_confirm', {
-                            count: impact.affected_non_admin_count || 0,
-                            users: sample || t('ticketcheck', 'none')
-                        });
+                        const warningMessage = nText(
+                            'Warning: this policy will block 1 currently allowed non-admin user.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?',
+                            'Warning: this policy will block %n currently allowed non-admin users.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?',
+                            impact.affected_non_admin_count || 0,
+                            { users: sample || t('ticketcheck', 'none') }
+                        );
                         const C = window.TicketCheckComponents;
                         if (!C || typeof C.confirmDialog !== 'function') {
                             return;

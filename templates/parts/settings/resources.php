@@ -75,7 +75,7 @@ $tcRes = is_array($_['ticketResources'] ?? null) ? $_['ticketResources'] : [];
 							</div>
 							<div class="tc-resource-item__delete-confirm" hidden>
 								<span class="tc-resource-delete-text">
-									<?php p(str_replace('{count}', (string)(int)($res['ticketCount'] ?? 0), $l->t('resource_delete_confirm'))); ?>
+									<?php p($l->n('Delete this resource? It will be removed from 1 linked ticket.', 'Delete this resource? It will be removed from %n linked tickets.', (int)($res['ticketCount'] ?? 0))); ?>
 								</span>
 								<select class="helpdesk-form-control tc-resource-reassign" aria-label="<?php p($l->t('resource_reassign_to')); ?>">
 									<option value=""><?php p($l->t('resource_detach_only')); ?></option>

@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const hasFiles = selectedFiles.length > 0;
         dropStatus.classList.toggle('ticket-detail-upload-dropzone-subtitle--has-files', hasFiles);
         dropStatus.textContent = hasFiles
-            ? tSafe('files_selected_count', '{count} file(s) selected', { count: selectedFiles.length })
+            ? tSafe('files_selected_count', 'Selected files: {count}', { count: selectedFiles.length })
             : tSafe('or_drag_drop_here', 'or drag and drop here');
     }
 

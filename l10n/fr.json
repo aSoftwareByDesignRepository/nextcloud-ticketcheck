@@ -3,18 +3,12 @@
 		"%1$d of %2$d device slots in use.": "%1$d emplacements d’appareil sur %2$d utilisés.",
 		"%1$d of %2$d seats assigned": "%1$d sur %2$d postes assignés",
 		"%1$s (%2$s)": "%1$s (%2$s)",
-		"%d row(s) need a value on this instance": "%d ligne(s) nécessitent une valeur sur cette instance",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "%d ligne(s) ignorée(s) et %d référence(s) non résolue(s) — voir les groupes ci-dessous.",
 		"%n ticket total": "Total des tickets %n",
 		"%n tickets total": "Total des tickets %n",
 		"%n view": "%n vue",
 		"%n views": "%n vues",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s reste gratuit (AGPL) sur votre Nextcloud. Les signalements de bugs et les idées sur GitHub restent les bienvenus — c'est l'entretien open source gratuit. Si votre organisation a besoin d'une aide réservable, facturée — ou de licences mobiles officielles — choisissez une option ci-dessous :",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s reste gratuit (AGPL) sur votre Nextcloud. Les signalements de bugs et les idées sur GitHub restent les bienvenus — c'est l'entretien open source gratuit. Si votre organisation a besoin d'une aide réservable, facturée, choisissez une option ci-dessous :",
-		"(%d env-bound value(s) emptied)": "(%d valeur(s) liées à l’instance vidée(s))",
-		"(%d filtered)": "(%d filtrée(s))",
-		"(%d secret(s) redacted)": "(%d secret(s) masqué(s))",
-		"(%d unresolved ref)": "(%d référence(s) non résolue(s))",
 		"(opens in a new tab)": "(s’ouvre dans un nouvel onglet)",
 		"(unknown — skipped)": "(inconnu — ignoré)",
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Une clé de licence est enregistrée, mais ce serveur ne peut pas vérifier sa signature avec la clé publique du fournisseur. Les applications compagnon rejetteront la licence tant que la clé n’aura pas été signée avec la clé de signature du fournisseur correspondante. Applique à nouveau une licence correctement signée, ou contacte le support si le problème persiste après une mise à jour de l’application.",
@@ -169,6 +163,7 @@
 		"Label": "Étiquette",
 		"Last Updated": "Dernière mise à jour",
 		"Last transfer": "Dernier transfert",
+		"Ledger bookings in this workspace run from {monthFrom} through {monthTo}.": "Les écritures comptables dans cet espace de travail s'étendent du {monthFrom} au {monthTo}.",
 		"License": "Licence",
 		"License expires soon": "La licence expire bientôt",
 		"License key": "Clé de licence",
@@ -202,7 +197,9 @@
 		"New pairing code generated.": "Nouveau code d’appairage généré.",
 		"New reply on %s": "Nouvelle réponse à %s",
 		"Nextcloud instance ID": "ID d'instance Nextcloud",
+		"No bookings in this date range yet.": "Aucune écriture pour cette plage de dates pour l'instant.",
 		"No devices registered yet.": "Aucun appareil enregistré pour l’instant.",
+		"No ledger transactions yet—each month is empty until you post one.": "Aucune écriture du grand livre pour l'instant : chaque mois est vide jusqu'à ce que vous en publiiez une.",
 		"No license applied": "Aucune licence enregistrée",
 		"No license yet": "Pas encore de licence",
 		"No matching people found.": "Aucune personne correspondante trouvée.",
@@ -211,8 +208,12 @@
 		"No seats assigned yet.": "Aucun siège attribué pour le moment.",
 		"No, still need help": "Non, toujours besoin d'aide",
 		"Not configured": "Non configuré",
+		"Nothing booked for {monthLabel}. That calendar month is after your latest ledger booking ({monthTo}).": "Rien de comptabilisé pour {monthLabel}. Ce mois civil est postérieur à votre dernière écriture dans le grand livre ({monthTo}).",
+		"Nothing booked for {monthLabel}. That calendar month is before your first ledger booking ({monthFrom}).": "Rien de comptabilisé pour {monthLabel}. Ce mois civil est précédant votre première écriture dans le grand livre ({monthFrom}).",
+		"Nothing booked for {monthLabel}. You can still plan budgets and use month tools.": "Rien de comptabilisé pour {monthLabel}. Vous pouvez toujours planifier des budgets et utiliser des outils mensuels.",
 		"OK — a longer passphrase is safer.": "OK — une phrase secrète plus longue est plus sûre.",
 		"Official mobile & terminal licenses": "Licences mobiles et terminal officielles",
+		"One booking in the ledger for {monthLabel}.": "Une écriture dans le grand livre pour {monthLabel}.",
 		"Open GitHub Issues": "Ouvrir GitHub Issues",
 		"Open InvoiceCheck": "Ouvrir InvoiceCheck",
 		"Open TicketCheck to work on this ticket.": "Ouvrez TicketCheck pour traiter ce ticket.",
@@ -329,7 +330,6 @@
 		"This file is older than the last import on this instance.": "Ce fichier est plus ancien que le dernier import sur cette instance.",
 		"This file was exported from a newer app version. Update this app first.": "Ce fichier a été exporté depuis une version plus récente de l’app. Mettez d’abord l’app à jour.",
 		"This file was exported from this instance.": "Ce fichier a été exporté depuis cette instance.",
-		"This license expires in {days} day(s). Renew soon to avoid an interruption for your mobile seats.": "Cette licence expire dans {days} jour(s). Renouvelez-la bientôt pour éviter une interruption de vos sièges mobiles.",
 		"This person already has a seat.": "Cette personne a déjà un siège.",
 		"This seat exceeds the current license limit. It stays assigned but has no mobile access until you remove a seat or upgrade.": "Ce siège dépasse la limite actuelle de la licence. Il reste attribué mais n'a pas d'accès mobile tant que vous n'avez pas retiré un siège ou mis à niveau.",
 		"This server’s Nextcloud instance ID (for support / sales reference). Licenses are not instance-bound.": "ID d’instance Nextcloud de ce serveur (référence pour le support / les ventes). Les licences ne sont pas liées à une instance.",
@@ -371,7 +371,6 @@
 		"View Ticket Details": "Afficher les détails du ticket",
 		"Waiting": "Attendre",
 		"Waiting for the job…": "En attente du traitement…",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "Avertissement : %d ligne(s) seront définitivement supprimées, puis les données du fichier seront chargées.",
 		"Writing data": "Écriture des données",
 		"Writing settings": "Écriture des paramètres",
 		"Yes, this helped": "Oui, ça a aidé.",
@@ -393,6 +392,54 @@
 		"_%n view_::_%n views_": [
 			"%n vue",
 			"%n vues"
+		],
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 valeur liée à l’instance vidée)",
+			"(%n valeurs liées à l’instance vidées)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(1 filtrée)",
+			"(%n filtrées)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(1 secret masqué)",
+			"(%n secrets masqués)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 référence non résolue)",
+			"(%n références non résolues)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 référence non résolue — voir les groupes ci-dessous.",
+			"%n références non résolues — voir les groupes ci-dessous."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 ligne nécessite une valeur sur cette instance",
+			"%n lignes nécessitent une valeur sur cette instance"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"1 ligne ignorée.",
+			"%n lignes ignorées."
+		],
+		"_1 ticket has been open for more than 7 days_::_%n tickets have been open for more than 7 days_": [
+			"1 ticket est ouvert depuis plus de 7 jours",
+			"%n tickets sont ouverts depuis plus de 7 jours"
+		],
+		"_1 urgent ticket with no updates for 2+ days requires immediate attention!_::_%n urgent tickets with no updates for 2+ days require immediate attention!_": [
+			"1 ticket urgent sans mise à jour depuis plus de 2 jours nécessite une attention immédiate !",
+			"%n tickets urgents sans mise à jour depuis plus de 2 jours nécessitent une attention immédiate !"
+		],
+		"_Delete this resource? It will be removed from 1 linked ticket._::_Delete this resource? It will be removed from %n linked tickets._": [
+			"Supprimer cette ressource ? Elle sera retirée de 1 ticket lié.",
+			"Supprimer cette ressource ? Elle sera retirée de %n tickets liés."
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Avertissement : 1 ligne sera définitivement supprimée, puis les données du fichier seront chargées.",
+			"Avertissement : %n lignes seront définitivement supprimées, puis les données du fichier seront chargées."
+		],
+		"_Warning: this policy will block 1 currently allowed non-admin user.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_::_Warning: this policy will block %n currently allowed non-admin users.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_": [
+			"Avertissement : cette politique bloquera 1 utilisateur non-admin actuellement autorisé.\n\nUtilisateurs touchés par l'échantillon :\n{users}\n\nVoulez-vous l'appliquer de toute façon ?",
+			"Avertissement : cette politique bloquera %n utilisateurs non-admin actuellement autorisés.\n\nUtilisateurs touchés par l'échantillon :\n{users}\n\nVoulez-vous l'appliquer de toute façon ?"
 		],
 		"abandon_reason": "Raison de l'abandon",
 		"abandon_uid": "Abandonner",
@@ -511,7 +558,6 @@
 		"app_access_groups_search_no_results": "Aucun groupe correspondant trouvé.",
 		"app_access_groups_search_placeholder": "Rechercher les groupes Nextcloud...",
 		"app_access_groups_search_results_count": "Groupes {count} trouvés",
-		"app_access_lockout_warning_confirm": "Avertissement : cette politique bloquera {count} actuellement autorisés utilisateurs non-admin.\n\nUtilisateurs touchés par l'échantillon:\n{users}\n\nVoulez-vous l'appliquer de toute façon ?",
 		"app_access_mode_help": "Les rôles ci-dessous s'appliquent toujours après la porte. Restricté avec un personnel de liste d'autorisation vide; les clients restent autorisés lorsque les clients sont sur.",
 		"app_access_mode_label": "Mode d'accès (porte de répertoire)",
 		"app_access_mode_open": "Ouvrir — toute personne ayant un rôle TicketCheck activé ci-dessous peut ouvrir l'application",
@@ -782,6 +828,8 @@
 		"creating_guest_user": "Création d'un utilisateur invité...",
 		"creating_ticket_uploading_files": "Création de ticket & téléchargement de fichiers...",
 		"creating_ticket_uploading_files_notice": "Création de tickets et téléchargement de fichiers... Veuillez patienter, ne fermez pas cette page!",
+		"creating_upload_notice": "Veuillez patienter, ne fermez pas cette page !",
+		"creating_uploading": "Création de tickets et téléchargement de fichiers...",
 		"critical_blocking_work": "Critique - Bloquer mon travail!",
 		"current_password": "Mot de passe actuel",
 		"current_password_required": "Le mot de passe actuel est requis",
@@ -941,12 +989,10 @@
 		"digest_new_this_week": "nouveaux tickets créés",
 		"digest_new_tickets_24h": "Nouveaux tickets (24h)",
 		"digest_old_open": "Tickets anciens ouverts (7+ jours)",
-		"digest_old_open_desc": "Les tickets %d sont ouverts depuis plus de 7 jours",
 		"digest_open": "Ouvert",
 		"digest_overall_stats": "Statistiques générales",
 		"digest_resolved_this_week": "tickets résolus",
 		"digest_stalled_urgent": "Nombre total de tickets urgents",
-		"digest_stalled_urgent_desc": "Les ticket(s) urgent(s) %d sans mise à jour pendant 2 jours et plus nécessitent une attention immédiate!",
 		"digest_total_tickets": "Total général des tickets",
 		"digest_weekly_activity": "L'activité de cette semaine",
 		"digest_weekly_summary": "Rapport pour la semaine se terminant %s",
@@ -1292,7 +1338,7 @@
 		"file_uploaded": "Fichier téléchargé avec succès",
 		"file_validation_failed": "La validation du fichier a échoué",
 		"files_selected": "fichiers sélectionnés",
-		"files_selected_count": "Fichier(s) {count} sélectionné(s)",
+		"files_selected_count": "Fichiers sélectionnés : {count}",
 		"files_to_attach": "Fichiers à joindre :",
 		"filter": "Filtrer",
 		"filter_articles": "Filtrer les articles par catégorie",
@@ -2114,6 +2160,7 @@
 		"recent_ticket_activity": "Activité récente de ticket",
 		"recent_tickets": "Tickets récents",
 		"recently_created": "Création récente",
+		"redirect_failed": "Ticket créé, mais la redirection a échoué. Veuillez actualiser la page.",
 		"redirect_page_status": "Je vous emmène à la page suivante...",
 		"redirect_page_title": "Réorientation",
 		"refresh_access_preview": "Actualiser l'aperçu de l'accès",
@@ -2165,7 +2212,6 @@
 		"resource": "Ressource",
 		"resource_added": "Ressource ajoutée.",
 		"resource_busy": "Une autre modification est en cours. Veuillez réessayer.",
-		"resource_delete_confirm": "Supprimer cette ressource ? Elle sera retirée de {count} ticket(s).",
 		"resource_deleted": "Ressource supprimée.",
 		"resource_detach_only": "Retirer seulement",
 		"resource_import_invalid": "Fichier d'import invalide.",
@@ -2246,6 +2292,7 @@
 		"search_results": "Résultats de la recherche",
 		"search_results_for": "Résultats de recherche pour",
 		"search_tickets": "Rechercher des tickets...",
+		"searching": "Recherche en cours…",
 		"secure_limited": "Sécurisé et limité",
 		"secure_limited_desc": "Aucun accès aux autres applications Nextcloud",
 		"select_a_customer": "Sélectionnez un client",
@@ -2371,6 +2418,7 @@
 		"still_need_help": "Besoin d'aide ?",
 		"submit": "Soumettre",
 		"success": "Succès",
+		"success_redirect": "Ticket créé. Redirection…",
 		"support_dashboard": "Tableau de bord de soutien",
 		"support_email_placeholder": "support@example.com",
 		"support_portal": "Portail d ' appui",
@@ -2417,7 +2465,9 @@
 		"the mobile companion app": "l’application compagnon mobile",
 		"these_tickets_require_immediate_action": "Ces tickets nécessitent une action immédiate. Cliquez pour revoir.",
 		"this_action_cannot_be_undone": "Cette action ne peut pas être annulée.",
+		"this_customer": "ce client",
 		"this_guest": "cette invitée",
+		"this_project": "ce projet",
 		"this_will_remove_all_data": "Cela supprimera également tous leurs projets et tickets!",
 		"this_will_remove_projects_tickets": "Cela supprimera également tous leurs projets et tickets!",
 		"this_will_remove_tickets": "Cela supprimera également tous les tickets de ce projet!",
@@ -2609,6 +2659,8 @@
 		"your_projects": "Vos projets",
 		"your_support_tickets": "Vos tickets de soutien",
 		"your_tickets": "Vos tickets",
+		"{count} bookings fall into this date range. Pick a calendar month to focus one month.": "{count} écritures se situent dans cette plage de dates. Choisissez un mois civil pour vous concentrer sur un mois.",
+		"{count} bookings in the ledger for {monthLabel}.": "{count} écritures dans le grand livre pour {monthLabel}.",
 		"{used} of {total} seats used": "{used} sièges utilisés sur {total}"
 	}
 }

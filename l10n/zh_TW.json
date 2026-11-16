@@ -3,18 +3,12 @@
 		"%1$d of %2$d device slots in use.": "已使用 %2$d 個裝置名額中的 %1$d 個。",
 		"%1$d of %2$d seats assigned": "已指派 %2$d 個席位中的 %1$d 個",
 		"%1$s (%2$s)": "%1$s（%2$s）",
-		"%d row(s) need a value on this instance": "%d 列需要在此實例上填寫值",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "已略過 %d 列，%d 個參照未能解析——請查看下方群組。",
 		"%n ticket total": "共 %n 個工單",
 		"%n tickets total": "共 %n 個工單",
 		"%n view": "%n 次瀏覽",
 		"%n views": "%n 次瀏覽",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s 在您的 Nextcloud 上保持免費（AGPL）。歡迎在 GitHub 提交缺陷報告和建議——這是自由開源的關懷。如果您的組織需要可開票的幫助或官方行動端授權，請選擇下方選項：",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s 在您的 Nextcloud 上保持免費（AGPL）。歡迎在 GitHub 提交缺陷報告和建議——這是自由開源的關懷。如果您的組織需要可開票的幫助，請選擇下方選項：",
-		"(%d env-bound value(s) emptied)": "（已清空 %d 個實例綁定值）",
-		"(%d filtered)": "（已篩選 %d 項）",
-		"(%d secret(s) redacted)": "（已遮蔽 %d 個密鑰）",
-		"(%d unresolved ref)": "（%d 個參照未解析）",
 		"(opens in a new tab)": "（在新標籤頁中開啟）",
 		"(unknown — skipped)": "（未知——已跳過）",
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "已儲存授權金鑰，但此伺服器無法使用供應商公鑰驗證其簽章。配套應用程式將拒絕該授權，直到金鑰使用相符的供應商簽章金鑰簽署。請重新套用簽章正確的授權；若應用程式更新後問題仍存在，請聯絡支援。",
@@ -169,6 +163,7 @@
 		"Label": "標籤",
 		"Last Updated": "最後更新",
 		"Last transfer": "上次傳輸",
+		"Ledger bookings in this workspace run from {monthFrom} through {monthTo}.": "該工作區的臺帳記帳覆蓋 {monthFrom} 至 {monthTo}。",
 		"License": "授權",
 		"License expires soon": "授權即將到期",
 		"License key": "授權金鑰",
@@ -202,7 +197,9 @@
 		"New pairing code generated.": "已產生新的配對碼。",
 		"New reply on %s": "%s 的新回覆",
 		"Nextcloud instance ID": "Nextcloud 執行個體 ID",
+		"No bookings in this date range yet.": "該日期範圍內尚無記帳。",
 		"No devices registered yet.": "尚未註冊裝置。",
+		"No ledger transactions yet—each month is empty until you post one.": "尚無臺帳交易——在你記錄之前，每個月都是空的。",
 		"No license applied": "未應用授權",
 		"No license yet": "尚無授權",
 		"No matching people found.": "找不到相符的成員。",
@@ -211,8 +208,12 @@
 		"No seats assigned yet.": "尚未分配席位。",
 		"No, still need help": "不，仍需要幫助",
 		"Not configured": "未設定",
+		"Nothing booked for {monthLabel}. That calendar month is after your latest ledger booking ({monthTo}).": "{monthLabel} 沒有任何記帳。該行事曆月份晚於你最近的一筆臺帳記帳（{monthTo}）。",
+		"Nothing booked for {monthLabel}. That calendar month is before your first ledger booking ({monthFrom}).": "{monthLabel} 沒有任何記帳。該行事曆月份早於你的第一筆臺帳記帳（{monthFrom}）。",
+		"Nothing booked for {monthLabel}. You can still plan budgets and use month tools.": "{monthLabel} 沒有任何記帳。你仍然可以規劃預算並使用月度工具。",
 		"OK — a longer passphrase is safer.": "好——更長的密碼短語更安全。",
 		"Official mobile & terminal licenses": "官方行動端與終端授權",
+		"One booking in the ledger for {monthLabel}.": "{monthLabel} 的臺帳中有 1 筆記帳。",
 		"Open GitHub Issues": "開啟 GitHub Issues",
 		"Open InvoiceCheck": "開啟 InvoiceCheck",
 		"Open TicketCheck to work on this ticket.": "開啟 TicketCheck 處理此工單。",
@@ -329,7 +330,6 @@
 		"This file is older than the last import on this instance.": "此檔案早於此執行個體的上次匯入。",
 		"This file was exported from a newer app version. Update this app first.": "此檔案由更新版本的應用匯出。請先更新本應用。",
 		"This file was exported from this instance.": "此檔案匯出自本執行個體。",
-		"This license expires in {days} day(s). Renew soon to avoid an interruption for your mobile seats.": "此授權將在 {days} 天後到期。請儘快續期，避免移動席位中斷。",
 		"This person already has a seat.": "此人已有席位。",
 		"This seat exceeds the current license limit. It stays assigned but has no mobile access until you remove a seat or upgrade.": "此席位超出當前授權上限。它保持已分配，但在您移除席位或升級前無行動端訪問。",
 		"This server’s Nextcloud instance ID (for support / sales reference). Licenses are not instance-bound.": "此伺服器的 Nextcloud 執行個體 ID（供支援/銷售參考）。授權不綁定執行個體。",
@@ -371,7 +371,6 @@
 		"View Ticket Details": "檢視工單詳情",
 		"Waiting": "等待中",
 		"Waiting for the job…": "正在等待任務……",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "警告：%d 列將被永久刪除，然後載入檔案資料。",
 		"Writing data": "正在寫入資料",
 		"Writing settings": "正在寫入設定",
 		"Yes, this helped": "是的，有幫助",
@@ -391,6 +390,54 @@
 		],
 		"_%n view_::_%n views_": [
 			"%n 次瀏覽"
+		],
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"（已清空 1 個實例綁定值）",
+			"（已清空 %n 個實例綁定值）"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"（已篩選 1 項）",
+			"（已篩選 %n 項）"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"（已遮蔽 1 個密鑰）",
+			"（已遮蔽 %n 個密鑰）"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"（1 個參照未解析）",
+			"（%n 個參照未解析）"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 個參照未能解析——請查看下方群組。",
+			"%n 個參照未能解析——請查看下方群組。"
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 列需要在此實例上填寫值",
+			"%n 列需要在此實例上填寫值"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"已略過 1 列。",
+			"已略過 %n 列。"
+		],
+		"_1 ticket has been open for more than 7 days_::_%n tickets have been open for more than 7 days_": [
+			"1 個工單已開放超過 7 天",
+			"%n 個工單已開放超過 7 天"
+		],
+		"_1 urgent ticket with no updates for 2+ days requires immediate attention!_::_%n urgent tickets with no updates for 2+ days require immediate attention!_": [
+			"1 個緊急工單超過 2 天未更新，需要立即處理",
+			"%n 個緊急工單超過 2 天未更新，需要立即處理"
+		],
+		"_Delete this resource? It will be removed from 1 linked ticket._::_Delete this resource? It will be removed from %n linked tickets._": [
+			"刪除此資源？它將從 1 個關聯工單中移除。",
+			"刪除此資源？它將從 %n 個關聯工單中移除。"
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"警告：1 列將被永久刪除，然後載入檔案資料。",
+			"警告：%n 列將被永久刪除，然後載入檔案資料。"
+		],
+		"_Warning: this policy will block 1 currently allowed non-admin user.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_::_Warning: this policy will block %n currently allowed non-admin users.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_": [
+			"警告：此策略將阻止 1 位當前允許的非管理員使用者。\n\n受影響使用者示例：\n{users}\n\n仍要應用嗎？",
+			"警告：此策略將阻止 %n 位當前允許的非管理員使用者。\n\n受影響使用者示例：\n{users}\n\n仍要應用嗎？"
 		],
 		"abandon_reason": "放棄原因",
 		"abandon_uid": "放棄",
@@ -509,7 +556,6 @@
 		"app_access_groups_search_no_results": "未找到匹配群組。",
 		"app_access_groups_search_placeholder": "搜尋 Nextcloud 群組…",
 		"app_access_groups_search_results_count": "找到 {count} 個群組",
-		"app_access_lockout_warning_confirm": "警告：此策略將阻止 {count} 位當前允許的非管理員使用者。\n\n受影響使用者示例：\n{users}\n\n仍要應用嗎？",
 		"app_access_mode_help": "進門後下方角色仍然適用。白名單為空的受限",
 		"app_access_mode_label": "訪問模式（目錄門）",
 		"app_access_mode_open": "開放——任何擁有下方已啟用 TicketCheck 角色的人都可以開啟應用",
@@ -780,6 +826,8 @@
 		"creating_guest_user": "正在建立訪客使用者…",
 		"creating_ticket_uploading_files": "正在建立工單並上傳檔案…",
 		"creating_ticket_uploading_files_notice": "正在建立工單並上傳檔案…請稍候，請勿關閉",
+		"creating_upload_notice": "請稍候，請勿關閉此頁面",
+		"creating_uploading": "正在建立工單並上傳檔案…",
 		"critical_blocking_work": "緊急——正在阻塞我的工作！",
 		"current_password": "當前密碼",
 		"current_password_required": "需要當前密碼",
@@ -939,12 +987,10 @@
 		"digest_new_this_week": "個新建工單",
 		"digest_new_tickets_24h": "新工單（最近 24 小時）",
 		"digest_old_open": "超期未決工單（7 天以上）",
-		"digest_old_open_desc": "%d 個工單已開放超過 7 天",
 		"digest_open": "待處理",
 		"digest_overall_stats": "總體統計",
 		"digest_resolved_this_week": "個已解決工單",
 		"digest_stalled_urgent": "停滯的緊急工單",
-		"digest_stalled_urgent_desc": "%d 個緊急工單超過 2 天未更新，需要立即處理",
 		"digest_total_tickets": "工單總數",
 		"digest_weekly_activity": "本週動態",
 		"digest_weekly_summary": "截至 %s 一週的報表",
@@ -2112,6 +2158,7 @@
 		"recent_ticket_activity": "最近工單動態",
 		"recent_tickets": "最近工單",
 		"recently_created": "最近建立",
+		"redirect_failed": "工單已建立，但跳轉失敗。請重新整理頁面。",
 		"redirect_page_status": "正在前往下一頁…",
 		"redirect_page_title": "正在跳轉",
 		"refresh_access_preview": "重新整理訪問預覽",
@@ -2163,7 +2210,6 @@
 		"resource": "資源",
 		"resource_added": "資源已新增。",
 		"resource_busy": "另一項更改正在進行中。請重試。",
-		"resource_delete_confirm": "刪除此資源？它將從 {count} 個工單中移除。",
 		"resource_deleted": "資源已刪除。",
 		"resource_detach_only": "僅移除",
 		"resource_import_invalid": "匯入檔案無效。",
@@ -2244,6 +2290,7 @@
 		"search_results": "搜尋結果",
 		"search_results_for": "搜尋結果：",
 		"search_tickets": "搜尋工單…",
+		"searching": "正在搜尋…",
 		"secure_limited": "安全且受限",
 		"secure_limited_desc": "無法訪問其他 Nextcloud 應用",
 		"select_a_customer": "選擇客戶",
@@ -2369,6 +2416,7 @@
 		"still_need_help": "仍需要幫助？",
 		"submit": "提交",
 		"success": "成功",
+		"success_redirect": "工單已建立。正在跳轉…",
 		"support_dashboard": "支援儀表板",
 		"support_email_placeholder": "support@example.com",
 		"support_portal": "支援門戶",
@@ -2415,7 +2463,9 @@
 		"the mobile companion app": "行動版配套應用程式",
 		"these_tickets_require_immediate_action": "這些工單需要立即處理。點選檢視。",
 		"this_action_cannot_be_undone": "此操作無法撤銷。",
+		"this_customer": "此客戶",
 		"this_guest": "此訪客",
+		"this_project": "此專案",
 		"this_will_remove_all_data": "這還將刪除其所有專案和工單！",
 		"this_will_remove_projects_tickets": "這還將刪除其所有專案和工單！",
 		"this_will_remove_tickets": "這還將刪除此專案中的所有工單！",
@@ -2607,6 +2657,8 @@
 		"your_projects": "您的專案",
 		"your_support_tickets": "您的支援工單",
 		"your_tickets": "您的工單",
+		"{count} bookings fall into this date range. Pick a calendar month to focus one month.": "該日期範圍內有 {count} 筆記帳。選擇一個行事曆月份以聚焦某個月。",
+		"{count} bookings in the ledger for {monthLabel}.": "臺帳中有 {count} 筆記帳（{monthLabel}）。",
 		"{used} of {total} seats used": "已用 {used}/{total} 席位"
 	}
 }

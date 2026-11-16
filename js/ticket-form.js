@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         fileCountText.classList.remove('helpdesk-upload-dropzone__subtitle--error');
-        fileCountText.textContent = tFormat('files_selected_count', '{count} file(s) selected', { count: String(selectedFiles.length) });
+        fileCountText.textContent = tFormat('files_selected_count', 'Selected files: {count}', { count: String(selectedFiles.length) });
     }
 
     function fileIcon(file) {
