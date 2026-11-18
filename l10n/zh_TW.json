@@ -18,51 +18,39 @@
 			"%n 次瀏覽"
 		],
 		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
-			"（已清空 1 個實例綁定值）",
 			"（已清空 %n 個實例綁定值）"
 		],
 		"_(1 filtered)_::_(%n filtered)_": [
-			"（已篩選 1 項）",
 			"（已篩選 %n 項）"
 		],
 		"_(1 secret redacted)_::_(%n secrets redacted)_": [
-			"（已遮蔽 1 個密鑰）",
 			"（已遮蔽 %n 個密鑰）"
 		],
 		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
-			"（1 個參照未解析）",
 			"（%n 個參照未解析）"
 		],
 		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
-			"1 個參照未能解析——請查看下方群組。",
 			"%n 個參照未能解析——請查看下方群組。"
 		],
 		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
-			"1 列需要在此實例上填寫值",
 			"%n 列需要在此實例上填寫值"
 		],
 		"_1 row skipped._::_%n rows skipped._": [
-			"已略過 1 列。",
 			"已略過 %n 列。"
 		],
 		"_1 ticket has been open for more than 7 days_::_%n tickets have been open for more than 7 days_": [
-			"1 個工單已開放超過 7 天",
 			"%n 個工單已開放超過 7 天"
 		],
 		"_1 urgent ticket with no updates for 2+ days requires immediate attention!_::_%n urgent tickets with no updates for 2+ days require immediate attention!_": [
-			"1 個緊急工單超過 2 天未更新，需要立即處理",
 			"%n 個緊急工單超過 2 天未更新，需要立即處理"
 		],
 		"_Delete this resource? It will be removed from 1 linked ticket._::_Delete this resource? It will be removed from %n linked tickets._": [
-			"刪除此資源？它將從 1 個關聯工單中移除。",
 			"刪除此資源？它將從 %n 個關聯工單中移除。"
 		],
 		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
-			"警告：1 列將被永久刪除，然後載入檔案資料。",
 			"警告：%n 列將被永久刪除，然後載入檔案資料。"
 		],
 		"_Warning: this policy will block 1 currently allowed non-admin user.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_::_Warning: this policy will block %n currently allowed non-admin users.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_": [
-			"警告：此策略將阻止 1 位當前允許的非管理員使用者。\n\n受影響使用者示例：\n{users}\n\n仍要應用嗎？",
 			"警告：此策略將阻止 %n 位當前允許的非管理員使用者。\n\n受影響使用者示例：\n{users}\n\n仍要應用嗎？"
 		],
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "已儲存授權金鑰，但此伺服器無法使用供應商公鑰驗證其簽章。配套應用程式將拒絕該授權，直到金鑰使用相符的供應商簽章金鑰簽署。請重新套用簽章正確的授權；若應用程式更新後問題仍存在，請聯絡支援。",

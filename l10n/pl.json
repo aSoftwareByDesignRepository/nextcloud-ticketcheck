@@ -23,50 +23,62 @@
 		],
 		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
 			"(1 opróżniona wartość związana z instancją)",
+			"(%n opróżnione wartości związane z instancją)",
 			"(%n opróżnionych wartości związanych z instancją)"
 		],
 		"_(1 filtered)_::_(%n filtered)_": [
-			"(1 odfiltrowane)",
+			"(1 odfiltrowany)",
+			"(%n odfiltrowane)",
 			"(%n odfiltrowanych)"
 		],
 		"_(1 secret redacted)_::_(%n secrets redacted)_": [
 			"(1 ukryty sekret)",
+			"(%n ukryte sekrety)",
 			"(%n ukrytych sekretów)"
 		],
 		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
 			"(1 nierozwiązane odwołanie)",
+			"(%n nierozwiązane odwołania)",
 			"(%n nierozwiązanych odwołań)"
 		],
 		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
 			"Nierozwiązano 1 odwołanie — zobacz grupy poniżej.",
+			"Nierozwiązano %n odwołania — zobacz grupy poniżej.",
 			"Nierozwiązano %n odwołań — zobacz grupy poniżej."
 		],
 		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
 			"1 wiersz wymaga wartości na tej instancji",
+			"%n wiersze wymagają wartości na tej instancji",
 			"%n wierszy wymaga wartości na tej instancji"
 		],
 		"_1 row skipped._::_%n rows skipped._": [
 			"Pominięto 1 wiersz.",
+			"Pominięto %n wiersze.",
 			"Pominięto %n wierszy."
 		],
 		"_1 ticket has been open for more than 7 days_::_%n tickets have been open for more than 7 days_": [
 			"1 zgłoszenie jest otwarte od ponad 7 dni",
+			"%n zgłoszenia są otwarte od ponad 7 dni",
 			"%n zgłoszeń jest otwartych od ponad 7 dni"
 		],
 		"_1 urgent ticket with no updates for 2+ days requires immediate attention!_::_%n urgent tickets with no updates for 2+ days require immediate attention!_": [
 			"1 pilne zgłoszenie bez aktualizacji przez ponad 2 dni wymaga natychmiastowej uwagi!",
+			"%n pilne zgłoszenia bez aktualizacji przez ponad 2 dni wymagają natychmiastowej uwagi!",
 			"%n pilnych zgłoszeń bez aktualizacji przez ponad 2 dni wymaga natychmiastowej uwagi!"
 		],
 		"_Delete this resource? It will be removed from 1 linked ticket._::_Delete this resource? It will be removed from %n linked tickets._": [
 			"Usunąć ten zasób? Zostanie usunięty z 1 powiązanego zgłoszenia.",
+			"Usunąć ten zasób? Zostanie usunięty z %n powiązanych zgłoszeń.",
 			"Usunąć ten zasób? Zostanie usunięty z %n powiązanych zgłoszeń."
 		],
 		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
 			"Ostrzeżenie: 1 wiersz zostanie trwale usunięty, a następnie dane z pliku zostaną wczytane.",
+			"Ostrzeżenie: %n wiersze zostaną trwale usunięte, a następnie dane z pliku zostaną wczytane.",
 			"Ostrzeżenie: %n wierszy zostanie trwale usuniętych, a następnie dane z pliku zostaną wczytane."
 		],
 		"_Warning: this policy will block 1 currently allowed non-admin user.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_::_Warning: this policy will block %n currently allowed non-admin users.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_": [
 			"Ostrzeżenie: ta polityka zablokuje 1 aktualnie dozwolonego użytkownika bez roli administratora.\n\nPrzykładowi użytkownicy, których to dotyczy:\n{users}\n\nCzy chcesz ją mimo to zastosować?",
+			"Ostrzeżenie: ta polityka zablokuje %n aktualnie dozwolonych użytkowników bez roli administratora.\n\nPrzykładowi użytkownicy, których to dotyczy:\n{users}\n\nCzy chcesz ją mimo to zastosować?",
 			"Ostrzeżenie: ta polityka zablokuje %n aktualnie dozwolonych użytkowników bez roli administratora.\n\nPrzykładowi użytkownicy, których to dotyczy:\n{users}\n\nCzy chcesz ją mimo to zastosować?"
 		],
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Klucz licencyjny jest zapisany, ale ten serwer nie może zweryfikować jego podpisu kluczem publicznym dostawcy. Aplikacje towarzyszące odrzucą licencję, dopóki klucz nie zostanie podpisany pasującym kluczem podpisującym dostawcy. Zastosuj ponownie poprawnie podpisaną licencję albo skontaktuj się ze wsparciem, jeśli problem nadal występuje po aktualizacji aplikacji.",
