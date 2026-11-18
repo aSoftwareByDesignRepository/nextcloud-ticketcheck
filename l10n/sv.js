@@ -259,7 +259,7 @@ OC.L10N.register(
 	"Remote onboarding or a workshop so your team can roll out cleanly — billed as a service." : "Distansintroduktion eller en workshop så att ert team kan rulla ut rent — faktureras som tjänst.",
 	"Remove" : "Ta bort",
 	"Remove license" : "Ta bort licens",
-	"Remove mobile seat" : "Ta bort mobil plats",
+	"Remove mobile seat" : "Ta bort mobilplats",
 	"Remove mobile seat for this person?" : "Ta bort mobilplatsen för den här personen?",
 	"Remove seat for {name}" : "Ta bort sätet för {name}",
 	"Remove the organisation license and revoke all seats and devices? This cannot be undone." : "Ta bort organisationslicensen och återkalla alla platser och enheter? Detta kan inte ångras.",
