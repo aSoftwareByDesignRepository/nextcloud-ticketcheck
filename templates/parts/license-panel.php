@@ -86,7 +86,8 @@ try {
 	$_['requesttoken'] = (string)($_['requesttoken'] ?? '');
 }
 
-// Keep the legacy deep-link anchor (#ticketcheck-license) working.
-echo '<div id="ticketcheck-license">';
+// Keep the legacy deep-link anchors (#ticketcheck-license, #tc-license-panel)
+// working — the shared template owns #tc-license-heading.
+echo '<div id="ticketcheck-license"><span id="tc-license-panel" class="tc-license-anchor" aria-hidden="true"></span>';
 include __DIR__ . '/../common/license-page.php';
 echo '</div>';

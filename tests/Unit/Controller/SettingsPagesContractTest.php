@@ -190,8 +190,10 @@ final class SettingsPagesContractTest extends TestCase
 	{
 		$generated = ['tc-support-us' => 'templates/parts/support-us-section.php', 'tc-support-us-title' => 'templates/parts/support-us-section.php'];
 		$sharedPartialsBySection = [
-			'license' => 'templates/parts/license-panel.php',
-			'support' => 'templates/parts/support-us-section.php',
+			// license.php delegates to license-panel.php, which includes the
+			// synced common/license-page.php — anchors live across all three.
+			'license' => ['templates/parts/license-panel.php', 'templates/common/license-page.php'],
+			'support' => ['templates/parts/support-us-section.php'],
 		];
 		foreach (SettingsSectionCatalog::LEGACY_ANCHORS as $anchor => $section) {
 			if (isset($generated[$anchor])) {
@@ -203,8 +205,8 @@ final class SettingsPagesContractTest extends TestCase
 				continue;
 			}
 			$haystack = self::read('templates/parts/settings/' . $section . '.php');
-			if (isset($sharedPartialsBySection[$section])) {
-				$haystack .= self::read($sharedPartialsBySection[$section]);
+			foreach ($sharedPartialsBySection[$section] ?? [] as $sharedPartial) {
+				$haystack .= self::read($sharedPartial);
 			}
 			self::assertMatchesRegularExpression(
 				'/\sid="' . preg_quote($anchor, '/') . '"/',

@@ -77,7 +77,7 @@ $mutations = [
 	],
 	'catalog_unhide_hidden_sections' => [
 		'file' => 'lib/Service/SettingsSectionCatalog.php',
-		'from' => "public const HIDDEN_SECTIONS = [\n\t\t'license',\n\t\t'support',\n\t];",
+		'from' => "public const HIDDEN_SECTIONS = [\n\t\t'support',\n\t];",
 		'to' => "public const HIDDEN_SECTIONS = [];",
 		'kill' => 'php',
 	],

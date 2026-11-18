@@ -16,7 +16,7 @@
 include __DIR__ . '/common/page-start.php';
 
 // Map must cover exactly SettingsSectionCatalog::routableSections() — hidden
-// sections (license, support) keep their partials on disk but stay unreachable.
+// sections (support) keep their partials on disk but stay unreachable.
 $tcSettingsSectionFiles = [
 	'access' => 'access.php',
 	'categories' => 'categories.php',
@@ -27,6 +27,7 @@ $tcSettingsSectionFiles = [
 	'kb-categories' => 'kb-categories.php',
 	'escalation' => 'escalation.php',
 	'sla' => 'sla.php',
+	'license' => 'license.php',
 	'about' => 'about.php',
 	'transfer' => 'transfer.php',
 ];

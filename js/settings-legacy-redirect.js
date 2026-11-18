@@ -35,6 +35,9 @@
 		'settings-sla-heading': 'sla',
 		'settings-about-heading': 'about',
 		'tc-transfer-export-card': 'transfer',
+		'ticketcheck-license': 'license',
+		'tc-license-panel': 'license',
+		'tc-license-heading': 'license',
 	});
 
 	/**

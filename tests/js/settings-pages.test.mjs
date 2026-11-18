@@ -32,6 +32,7 @@ const SECTION_URLS = Object.freeze({
 	'sla': '/apps/ticketcheck/settings/sla',
 	'kb-categories': '/apps/ticketcheck/settings/kb-categories',
 	escalation: '/apps/ticketcheck/settings/escalation',
+	license: '/apps/ticketcheck/settings/license',
 	about: '/apps/ticketcheck/settings/about',
 	transfer: '/apps/ticketcheck/settings/transfer',
 });

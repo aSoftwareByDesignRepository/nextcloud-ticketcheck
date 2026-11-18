@@ -7,9 +7,9 @@ const { ensureAuthenticated } = require('./helpers/auth-guard');
  * Multipage settings: axe smoke per section, redirect, hash forward, nav active state.
  * Uses storageState / E2E_USER when available; skips cleanly on login wall.
  */
-// Mirrors SettingsSectionCatalog::routableSections() — license/support are
-// hidden until further notice (their specs: settings-license.spec.js,
-// settings-support-us.spec.js are describe.skip'ed for the same reason).
+// Mirrors SettingsSectionCatalog::routableSections() — support is
+// hidden until further notice (its spec: settings-support-us.spec.js is
+// describe.skip'ed for the same reason).
 const settingsSections = [
   'access',
   'categories',
@@ -20,6 +20,7 @@ const settingsSections = [
   'kb-categories',
   'escalation',
   'sla',
+  'license',
   'about',
   'transfer',
 ];
@@ -69,7 +70,7 @@ test.describe('TicketCheck multipage settings', () => {
   });
 
   // Hidden sections must not be reachable — no route match, no settings shell.
-  for (const hidden of ['license', 'support']) {
+  for (const hidden of ['support']) {
     test(`hidden section /settings/${hidden} is not reachable`, async ({ page }) => {
       const response = await page.goto(`/apps/ticketcheck/settings/${hidden}`, {
         waitUntil: 'domcontentloaded',

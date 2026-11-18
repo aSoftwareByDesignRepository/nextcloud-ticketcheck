@@ -108,6 +108,6 @@ final class LicensePageL10nParityTest extends TestCase
 		$de = $this->loadTranslations('de');
 		self::assertSame('Mobile-Lizenz', $de['Mobile license'] ?? null);
 		self::assertStringContainsString('kostenlos', $de['The TicketCheck web app always stays free. A TKC2 license unlocks named seats for the official TicketCheck mobile companion app for your organisation.'] ?? '');
-		self::assertSame('Mobile-Sitze', $de['Mobile seats'] ?? null);
+		self::assertSame('Mobile-Plätze', $de['Mobile seats'] ?? null);
 	}
 }
