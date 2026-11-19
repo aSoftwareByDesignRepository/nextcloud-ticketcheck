@@ -77,7 +77,7 @@ $mutations = [
 	],
 	'catalog_unhide_hidden_sections' => [
 		'file' => 'lib/Service/SettingsSectionCatalog.php',
-		'from' => "public const HIDDEN_SECTIONS = [\n\t\t'support',\n\t];",
+		'from' => "public const HIDDEN_SECTIONS = [\n\t\t'support',\n\t\t'license',\n\t];",
 		'to' => "public const HIDDEN_SECTIONS = [];",
 		'kill' => 'php',
 	],
@@ -108,7 +108,7 @@ $mutations = [
 	'dispatcher_fail_closed_removed' => [
 		'file' => 'templates/settings.php',
 		'from' => "if (!isset(\$tcSettingsSectionFiles[\$tcRequestedSection])) {\n\tthrow new \\RuntimeException('TicketCheck settings: unknown section reached the template dispatcher.');\n}\ninclude __DIR__ . '/parts/settings/' . \$tcSettingsSectionFiles[\$tcRequestedSection];",
-		'to' => "include __DIR__ . '/parts/settings/' . (\$tcSettingsSectionFiles[\$tcRequestedSection] ?? \$tcSettingsSectionFiles['license']);",
+		'to' => "include __DIR__ . '/parts/settings/' . (\$tcSettingsSectionFiles[\$tcRequestedSection] ?? \$tcSettingsSectionFiles['access']);",
 		'kill' => 'php',
 	],
 	'dispatcher_drop_inpage_nav' => [

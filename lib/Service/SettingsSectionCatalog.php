@@ -53,14 +53,17 @@ final class SettingsSectionCatalog
 	 * controller params, and label/navLabel arms are kept so restoring a
 	 * section is a one-line removal here.
 	 *
-	 * support is hidden until further notice (product decision). license was
-	 * restored 2026-11-18: we sell TKC2 mobile seats, so the purchase/manage
-	 * surface must be reachable and obvious.
+	 * support is hidden until further notice (product decision). license is
+	 * hidden until the Prototype Fund grant period ends — the TKC2 mobile
+	 * companion cannot launch before that, so the purchase/seat surface must
+	 * not be reachable. Templates, the controller arm and the license API
+	 * routes stay in place; restoring is a one-line removal here.
 	 *
 	 * @var list<string>
 	 */
 	public const HIDDEN_SECTIONS = [
 		'support',
+		'license',
 	];
 
 	/**
@@ -94,9 +97,6 @@ final class SettingsSectionCatalog
 		// the entry keeps the every-routable-section-needs-an-anchor
 		// contract and gives deep links a stable target.
 		'tc-transfer-export-card' => 'transfer',
-		'ticketcheck-license' => 'license',
-		'tc-license-panel' => 'license',
-		'tc-license-heading' => 'license',
 	];
 
 	/**
@@ -109,6 +109,9 @@ final class SettingsSectionCatalog
 	public const HIDDEN_LEGACY_ANCHORS = [
 		'tc-support-us' => 'support',
 		'tc-support-us-title' => 'support',
+		'ticketcheck-license' => 'license',
+		'tc-license-panel' => 'license',
+		'tc-license-heading' => 'license',
 	];
 
 	/**

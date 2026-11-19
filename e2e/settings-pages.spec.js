@@ -8,8 +8,8 @@ const { ensureAuthenticated } = require('./helpers/auth-guard');
  * Uses storageState / E2E_USER when available; skips cleanly on login wall.
  */
 // Mirrors SettingsSectionCatalog::routableSections() — support is
-// hidden until further notice (its spec: settings-support-us.spec.js is
-// describe.skip'ed for the same reason).
+// hidden until further notice and license until the grant period ends
+// (their specs are describe.skip'ed for the same reason).
 const settingsSections = [
   'access',
   'categories',
@@ -21,7 +21,6 @@ const settingsSections = [
   'kb-categories',
   'escalation',
   'sla',
-  'license',
   'about',
   'transfer',
 ];

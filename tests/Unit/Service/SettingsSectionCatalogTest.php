@@ -55,14 +55,14 @@ final class SettingsSectionCatalogTest extends TestCase
 
 	public function testHiddenSectionsAreSubsetOfCatalogAndDisjointFromRoutable(): void
 	{
-		self::assertSame(['support'], SettingsSectionCatalog::HIDDEN_SECTIONS);
+		self::assertSame(['support', 'license'], SettingsSectionCatalog::HIDDEN_SECTIONS);
 		foreach (SettingsSectionCatalog::HIDDEN_SECTIONS as $hidden) {
 			self::assertContains($hidden, SettingsSectionCatalog::SECTIONS, "Hidden '{$hidden}' must stay registered");
 			self::assertNotContains($hidden, SettingsSectionCatalog::routableSections());
 		}
 		// Routable = SECTIONS minus HIDDEN, order preserved.
 		self::assertSame(
-			['access', 'categories', 'resources', 'comments', 'email', 'inbound-mail', 'knowledge-base', 'kb-categories', 'escalation', 'sla', 'license', 'about', 'transfer'],
+			['access', 'categories', 'resources', 'comments', 'email', 'inbound-mail', 'knowledge-base', 'kb-categories', 'escalation', 'sla', 'about', 'transfer'],
 			SettingsSectionCatalog::routableSections(),
 		);
 	}

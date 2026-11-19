@@ -2,7 +2,9 @@
 const { test, expect } = require('@playwright/test');
 const { ensureAuthenticated } = require('./helpers/auth-guard');
 
-test.describe('TicketCheck license settings UX', () => {
+// /settings/license is hidden until the grant period ends (SettingsSectionCatalog::HIDDEN_SECTIONS).
+// Re-enable by removing .skip when the section is restored.
+test.describe.skip('TicketCheck license settings UX', () => {
   test('license key textarea is full-width and tall enough to paste a key', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/apps/ticketcheck/settings/license', { waitUntil: 'domcontentloaded' });

@@ -154,7 +154,7 @@ return [
         // Keep the requirement literal (route files load without the app autoloader).
         // tests/Unit/Controller/SettingsPagesContractTest pins it to SettingsSectionCatalog::routeRequirement().
         ['name' => 'settings#section', 'url' => '/settings/{section}', 'verb' => 'GET',
-            'requirements' => ['section' => 'access|categories|resources|comments|email|inbound-mail|knowledge-base|kb-categories|escalation|sla|license|about|transfer']],
+            'requirements' => ['section' => 'access|categories|resources|comments|email|inbound-mail|knowledge-base|kb-categories|escalation|sla|about|transfer']],
         ['name' => 'settings#listTicketCategories', 'url' => '/api/settings/ticket-categories', 'verb' => 'GET'],
         ['name' => 'settings#createTicketCategory', 'url' => '/api/settings/ticket-categories', 'verb' => 'POST'],
         ['name' => 'settings#updateTicketCategory', 'url' => '/api/settings/ticket-categories/{key}', 'verb' => 'PUT', 'requirements' => ['key' => '[a-z0-9-]+']],
