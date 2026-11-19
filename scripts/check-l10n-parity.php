@@ -12,7 +12,7 @@ declare(strict_types=1);
  */
 
 $base = __DIR__ . '/../l10n';
-$localeFiles = ['en', 'de', 'da', 'es', 'fr', 'it', 'nb', 'nl', 'pl', 'sv', 'pt_BR', 'pt', 'tr', 'zh_CN', 'zh_TW'];
+$localeFiles = ['en', 'de', 'da', 'es', 'fr', 'it', 'nb', 'nl', 'pl', 'sv', 'pt_BR', 'pt', 'tr', 'zh_CN', 'zh_TW', 'ru'];
 
 // Guard the roster's input domain both ways: a shipped l10n/<locale>.json
 // that is not rostered must FAIL (silent-skip blindness), and a rostered

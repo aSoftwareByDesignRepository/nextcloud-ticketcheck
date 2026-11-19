@@ -29,7 +29,7 @@ final class L10nPlaceholderParityTest extends TestCase
 	 */
 	private function rosteredLocales(): array
 	{
-		return ['en', 'de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR', 'pt', 'tr', 'zh_CN', 'zh_TW'];
+		return ['en', 'de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb', 'pt_BR', 'pt', 'tr', 'zh_CN', 'zh_TW', 'ru'];
 	}
 
 	public function testRosterCoversEveryShippedCatalog(): void
