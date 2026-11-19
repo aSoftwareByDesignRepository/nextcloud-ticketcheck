@@ -282,10 +282,6 @@ abstract class AbstractTransferManifest
 	 * Normaliser shared by all app manifests: accepts the spec's string
 	 * shorthand (`'key' => 'plain'`) or the array form.
 	 *
-	 * @param array<string,mixed> $raw
-	 * @return array<string,array>
-	 */
-	/**
 	 * @param array<string, mixed> $raw
 	 * @return array<string, array{class:string,refs:?array{kind:string,uid_paths:list<string>,gid_paths:list<string>},unresolved:string,section:?string,security:bool,store:?array{table:string,kind:string,key_col:string,value_col:string,row_id:int,json_col:string,json_key:string}}>
 	 */

@@ -251,12 +251,14 @@ $localeFormat = $_['localeFormat'] ?? null;
                                     $cc = (int)($line['commentCount'] ?? 0);
                                     $ac = (int)($line['attachmentCount'] ?? 0);
                                     $counterpart = $line['counterpart'] ?? 'generic';
+                                    $commentsText = $l->n('move_line_count_comments', 'move_line_count_comments_plural', $cc);
+                                    $attachmentsText = $l->n('move_line_count_attachments', 'move_line_count_attachments_plural', $ac);
                                     if ($cc > 0 && $ac > 0) {
-                                        $countText = $l->t('move_line_count_both', [$cc, $ac]);
+                                        $countText = $l->t('move_line_count_both', [$commentsText, $attachmentsText]);
                                     } elseif ($cc > 0) {
-                                        $countText = $l->t('move_line_count_comments', [$cc]);
+                                        $countText = $commentsText;
                                     } else {
-                                        $countText = $l->t('move_line_count_attachments', [$ac]);
+                                        $countText = $attachmentsText;
                                     }
                             ?>
                                 <div class="ticket-detail-system-line" role="note">
@@ -774,7 +776,7 @@ $localeFormat = $_['localeFormat'] ?? null;
 <!-- Edit comment dialog -->
 <dialog id="comment-edit-dialog" class="helpdesk-dialog ticket-detail-dialog" aria-labelledby="comment-edit-title">
     <h2 id="comment-edit-title" class="helpdesk-dialog__title ticket-detail-dialog-title"><?php p($l->t('comment_edit_dialog_title')); ?></h2>
-    <form id="comment-edit-form" method="dialog" novalidate>
+    <form id="comment-edit-form" class="tc-form" method="dialog" novalidate>
         <input type="hidden" id="comment-edit-id" value="">
         <div class="helpdesk-form-group tc-field">
             <label for="comment-edit-content" class="helpdesk-form-label helpdesk-form-label--required">
@@ -823,14 +825,14 @@ $localeFormat = $_['localeFormat'] ?? null;
 <!-- Select-mode sticky action bar -->
 <div class="ticket-detail-select-bar" data-select-bar hidden role="region" aria-label="<?php p($l->t('move_selection_bar')); ?>">
     <span class="ticket-detail-select-bar__count" data-select-count role="status" aria-live="polite">
-        <?php p($l->t('move_selected_count', ['count' => 0])); ?>
+        <?php p($l->n('move_selected_count', 'move_selected_count_plural', 0)); ?>
     </span>
     <div class="ticket-detail-select-bar__actions">
         <button type="button" class="helpdesk-btn helpdesk-btn--secondary" data-select-cancel>
             <?php p($l->t('cancel_button')); ?>
         </button>
         <button type="button" class="helpdesk-btn helpdesk-btn--primary" data-select-move disabled>
-            <?php p($l->t('move_items_button', ['count' => 0])); ?>
+            <?php p($l->n('move_items_button', 'move_items_button_plural', 0)); ?>
         </button>
     </div>
 </div>

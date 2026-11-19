@@ -14,6 +14,12 @@ declare(strict_types=1);
  * Files follow the merge safety pattern: copy to target before commit,
  * delete source originals only after commit.
  *
+ * unique-conflict:ok — every write here is an id-keyed entity update
+ * (comment/attachment re-set, ticket updated_at touch) or a fresh audit-row
+ * insert; no site SETs the hd_ticket_num_idx ticket_number column. Comment
+ * idempotency is enforced by IdempotencyService payload-fingerprint 409,
+ * not by a unique index.
+ *
  * @copyright Copyright (c) 2026, Lara Raffel, Alexander Mäule and Hauke Klünder
  * @license AGPL-3.0-or-later
  */

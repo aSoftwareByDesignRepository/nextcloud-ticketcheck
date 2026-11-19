@@ -79,6 +79,8 @@
 		"Choose which people may use %1$s. Only assigned users can sign in from their companion device.": "選擇哪些人可以使用 %1$s。只有被指派的成員才能在其配套裝置上登入。",
 		"Click to choose files": "點選選擇檔案",
 		"Close": "關閉",
+		"Comment management": "評論管理",
+		"Comments": "評論",
 		"Comments & Activity": "評論與動態",
 		"Commissioned feature": "委託開發功能",
 		"Config changes": "配置變更",
@@ -439,6 +441,27 @@
 		"_Warning: this policy will block 1 currently allowed non-admin user.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_::_Warning: this policy will block %n currently allowed non-admin users.\n\nSample affected users:\n{users}\n\nDo you want to apply it anyway?_": [
 			"警告：此策略將阻止 %n 位當前允許的非管理員使用者。\n\n受影響使用者示例：\n{users}\n\n仍要應用嗎？"
 		],
+		"_comment_delete_attachments_warning_::_comment_delete_attachments_warning_plural_": [
+			"此評論有 %n 個附件，將被永久刪除。"
+		],
+		"_move_items_button_::_move_items_button_plural_": [
+			"移動 %n 個項目…"
+		],
+		"_move_line_count_attachments_::_move_line_count_attachments_plural_": [
+			"%n 個附件"
+		],
+		"_move_line_count_comments_::_move_line_count_comments_plural_": [
+			"%n 則評論"
+		],
+		"_move_recap_attachments_::_move_recap_attachments_plural_": [
+			"%n 個獨立附件"
+		],
+		"_move_recap_comments_::_move_recap_comments_plural_": [
+			"%n 則評論（含其檔案）"
+		],
+		"_move_selected_count_::_move_selected_count_plural_": [
+			"已選擇 %n 項"
+		],
 		"abandon_reason": "放棄原因",
 		"abandon_uid": "放棄",
 		"about_team_members": "關於團隊成員",
@@ -756,11 +779,12 @@
 		"closed": "已關閉",
 		"comma_separated_group_ids": "group_a,group_b",
 		"comment_actions": "留言操作",
-		"comment_actions_by": "Comment actions by %s",
+		"comment_actions_by": "%s 的評論操作",
 		"comment_added": "評論新增成功",
 		"comment_content_required": "需要評論內容",
 		"comment_delete": "刪除留言",
-		"comment_delete_attachments_warning": "此留言有 {count} 個附件，將被永久刪除。",
+		"comment_delete_attachments_warning": "此評論有 %n 個附件，將被永久刪除。",
+		"comment_delete_attachments_warning_plural": "此評論有 %n 個附件，將被永久刪除。",
 		"comment_delete_dialog_desc": "留言將作為刪除標記保留在歷史記錄中，其附件將被永久移除。",
 		"comment_delete_dialog_title": "刪除留言？",
 		"comment_delete_failed": "無法刪除此留言。",
@@ -772,7 +796,7 @@
 		"comment_edited_by": "由 %s 編輯",
 		"comment_make_private": "設為私密",
 		"comment_make_public": "設為公開",
-		"comment_make_public_confirm": "This will make the comment visible to the customer.",
+		"comment_make_public_confirm": "這將使評論對客戶可見。",
 		"comment_moved_from": "自工單移入",
 		"comment_moved_from_generic": "自另一個工單移入",
 		"comment_not_deleted": "此留言未被刪除",
@@ -1494,7 +1518,7 @@
 		"i_understand": "我已瞭解",
 		"i_understand_button": "我已瞭解",
 		"idempotency_conflict": "此請求與先前的移動操作衝突。請重新載入後重試。",
-		"idempotency_key_required": "An idempotency key is required for this action.",
+		"idempotency_key_required": "此操作需要冪等鍵。",
 		"identity_mode": "身分",
 		"image_preview_counter": "第 {current}/{total} 張",
 		"image_preview_failed": "無法載入此圖片。請改為下載檔案。",
@@ -1854,17 +1878,25 @@
 		"move_down": "下移",
 		"move_failed": "無法移動所選項目。",
 		"move_invalid_selection": "無效的選擇",
-		"move_items_button": "移動 {count} 個項目…",
-		"move_line_count_attachments": "%d 個附件",
-		"move_line_count_both": "%1$d 則留言和 %2$d 個附件",
-		"move_line_count_comments": "%d 則留言",
+		"move_items_button": "移動 %n 個項目…",
+		"move_items_button_plural": "移動 %n 個項目…",
+		"move_line_count_attachments": "%n 個附件",
+		"move_line_count_attachments_plural": "%n 個附件",
+		"move_line_count_both": "%1$s 和 %2$s",
+		"move_line_count_comments": "%n 則評論",
+		"move_line_count_comments_plural": "%n 則評論",
 		"move_line_counterpart_generic": "另一個工單",
 		"move_line_in": "%s 從工單移入了 %s",
 		"move_line_out": "%s 將 %s 移到了工單",
-		"move_recap": "將移動 {comments} 則留言（含其檔案）和 {attachments} 個獨立附件。",
+		"move_recap": "將移動 {comments} 和 {attachments}。",
+		"move_recap_attachments": "%n 個獨立附件",
+		"move_recap_attachments_plural": "%n 個獨立附件",
+		"move_recap_comments": "%n 則評論（含其檔案）",
+		"move_recap_comments_plural": "%n 則評論（含其檔案）",
 		"move_search_empty": "沒有符合的工單。請嘗試其他搜尋。",
 		"move_select_target_required": "請選擇目標工單。",
-		"move_selected_count": "已選擇 {count} 項",
+		"move_selected_count": "已選擇 %n 項",
+		"move_selected_count_plural": "已選擇 %n 項",
 		"move_selection_bar": "移動所選",
 		"move_target_help": "請輸入至少 2 個字元。僅列出您可以編輯的工單。",
 		"move_target_label": "目標工單",
@@ -2356,7 +2388,7 @@
 		"select_all_tickets": "選擇本頁所有工單",
 		"select_attachment_for_move": "選擇要移動的附件",
 		"select_comment_for_move": "選擇要移動的留言",
-		"select_comment_for_move_by": "Select comment by %1$s, %2$s",
+		"select_comment_for_move_by": "選擇 %1$s, %2$s 的評論",
 		"select_guest_user": "選擇訪客使用者",
 		"select_guests": "選擇訪客",
 		"select_items": "選擇項目",

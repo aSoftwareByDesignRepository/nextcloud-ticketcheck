@@ -166,6 +166,21 @@ document.addEventListener('DOMContentLoaded', function () {
         return fallback || key;
     };
 
+    // Plural-aware translate — window.n resolves the _sg_::_pl_ combined
+    // catalog key and substitutes %n. Never '(s)'-hack a count into a
+    // single msgid.
+    function nText(singular, plural, count, vars) {
+        const c = Number.isFinite(Number(count)) ? Number(count) : 0;
+        if (typeof window.n === 'function') {
+            return window.n('ticketcheck', singular, plural, c, vars || {});
+        }
+        let text = String(c === 1 ? singular : plural).replace('%n', String(c));
+        Object.keys(vars || {}).forEach(function (k) {
+            text = text.split('{' + k + '}').join(String(vars[k]));
+        });
+        return text;
+    }
+
     function parseTicketId(value) {
         const parsed = parseInt(String(value), 10);
         return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
@@ -1532,7 +1547,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function lifecycleUrl(suffix) {
-            return '/apps/ticketcheck/tickets/' + ticketId + '/comments/' + suffix;
+            return appUrl('/apps/ticketcheck/tickets/' + ticketId + '/comments/' + suffix);
         }
 
         function reportLifecycleError(data, fallbackKey) {
@@ -1674,7 +1689,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 : 0;
             if (deleteNote) {
                 if (bound > 0) {
-                    deleteNote.textContent = tSafe('comment_delete_attachments_warning', 'This comment has {count} attachment(s). They will be permanently deleted.', { count: bound });
+                    deleteNote.textContent = nText('comment_delete_attachments_warning', 'comment_delete_attachments_warning_plural', bound);
                     deleteNote.hidden = false;
                 } else {
                     deleteNote.hidden = true;
@@ -1787,11 +1802,11 @@ document.addEventListener('DOMContentLoaded', function () {
         function syncSelectUi() {
             const count = selectedCount();
             if (selectCount) {
-                selectCount.textContent = tSafe('move_selected_count', '{count} selected', { count: count });
+                selectCount.textContent = nText('move_selected_count', 'move_selected_count_plural', count);
             }
             if (selectMoveBtn) {
                 selectMoveBtn.disabled = count === 0;
-                selectMoveBtn.textContent = tSafe('move_items_button', 'Move {count} items…', { count: count });
+                selectMoveBtn.textContent = nText('move_items_button', 'move_items_button_plural', count);
             }
         }
 
@@ -1877,8 +1892,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (moveRecap) {
                     moveRecap.textContent = tSafe(
                         'move_recap',
-                        '{comments} comment(s) (with their files) and {attachments} standalone attachment(s) will be moved.',
-                        { comments: comments.length, attachments: attachments.length }
+                        '{comments} and {attachments} will be moved.',
+                        {
+                            comments: nText('move_recap_comments', 'move_recap_comments_plural', comments.length),
+                            attachments: nText('move_recap_attachments', 'move_recap_attachments_plural', attachments.length),
+                        }
                     );
                 }
                 setInlineStatus(moveStatus, '', false);

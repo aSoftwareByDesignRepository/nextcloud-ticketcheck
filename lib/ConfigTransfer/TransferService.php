@@ -1557,8 +1557,7 @@ final class TransferService
 	/**
 	 * Whether the current instance holds a value for the key — appconfig
 	 * keys via getAppKeys, store-backed keys via their backing row/field.
-	 */
-	/**
+	 *
 	 * @param array{class:string,refs:?array{kind:string,uid_paths:list<string>,gid_paths:list<string>},unresolved:string,section:?string,security:bool,store:?array{table:string,kind:string,key_col:string,value_col:string,row_id:int,json_col:string,json_key:string}} $spec
 	 */
 	private function keyExists(string $key, array $spec): bool
@@ -1578,8 +1577,7 @@ final class TransferService
 	 *                 (non-scalar field values return as a JSON string)
 	 * Writes never use this path — store-backed keys are class 'mirrored'
 	 * and flow through the app's central validated writer (writeMirrored).
-	 */
-	/**
+	 *
 	 * @param array{class:string,refs:?array{kind:string,uid_paths:list<string>,gid_paths:list<string>},unresolved:string,section:?string,security:bool,store:?array{table:string,kind:string,key_col:string,value_col:string,row_id:int,json_col:string,json_key:string}} $spec
 	 */
 	private function readKeyValue(string $key, array $spec): ?string

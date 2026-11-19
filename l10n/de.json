@@ -79,6 +79,8 @@
 		"Choose which people may use %1$s. Only assigned users can sign in from their companion device.": "Wähle aus, wer %1$s nutzen darf. Nur zugewiesene Benutzer können sich von ihrem Begleitgerät anmelden.",
 		"Click to choose files": "Klicken Sie, um Dateien auszuwählen",
 		"Close": "Schließen",
+		"Comment management": "Kommentarverwaltung",
+		"Comments": "Kommentare",
 		"Comments & Activity": "Kommentare & Aktivität",
 		"Commissioned feature": "Beauftragte Funktion",
 		"Config changes": "Konfigurationsänderungen",
@@ -455,6 +457,34 @@
 			"Warnung: Diese Richtlinie wird 1 aktuell erlaubten Nicht-Admin-Benutzer sperren.\n\nBeispiel betroffener Benutzer:\n{users}\n\nMöchten Sie trotzdem speichern?",
 			"Warnung: Diese Richtlinie wird %n aktuell erlaubte Nicht-Admin-Benutzer sperren.\n\nBeispiel betroffener Benutzer:\n{users}\n\nMöchten Sie trotzdem speichern?"
 		],
+		"_comment_delete_attachments_warning_::_comment_delete_attachments_warning_plural_": [
+			"Dieser Kommentar hat %n Anhang. Er wird endgültig gelöscht.",
+			"Dieser Kommentar hat %n Anhänge. Diese werden endgültig gelöscht."
+		],
+		"_move_items_button_::_move_items_button_plural_": [
+			"%n Element verschieben…",
+			"%n Elemente verschieben…"
+		],
+		"_move_line_count_attachments_::_move_line_count_attachments_plural_": [
+			"%n Anhang",
+			"%n Anhänge"
+		],
+		"_move_line_count_comments_::_move_line_count_comments_plural_": [
+			"%n Kommentar",
+			"%n Kommentare"
+		],
+		"_move_recap_attachments_::_move_recap_attachments_plural_": [
+			"%n einzelner Anhang",
+			"%n einzelne Anhänge"
+		],
+		"_move_recap_comments_::_move_recap_comments_plural_": [
+			"%n Kommentar (inkl. Dateien)",
+			"%n Kommentare (inkl. Dateien)"
+		],
+		"_move_selected_count_::_move_selected_count_plural_": [
+			"%n ausgewählt",
+			"%n ausgewählt"
+		],
 		"abandon_reason": "Grund für Verwerfen",
 		"abandon_uid": "Verwerfen",
 		"about_team_members": "Über Teammitglieder",
@@ -776,7 +806,8 @@
 		"comment_added": "Kommentar erfolgreich hinzugefügt",
 		"comment_content_required": "Kommentarinhalt erforderlich",
 		"comment_delete": "Kommentar löschen",
-		"comment_delete_attachments_warning": "Dieser Kommentar hat {count} Anhang/Anhänge. Diese werden endgültig gelöscht.",
+		"comment_delete_attachments_warning": "Dieser Kommentar hat %n Anhang. Er wird endgültig gelöscht.",
+		"comment_delete_attachments_warning_plural": "Dieser Kommentar hat %n Anhänge. Diese werden endgültig gelöscht.",
 		"comment_delete_dialog_desc": "Der Kommentar bleibt als Löschmarkierung im Verlauf. Anhänge daran werden endgültig entfernt.",
 		"comment_delete_dialog_title": "Kommentar löschen?",
 		"comment_delete_failed": "Der Kommentar konnte nicht gelöscht werden.",
@@ -1870,17 +1901,25 @@
 		"move_down": "Nach unten",
 		"move_failed": "Die ausgewählten Elemente konnten nicht verschoben werden.",
 		"move_invalid_selection": "Ungültige Auswahl",
-		"move_items_button": "{count} Elemente verschieben…",
-		"move_line_count_attachments": "%d Anhang/Anhänge",
-		"move_line_count_both": "%1$d Kommentar(e) und %2$d Anhang/Anhänge",
-		"move_line_count_comments": "%d Kommentar(e)",
+		"move_items_button": "%n Element verschieben…",
+		"move_items_button_plural": "%n Elemente verschieben…",
+		"move_line_count_attachments": "%n Anhang",
+		"move_line_count_attachments_plural": "%n Anhänge",
+		"move_line_count_both": "%1$s und %2$s",
+		"move_line_count_comments": "%n Kommentar",
+		"move_line_count_comments_plural": "%n Kommentare",
 		"move_line_counterpart_generic": "ein anderes Ticket",
 		"move_line_in": "%s verschob %s von Ticket",
 		"move_line_out": "%s verschob %s nach Ticket",
-		"move_recap": "{comments} Kommentar(e) (inkl. Dateien) und {attachments} einzelne Anhänge werden verschoben.",
+		"move_recap": "{comments} und {attachments} werden verschoben.",
+		"move_recap_attachments": "%n einzelner Anhang",
+		"move_recap_attachments_plural": "%n einzelne Anhänge",
+		"move_recap_comments": "%n Kommentar (inkl. Dateien)",
+		"move_recap_comments_plural": "%n Kommentare (inkl. Dateien)",
 		"move_search_empty": "Keine passenden Tickets. Bitte anderen Suchbegriff versuchen.",
 		"move_select_target_required": "Bitte ein Ziel-Ticket wählen.",
-		"move_selected_count": "{count} ausgewählt",
+		"move_selected_count": "%n ausgewählt",
+		"move_selected_count_plural": "%n ausgewählt",
 		"move_selection_bar": "Auswahl verschieben",
 		"move_target_help": "Mindestens 2 Zeichen eingeben. Nur Tickets, die du bearbeiten darfst, werden angezeigt.",
 		"move_target_label": "Ziel-Ticket",

@@ -64,3 +64,4 @@ postlådestatus # shared — compound
 arbetsytetypen # shared — arbetsyta+typ compound
 europe # proper — IANA tz identifier prefix (Europe/Berlin)
 yyyy # abbrev — ISO date-format token (YYYY-MM-DD)
+idempotensnyckel # shared — idempotens+nyckel compound (idempotency key)
