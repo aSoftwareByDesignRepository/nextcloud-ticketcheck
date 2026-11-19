@@ -121,6 +121,42 @@ class AttachmentMapper extends QBMapper
     }
 
     /**
+     * Find attachments by id regardless of ticket (move selection validation).
+     *
+     * @param int[] $ids
+     * @return Attachment[]
+     */
+    public function findByIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('*')
+            ->from($this->getTableName())
+            ->where($qb->expr()->in('id', $qb->createNamedParameter($ids, IQueryBuilder::PARAM_INT_ARRAY)));
+        return $this->findEntities($qb);
+    }
+
+    /**
+     * Standalone (not comment-bound) attachments on a ticket — the only
+     * selectable items in the move picker (AC-B-1/US-B02).
+     *
+     * @return Attachment[]
+     */
+    public function findStandaloneByTicketId(int $ticketId): array
+    {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('*')
+            ->from($this->getTableName())
+            ->where($qb->expr()->eq('ticket_id', $qb->createNamedParameter($ticketId, IQueryBuilder::PARAM_INT)))
+            ->andWhere($qb->expr()->isNull('comment_id'))
+            ->orderBy('uploaded_at', 'ASC');
+        return $this->findEntities($qb);
+    }
+
+    /**
      * Delete all attachments for a comment
      *
      * @param int $commentId

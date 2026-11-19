@@ -132,6 +132,16 @@ $localeFormat = $_['localeFormat'] ?? null;
                                 );
                                 $downloadUrl = $attUrls['download'];
                                 $previewUrl = $attUrls['preview'];
+                                if (!empty($_['canMoveItems'])):
+                            ?>
+                                <label class="ticket-detail-attachment-select" data-attachment-select hidden>
+                                    <input type="checkbox"
+                                        class="ticket-detail-select-checkbox"
+                                        data-select-attachment="<?php p((string)$attachment->getId()); ?>"
+                                        aria-label="<?php p($l->t('select_attachment_for_move')); ?>">
+                                </label>
+                            <?php
+                                endif;
                                 include __DIR__ . '/common/ticket-attachment-card.php';
                             endforeach; ?>
                         </div>
@@ -204,12 +214,20 @@ $localeFormat = $_['localeFormat'] ?? null;
             <?php endif; ?>
 
             <!-- Comments thread + reply (single conversation card) -->
-            <div class="helpdesk-card ticket-detail-section ticket-detail-comments-card">
+            <div class="helpdesk-card ticket-detail-section ticket-detail-comments-card" data-ticket-id="<?php p($_['ticket']->getId()); ?>" data-can-move="<?php p(!empty($_['canMoveItems']) ? '1' : '0'); ?>">
                 <div class="helpdesk-card__header">
                     <h2 class="helpdesk-card__title">
                         <?php p($l->t('comments_and_activity')); ?>
                         <span class="helpdesk-badge ticket-detail-neutral-badge"><?php p(count($_['comments'])); ?></span>
                     </h2>
+                    <?php if (!empty($_['canMoveItems'])): ?>
+                        <button type="button"
+                            class="helpdesk-btn helpdesk-btn--secondary ticket-detail-select-toggle"
+                            data-select-mode-toggle
+                            aria-pressed="false">
+                            <?php p($l->t('select_items')); ?>
+                        </button>
+                    <?php endif; ?>
                 </div>
 
                 <div class="helpdesk-card__body ticket-detail-comments-body">
@@ -222,16 +240,70 @@ $localeFormat = $_['localeFormat'] ?? null;
                             <p class="helpdesk-empty__text"><?php p($l->t('be_first_to_comment')); ?></p>
                         </div>
                 <?php else: ?>
-                        <div class="ticket-detail-comments-list">
-                            <?php foreach ($_['commentsWithAttachments'] as $index => $commentData): ?>
-                                <?php
+                        <div class="ticket-detail-comments-list" data-comment-list>
+                            <?php
+                            $threadItems = is_array($_['threadItems'] ?? null) ? $_['threadItems'] : [];
+                            $canMoveItems = !empty($_['canMoveItems']);
+                            $index = 0;
+                            foreach ($threadItems as $item):
+                                if (($item['type'] ?? 'comment') === 'move'):
+                                    $line = $item['data'];
+                                    $cc = (int)($line['commentCount'] ?? 0);
+                                    $ac = (int)($line['attachmentCount'] ?? 0);
+                                    $counterpart = $line['counterpart'] ?? 'generic';
+                                    if ($cc > 0 && $ac > 0) {
+                                        $countText = $l->t('move_line_count_both', [$cc, $ac]);
+                                    } elseif ($cc > 0) {
+                                        $countText = $l->t('move_line_count_comments', [$cc]);
+                                    } else {
+                                        $countText = $l->t('move_line_count_attachments', [$ac]);
+                                    }
+                            ?>
+                                <div class="ticket-detail-system-line" role="note">
+                                    <?php print_unescaped(IconCatalog::render('merge', 'ticket-detail-system-line__icon')); ?>
+                                    <span class="ticket-detail-system-line__text">
+                                        <?php if (($line['direction'] ?? '') === 'out'): ?>
+                                            <?php p($l->t('move_line_out', [(string)($line['actorName'] ?? ''), $countText])); ?>
+                                        <?php else: ?>
+                                            <?php p($l->t('move_line_in', [(string)($line['actorName'] ?? ''), $countText])); ?>
+                                        <?php endif; ?>
+                                        <?php if (is_array($counterpart)): ?>
+                                            <a class="ticket-detail-system-line__link" href="<?php p($counterpart['url']); ?>">
+                                                #<?php p($counterpart['number']); ?>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="helpdesk-text-muted"><?php p($l->t('move_line_counterpart_generic')); ?></span>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                            <?php
+                                continue;
+                                endif;
+                                $commentData = $item['data'];
                                 $comment = $commentData['comment'];
                                 $commentAttachments = $commentData['attachments'];
                                 $isInternal = $comment->getIsInternal();
+                                $isDeleted = !empty($commentData['deleted']);
                                 $isEven = $index % 2 === 0;
-                                ?>
-                                <div class="ticket-detail-comment-item <?php p($isEven ? 'ticket-detail-comment-item--even' : 'ticket-detail-comment-item--odd'); ?> <?php if ($isInternal) p('ticket-detail-comment-item--internal'); ?>">
+                                $index++;
+                                $boundAttachmentIds = array_map(static fn ($a): int => (int)$a->getId(), $commentAttachments);
+                            ?>
+                                <div class="ticket-detail-comment-item <?php p($isEven ? 'ticket-detail-comment-item--even' : 'ticket-detail-comment-item--odd'); ?> <?php if ($isInternal) p('ticket-detail-comment-item--internal'); ?> <?php if ($isDeleted) p('ticket-detail-comment-item--tombstone'); ?>"
+                                     data-comment-id="<?php p((string)$comment->getId()); ?>"
+                                     <?php if (!$isDeleted && $boundAttachmentIds !== []): ?>data-attachment-ids="<?php p(implode(',', $boundAttachmentIds)); ?>"<?php endif; ?>
+                                     data-comment-internal="<?php p($isInternal ? '1' : '0'); ?>">
                                     <div class="ticket-detail-comment-row">
+                                        <?php if ($canMoveItems && !$isDeleted): ?>
+                                            <label class="ticket-detail-comment-select" data-comment-select hidden>
+                                                <input type="checkbox"
+                                                    class="ticket-detail-select-checkbox"
+                                                    data-select-comment="<?php p((string)$comment->getId()); ?>"
+                                                    aria-label="<?php p($l->t('select_comment_for_move_by', [
+                                                        $comment->getAuthorName(),
+                                                        $comment->getCreatedAt()->format('Y-m-d H:i'),
+                                                    ])); ?>">
+                                            </label>
+                                        <?php endif; ?>
                                         <div class="ticket-detail-comment-avatar">
                                             <?php p(strtoupper(substr($comment->getAuthorName(), 0, 1))); ?>
                                         </div>
@@ -252,8 +324,48 @@ $localeFormat = $_['localeFormat'] ?? null;
                                                         <?php p($l->t('private')); ?>
                                                     </span>
                                                 <?php endif; ?>
+                                                <?php if (!empty($commentData['editedAt'])): ?>
+                                                    <span class="ticket-detail-comment-edited helpdesk-text-muted" title="<?php
+                                                        $editedAt = $commentData['editedAt'];
+                                                        p($editedAt instanceof \DateTimeInterface
+                                                            ? ($localeFormat !== null
+                                                                ? $localeFormat->formatDateTime($editedAt, 'medium', 'short', $l)
+                                                                : $editedAt->format('Y-m-d H:i'))
+                                                            : '');
+                                                    ?>">
+                                                        <?php if (!empty($commentData['editedByName'])): ?>
+                                                            <?php p($l->t('comment_edited_by', [(string)$commentData['editedByName']])); ?>
+                                                        <?php else: ?>
+                                                            <?php p($l->t('comment_edited')); ?>
+                                                        <?php endif; ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php
+                                                $movedFrom = $commentData['movedFrom'] ?? null;
+                                                if ($movedFrom !== null):
+                                                ?>
+                                                    <span class="ticket-detail-comment-moved helpdesk-text-muted">
+                                                        <?php print_unescaped(IconCatalog::render('merge', 'ticket-detail-comment-moved-icon')); ?>
+                                                        <?php if (is_array($movedFrom)): ?>
+                                                            <?php p($l->t('comment_moved_from')); ?>
+                                                            <a class="ticket-detail-comment-moved-link" href="<?php p($movedFrom['url']); ?>">#<?php p($movedFrom['number']); ?></a>
+                                                        <?php else: ?>
+                                                            <?php p($l->t('comment_moved_from_generic')); ?>
+                                                        <?php endif; ?>
+                                                    </span>
+                                                <?php endif; ?>
                                             </div>
-                                            <p class="ticket-detail-comment-content"><?php p($comment->getContent()); ?></p>
+                                            <?php if ($isDeleted): ?>
+                                                <p class="ticket-detail-comment-tombstone helpdesk-text-muted">
+                                                    <?php print_unescaped(IconCatalog::render('trash-2', 'ticket-detail-comment-tombstone-icon')); ?>
+                                                    <?php if (!empty($commentData['deletedByName'])): ?>
+                                                        <?php p($l->t('comment_tombstone_by', [(string)$commentData['deletedByName']])); ?>
+                                                    <?php else: ?>
+                                                        <?php p($l->t('comment_tombstone')); ?>
+                                                    <?php endif; ?>
+                                                </p>
+                                            <?php else: ?>
+                                            <p class="ticket-detail-comment-content" data-comment-content><?php p($comment->getContent()); ?></p>
 
                                             <?php if (!empty($commentAttachments)): ?>
                                                 <div class="ticket-detail-comment-attachments <?php p($isEven ? 'ticket-detail-comment-attachments--even' : 'ticket-detail-comment-attachments--odd'); ?>">
@@ -273,7 +385,52 @@ $localeFormat = $_['localeFormat'] ?? null;
                                                     </div>
                                                 </div>
                                             <?php endif; ?>
+                                            <?php endif; ?>
                                         </div>
+                                        <?php
+                                        $hasMenu = !empty($commentData['canEdit'])
+                                            || !empty($commentData['canDelete'])
+                                            || !empty($commentData['toggleTarget'])
+                                            || !empty($commentData['canPurge']);
+                                        if ($hasMenu):
+                                        ?>
+                                        <div class="ticket-detail-comment-actions">
+                                            <button type="button"
+                                                class="ticket-detail-comment-kebab"
+                                                data-comment-kebab
+                                                aria-haspopup="menu"
+                                                aria-expanded="false"
+                                                aria-label="<?php p($l->t('comment_actions_by', [$comment->getAuthorName()])); ?>">
+                                                <?php print_unescaped(IconCatalog::render('grip-vertical', 'ticket-detail-comment-kebab-icon')); ?>
+                                            </button>
+                                            <div class="ticket-detail-comment-menu" role="menu" hidden>
+                                                <?php if (!empty($commentData['canEdit'])): ?>
+                                                    <button type="button" role="menuitem" class="ticket-detail-comment-menu-item" data-comment-action="edit">
+                                                        <?php p($l->t('comment_edit')); ?>
+                                                    </button>
+                                                <?php endif; ?>
+                                                <?php if (($commentData['toggleTarget'] ?? null) === 'internal'): ?>
+                                                    <button type="button" role="menuitem" class="ticket-detail-comment-menu-item" data-comment-action="make-internal">
+                                                        <?php p($l->t('comment_make_private')); ?>
+                                                    </button>
+                                                <?php elseif (($commentData['toggleTarget'] ?? null) === 'public'): ?>
+                                                    <button type="button" role="menuitem" class="ticket-detail-comment-menu-item" data-comment-action="make-public">
+                                                        <?php p($l->t('comment_make_public')); ?>
+                                                    </button>
+                                                <?php endif; ?>
+                                                <?php if (!empty($commentData['canDelete'])): ?>
+                                                    <button type="button" role="menuitem" class="ticket-detail-comment-menu-item ticket-detail-comment-menu-item--danger" data-comment-action="delete">
+                                                        <?php p($l->t('comment_delete')); ?>
+                                                    </button>
+                                                <?php endif; ?>
+                                                <?php if (!empty($commentData['canPurge'])): ?>
+                                                    <button type="button" role="menuitem" class="ticket-detail-comment-menu-item ticket-detail-comment-menu-item--danger" data-comment-action="purge">
+                                                        <?php p($l->t('comment_purge')); ?>
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -608,6 +765,103 @@ $localeFormat = $_['localeFormat'] ?? null;
         <div class="helpdesk-form-actions ticket-detail-dialog-actions">
             <button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="add-watcher-cancel"><?php p($l->t('cancel_button')); ?></button>
             <button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="add-watcher-submit" disabled><?php p($l->t('add_watcher')); ?></button>
+        </div>
+    </form>
+</dialog>
+<?php endif; ?>
+
+<?php if (!empty($_['canMoveItems']) || !empty($_['comments'])): ?>
+<!-- Edit comment dialog -->
+<dialog id="comment-edit-dialog" class="helpdesk-dialog ticket-detail-dialog" aria-labelledby="comment-edit-title">
+    <h2 id="comment-edit-title" class="helpdesk-dialog__title ticket-detail-dialog-title"><?php p($l->t('comment_edit_dialog_title')); ?></h2>
+    <form id="comment-edit-form" method="dialog" novalidate>
+        <input type="hidden" id="comment-edit-id" value="">
+        <div class="helpdesk-form-group tc-field">
+            <label for="comment-edit-content" class="helpdesk-form-label helpdesk-form-label--required">
+                <?php p($l->t('Your Comment')); ?>
+            </label>
+            <textarea id="comment-edit-content"
+                rows="5"
+                required
+                aria-required="true"
+                maxlength="<?php p((string)($_['maxCommentChars'] ?? 10000)); ?>"
+                aria-describedby="comment-edit-status"
+                class="helpdesk-form-control"></textarea>
+            <span class="tc-field-error" id="comment-edit-field-error" data-field-error="content" hidden></span>
+        </div>
+        <div id="comment-edit-status" class="helpdesk-alert ticket-detail-dialog-status" role="status" aria-live="polite" hidden></div>
+        <div class="helpdesk-form-actions ticket-detail-dialog-actions">
+            <button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="comment-edit-cancel"><?php p($l->t('cancel_button')); ?></button>
+            <button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="comment-edit-submit"><?php p($l->t('save_button')); ?></button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Delete comment confirm -->
+<dialog id="comment-delete-dialog" class="helpdesk-dialog ticket-detail-dialog" aria-labelledby="comment-delete-title" aria-describedby="comment-delete-desc">
+    <h2 id="comment-delete-title" class="helpdesk-dialog__title ticket-detail-dialog-title"><?php p($l->t('comment_delete_dialog_title')); ?></h2>
+    <p id="comment-delete-desc" class="helpdesk-text-muted ticket-detail-dialog-desc"><?php p($l->t('comment_delete_dialog_desc')); ?></p>
+    <p id="comment-delete-attachment-note" class="helpdesk-alert ticket-detail-dialog-warning" role="note" hidden></p>
+    <div class="helpdesk-form-actions ticket-detail-dialog-actions">
+        <button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="comment-delete-cancel"><?php p($l->t('cancel_button')); ?></button>
+        <button type="button" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--danger" id="comment-delete-confirm"><?php p($l->t('comment_delete')); ?></button>
+    </div>
+</dialog>
+
+<!-- Purge comment confirm (admin only) -->
+<dialog id="comment-purge-dialog" class="helpdesk-dialog ticket-detail-dialog" aria-labelledby="comment-purge-title" aria-describedby="comment-purge-desc">
+    <h2 id="comment-purge-title" class="helpdesk-dialog__title ticket-detail-dialog-title"><?php p($l->t('comment_purge_dialog_title')); ?></h2>
+    <p id="comment-purge-desc" class="helpdesk-text-muted ticket-detail-dialog-desc"><?php p($l->t('comment_purge_dialog_desc')); ?></p>
+    <div class="helpdesk-form-actions ticket-detail-dialog-actions">
+        <button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="comment-purge-cancel"><?php p($l->t('cancel_button')); ?></button>
+        <button type="button" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--danger" id="comment-purge-confirm"><?php p($l->t('comment_purge')); ?></button>
+    </div>
+</dialog>
+<?php endif; ?>
+
+<?php if (!empty($_['canMoveItems'])): ?>
+<!-- Select-mode sticky action bar -->
+<div class="ticket-detail-select-bar" data-select-bar hidden role="region" aria-label="<?php p($l->t('move_selection_bar')); ?>">
+    <span class="ticket-detail-select-bar__count" data-select-count role="status" aria-live="polite">
+        <?php p($l->t('move_selected_count', ['count' => 0])); ?>
+    </span>
+    <div class="ticket-detail-select-bar__actions">
+        <button type="button" class="helpdesk-btn helpdesk-btn--secondary" data-select-cancel>
+            <?php p($l->t('cancel_button')); ?>
+        </button>
+        <button type="button" class="helpdesk-btn helpdesk-btn--primary" data-select-move disabled>
+            <?php p($l->t('move_items_button', ['count' => 0])); ?>
+        </button>
+    </div>
+</div>
+
+<!-- Move items dialog -->
+<dialog id="comment-move-dialog" class="helpdesk-dialog ticket-detail-dialog ticket-detail-move-dialog" aria-labelledby="comment-move-title">
+    <h2 id="comment-move-title" class="helpdesk-dialog__title ticket-detail-dialog-title"><?php p($l->t('move_dialog_title')); ?></h2>
+    <p id="comment-move-recap" class="helpdesk-text-muted ticket-detail-dialog-desc" data-move-recap></p>
+    <form id="comment-move-form" method="dialog" novalidate>
+        <div class="helpdesk-form-group tc-entity-search-picker tc-ticket-search-picker" data-move-picker-root>
+            <label for="move-target-search-input" class="helpdesk-form-label helpdesk-form-label--required">
+                <?php p($l->t('move_target_label')); ?>
+            </label>
+            <input type="search"
+                id="move-target-search-input"
+                class="helpdesk-form-control"
+                placeholder="<?php p($l->t('move_target_placeholder')); ?>"
+                autocomplete="off"
+                aria-controls="move-target-search-results"
+                aria-expanded="false"
+                aria-autocomplete="list"
+                aria-describedby="move-target-search-status">
+            <input type="hidden" id="move-target-ticket-id">
+            <p id="move-target-search-status" class="tc-select-combobox__status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+            <div id="move-target-search-results" class="tc-select-combobox__results" role="listbox" aria-label="<?php p($l->t('move_target_label')); ?>" hidden></div>
+            <p class="helpdesk-form-help"><?php p($l->t('move_target_help')); ?></p>
+        </div>
+        <div id="comment-move-status" class="helpdesk-alert ticket-detail-dialog-status" role="alert" aria-live="assertive" hidden></div>
+        <div class="helpdesk-form-actions ticket-detail-dialog-actions">
+            <button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="comment-move-cancel"><?php p($l->t('cancel_button')); ?></button>
+            <button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="comment-move-submit" disabled><?php p($l->t('move_confirm_button')); ?></button>
         </div>
     </form>
 </dialog>

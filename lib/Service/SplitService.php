@@ -106,16 +106,17 @@ class SplitService
                     'created_by_guest' => $sourceFresh->getCreatedByGuest(),
                 ];
                 $newTicket = $this->ticketService->createTicket($data);
-                if ($this->ticketResources !== null) {
-                    $sourceKeys = $this->ticketResources->keysForTicket($sourceTicketId);
+                $resources = $this->ticketResources;
+                if ($resources !== null) {
+                    $sourceKeys = $resources->keysForTicket($sourceTicketId);
                     if ($sourceKeys !== []) {
                         // Copy under the shared guard with re-validation — a
                         // catalog delete/disable mid-split must not land
                         // doomed keys on the new tickets (NN-11).
                         $newId = (int)$newTicket->getId();
-                        $this->ticketResources->withResourceWriteGuard(function () use ($newId, $sourceKeys) {
-                            $this->ticketResources->assertEnabledKeys($sourceKeys);
-                            $this->ticketResources->setForTicket($newId, $sourceKeys);
+                        $resources->withResourceWriteGuard(function () use ($resources, $newId, $sourceKeys) {
+                            $resources->assertEnabledKeys($sourceKeys);
+                            $resources->setForTicket($newId, $sourceKeys);
                         });
                     }
                 }

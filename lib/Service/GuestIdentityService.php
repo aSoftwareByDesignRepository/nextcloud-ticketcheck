@@ -41,6 +41,7 @@ class GuestIdentityService
         private readonly PortalOtpMapper $otps,
         private readonly GuestDeviceMapper $devices,
         private readonly GuestAuditMapper $audit,
+        private readonly \OCA\Ticketcheck\Db\CommentMapper $comments,
         private readonly IDBConnection $db,
     ) {
     }
@@ -147,6 +148,13 @@ class GuestIdentityService
             $this->prefs->deleteByIdentityId($id);
             $this->devices->deleteByIdentityId($id);
             $this->access->deleteByUser(PortalActorResolver::actorForIdentity($id));
+            // Tombstoned comments authored by this identity lose body+PII
+            // (EC-11); active comments keep history — the actor string
+            // resolves anonymized through the erased identity row.
+            $this->comments->scrubDeletedByUserId(
+                PortalActorResolver::actorForIdentity($id),
+                'Deleted contact'
+            );
             $i->setEmail('deleted+' . $id . '@invalid');
             $i->setDisplayName('Deleted contact');
             $i->setLocale(null);
@@ -161,6 +169,7 @@ class GuestIdentityService
         }
     }
 
+    /** @param list<int> $projectIds */
     public function grantProjects(int $identityId, array $projectIds, ?int $customerId, string $createdBy): void
     {
         // Resolve BOTH referents before any write — a grant for a missing
@@ -213,6 +222,7 @@ class GuestIdentityService
         return array_values(array_filter($ids, static fn (int $id): bool => !isset($existing[$id])));
     }
 
+    /** @param list<int> $projectIds */
     private function assertProjectsExist(array $projectIds): void
     {
         if ($this->findMissingProjectIds($projectIds) !== []) {

@@ -74,6 +74,10 @@ class RequesterTicketService
                 'body' => (string)$comment->getContent(),
                 'authorDisplay' => $this->actors->displayNameForActor($comment->getUserId(), 'Support'),
                 'createdAt' => $comment->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'editedAt' => $comment->getEditedAt()?->format(\DateTimeInterface::ATOM),
+                // Generic marker only — the source ticket id is a
+                // mini-oracle for readers without access (NN-B11).
+                'movedFrom' => $comment->getMovedFromTicketId() !== null,
                 'visibility' => 'public',
             ];
         }

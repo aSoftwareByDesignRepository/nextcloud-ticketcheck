@@ -411,10 +411,16 @@ class UpgradeBackupService
 	private function deleteSnapshotFolderIfExists(string $snapshotId): void
 	{
 		try {
-			$this->getSnapshotFolder($snapshotId)->delete();
+			$folder = $this->getSnapshotFolder($snapshotId);
+		} catch (\Throwable) {
+			return;
+		}
+		try {
+			$folder->delete();
 		} catch (\Throwable $e) {
-			// cleanup only: snapshot folder may not exist or be unreadable — delete is best-effort.
-			$this->logger->debug('TicketCheck: snapshot folder delete skipped (missing or unreadable)', ['exception' => $e]);
+			// best-effort: called from rollback paths — a leaked partial
+			// snapshot folder is preferable to masking the original failure.
+			$this->logger->warning('Failed to delete leftover upgrade backup snapshot folder.', ['exception' => $e]);
 		}
 	}
 
@@ -617,11 +623,11 @@ class UpgradeBackupService
 
 		$destPath = $this->getAppDataPath($folderName);
 		try {
-			$this->rootFolder->get($destPath)->delete();
-		} catch (NotFoundException $e) {
-			// cleanup only: no existing appdata folder to replace during restore — nothing to delete.
-			$this->logger->debug('TicketCheck: no existing appdata folder to replace during restore', ['exception' => $e]);
+			$existing = $this->rootFolder->get($destPath);
+		} catch (NotFoundException) {
+			$existing = null;
 		}
+		$existing?->delete();
 
 		try {
 			$source = $snapshotFolder->get($folderName);
@@ -665,9 +671,9 @@ class UpgradeBackupService
 			$qb = $this->db->getQueryBuilder();
 			$qb->insert($table);
 			foreach ($row as $column => $value) {
-				// Generated columns (e.g. at_entries.live_user_id) are recomputed
-				// by the engine on insert — writing them explicitly is an SQL
-				// error (MySQL/MariaDB 1906, Postgres 42602-class).
+				// Generated columns are recomputed by the engine on insert —
+				// writing them explicitly is an SQL error (MySQL/MariaDB 1906,
+				// Postgres 42602-class).
 				if (isset($generatedColumns[(string)$column])) {
 					continue;
 				}

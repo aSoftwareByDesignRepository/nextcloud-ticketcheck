@@ -47,7 +47,7 @@ $renderResultCard = static function (KBArticle $article, string $searchQuery) us
                 <ul class="tc-kb-article-card__meta" aria-hidden="true">
                     <li>
                         <span class="tc-kb-article-card__meta-item">
-                            <?php p($l->n('ticketcheck', '%n view', '%n views', (int)$article->getViews())); ?>
+                            <?php p($l->n('%n view', '%n views', (int)$article->getViews())); ?>
                         </span>
                     </li>
                     <li>

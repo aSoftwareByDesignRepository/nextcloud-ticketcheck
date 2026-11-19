@@ -189,6 +189,14 @@
 		const clearBtn = root ? root.querySelector('[data-tc-ticket-picker-clear]') : null;
 		const minQueryLength = config.minQueryLength ?? DEFAULT_MIN_QUERY;
 		const debounceMs = config.debounceMs ?? DEFAULT_DEBOUNCE_MS;
+		// purpose/searchPath are injectable — the move picker reuses this
+		// component against merge-targets?purpose=move (spec AC-B-6).
+		const searchPath = typeof config.searchPath === 'string' && config.searchPath !== ''
+			? config.searchPath
+			: SEARCH_PATH;
+		const purpose = typeof config.purpose === 'string' && config.purpose !== ''
+			? config.purpose
+			: 'merge';
 		const optionIdPrefix = config.optionIdPrefix || 'tc-ticket-opt-';
 		// When true, the surrounding markup already shows a persistent help text,
 		// so the picker must not duplicate it in its live-status region.
@@ -349,9 +357,10 @@
 			abortController = new AbortController();
 			setBusy(true);
 
-			return api.get(SEARCH_PATH, {
+			return api.get(searchPath, {
 				query: query,
 				source_id: String(sourceTicketId),
+				purpose: purpose,
 			}, { signal: abortController.signal }).then(function (data) {
 				if (generation !== searchGeneration) {
 					return [];

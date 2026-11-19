@@ -22,7 +22,11 @@ class GuestAuditMapper extends QBMapper
         parent::__construct($db, 'helpdesk_guest_audit', GuestAudit::class);
     }
 
-    /** Audit rows never carry codes/tokens — caller passes scrubbed detail only. */
+    /**
+     * Audit rows never carry codes/tokens — caller passes scrubbed detail only.
+     *
+     * @param array<string,mixed> $detail
+     */
     public function log(string $actor, string $action, ?string $target = null, array $detail = []): GuestAudit
     {
         $e = new GuestAudit();

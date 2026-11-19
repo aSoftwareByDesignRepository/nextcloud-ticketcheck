@@ -225,7 +225,8 @@ class CompanionPushService
 				$this->logger?->warning('TicketCheck Expo push HTTP {code}', ['code' => $code]);
 				return ['ok' => false, 'reason' => 'expo_http_' . $code];
 			}
-			$decoded = json_decode($response->getBody(), true);
+			$body = $response->getBody();
+			$decoded = is_string($body) ? json_decode($body, true) : null;
 			$data = is_array($decoded) ? ($decoded['data'] ?? $decoded) : null;
 			$row = is_array($data) ? ($data[0] ?? $data) : null;
 			if (!is_array($row)) {

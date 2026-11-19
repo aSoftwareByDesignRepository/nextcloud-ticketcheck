@@ -131,6 +131,7 @@ final class TransferHooks implements ConfigTransferHooks
 			$key === 'guest_otp_ttl_min' => $this->normalizeRangedInt($value, 5, 30),
 			$key === 'guest_portal_sess_days' => $this->normalizeRangedInt($value, 1, 365),
 			$key === 'max_attachment_size' => $this->normalizeRangedInt($value, 1, PHP_INT_MAX),
+			$key === 'comment_edit_window_minutes' => $this->normalizeRangedInt($value, 0, 100000),
 			$key === 'sla_alert_cooldown_hours' => $this->normalizeRangedInt($value, 1, PHP_INT_MAX),
 			$key === 'email_from_name' => $this->headerSanitizer->sanitizeWithDefault($value, 'Helpdesk'),
 			$key === 'default_category' => preg_match(self::CATEGORY_KEY_PATTERN, $value) === 1

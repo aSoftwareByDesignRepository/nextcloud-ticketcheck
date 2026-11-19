@@ -257,6 +257,8 @@ class Application extends App implements IBootstrap
                 $c->get(\OCP\IDBConnection::class),
                 $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class),
                 $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
+                null,
+                $c->get(\OCA\Ticketcheck\Db\CommentMoveMapper::class),
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\TicketService::class, function ($c) {
@@ -401,6 +403,29 @@ class Application extends App implements IBootstrap
             );
         });
 
+        $context->registerService(\OCA\Ticketcheck\Db\CommentMoveMapper::class, function ($c) {
+            return new \OCA\Ticketcheck\Db\CommentMoveMapper(
+                $c->get(\OCP\IDBConnection::class)
+            );
+        });
+
+        $context->registerService(\OCA\Ticketcheck\Service\CommentLifecycleService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\CommentLifecycleService(
+                $c->get(\OCA\Ticketcheck\Db\TicketMapper::class),
+                $c->get(\OCA\Ticketcheck\Db\CommentMapper::class),
+                $c->get(\OCA\Ticketcheck\Db\AttachmentMapper::class),
+                $c->get(\OCA\Ticketcheck\Db\CommentMoveMapper::class),
+                $c->get('TicketService'),
+                $c->get('PermissionService'),
+                $c->get(\OCA\Ticketcheck\Service\TicketWorkflowLock::class),
+                $c->get(\OCA\Ticketcheck\Service\IdempotencyService::class),
+                $c->get(\OCA\Ticketcheck\Service\ActivityEventService::class),
+                $c->get(\OCP\IConfig::class),
+                $c->get(\OCP\IDBConnection::class),
+                $c->get(\Psr\Log\LoggerInterface::class),
+            );
+        });
+
         $context->registerService(\OCA\Ticketcheck\Db\TicketLinkMapper::class, function ($c) {
             return new \OCA\Ticketcheck\Db\TicketLinkMapper(
                 $c->get(\OCP\IDBConnection::class)
@@ -532,8 +557,7 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Db\HelpdeskCustomerMapper::class),
                 $c->get(\OCA\Ticketcheck\Db\HelpdeskProjectMapper::class),
                 $c->get(\OCP\L10N\IFactory::class),
-                $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class),
-                $c->get(\OCA\Ticketcheck\Service\TicketResourceService::class)
+                $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\BackgroundJob\InboundMailSyncJob::class, function ($c) {

@@ -65,6 +65,7 @@ class TicketService
         ?TicketCategoryService $ticketCategories = null,
         ?PortalActorResolver $actorResolver = null,
         ?SlaPolicyService $slaPolicy = null,
+        private readonly ?\OCA\Ticketcheck\Db\CommentMoveMapper $commentMoveMapper = null,
     ) {
         $this->actorResolver = $actorResolver;
         $this->ticketMapper = $ticketMapper;
@@ -702,6 +703,10 @@ class TicketService
         }
 
         $this->commentMapper->deleteByTicketId($id);
+        // Move audit rows reference the ticket on either side — dropping
+        // them with the ticket avoids orphans (audit survives comment
+        // purge, not ticket deletion).
+        $this->commentMoveMapper?->deleteByTicketId($id);
 
         $cleanupResult = $this->attachmentCleanupService->cleanupTicketAttachments($id);
         $this->logger->info('Ticket attachment cleanup completed', [
@@ -965,8 +970,11 @@ class TicketService
      * @param bool $includeInternal
      * @return list<Comment>
      */
-    public function getComments(int $ticketId, bool $includeInternal = true): array
+    public function getComments(int $ticketId, bool $includeInternal = true, bool $includeDeleted = false): array
     {
+        if ($includeDeleted) {
+            return array_values($this->commentMapper->findByTicketIdIncludingDeleted($ticketId, $includeInternal));
+        }
         return array_values($this->commentMapper->findByTicketId($ticketId, $includeInternal));
     }
 
@@ -1265,7 +1273,6 @@ class TicketService
     }
 
     /**
-     * @param \OCP\IUser $user
      * @param null|callable(Ticket):void $assertAuthorized
      */
     private function addAttachmentLocked(

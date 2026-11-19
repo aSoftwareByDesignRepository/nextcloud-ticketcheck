@@ -14,6 +14,7 @@ const settingsSections = [
   'access',
   'categories',
   'resources',
+  'comments',
   'email',
   'inbound-mail',
   'knowledge-base',

@@ -58,8 +58,12 @@ return [
         // Search/filter are handled by ticket#index with query params; no separate endpoints
         // (removed ticket#search and ticket#filter - no controller methods)
 
-        // Comment routes (update/delete not implemented; use addComment only)
+        // Comment routes — lifecycle management (edit/visibility/delete/purge/move)
         ['name' => 'ticket#addComment', 'url' => '/tickets/{id}/comments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#updateComment', 'url' => '/tickets/{id}/comments/{commentId}/update', 'verb' => 'POST', 'requirements' => ['id' => '\\d+', 'commentId' => '\\d+']],
+        ['name' => 'ticket#deleteComment', 'url' => '/tickets/{id}/comments/{commentId}/delete', 'verb' => 'POST', 'requirements' => ['id' => '\\d+', 'commentId' => '\\d+']],
+        ['name' => 'ticket#purgeComment', 'url' => '/tickets/{id}/comments/{commentId}/purge', 'verb' => 'POST', 'requirements' => ['id' => '\\d+', 'commentId' => '\\d+']],
+        ['name' => 'ticket#moveComments', 'url' => '/tickets/{id}/comments/move', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 
         // Attachment routes
         ['name' => 'ticket#uploadAttachment', 'url' => '/tickets/{id}/attachments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
@@ -150,7 +154,7 @@ return [
         // Keep the requirement literal (route files load without the app autoloader).
         // tests/Unit/Controller/SettingsPagesContractTest pins it to SettingsSectionCatalog::routeRequirement().
         ['name' => 'settings#section', 'url' => '/settings/{section}', 'verb' => 'GET',
-            'requirements' => ['section' => 'access|categories|resources|email|inbound-mail|knowledge-base|kb-categories|escalation|sla|license|about|transfer']],
+            'requirements' => ['section' => 'access|categories|resources|comments|email|inbound-mail|knowledge-base|kb-categories|escalation|sla|license|about|transfer']],
         ['name' => 'settings#listTicketCategories', 'url' => '/api/settings/ticket-categories', 'verb' => 'GET'],
         ['name' => 'settings#createTicketCategory', 'url' => '/api/settings/ticket-categories', 'verb' => 'POST'],
         ['name' => 'settings#updateTicketCategory', 'url' => '/api/settings/ticket-categories/{key}', 'verb' => 'PUT', 'requirements' => ['key' => '[a-z0-9-]+']],
@@ -169,6 +173,7 @@ return [
         ['name' => 'settings#updateEmail', 'url' => '/settings/email', 'verb' => 'POST'],
         ['name' => 'settings#updateKnowledgeBase', 'url' => '/settings/knowledge-base', 'verb' => 'POST'],
         ['name' => 'settings#updateSla', 'url' => '/settings/sla', 'verb' => 'POST'],
+        ['name' => 'settings#updateComments', 'url' => '/settings/comments', 'verb' => 'POST'],
         ['name' => 'settings#updateAppAccess', 'url' => '/settings/app-access', 'verb' => 'POST'],
         ['name' => 'settings#getAppAccessPreview', 'url' => '/api/settings/app-access/preview', 'verb' => 'GET'],
         ['name' => 'settings#searchNextcloudGroups', 'url' => '/api/settings/groups/search', 'verb' => 'GET'],
@@ -316,6 +321,10 @@ return [
         ['name' => 'companion#bulkStatus', 'url' => '/companion/api/v1/tickets/bulk-status', 'verb' => 'POST'],
         ['name' => 'companion#show', 'url' => '/companion/api/v1/tickets/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
         ['name' => 'companion#addComment', 'url' => '/companion/api/v1/tickets/{id}/comments', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'companion#updateComment', 'url' => '/companion/api/v1/tickets/{id}/comments/{cid}/update', 'verb' => 'POST', 'requirements' => ['id' => '\\d+', 'cid' => '\\d+']],
+        ['name' => 'companion#deleteComment', 'url' => '/companion/api/v1/tickets/{id}/comments/{cid}/delete', 'verb' => 'POST', 'requirements' => ['id' => '\\d+', 'cid' => '\\d+']],
+        ['name' => 'companion#moveComments', 'url' => '/companion/api/v1/tickets/{id}/comments/move', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'companion#moveTargets', 'url' => '/companion/api/v1/tickets/move-targets', 'verb' => 'GET'],
         ['name' => 'companion#changeStatus', 'url' => '/companion/api/v1/tickets/{id}/status', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
         ['name' => 'companion#assign', 'url' => '/companion/api/v1/tickets/{id}/assign', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
         ['name' => 'companion#assignableUsers', 'url' => '/companion/api/v1/tickets/{id}/assignable-users', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],

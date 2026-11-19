@@ -919,6 +919,114 @@ class PermissionService
     }
 
     /**
+     * Comment author self-edit window in minutes (spec comment-management
+     * MH-A04). Read from appconfig each call — no stale cache. Missing or
+     * invalid values fall back to the 1440 default; 0 disables author
+     * self-edit (staff are exempt via canEditTicket).
+     */
+    public function commentEditWindowMinutes(): int
+    {
+        $raw = $this->config->getAppValue('ticketcheck', 'comment_edit_window_minutes', '1440');
+        $minutes = filter_var($raw, FILTER_VALIDATE_INT);
+        if ($minutes === false || $minutes < 0) {
+            return 1440;
+        }
+        return $minutes;
+    }
+
+    /**
+     * Whether the current user may edit the comment's content.
+     * Staff = canEditTicket on the comment's home ticket (window-exempt);
+     * author = NC-authenticated user_id match within the edit window,
+     * never on tombstones (spec MH-A03).
+     *
+     * @param \OCA\Ticketcheck\Db\Comment $comment
+     * @param mixed $ticket Ticket entity the comment currently belongs to
+     */
+    public function canEditComment(\OCA\Ticketcheck\Db\Comment $comment, $ticket): bool
+    {
+        if ($this->isGuest() || $comment->getDeletedAt() !== null) {
+            return false;
+        }
+        if ($this->canEditTicket($ticket)) {
+            return true;
+        }
+        return $this->isCommentAuthorWithinEditWindow($comment);
+    }
+
+    /**
+     * Whether the current user may soft-delete the comment — same matrix as
+     * edit (US-A04: staff, or author within the window).
+     *
+     * @param \OCA\Ticketcheck\Db\Comment $comment
+     * @param mixed $ticket
+     */
+    public function canDeleteComment(\OCA\Ticketcheck\Db\Comment $comment, $ticket): bool
+    {
+        return $this->canEditComment($comment, $ticket);
+    }
+
+    /**
+     * Whether the current user may flip the comment's visibility in the given
+     * direction. Staff may toggle either way; a non-staff author may only
+     * pull their own comment from public to internal — never the reverse
+     * (US-A03 AC-2).
+     *
+     * @param \OCA\Ticketcheck\Db\Comment $comment
+     * @param mixed $ticket
+     * @param bool $makeInternal Target visibility (true = public→internal)
+     */
+    public function canToggleCommentVisibility(\OCA\Ticketcheck\Db\Comment $comment, $ticket, bool $makeInternal): bool
+    {
+        if ($this->isGuest() || $comment->getDeletedAt() !== null) {
+            return false;
+        }
+        if ($this->canEditTicket($ticket)) {
+            return true;
+        }
+        return $makeInternal && $this->isCommentAuthorWithinEditWindow($comment);
+    }
+
+    /**
+     * Whether the current user may move comments/attachments between two
+     * tickets — requires edit rights on BOTH sides (NN-B01).
+     *
+     * @param mixed $sourceTicket
+     * @param mixed $targetTicket
+     */
+    public function canMoveCommentsBetween($sourceTicket, $targetTicket): bool
+    {
+        if ($this->isGuest()) {
+            return false;
+        }
+        return $this->canEditTicket($sourceTicket) && $this->canEditTicket($targetTicket);
+    }
+
+    /**
+     * Author branch shared by the comment permission matrix: authenticated
+     * uid matches comment.user_id AND the exclusive edit window has not
+     * expired (AS-04: editable iff created_at + window > now).
+     */
+    private function isCommentAuthorWithinEditWindow(\OCA\Ticketcheck\Db\Comment $comment): bool
+    {
+        $userId = $this->getCurrentUserId();
+        if ($userId === null || $userId === '') {
+            return false;
+        }
+        $authorId = $comment->getUserId();
+        if ($authorId === null || !hash_equals((string)$authorId, (string)$userId)) {
+            return false;
+        }
+        $window = $this->commentEditWindowMinutes();
+        if ($window <= 0) {
+            return false;
+        }
+        $createdAt = $comment->getCreatedAt();
+        $expiresAt = (clone $createdAt)->modify('+' . $window . ' minutes');
+        return $expiresAt > new \DateTime();
+    }
+
+    /**
      * Check if user can manage settings
      *
      * @return bool

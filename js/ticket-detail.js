@@ -1436,6 +1436,507 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    safeInit('comment-lifecycle', function () {
+        const commentsCard = document.querySelector('.ticket-detail-comments-card[data-ticket-id]');
+        if (!commentsCard) {
+            return;
+        }
+        const ticketId = parseTicketId(commentsCard.getAttribute('data-ticket-id'));
+        const commentList = commentsCard.querySelector('[data-comment-list]');
+
+        // ---- flash: receipts survive the post-mutation reload ----
+        try {
+            const flash = window.sessionStorage.getItem('tc-comment-flash');
+            if (flash) {
+                window.sessionStorage.removeItem('tc-comment-flash');
+                notify(flash, 'success');
+            }
+        } catch (_) { /* storage may be unavailable */ }
+        function flashAndReload(message) {
+            try {
+                window.sessionStorage.setItem('tc-comment-flash', message);
+            } catch (_) { /* ignore */ }
+            window.location.reload();
+        }
+
+        // ---- kebab menus (one open at a time, Escape/outside closes) ----
+        let openKebab = null;
+        function closeKebab(restoreFocus) {
+            if (!openKebab) {
+                return;
+            }
+            const hadFocus = openKebab.menu.contains(document.activeElement);
+            openKebab.menu.hidden = true;
+            openKebab.button.setAttribute('aria-expanded', 'false');
+            if (restoreFocus && hadFocus) {
+                openKebab.button.focus();
+            }
+            openKebab = null;
+        }
+        document.addEventListener('click', function (event) {
+            if (openKebab && !openKebab.wrap.contains(event.target)) {
+                closeKebab();
+            }
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeKebab(true);
+            }
+        });
+        if (commentList) {
+            commentList.addEventListener('click', function (event) {
+                const button = event.target.closest('[data-comment-kebab]');
+                if (button) {
+                    const wrap = button.closest('.ticket-detail-comment-actions');
+                    const menu = wrap ? wrap.querySelector('.ticket-detail-comment-menu') : null;
+                    if (!menu) {
+                        return;
+                    }
+                    if (openKebab && openKebab.menu === menu) {
+                        closeKebab();
+                        return;
+                    }
+                    closeKebab();
+                    menu.hidden = false;
+                    button.setAttribute('aria-expanded', 'true');
+                    openKebab = { button: button, menu: menu, wrap: wrap };
+                    const firstItem = menu.querySelector('[data-comment-action]');
+                    if (firstItem) {
+                        firstItem.focus();
+                    }
+                    return;
+                }
+
+                const actionItem = event.target.closest('[data-comment-action]');
+                if (!actionItem) {
+                    return;
+                }
+                const item = actionItem.closest('[data-comment-id]');
+                const commentId = item ? parseTicketId(item.getAttribute('data-comment-id')) : null;
+                if (!commentId) {
+                    return;
+                }
+                const action = actionItem.getAttribute('data-comment-action');
+                closeKebab();
+                if (action === 'edit') {
+                    openEditDialog(item, commentId);
+                } else if (action === 'make-internal' || action === 'make-public') {
+                    toggleVisibility(commentId, action === 'make-internal');
+                } else if (action === 'delete') {
+                    openDeleteDialog(item, commentId);
+                } else if (action === 'purge') {
+                    openPurgeDialog(commentId);
+                }
+            });
+        }
+
+        function lifecycleUrl(suffix) {
+            return '/apps/ticketcheck/tickets/' + ticketId + '/comments/' + suffix;
+        }
+
+        function reportLifecycleError(data, fallbackKey) {
+            const fields = data && data.fields && typeof data.fields === 'object' ? data.fields : null;
+            if (fields) {
+                const first = Object.keys(fields)[0];
+                if (first) {
+                    return String(fields[first]);
+                }
+            }
+            return (data && data.message) || tSafe(fallbackKey, 'An error occurred');
+        }
+
+        // ---- edit dialog ----
+        const editDialog = document.getElementById('comment-edit-dialog');
+        const editForm = document.getElementById('comment-edit-form');
+        const editIdInput = document.getElementById('comment-edit-id');
+        const editContent = document.getElementById('comment-edit-content');
+        const editStatus = document.getElementById('comment-edit-status');
+        const editFieldError = document.getElementById('comment-edit-field-error');
+
+        function openEditDialog(item, commentId) {
+            if (!editDialog) {
+                return;
+            }
+            editIdInput.value = String(commentId);
+            const contentEl = item ? item.querySelector('[data-comment-content]') : null;
+            editContent.value = contentEl ? contentEl.textContent : '';
+            setInlineStatus(editStatus, '', false);
+            if (editFieldError) {
+                editFieldError.hidden = true;
+                editFieldError.textContent = '';
+            }
+            editDialog.showModal();
+            window.setTimeout(function () {
+                editContent.focus();
+                editContent.setSelectionRange(editContent.value.length, editContent.value.length);
+            }, 0);
+        }
+
+        const editCancel = document.getElementById('comment-edit-cancel');
+        if (editCancel) {
+            editCancel.addEventListener('click', function () {
+                editDialog.close();
+            });
+        }
+        if (editForm) {
+            editForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const commentId = parseTicketId(editIdInput.value);
+                const body = editContent.value;
+                if (!commentId || body.trim() === '') {
+                    if (editFieldError) {
+                        editFieldError.textContent = tSafe('comment_content_required', 'Comment text is required.');
+                        editFieldError.hidden = false;
+                    }
+                    editContent.setAttribute('aria-invalid', 'true');
+                    editContent.focus();
+                    return;
+                }
+                editContent.setAttribute('aria-invalid', 'false');
+                const submitBtn = document.getElementById('comment-edit-submit');
+                submitBtn.disabled = true;
+                tcApiPost(lifecycleUrl(commentId + '/update'), { content: body })
+                    .then(function (data) {
+                        if (!data.success) {
+                            throw data;
+                        }
+                        editDialog.close();
+                        flashAndReload(tSafe('comment_updated', 'Comment updated.'));
+                    })
+                    .catch(function (err) {
+                        const msg = reportLifecycleError(err && err.payload ? err.payload : err, 'comment_update_failed');
+                        if (editFieldError && err && err.body && err.payload.fields && err.payload.fields.content) {
+                            editFieldError.textContent = String(err.payload.fields.content);
+                            editFieldError.hidden = false;
+                        } else {
+                            setInlineStatus(editStatus, msg, true);
+                        }
+                    })
+                    .finally(function () {
+                        submitBtn.disabled = false;
+                    });
+            });
+        }
+
+        // ---- visibility toggle: public→internal applies immediately;
+        // internal→public confirms first (customer-visible consequence,
+        // spec §7.1) ----
+        function toggleVisibility(commentId, makeInternal) {
+            const doPost = function () {
+            tcApiPost(lifecycleUrl(commentId + '/update'), { is_internal: makeInternal ? 'true' : 'false' })
+                .then(function (data) {
+                    if (!data.success) {
+                        throw data;
+                    }
+                    flashAndReload(makeInternal
+                        ? tSafe('comment_now_private', 'Comment is now private.')
+                        : tSafe('comment_now_public', 'Comment is now public.'));
+                })
+                .catch(function (err) {
+                    notify(reportLifecycleError(err && err.payload ? err.payload : err, 'comment_update_failed'), 'error');
+                });
+            };
+            if (makeInternal) {
+                doPost();
+                return;
+            }
+            const C = window.TicketCheckComponents;
+            if (!C || typeof C.confirmDialog !== 'function') {
+                // Pack missing → refuse silently; the menu item stays inert
+                // rather than exposing an internal note without consent.
+                notify(tSafe('an_error_occurred', 'An error occurred'), 'error');
+                return;
+            }
+            C.confirmDialog({
+                title: tSafe('comment_make_public', 'Make comment public'),
+                body: tSafe('comment_make_public_confirm', 'This will make the comment visible to the customer.'),
+                confirmLabel: tSafe('comment_make_public', 'Make comment public'),
+            }).then(function (confirmed) {
+                if (confirmed) {
+                    doPost();
+                }
+            });
+        }
+
+        // ---- delete confirm ----
+        const deleteDialog = document.getElementById('comment-delete-dialog');
+        const deleteNote = document.getElementById('comment-delete-attachment-note');
+        let pendingDeleteId = null;
+
+        function openDeleteDialog(item, commentId) {
+            if (!deleteDialog) {
+                return;
+            }
+            pendingDeleteId = commentId;
+            const bound = item && item.getAttribute('data-attachment-ids')
+                ? item.getAttribute('data-attachment-ids').split(',').filter(Boolean).length
+                : 0;
+            if (deleteNote) {
+                if (bound > 0) {
+                    deleteNote.textContent = tSafe('comment_delete_attachments_warning', 'This comment has {count} attachment(s). They will be permanently deleted.', { count: bound });
+                    deleteNote.hidden = false;
+                } else {
+                    deleteNote.hidden = true;
+                }
+            }
+            deleteDialog.showModal();
+        }
+        const deleteCancel = document.getElementById('comment-delete-cancel');
+        if (deleteCancel) {
+            deleteCancel.addEventListener('click', function () {
+                pendingDeleteId = null;
+                deleteDialog.close();
+            });
+        }
+        const deleteConfirm = document.getElementById('comment-delete-confirm');
+        if (deleteConfirm) {
+            deleteConfirm.addEventListener('click', function () {
+                if (!pendingDeleteId) {
+                    return;
+                }
+                const cid = pendingDeleteId;
+                deleteConfirm.disabled = true;
+                tcApiPost(lifecycleUrl(cid + '/delete'), {})
+                    .then(function (data) {
+                        if (!data.success) {
+                            throw data;
+                        }
+                        deleteDialog.close();
+                        flashAndReload(tSafe('comment_deleted', 'Comment deleted.'));
+                    })
+                    .catch(function (err) {
+                        deleteDialog.close();
+                        notify(reportLifecycleError(err && err.payload ? err.payload : err, 'comment_delete_failed'), 'error');
+                    })
+                    .finally(function () {
+                        deleteConfirm.disabled = false;
+                        pendingDeleteId = null;
+                    });
+            });
+        }
+
+        // ---- purge confirm ----
+        const purgeDialog = document.getElementById('comment-purge-dialog');
+        let pendingPurgeId = null;
+
+        function openPurgeDialog(commentId) {
+            if (!purgeDialog) {
+                return;
+            }
+            pendingPurgeId = commentId;
+            purgeDialog.showModal();
+        }
+        const purgeCancel = document.getElementById('comment-purge-cancel');
+        if (purgeCancel) {
+            purgeCancel.addEventListener('click', function () {
+                pendingPurgeId = null;
+                purgeDialog.close();
+            });
+        }
+        const purgeConfirm = document.getElementById('comment-purge-confirm');
+        if (purgeConfirm) {
+            purgeConfirm.addEventListener('click', function () {
+                if (!pendingPurgeId) {
+                    return;
+                }
+                const cid = pendingPurgeId;
+                purgeConfirm.disabled = true;
+                tcApiPost(lifecycleUrl(cid + '/purge'), {})
+                    .then(function (data) {
+                        if (!data.success) {
+                            throw data;
+                        }
+                        purgeDialog.close();
+                        flashAndReload(tSafe('comment_purged', 'Comment permanently removed.'));
+                    })
+                    .catch(function (err) {
+                        purgeDialog.close();
+                        notify(reportLifecycleError(err && err.payload ? err.payload : err, 'comment_purge_failed'), 'error');
+                    })
+                    .finally(function () {
+                        purgeConfirm.disabled = false;
+                        pendingPurgeId = null;
+                    });
+            });
+        }
+
+        // ---- select mode + move flow ----
+        const selectToggle = document.querySelector('[data-select-mode-toggle]');
+        const selectBar = document.querySelector('[data-select-bar]');
+        const selectCount = document.querySelector('[data-select-count]');
+        const selectMoveBtn = document.querySelector('[data-select-move]');
+        const selectCancelBtn = document.querySelector('[data-select-cancel]');
+        let selectMode = false;
+
+        function selectedIds(attr) {
+            const out = [];
+            document.querySelectorAll('input[data-select-' + attr + ']:checked').forEach(function (input) {
+                const id = parseTicketId(input.getAttribute('data-select-' + attr));
+                if (id) {
+                    out.push(id);
+                }
+            });
+            return out;
+        }
+
+        function selectedCount() {
+            return selectedIds('comment').length + selectedIds('attachment').length;
+        }
+
+        function syncSelectUi() {
+            const count = selectedCount();
+            if (selectCount) {
+                selectCount.textContent = tSafe('move_selected_count', '{count} selected', { count: count });
+            }
+            if (selectMoveBtn) {
+                selectMoveBtn.disabled = count === 0;
+                selectMoveBtn.textContent = tSafe('move_items_button', 'Move {count} items…', { count: count });
+            }
+        }
+
+        function setSelectMode(on) {
+            selectMode = on;
+            document.querySelectorAll('[data-comment-select], [data-attachment-select]').forEach(function (wrap) {
+                wrap.hidden = !on;
+            });
+            if (selectToggle) {
+                selectToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+                selectToggle.classList.toggle('is-active', on);
+            }
+            if (selectBar) {
+                selectBar.hidden = !on;
+            }
+            if (!on) {
+                document.querySelectorAll('input[data-select-comment]:checked, input[data-select-attachment]:checked').forEach(function (input) {
+                    input.checked = false;
+                });
+            }
+            syncSelectUi();
+        }
+
+        if (selectToggle) {
+            selectToggle.addEventListener('click', function () {
+                setSelectMode(!selectMode);
+            });
+        }
+        document.addEventListener('change', function (event) {
+            if (event.target.matches('input[data-select-comment], input[data-select-attachment]')) {
+                syncSelectUi();
+            }
+        });
+        if (selectCancelBtn) {
+            selectCancelBtn.addEventListener('click', function () {
+                setSelectMode(false);
+            });
+        }
+
+        // ---- move dialog ----
+        const moveDialog = document.getElementById('comment-move-dialog');
+        const moveRecap = document.getElementById('comment-move-recap');
+        const moveStatus = document.getElementById('comment-move-status');
+        const moveSubmit = document.getElementById('comment-move-submit');
+        const moveTargetId = document.getElementById('move-target-ticket-id');
+        let movePicker = null;
+
+        function ensureMovePicker() {
+            if (movePicker || !window.TicketCheckTicketSearchPicker) {
+                return movePicker;
+            }
+            const input = document.getElementById('move-target-search-input');
+            const results = document.getElementById('move-target-search-results');
+            const status = document.getElementById('move-target-search-status');
+            if (!input || !results || !moveTargetId) {
+                return null;
+            }
+            movePicker = window.TicketCheckTicketSearchPicker.attach({
+                input: input,
+                hiddenInput: moveTargetId,
+                results: results,
+                status: status,
+                root: document.querySelector('[data-move-picker-root]'),
+                sourceTicketId: ticketId,
+                purpose: 'move',
+                optionIdPrefix: 'tc-move-opt-',
+                submitButton: moveSubmit,
+                messages: {
+                    empty: tSafe('move_search_empty', 'No matching tickets. Try a different search.'),
+                    minChars: tSafe('merge_search_min_chars', 'Type at least 2 characters to search')
+                }
+            });
+            return movePicker;
+        }
+
+        if (selectMoveBtn) {
+            selectMoveBtn.addEventListener('click', function () {
+                const comments = selectedIds('comment');
+                const attachments = selectedIds('attachment');
+                if (comments.length + attachments.length === 0) {
+                    return;
+                }
+                if (moveRecap) {
+                    moveRecap.textContent = tSafe(
+                        'move_recap',
+                        '{comments} comment(s) (with their files) and {attachments} standalone attachment(s) will be moved.',
+                        { comments: comments.length, attachments: attachments.length }
+                    );
+                }
+                setInlineStatus(moveStatus, '', false);
+                if (moveTargetId) {
+                    moveTargetId.value = '';
+                }
+                if (moveSubmit) {
+                    moveSubmit.disabled = true;
+                }
+                const picker = ensureMovePicker();
+                if (picker && typeof picker.clear === 'function') {
+                    picker.clear();
+                }
+                moveDialog.showModal();
+            });
+        }
+
+        const moveCancel = document.getElementById('comment-move-cancel');
+        if (moveCancel) {
+            moveCancel.addEventListener('click', function () {
+                moveDialog.close();
+            });
+        }
+
+        const moveForm = document.getElementById('comment-move-form');
+        if (moveForm) {
+            moveForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const targetId = moveTargetId ? parseTicketId(moveTargetId.value) : null;
+                if (!targetId) {
+                    setInlineStatus(moveStatus, tSafe('move_select_target_required', 'Please choose a target ticket.'), true);
+                    return;
+                }
+                const comments = selectedIds('comment');
+                const attachments = selectedIds('attachment');
+                const idemKey = 'move-' + Date.now() + '-' + Math.random().toString(36).slice(2, 12);
+                moveSubmit.disabled = true;
+                tcApiPost('/apps/ticketcheck/tickets/' + ticketId + '/comments/move', {
+                    target_ticket_id: targetId,
+                    comment_ids: comments,
+                    attachment_ids: attachments,
+                    idempotency_key: idemKey
+                })
+                    .then(function (data) {
+                        if (!data.success) {
+                            throw data;
+                        }
+                        moveDialog.close();
+                        setSelectMode(false);
+                        flashAndReload(tSafe('move_completed', 'Items moved successfully.'));
+                    })
+                    .catch(function (err) {
+                        setInlineStatus(moveStatus, reportLifecycleError(err && err.payload ? err.payload : err, 'move_failed'), true);
+                        moveSubmit.disabled = false;
+                    });
+            });
+        }
+    });
     });
 });
 

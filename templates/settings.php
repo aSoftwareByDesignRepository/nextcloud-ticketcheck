@@ -21,6 +21,7 @@ $tcSettingsSectionFiles = [
 	'access' => 'access.php',
 	'categories' => 'categories.php',
 	'resources' => 'resources.php',
+	'comments' => 'comments.php',
 	'email' => 'email.php',
 	'inbound-mail' => 'inbound-mail.php',
 	'knowledge-base' => 'knowledge-base.php',

@@ -207,6 +207,56 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Comment lifecycle settings form handler
+    const commentsSettingsForm = document.getElementById('comments-settings-form');
+    if (commentsSettingsForm) {
+        const windowInput = document.getElementById('comment-edit-window-minutes');
+        const windowError = commentsSettingsForm.querySelector('[data-field-error="edit_window_minutes"]');
+
+        commentsSettingsForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const minutes = parseInt(windowInput && windowInput.value, 10);
+            if (windowError) {
+                windowError.hidden = true;
+                windowError.textContent = '';
+            }
+            if (windowInput) {
+                windowInput.setAttribute('aria-invalid', 'false');
+            }
+            if (!Number.isFinite(minutes) || minutes < 0 || minutes > 100000) {
+                const msg = t('ticketcheck', 'settings_comments_window_invalid');
+                if (windowError) {
+                    windowError.textContent = msg;
+                    windowError.hidden = false;
+                }
+                if (windowInput) {
+                    windowInput.setAttribute('aria-invalid', 'true');
+                    windowInput.focus();
+                }
+                return;
+            }
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            setButtonBusy(submitBtn, true, 'Saving…');
+
+            requestJson('POST', '/apps/ticketcheck/settings/comments', {
+                edit_window_minutes: String(minutes)
+            })
+                .then((resp) => {
+                    if (!resp.success) {
+                        throw new Error(resp.error || t('ticketcheck', 'error_saving_settings'));
+                    }
+                    announceSettings(t('ticketcheck', 'settings_saved'), 'success');
+                })
+                .catch((err) => {
+                    announceSettings(t('ticketcheck', 'error_with_recovery', { message: err.message || t('ticketcheck', 'error_saving_settings') }), 'error');
+                })
+                .finally(() => {
+                    setButtonBusy(submitBtn, false, 'Saving…', 'save_settings');
+                });
+        });
+    }
+
     // Knowledge base settings form handler
     const kbSettingsForm = document.getElementById('kb-settings-form');
     const kbDisabledNotice = document.getElementById('kb-disabled-notice');

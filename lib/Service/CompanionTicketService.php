@@ -220,7 +220,9 @@ class CompanionTicketService
 	{
 		$ticket = $this->requireVisibleTicket($id);
 		$canViewInternal = $this->permissions->canViewInternalNotes();
-		$comments = $this->ticketService->getComments($id, $canViewInternal);
+		// Tombstones only on staff surfaces (canViewInternal); requester-scope
+		// readers never receive deleted comment rows.
+		$comments = $this->ticketService->getComments($id, $canViewInternal, $canViewInternal);
 
 		// visibility of an attachment derives from its owning comment.
 		$internalCommentIds = [];
@@ -240,10 +242,13 @@ class CompanionTicketService
 
 		return [
 			'ticket' => $this->serializeTicket($ticket),
-			'comments' => array_map(fn (Comment $c): array => $this->serializeComment($c), $comments),
+			'comments' => array_map(fn (Comment $c): array => $this->serializeComment($c, $ticket), $comments),
 			'attachments' => $attachments,
 			'allowedTransitions' => $this->allowedTransitions($ticket->getStatus()),
 			'canAssign' => $this->permissions->canEditTicket($ticket),
+			// Selective move entry gate (spec §9.4): the server is the only
+			// authority on canEditTicket — absent/false hides Select mode.
+			'canMoveItems' => $this->permissions->canEditTicket($ticket),
 			'watching' => $this->watcherMapper->isWatching($id, $uid),
 		];
 	}
@@ -280,7 +285,7 @@ class CompanionTicketService
 		$fresh = $this->ticketService->getActiveTicket($id);
 
 		return [
-			'comment' => $this->serializeComment($comment),
+			'comment' => $this->serializeComment($comment, $fresh),
 			'ticket' => [
 				'id' => $fresh->getId(),
 				'version' => $this->ticketVersion($fresh),
@@ -480,6 +485,7 @@ class CompanionTicketService
 	/**
 	 * Create a ticket from the companion (project-scoped, ACL parity with web store()).
 	 *
+	 * @param list<string>|null $resources
 	 * @return array<string, mixed> detail payload of the created ticket
 	 */
 	public function create(string $uid, ?int $projectId, string $title, string $description, string $priority, ?string $category = null, ?array $resources = null): array
@@ -778,6 +784,74 @@ class CompanionTicketService
 		}
 	}
 
+	/**
+	 * Fetch a ticket the actor may read (uniform not-found collapse) — used
+	 * by companion lifecycle actions to compute the post-mutation version.
+	 */
+	public function requireTicketForRead(int $id): Ticket
+	{
+		return $this->requireVisibleTicket($id);
+	}
+
+	/**
+	 * Move-target search for the companion picker: same candidate set as the
+	 * staff-web move search (editable, unmerged, non-source, ≤8 results,
+	 * ≥2 chars).
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	public function searchMoveTargets(?int $sourceId, string $query): array
+	{
+		$query = trim($query);
+		if (mb_strlen($query) < 2 || $sourceId === null || $sourceId < 1) {
+			return [];
+		}
+		try {
+			$source = $this->ticketMapper->find($sourceId);
+		} catch (\Throwable) {
+			return [];
+		}
+		if (!$this->permissions->canEditTicket($source)) {
+			return [];
+		}
+		$out = [];
+		foreach ($this->ticketMapper->searchMergeTargets($query, $sourceId, 20) as $ticket) {
+			if (!$this->permissions->canEditTicket($ticket)) {
+				continue;
+			}
+			$out[] = [
+				'id' => $ticket->getId(),
+				'ticketNumber' => $ticket->getTicketNumber(),
+				'title' => $ticket->getTitle(),
+				'status' => $ticket->getStatus(),
+			];
+			if (count($out) >= 8) {
+				break;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Combined edit-permission + optimistic-version gate used inside the
+	 * comment-lifecycle lock (companion update/delete paths).
+	 */
+	public function assertEditableAtVersion(Ticket $ticket, int $version): void
+	{
+		$this->assertCanEdit($ticket);
+		$this->assertVersion($ticket, $version);
+	}
+
+	/**
+	 * Wire view of a comment for companion clients (caps included).
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function serializeCommentData(Comment $comment, Ticket $ticket): array
+	{
+		return $this->serializeComment($comment, $ticket);
+	}
+
 	public function ticketVersion(Ticket $ticket): int
 	{
 		return (int)$ticket->getUpdatedAt()->getTimestamp();
@@ -868,16 +942,67 @@ class CompanionTicketService
 	/**
 	 * @return array<string, mixed>
 	 */
-	private function serializeComment(Comment $comment): array
+	private function serializeComment(Comment $comment, Ticket $ticket): array
 	{
-		return [
+		$deleted = $comment->getDeletedAt() !== null;
+		$out = [
 			'id' => $comment->getId(),
-			'body' => $comment->getContent(),
+			// Tombstoned comments never leak their original body — the client
+			// renders a deletion marker from deletedAt/deletedBy.
+			'body' => $deleted ? null : $comment->getContent(),
 			'visibility' => $comment->getIsInternal() ? 'internal' : 'public',
 			'authorId' => $comment->getUserId(),
 			'authorDisplay' => $comment->getAuthorName(),
 			'createdAt' => $comment->getCreatedAt()->format(\DateTimeInterface::ATOM),
+			'editedAt' => $comment->getEditedAt()?->format(\DateTimeInterface::ATOM),
+			'editedBy' => $comment->getEditedBy() !== null ? $this->displayNameForUid($comment->getEditedBy()) : null,
+			'deletedAt' => $comment->getDeletedAt()?->format(\DateTimeInterface::ATOM),
+			'deletedBy' => $deleted ? $this->displayNameForUid($comment->getDeletedBy()) : null,
 		];
+		// Provenance is permission-gated: the source ticket id/number only
+		// leaks to viewers who may read the source (NN-B11); others get a
+		// redacted flag so the client can still render a generic marker.
+		$movedFrom = $comment->getMovedFromTicketId();
+		$out['movedFromTicketId'] = null;
+		$out['movedFromTicketNumber'] = null;
+		$out['movedFromRedacted'] = false;
+		if ($movedFrom !== null) {
+			$out['movedFromRedacted'] = true;
+			try {
+				$source = $this->ticketMapper->find((int)$movedFrom);
+				if ($this->permissions->canViewTicket($source)) {
+					$out['movedFromTicketId'] = (int)$movedFrom;
+					$out['movedFromTicketNumber'] = (string)$source->getTicketNumber();
+					$out['movedFromRedacted'] = false;
+				}
+			} catch (\Throwable) {
+				// Source gone — keep the redacted generic marker.
+			}
+		}
+		if (!$deleted) {
+			$out['attachmentIds'] = array_values(array_map(
+				static fn (\OCA\Ticketcheck\Db\Attachment $a): int => (int)$a->getId(),
+				$this->attachmentMapper->findByCommentId((int)$comment->getId())
+			));
+		}
+		// Server-authoritative caps — the client renders no affordances when a
+		// flag is absent/false (old-server safety is one-directional).
+		$out['canEdit'] = !$deleted && $this->permissions->canEditComment($comment, $ticket);
+		$out['canDelete'] = !$deleted && $this->permissions->canDeleteComment($comment, $ticket);
+		$out['canToggleVisibility'] = !$deleted && (
+			$this->permissions->canToggleCommentVisibility($comment, $ticket, !$comment->getIsInternal())
+		);
+		return $out;
+	}
+
+	private function displayNameForUid(?string $uid): ?string
+	{
+		if ($uid === null || $uid === '') {
+			return null;
+		}
+		$user = $this->userManager->get($uid);
+		$name = $user !== null ? trim((string)$user->getDisplayName()) : '';
+		return $name !== '' ? $name : $uid;
 	}
 
 	/**
@@ -894,6 +1019,9 @@ class CompanionTicketService
 			'mimeType' => $attachment->getMimeType(),
 			'size' => $attachment->getFileSize(),
 			'visibility' => $isInternal ? 'internal' : 'public',
+			// The standalone-move picker needs comment_id IS NULL membership
+			// without a second fetch — bound attachments move with their comment.
+			'commentId' => $commentId !== null ? (int)$commentId : null,
 		];
 	}
 

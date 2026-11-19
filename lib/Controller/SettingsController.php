@@ -292,6 +292,9 @@ class SettingsController extends Controller
             'access' => $this->accessSettingsExtras(),
             'categories' => $this->ticketCategorySettingsExtras(),
             'resources' => $this->ticketResourceSettingsExtras(),
+            'comments' => [
+                'commentEditWindowMinutes' => $this->permissionService->commentEditWindowMinutes(),
+            ],
             'email' => ['emailSettings' => $this->emailSettingsPayload()],
             'inbound-mail' => $this->inboundMailSettingsExtras(),
             'knowledge-base' => ['knowledgeBaseSettings' => $this->knowledgeBaseSettingsPayload()],
@@ -474,6 +477,37 @@ class SettingsController extends Controller
         return new JSONResponse([
             'success' => true,
             'saved_values' => $this->slaPolicy->settingsPayload(),
+        ]);
+    }
+
+    /**
+     * Update comment lifecycle settings — currently only the author
+     * self-edit window (minutes; 0 = author self-edit disabled). Values are
+     * clamped to a sane non-negative integer so a hand-crafted POST cannot
+     * poison the window used inside the lifecycle lock.
+     */
+    #[NoAdminRequired]
+    public function updateComments(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canManageSettings()) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+
+        $raw = $this->request->getParam('edit_window_minutes', '');
+        $minutes = filter_var($raw, FILTER_VALIDATE_INT);
+        if ($minutes === false || $minutes < 0 || $minutes > 100000) {
+            return new JSONResponse([
+                'error' => $l->t('settings_comments_window_invalid'),
+                'fields' => ['edit_window_minutes' => $l->t('settings_comments_window_invalid')],
+            ], 400);
+        }
+
+        $this->config->setAppValue('ticketcheck', 'comment_edit_window_minutes', (string)$minutes);
+
+        return new JSONResponse([
+            'success' => true,
+            'saved_values' => ['edit_window_minutes' => $minutes],
         ]);
     }
 
@@ -2484,11 +2518,11 @@ class SettingsController extends Controller
             return new JSONResponse(['error' => $l->t('an_error_occurred')], 500);
         }
         $keys = $this->request->getParam('keys', []);
-        if (!is_array($keys)) {
+        if (!is_array($keys) || array_filter($keys, static fn ($k) => !is_string($k)) !== []) {
             return new JSONResponse(['error' => $l->t('resource_validation_failed'), 'fields' => ['order' => 'invalid_resource_order']], 422);
         }
         try {
-            $this->ticketResources->reorder($keys, $this->ticketCategoryActorUid());
+            $this->ticketResources->reorder(array_values($keys), $this->ticketCategoryActorUid());
             return new JSONResponse(['success' => true]);
         } catch (ValidationException $e) {
             return new JSONResponse(['error' => $l->t('resource_validation_failed'), 'fields' => $e->getErrors()], 422);

@@ -1133,7 +1133,8 @@ class TicketMapper extends QBMapper
      *   category?: string,
      *   assigned_to?: string,
      *   project_id?: int,
-     *   customer_id?: int
+     *   customer_id?: int,
+     *   ticket_ids_in?: list<int>
      * } $filters
      * @return list<Ticket>
      */

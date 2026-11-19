@@ -25,6 +25,17 @@ const routes = [
 	{ id: 'kb', path: '/apps/ticketcheck/kb', ready: '#tc-main-content' },
 ];
 
+// Comment lifecycle UI lives on the ticket detail surface — include it in
+// the axe/theme matrix when the fixture ticket is configured.
+const ticketDetailUrl = process.env.E2E_AGENT_TICKET_DETAIL_URL;
+if (ticketDetailUrl) {
+	try {
+		routes.push({ id: 'ticket-detail', path: new URL(ticketDetailUrl).pathname, ready: '#tc-main-content' });
+	} catch {
+		// env var not a URL — skip silently; route list stays as declared
+	}
+}
+
 const overflowViewports = [
 	{ width: 320, height: 640 },
 	{ width: 375, height: 812 },
@@ -416,5 +427,24 @@ test.describe('TicketCheck keyboard chrome', () => {
 		await expect(page.locator('.tc-scope-strip__value')).not.toBeEmpty();
 		const shellClass = await page.locator('#app-content-wrapper').getAttribute('class');
 		expect(shellClass || '').toMatch(/tc-shell/);
+	});
+
+	test('comment kebab: keyboard open focuses menu, Escape restores trigger', async ({ page }) => {
+		test.skip(!hasAuth(), 'Requires E2E credentials');
+		const detail = process.env.E2E_AGENT_TICKET_DETAIL_URL;
+		test.skip(!detail, 'Set E2E_AGENT_TICKET_DETAIL_URL to cover comment controls');
+		await gotoReady(page, new URL(detail).pathname, '#tc-main-content');
+		const kebab = page.locator('[data-comment-kebab]').first();
+		test.skip(!(await kebab.count()), 'No comment action menus in this fixture');
+		await kebab.focus();
+		await page.keyboard.press('Enter');
+		const menu = page.locator('.ticket-detail-comment-menu:not([hidden])').first();
+		await expect(menu).toBeVisible();
+		await expect(kebab).toHaveAttribute('aria-expanded', 'true');
+		await expect(menu.locator('[data-comment-action]').first()).toBeFocused();
+		await page.keyboard.press('Escape');
+		await expect(menu).toBeHidden();
+		await expect(kebab).toHaveAttribute('aria-expanded', 'false');
+		await expect(kebab).toBeFocused();
 	});
 });

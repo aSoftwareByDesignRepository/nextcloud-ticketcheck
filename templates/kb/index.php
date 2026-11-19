@@ -54,7 +54,7 @@ $renderArticleCard = static function (KBArticle $article) use ($l, $_): void {
                     <li>
                         <span class="tc-kb-article-card__meta-item">
                             <?php print_unescaped(IconCatalog::render('eye', 'tc-icon--inline')); ?>
-                            <?php p($l->n('ticketcheck', '%n view', '%n views', (int)$views)); ?>
+                            <?php p($l->n('%n view', '%n views', (int)$views)); ?>
                         </span>
                     </li>
                     <li>

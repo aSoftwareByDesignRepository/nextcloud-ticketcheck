@@ -88,7 +88,13 @@ class GuestMigrationService
         return false;
     }
 
-    /** Classify one uid into a dry-run bucket. */
+    /**
+     * Classify one uid into a dry-run bucket.
+     *
+     * @param array<string,int> $emailCounts
+     * @param list<string> $aliasedUids
+     * @param list<string> $fallbackUids
+     */
     public function classify(string $uid, array $emailCounts, array $aliasedUids, array $fallbackUids): string
     {
         $user = $this->userManager->get($uid);
@@ -175,6 +181,7 @@ class GuestMigrationService
         }
     }
 
+    /** @return array{bucket:string, identity_id?:int, error?:string} */
     private function doMigrateOne(string $uid, string $actor, ?int $forcedIdentityId): array
     {
         $user = $this->userManager->get($uid);
@@ -267,7 +274,7 @@ class GuestMigrationService
         }
     }
 
-    private function portGuestLanguage(string $uid, $identity): void
+    private function portGuestLanguage(string $uid, \OCA\Ticketcheck\Db\GuestIdentity $identity): void
     {
         if (trim((string)($identity->getLocale() ?? '')) !== '') {
             return;
@@ -317,7 +324,12 @@ class GuestMigrationService
         }
     }
 
-    /** Run over a uid list (or all guests) → per-bucket counts. */
+    /**
+     * Run over a uid list (or all guests) → per-bucket counts.
+     *
+     * @param list<string>|null $uids
+     * @return array<string,int>
+     */
     public function run(?array $uids, string $actor): array
     {
         $uids = $uids ?? $this->guestUids();

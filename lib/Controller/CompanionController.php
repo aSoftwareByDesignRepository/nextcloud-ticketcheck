@@ -44,6 +44,7 @@ class CompanionController extends Controller
 		private readonly IdempotencyService $idempotency,
 		private readonly CompanionPushService $push,
 		private readonly KnowledgeBaseService $knowledgeBase,
+		private readonly ?\OCA\Ticketcheck\Service\CommentLifecycleService $commentLifecycle = null,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -129,7 +130,7 @@ class CompanionController extends Controller
 				$uid,
 				'companion.ticket.create.' . ($projectId !== null && $projectId > 0 ? (string)$projectId : 'noproject'),
 				$this->idempotencyKey(),
-				fn (): array => $this->tickets->create($uid, $projectId, $title, $description, $priority, $category, is_array($resourcesParam) ? $resourcesParam : null),
+				fn (): array => $this->tickets->create($uid, $projectId, $title, $description, $priority, $category, is_array($resourcesParam) ? array_values(array_filter($resourcesParam, 'is_string')) : null),
 			);
 			return new JSONResponse(['ok' => true] + $result, Http::STATUS_CREATED);
 		} catch (CompanionConflictException $e) {
@@ -261,6 +262,203 @@ class CompanionController extends Controller
 		} catch (CompanionValidationException $e) {
 			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
 		}
+	}
+
+	/**
+	 * Companion comment update (edit body and/or visibility toggle).
+	 * version is required — the CAS check runs inside the lifecycle lock so
+	 * stale offline replays fail closed (spec MH-C05).
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function updateComment(int $id, int $cid): JSONResponse
+	{
+		try {
+			$this->requireUid();
+			if ($this->commentLifecycle === null) {
+				return $this->error('not_supported', Http::STATUS_NOT_IMPLEMENTED);
+			}
+			$version = $this->requireVersion();
+			$bodyRaw = $this->request->getParam('body');
+			$body = $bodyRaw === null ? null : (string)$bodyRaw;
+			$visibilityRaw = $this->request->getParam('visibility');
+			$isInternal = null;
+			if ($visibilityRaw !== null) {
+				if (!in_array($visibilityRaw, ['public', 'internal'], true)) {
+					throw new CompanionValidationException('invalid_visibility', 'visibility must be public or internal');
+				}
+				$isInternal = $visibilityRaw === 'internal';
+			}
+			$comment = $this->commentLifecycle->updateComment(
+				$id,
+				$cid,
+				$body,
+				$isInternal,
+				fn (\OCA\Ticketcheck\Db\Ticket $t) => $this->tickets->assertEditableAtVersion($t, $version)
+			);
+			$fresh = $this->tickets->requireTicketForRead($id);
+			return new JSONResponse([
+				'ok' => true,
+				'comment' => $this->tickets->serializeCommentData($comment, $fresh),
+				'ticket' => ['id' => $id, 'version' => $this->tickets->ticketVersion($fresh)],
+			]);
+		} catch (\OCA\Ticketcheck\Exception\CommentLifecycleException $e) {
+			return $this->lifecycleError($e);
+		} catch (CompanionUnauthorizedException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNAUTHORIZED);
+		} catch (CompanionNotFoundException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_NOT_FOUND);
+		} catch (CompanionConflictException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_CONFLICT, $e->getMessage());
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		}
+	}
+
+	/**
+	 * Companion comment delete (soft delete + bound attachment wipe). No
+	 * purge route in companion v1 — staff-web only (spec §C).
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function deleteComment(int $id, int $cid): JSONResponse
+	{
+		try {
+			$this->requireUid();
+			if ($this->commentLifecycle === null) {
+				return $this->error('not_supported', Http::STATUS_NOT_IMPLEMENTED);
+			}
+			$version = $this->requireVersion();
+			$this->commentLifecycle->softDeleteComment(
+				$id,
+				$cid,
+				fn (\OCA\Ticketcheck\Db\Ticket $t) => $this->tickets->assertEditableAtVersion($t, $version)
+			);
+			$fresh = $this->tickets->requireTicketForRead($id);
+			return new JSONResponse([
+				'ok' => true,
+				'ticket' => ['id' => $id, 'version' => $this->tickets->ticketVersion($fresh)],
+			]);
+		} catch (\OCA\Ticketcheck\Exception\CommentLifecycleException $e) {
+			return $this->lifecycleError($e);
+		} catch (CompanionUnauthorizedException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNAUTHORIZED);
+		} catch (CompanionNotFoundException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_NOT_FOUND);
+		} catch (CompanionConflictException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_CONFLICT, $e->getMessage());
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		}
+	}
+
+	/**
+	 * Companion selective move — same lifecycle service as staff-web; the
+	 * idempotency key is mandatory (offline queues can re-fire).
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function moveComments(int $id): JSONResponse
+	{
+		try {
+			$this->requireUid();
+			if ($this->commentLifecycle === null) {
+				return $this->error('not_supported', Http::STATUS_NOT_IMPLEMENTED);
+			}
+			$targetId = $this->optionalPositiveInt('targetTicketId');
+			if ($targetId === null) {
+				throw new CompanionValidationException('invalid_target', 'targetTicketId is required');
+			}
+			$commentIds = $this->idListParam('commentIds');
+			$attachmentIds = $this->idListParam('attachmentIds');
+			// The key is mandatory on this route: offline queues re-fire, and a
+			// move is not retry-safe without dedup (spec MH-C07).
+			$idemKey = $this->idempotencyKey();
+			if ($idemKey === null) {
+				throw new CompanionValidationException('idempotency_key_required', 'idempotencyKey is required');
+			}
+			$receipt = $this->commentLifecycle->moveCommentsAndAttachments(
+				$id,
+				$targetId,
+				$commentIds,
+				$attachmentIds,
+				$idemKey
+			);
+			return new JSONResponse(['ok' => true] + [
+				'batchId' => $receipt['batch_id'],
+				'commentsMoved' => $receipt['comments_moved'],
+				'attachmentsMoved' => $receipt['attachments_moved'],
+				'targetTicketId' => $receipt['target_ticket_id'],
+			]);
+		} catch (\OCA\Ticketcheck\Exception\CommentLifecycleException $e) {
+			return $this->lifecycleError($e);
+		} catch (CompanionUnauthorizedException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNAUTHORIZED);
+		} catch (CompanionConflictException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_CONFLICT, $e->getMessage());
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		}
+	}
+
+	/**
+	 * Companion move-target search — editable, unmerged, non-source tickets.
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function moveTargets(): JSONResponse
+	{
+		try {
+			$this->requireUid();
+			$sourceId = $this->optionalPositiveInt('sourceTicketId');
+			$query = trim((string)$this->request->getParam('query', ''));
+			return new JSONResponse([
+				'ok' => true,
+				'items' => $this->tickets->searchMoveTargets($sourceId, $query),
+			]);
+		} catch (CompanionUnauthorizedException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNAUTHORIZED);
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		}
+	}
+
+	/**
+	 * Map lifecycle failures onto the companion error envelope — the codes
+	 * are stable contract values the app keys its UX on (spec §C wire codes).
+	 */
+	private function lifecycleError(\OCA\Ticketcheck\Exception\CommentLifecycleException $e): JSONResponse
+	{
+		$status = match ($e->getHttpStatus()) {
+			404 => Http::STATUS_NOT_FOUND,
+			403 => Http::STATUS_FORBIDDEN,
+			409 => Http::STATUS_CONFLICT,
+			default => Http::STATUS_BAD_REQUEST,
+		};
+		return $this->error($e->getErrorCode(), $status, $e->getMessage() !== '' ? $e->getMessage() : $e->getErrorCode());
+	}
+
+	/**
+	 * @return array<int, int>
+	 */
+	private function idListParam(string $param): array
+	{
+		$raw = $this->request->getParam($param);
+		if (is_string($raw)) {
+			$raw = $raw === '' ? [] : explode(',', $raw);
+		}
+		if (!is_array($raw)) {
+			return [];
+		}
+		$out = [];
+		foreach ($raw as $value) {
+			if (is_int($value) && $value > 0) {
+				$out[] = $value;
+			} elseif (is_string($value) && ctype_digit($value) && (int)$value > 0) {
+				$out[] = (int)$value;
+			}
+		}
+		return array_values(array_unique($out));
 	}
 
 	#[NoAdminRequired]

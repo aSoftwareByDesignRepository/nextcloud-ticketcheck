@@ -123,7 +123,7 @@ class UserPreferencesController extends Controller
         }
 
         // Identity sessions persist the ack per identity, not per browser.
-        $actorId = (string)($this->permissionService->getCurrentUserId() ?? '');
+        $actorId = (string)($this->permissionService?->getCurrentUserId() ?? '');
         $identityId = \OCA\Ticketcheck\Service\PortalActorResolver::identityIdForActor($actorId);
         if ($identityId !== null && $this->guestIdentities !== null) {
             $this->guestIdentities->setPref($identityId, 'gdpr_portal_ack', true);

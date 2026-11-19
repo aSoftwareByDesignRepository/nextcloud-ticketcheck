@@ -69,6 +69,7 @@ class DeletionService
         TemplateService $templateService,
         IUserManager $userManager,
 		private ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
+		private ?\OCA\Ticketcheck\Db\CommentMoveMapper $commentMoveMapper = null,
 	) {
         $this->db = $db;
         $this->ticketMapper = $ticketMapper;
@@ -663,6 +664,12 @@ class DeletionService
         $commentCount = $this->commentMapper->deleteByTicketId($ticketId);
         if ($commentCount > 0) {
             $deletedCounts['comments'] = $commentCount;
+        }
+        // Move audit rows die with the ticket (they survive comment purge
+        // only — item_id is decoupled, ticket ids are not).
+        $movesCount = $this->commentMoveMapper?->deleteByTicketId($ticketId) ?? 0;
+        if ($movesCount > 0) {
+            $deletedCounts['comment_moves'] = $movesCount;
         }
 
         $attachments = $this->attachmentMapper->findByTicketId($ticketId);

@@ -146,12 +146,13 @@ class MergeService
 			// (failed-op residue / catalog_ref_delete_toctou). The shared
 			// guard keeps a concurrent catalog delete/disable from landing
 			// doomed keys between resolve and write (NN-11).
-			if ($this->ticketResources !== null) {
-				$srcKeys = $this->ticketResources->keysForTicket($sourceId);
+			$resources = $this->ticketResources;
+			if ($resources !== null) {
+				$srcKeys = $resources->keysForTicket($sourceId);
 				if ($srcKeys !== []) {
-					$this->ticketResources->withResourceWriteGuard(function () use ($targetId, $srcKeys) {
-						$this->ticketResources->assertEnabledKeys($srcKeys);
-						$this->ticketResources->unionForTicket($targetId, $srcKeys);
+					$resources->withResourceWriteGuard(function () use ($resources, $targetId, $srcKeys) {
+						$resources->assertEnabledKeys($srcKeys);
+						$resources->unionForTicket($targetId, $srcKeys);
 					});
 				}
 			}

@@ -131,7 +131,7 @@ class RequesterCompanionController extends Controller
         } catch (CompanionConflictException $e) {
             return new JSONResponse(['ok' => false, 'error' => ['code' => $e->getErrorCode()]], 409);
         } catch (CompanionValidationException $e) {
-            return new JSONResponse(['ok' => false, 'error' => ['code' => $e->getErrorCode(), 'message' => $e->getMessage()]], $e->getCode());
+            return new JSONResponse(['ok' => false, 'error' => ['code' => $e->getErrorCode(), 'message' => $e->getMessage()]], $e->getHttpStatus());
         } catch (\Throwable $e) {
             $this->logger->error('Requester companion action failed', ['exception' => $e, 'app' => 'ticketcheck']);
             return new JSONResponse(['ok' => false, 'error' => ['code' => 'operation_failed']], 500);

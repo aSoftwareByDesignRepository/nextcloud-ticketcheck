@@ -53,6 +53,8 @@ final class TransferManifest extends AbstractTransferManifest
 			'daily_digest_enabled' => ['class' => 'plain', 'section' => 'email'],
 			'weekly_digest_enabled' => ['class' => 'plain', 'section' => 'email'],
 			'max_attachment_size' => ['class' => 'plain', 'section' => 'email'],
+			// ── comment lifecycle (Settings → Comments) ──
+			'comment_edit_window_minutes' => ['class' => 'plain', 'section' => 'comments'],
 			// ── knowledge base toggles (Settings → Knowledge base) ──
 			'kb_enabled' => ['class' => 'plain', 'section' => 'knowledge-base'],
 			'kb_portal_enabled' => ['class' => 'plain', 'section' => 'knowledge-base'],
@@ -207,9 +209,23 @@ final class TransferManifest extends AbstractTransferManifest
 				'env_columns' => ['sla_response_alerted_at', 'sla_resolution_alerted_at']],
 			// Comments have no honest natural key (legitimate duplicates
 			// exist) — spec default seed-if-empty on merge.
+			// moved_from_ticket_id is nullable provenance, not identity —
+			// fk_late so an untransferred source degrades to NULL (generic
+			// marker) instead of skipping the row (fk would drop comments).
 			'helpdesk_comments' => ['class' => 'business', 'strategy' => 'seed-if-empty',
 				'fk' => ['ticket_id' => 'helpdesk_tickets'], 'depends_on' => ['helpdesk_tickets'],
-				'uid_ref_nullable' => ['user_id']],
+				'uid_ref_nullable' => ['user_id'],
+				'fk_late' => ['moved_from_ticket_id' => 'helpdesk_tickets']],
+			// Selective-move audit (comment-management spec §9.1). batch_id /
+			// item_kind / item_id are self-contained; ticket ids re-map via
+			// fk. actor_uid carries verbatim like tickets.created_by — audit
+			// provenance degrades to the raw uid, never drops the row.
+			'helpdesk_comment_moves' => ['class' => 'business', 'strategy' => 'seed-if-empty',
+				'fk' => [
+					'source_ticket_id' => 'helpdesk_tickets',
+					'target_ticket_id' => 'helpdesk_tickets',
+				],
+				'depends_on' => ['helpdesk_tickets']],
 			'helpdesk_ticket_links' => ['class' => 'business', 'strategy' => 'upsert-natural-key',
 				'natural_key' => ['ticket_id', 'linked_ticket_id', 'link_type'],
 				'fk' => [

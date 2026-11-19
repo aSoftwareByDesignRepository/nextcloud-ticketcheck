@@ -361,7 +361,7 @@ class GuestUserController extends Controller
                 // invite mail is a magic link — never a password (US-T03).
                 $identity = $this->guestIdentities->findOrCreate($email, $displayName,
                     (string)($this->permissionService->getCurrentUserId() ?? 'staff'));
-                $this->guestIdentities->grantProjects((int)$identity->getId(), $projectIds, null,
+                $this->guestIdentities->grantProjects((int)$identity->getId(), array_values($projectIds), null,
                     (string)($this->permissionService->getCurrentUserId() ?? 'staff'));
                 [, $magic, $otpId] = $this->portalOtp->issue($email, (int)$identity->getId(), 'staff-invite');
                 $sent = $this->mailOutbox->enqueue('invite:' . $otpId, $email,

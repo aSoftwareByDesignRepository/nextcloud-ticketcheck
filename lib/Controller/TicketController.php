@@ -28,6 +28,7 @@ use OCA\Ticketcheck\Service\TicketLinkService;
 use OCA\Ticketcheck\Service\TicketWatcherService;
 use OCA\Ticketcheck\Service\SplitService;
 use OCA\Ticketcheck\Service\ActivityEventService;
+use OCA\Ticketcheck\Service\CommentLifecycleService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentDisplayHelper;
@@ -91,6 +92,8 @@ class TicketController extends Controller
     private NavigationContextService $navigationContext;
     private FrontEndAssetService $frontEndAssets;
     private AttachmentDeliveryService $attachmentDelivery;
+    private ?CommentLifecycleService $commentLifecycle;
+    private ?\OCA\Ticketcheck\Db\CommentMoveMapper $commentMoveMapper;
     private ?TicketCategoryService $ticketCategories;
     private ?TicketResourceService $ticketResources;
 
@@ -122,6 +125,8 @@ class TicketController extends Controller
         NavigationContextService $navigationContext,
         FrontEndAssetService $frontEndAssets,
         AttachmentDeliveryService $attachmentDelivery,
+        ?CommentLifecycleService $commentLifecycle = null,
+        ?\OCA\Ticketcheck\Db\CommentMoveMapper $commentMoveMapper = null,
         ?TicketCategoryService $ticketCategories = null,
         ?TicketResourceService $ticketResources = null,
     ) {
@@ -151,6 +156,8 @@ class TicketController extends Controller
         $this->navigationContext = $navigationContext;
         $this->frontEndAssets = $frontEndAssets;
         $this->attachmentDelivery = $attachmentDelivery;
+        $this->commentLifecycle = $commentLifecycle;
+        $this->commentMoveMapper = $commentMoveMapper;
         $this->ticketCategories = $ticketCategories;
         $this->ticketResources = $ticketResources;
     }
@@ -372,13 +379,13 @@ class TicketController extends Controller
         $params = [
             'tickets' => $tickets,
             'ticketResourceMap' => $this->ticketResources !== null
-                ? $this->ticketResources->pairsMapForTickets(array_map(static fn (\OCA\Ticketcheck\Db\Ticket $t) => (int)$t->getId(), $tickets))
+                ? $this->ticketResources->pairsMapForTickets(array_values(array_map(static fn (\OCA\Ticketcheck\Db\Ticket $t) => (int)$t->getId(), $tickets)))
                 : [],
             'statuses' => Ticket::getStatuses(),
             'priorities' => Ticket::getPriorities(),
             // Filters include disabled categories — historic tickets stay filterable.
             ...$this->categoryTemplateParams(true),
-                    ...$this->resourceTemplateParams($ticket ?? null),
+                    ...$this->resourceTemplateParams(null),
             'projects' => $projectsAndCustomers['projects'],
             'customers' => $projectsAndCustomers['customers'],
             'currentUser' => $this->userSession->getUser(),
@@ -568,9 +575,10 @@ class TicketController extends Controller
                 }
             }
 
-            // Get comments
+            // Get comments — staff thread includes tombstones for context
+            // (US-A04 AC-2); non-staff surfaces use the default filtered list.
             $includeInternal = $this->permissionService->canViewInternalNotes();
-            $comments = $this->ticketService->getComments($id, $includeInternal);
+            $comments = $this->ticketService->getComments($id, $includeInternal, true);
 
             // Get ticket-level attachments (not linked to specific comments)
             $ticketAttachments = $this->ticketService->getAttachments($id);
@@ -578,15 +586,42 @@ class TicketController extends Controller
                 return $attachment->getCommentId() === null;
             });
 
-            // Get comment-level attachments for each comment
+            // Get comment-level attachments for each comment + lifecycle caps
             $commentsWithAttachments = [];
+            $threadItems = [];
             foreach ($comments as $comment) {
-                $commentAttachments = $this->attachmentMapper->findByCommentId($comment->getId());
-                $commentsWithAttachments[] = [
+                $isDeleted = $comment->getDeletedAt() !== null;
+                $commentAttachments = $isDeleted
+                    ? []
+                    : $this->attachmentMapper->findByCommentId($comment->getId());
+                $commentData = [
                     'comment' => $comment,
-                    'attachments' => $commentAttachments
+                    'attachments' => $commentAttachments,
+                    'deleted' => $isDeleted,
+                    'deletedByName' => $isDeleted ? $this->displayNameForUid($comment->getDeletedBy()) : null,
+                    'editedAt' => $comment->getEditedAt(),
+                    'editedByName' => $comment->getEditedBy() !== null
+                        ? $this->displayNameForUid($comment->getEditedBy()) : null,
+                    'movedFrom' => $this->movedFromBadge($comment),
+                    'canEdit' => !$isDeleted && $this->permissionService->canEditComment($comment, $ticket),
+                    'canDelete' => !$isDeleted && $this->permissionService->canDeleteComment($comment, $ticket),
+                    'toggleTarget' => !$isDeleted
+                        ? $this->commentToggleTarget($comment, $ticket) : null,
+                    'canPurge' => $isDeleted && $this->permissionService->isHelpdeskAdmin(),
+                ];
+                $commentsWithAttachments[] = $commentData;
+                $threadItems[] = [
+                    'type' => 'comment',
+                    'time' => $comment->getCreatedAt(),
+                    'data' => $commentData,
                 ];
             }
+            foreach ($this->moveSystemLines($id) as $line) {
+                $threadItems[] = $line;
+            }
+            usort($threadItems, static function (array $a, array $b): int {
+                return $a['time'] <=> $b['time'];
+            });
 
             // Get project info if linked
             $project = null;
@@ -696,6 +731,9 @@ class TicketController extends Controller
                     ...$this->resourceTemplateParams($ticket ?? null),
                     'comments' => $comments,
                     'commentsWithAttachments' => $commentsWithAttachments,
+                    'threadItems' => $threadItems,
+                    'canMoveItems' => $this->permissionService->canEditTicket($ticket),
+                    'maxCommentChars' => 10000,
                     'attachments' => $attachments,
                     'project' => $project,
                     'availableAgents' => $availableAgents,
@@ -784,7 +822,7 @@ class TicketController extends Controller
                 'customers' => $customers,
                 'priorities' => Ticket::getPriorities(),
                 ...$this->categoryTemplateParams(),
-                    ...$this->resourceTemplateParams($ticket ?? null),
+                    ...$this->resourceTemplateParams(null),
                 'availableAgents' => $availableAgents,
                 'isEdit' => false,
             ],
@@ -2299,6 +2337,14 @@ class TicketController extends Controller
             ], 400);
         }
 
+        // purpose=move: same searchable set (unmerged, editable, non-source)
+        // with done/closed targets allowed — the merge picker default
+        // retains its behaviour for any other/absent value (AC-B-6).
+        $purpose = (string)$this->request->getParam('purpose', 'merge');
+        if (!in_array($purpose, ['merge', 'move'], true)) {
+            $purpose = 'merge';
+        }
+
         $query = trim((string)$this->request->getParam('query', ''));
         if (strlen($query) < 2) {
             return new JSONResponse([
@@ -2320,6 +2366,12 @@ class TicketController extends Controller
             $tickets = [];
             foreach ($this->ticketMapper->searchMergeTargets($query, $sourceId, 20) as $ticket) {
                 if (!$this->permissionService->canEditTicket($ticket)) {
+                    continue;
+                }
+                // Merge keeps its historical target set: open tickets only.
+                // purpose=move additionally offers done/closed tickets —
+                // tidying old threads is a legitimate move use (AC-B-6).
+                if ($purpose === 'merge' && \OCA\Ticketcheck\Db\Ticket::normalizeStatus($ticket->getStatus()) === \OCA\Ticketcheck\Db\Ticket::STATUS_DONE) {
                     continue;
                 }
 
@@ -3215,6 +3267,339 @@ class TicketController extends Controller
     /**
      * @return array{id: int, ticket_number: string, title: string, customer_name: string, customer_email: string, status: string, priority: string}
      */
+    /**
+     * Display name for a lifecycle actor uid (edited_by/deleted_by). Falls
+     * back to the raw uid when the account is gone — never null leaking into
+     * the template.
+     */
+    private function displayNameForUid(?string $uid): ?string
+    {
+        if ($uid === null || $uid === '') {
+            return null;
+        }
+        $user = $this->userManager->get($uid);
+        $name = $user !== null ? trim((string)$user->getDisplayName()) : '';
+        return $name !== '' ? $name : $uid;
+    }
+
+    /**
+     * Provenance badge for a moved comment (NN-B11): ticket number + link
+     * only when the reader may view the source ticket; generic otherwise.
+     *
+     * @return array{number: string, url: string}|'generic'|null
+     */
+    private function movedFromBadge(\OCA\Ticketcheck\Db\Comment $comment)
+    {
+        $sourceId = $comment->getMovedFromTicketId();
+        if ($sourceId === null) {
+            return null;
+        }
+        try {
+            $source = $this->ticketMapper->find((int)$sourceId);
+        } catch (\Throwable) {
+            return 'generic';
+        }
+        if (!$this->permissionService->canViewTicket($source)) {
+            return 'generic';
+        }
+        return [
+            'number' => (string)$source->getTicketNumber(),
+            'url' => $this->urlGenerator->linkToRoute('ticketcheck.ticket.show', ['id' => (int)$source->getId()]),
+        ];
+    }
+
+    /**
+     * Which direction (if any) this actor may toggle the comment:
+     * 'internal' | 'public' | null — drives the one-click menu item.
+     */
+    private function commentToggleTarget(\OCA\Ticketcheck\Db\Comment $comment, Ticket $ticket): ?string
+    {
+        if ($comment->getIsInternal()) {
+            return $this->permissionService->canToggleCommentVisibility($comment, $ticket, false) ? 'public' : null;
+        }
+        return $this->permissionService->canToggleCommentVisibility($comment, $ticket, true) ? 'internal' : null;
+    }
+
+    /**
+     * In-thread move system lines built from helpdesk_comment_moves audit
+     * rows, one per batch, rendered on BOTH sides of a move (MH-B09a).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function moveSystemLines(int $ticketId): array
+    {
+        if ($this->commentMoveMapper === null) {
+            return [];
+        }
+        $batches = [];
+        foreach ($this->commentMoveMapper->findForTicket($ticketId) as $row) {
+            $batches[$row->getBatchId()][] = $row;
+        }
+        $lines = [];
+        foreach ($batches as $batchId => $rows) {
+            $first = $rows[0];
+            $commentCount = 0;
+            $attachmentCount = 0;
+            foreach ($rows as $row) {
+                if ($row->getItemKind() === 'comment') {
+                    $commentCount++;
+                } else {
+                    $attachmentCount++;
+                }
+            }
+            $isOut = (int)$first->getSourceTicketId() === $ticketId;
+            $counterpartId = $isOut ? (int)$first->getTargetTicketId() : (int)$first->getSourceTicketId();
+            $counterpart = 'generic';
+            try {
+                $counterpartTicket = $this->ticketMapper->find($counterpartId);
+                if ($this->permissionService->canViewTicket($counterpartTicket)) {
+                    $counterpart = [
+                        'number' => (string)$counterpartTicket->getTicketNumber(),
+                        'url' => $this->urlGenerator->linkToRoute('ticketcheck.ticket.show', ['id' => $counterpartId]),
+                    ];
+                }
+            } catch (\Throwable) {
+                $counterpart = 'generic';
+            }
+            $lines[] = [
+                'type' => 'move',
+                'time' => $first->getCreatedAt(),
+                'data' => [
+                    'direction' => $isOut ? 'out' : 'in',
+                    'commentCount' => $commentCount,
+                    'attachmentCount' => $attachmentCount,
+                    'actorName' => $this->displayNameForUid($first->getActorUid()) ?? $first->getActorUid(),
+                    'counterpart' => $counterpart,
+                    'batchId' => $batchId,
+                ],
+            ];
+        }
+        return $lines;
+    }
+
+    /**
+     * Map a lifecycle failure onto the stable wire contract (error_code +
+     * optional per-field map) — one code path for all four staff routes.
+     */
+    private function lifecycleError(\OCA\Ticketcheck\Exception\CommentLifecycleException $e, \OCP\IL10N $l): JSONResponse
+    {
+        $code = $e->getErrorCode();
+        $messageKey = [
+            'comment_not_found' => 'comment_not_found',
+            'comment_deleted' => 'comment_deleted',
+            'comment_not_deleted' => 'comment_not_deleted',
+            'access_denied' => 'access_denied',
+            'edit_window_expired' => 'comment_edit_window_expired',
+            'ticket_not_found' => 'ticket_not_found',
+            'ticket_merged' => 'ticket_merged',
+            'too_many_items' => 'move_too_many_items',
+            'invalid_selection' => 'move_invalid_selection',
+            'content_required' => 'comment_content_required',
+            'no_fields' => 'comment_nothing_to_update',
+            'attachment_bound_to_comment' => 'attachment_bound_to_comment',
+            'idempotency_conflict' => 'idempotency_conflict',
+        ][$code] ?? 'an_error_occurred';
+
+        $payload = [
+            'success' => false,
+            'error_code' => $code,
+            'message' => $l->t($messageKey),
+        ];
+        $fields = $e->getFields();
+        if ($fields !== []) {
+            $payload['fields'] = array_map(
+                static fn (string $fieldKey): string => $l->t($fieldKey),
+                $fields
+            );
+        }
+        return new JSONResponse($payload, $e->getHttpStatus());
+    }
+
+    /**
+     * Lifecycle service accessor — tests constructing the controller without
+     * the new dependency get a clean 500 instead of a null deref.
+     */
+    private function requireCommentLifecycle(): CommentLifecycleService
+    {
+        if ($this->commentLifecycle === null) {
+            throw new \RuntimeException('Comment lifecycle service not wired');
+        }
+        return $this->commentLifecycle;
+    }
+
+    /**
+     * Staff comment update — content and/or visibility, per-field atomic
+     * authz enforced in the service (spec MH-A02/MH-A12).
+     */
+    #[NoAdminRequired]
+    public function updateComment(int $id, int $commentId): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        try {
+            if ($this->permissionService->isGuest()) {
+                return new JSONResponse(['success' => false, 'error_code' => 'access_denied', 'message' => $l->t('access_denied')], 403);
+            }
+            $contentRaw = $this->request->getParam('content');
+            $content = $contentRaw === null ? null : (string)$contentRaw;
+            $isInternalRaw = $this->request->getParam('is_internal');
+            // Form-encoded "false" is a string — coerce explicitly (NN-A10).
+            $isInternal = null;
+            if ($isInternalRaw !== null) {
+                $isInternal = filter_var($isInternalRaw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                if ($isInternal === null) {
+                    return new JSONResponse([
+                        'success' => false,
+                        'error_code' => 'invalid_selection',
+                        'message' => $l->t('invalid_parameters'),
+                    ], 400);
+                }
+            }
+            $comment = $this->requireCommentLifecycle()->updateComment($id, $commentId, $content, $isInternal);
+            return new JSONResponse([
+                'success' => true,
+                'message' => $l->t('comment_updated'),
+                'comment' => [
+                    'id' => $comment->getId(),
+                    'content' => $comment->getContent(),
+                    'is_internal' => $comment->getIsInternal(),
+                    'edited_at' => $comment->getEditedAt() !== null ? $comment->getEditedAt()->format(\DateTimeInterface::ATOM) : null,
+                    'edited_by' => $this->displayNameForUid($comment->getEditedBy()),
+                ],
+            ]);
+        } catch (\OCA\Ticketcheck\Exception\CommentLifecycleException $e) {
+            return $this->lifecycleError($e, $l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Comment update failed', ['exception' => $e]);
+            return new JSONResponse(['success' => false, 'error_code' => 'internal_error', 'message' => $l->t('an_error_occurred')], 500);
+        }
+    }
+
+    /**
+     * Staff comment soft-delete — tombstone + bound attachment wipe (US-A04).
+     */
+    #[NoAdminRequired]
+    public function deleteComment(int $id, int $commentId): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        try {
+            if ($this->permissionService->isGuest()) {
+                return new JSONResponse(['success' => false, 'error_code' => 'access_denied', 'message' => $l->t('access_denied')], 403);
+            }
+            $this->requireCommentLifecycle()->softDeleteComment($id, $commentId);
+            return new JSONResponse(['success' => true, 'message' => $l->t('comment_deleted')]);
+        } catch (\OCA\Ticketcheck\Exception\CommentLifecycleException $e) {
+            return $this->lifecycleError($e, $l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Comment delete failed', ['exception' => $e]);
+            return new JSONResponse(['success' => false, 'error_code' => 'internal_error', 'message' => $l->t('an_error_occurred')], 500);
+        }
+    }
+
+    /**
+     * Staff comment purge — tombstone-only, helpdesk admin only (US-A05).
+     */
+    #[NoAdminRequired]
+    public function purgeComment(int $id, int $commentId): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        try {
+            if ($this->permissionService->isGuest()) {
+                return new JSONResponse(['success' => false, 'error_code' => 'access_denied', 'message' => $l->t('access_denied')], 403);
+            }
+            $this->requireCommentLifecycle()->purgeComment($id, $commentId);
+            return new JSONResponse(['success' => true, 'message' => $l->t('comment_purged')]);
+        } catch (\OCA\Ticketcheck\Exception\CommentLifecycleException $e) {
+            return $this->lifecycleError($e, $l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Comment purge failed', ['exception' => $e]);
+            return new JSONResponse(['success' => false, 'error_code' => 'internal_error', 'message' => $l->t('an_error_occurred')], 500);
+        }
+    }
+
+    /**
+     * Staff selective move — comments (with bound attachments) and/or
+     * standalone attachments to another ticket (US-B01/US-B02).
+     */
+    #[NoAdminRequired]
+    public function moveComments(int $id): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        try {
+            if ($this->permissionService->isGuest()) {
+                return new JSONResponse(['success' => false, 'error_code' => 'access_denied', 'message' => $l->t('access_denied')], 403);
+            }
+            $targetId = $this->normalizeOptionalPositiveInt($this->request->getParam('target_ticket_id'));
+            if ($targetId === false || $targetId === null) {
+                return new JSONResponse([
+                    'success' => false,
+                    'error_code' => 'invalid_selection',
+                    'message' => $l->t('invalid_parameters'),
+                    'fields' => ['target_ticket_id' => $l->t('move_select_target_required')],
+                ], 400);
+            }
+            $commentIds = $this->normalizeIdListParam($this->request->getParam('comment_ids', []));
+            $attachmentIds = $this->normalizeIdListParam($this->request->getParam('attachment_ids', []));
+            $idempotencyKey = $this->request->getParam('idempotency_key');
+            if ($idempotencyKey === null) {
+                $idempotencyKey = $this->request->getHeader('X-TC-Idempotency-Key');
+            }
+            // The key is mandatory (spec MH-B08): a move without dedup is
+            // not retry-safe — a browser retry would double-move items.
+            if ($idempotencyKey === null || trim((string)$idempotencyKey) === '') {
+                return new JSONResponse([
+                    'success' => false,
+                    'error_code' => 'idempotency_key_required',
+                    'message' => $l->t('idempotency_key_required'),
+                ], 400);
+            }
+            $receipt = $this->requireCommentLifecycle()->moveCommentsAndAttachments(
+                $id,
+                $targetId,
+                $commentIds,
+                $attachmentIds,
+                (string)$idempotencyKey
+            );
+            return new JSONResponse([
+                'success' => true,
+                'message' => $l->t('move_completed'),
+                'batch_id' => $receipt['batch_id'],
+                'comments_moved' => $receipt['comments_moved'],
+                'attachments_moved' => $receipt['attachments_moved'],
+                'cleared_checklist_bindings' => $receipt['cleared_checklist_bindings'],
+                'target_ticket_id' => $receipt['target_ticket_id'],
+            ]);
+        } catch (\OCA\Ticketcheck\Exception\CommentLifecycleException $e) {
+            return $this->lifecycleError($e, $l);
+        } catch (\Throwable $e) {
+            $this->logger->error('Comment move failed', ['exception' => $e]);
+            return new JSONResponse(['success' => false, 'error_code' => 'internal_error', 'message' => $l->t('an_error_occurred')], 500);
+        }
+    }
+
+    /**
+     * Accept an array param or a comma-separated id list; only positive ints
+     * survive (never trust client id typing).
+     *
+     * @return int[]
+     */
+    private function normalizeIdListParam(mixed $raw): array
+    {
+        if (is_string($raw)) {
+            $raw = $raw === '' ? [] : explode(',', $raw);
+        }
+        if (!is_array($raw)) {
+            return [];
+        }
+        $ids = [];
+        foreach ($raw as $value) {
+            $parsed = filter_var($value, FILTER_VALIDATE_INT);
+            if ($parsed !== false && $parsed > 0) {
+                $ids[] = $parsed;
+            }
+        }
+        return array_values(array_unique($ids));
+    }
+
     private function formatMergeTargetTicket(Ticket $ticket): array
     {
         return [
@@ -3463,16 +3848,17 @@ class TicketController extends Controller
      */
     private function assignTicketResources(int $ticketId, array $keys): void
     {
-        if ($this->ticketResources === null) {
+        $resources = $this->ticketResources;
+        if ($resources === null) {
             return;
         }
         try {
-            $prior = $this->ticketResources->keysForTicket($ticketId);
-            $this->ticketResources->withResourceWriteGuard(function () use ($ticketId, $keys) {
+            $prior = $resources->keysForTicket($ticketId);
+            $resources->withResourceWriteGuard(function () use ($resources, $ticketId, $keys) {
                 // Re-validate inside the guard — a catalog delete/disable
                 // racing resolveResourceParam() must not land doomed keys (NN-11).
-                $this->ticketResources->assertEnabledKeys($keys);
-                $this->ticketResources->setForTicket($ticketId, $keys);
+                $resources->assertEnabledKeys($keys);
+                $resources->setForTicket($ticketId, $keys);
             });
             $added = array_values(array_diff($keys, $prior));
             $removed = array_values(array_diff($prior, $keys));

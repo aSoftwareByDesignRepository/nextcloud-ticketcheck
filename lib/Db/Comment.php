@@ -32,6 +32,16 @@ use OCP\AppFramework\Db\Entity;
  * @method void setIsInternal(bool $isInternal)
  * @method int|null getChecklistItemId()
  * @method void setChecklistItemId(int|null $checklistItemId)
+ * @method \DateTime|null getEditedAt()
+ * @method void setEditedAt(\DateTime|null $editedAt)
+ * @method string|null getEditedBy()
+ * @method void setEditedBy(string|null $editedBy)
+ * @method \DateTime|null getDeletedAt()
+ * @method void setDeletedAt(\DateTime|null $deletedAt)
+ * @method string|null getDeletedBy()
+ * @method void setDeletedBy(string|null $deletedBy)
+ * @method int|null getMovedFromTicketId()
+ * @method void setMovedFromTicketId(int|null $movedFromTicketId)
  * @method \DateTime getCreatedAt()
  * @method void setCreatedAt(\DateTime $createdAt)
  */
@@ -58,6 +68,21 @@ class Comment extends Entity
     /** @var int|null */
     protected $checklistItemId;
 
+    /** @var \DateTime|null */
+    protected $editedAt;
+
+    /** @var string|null */
+    protected $editedBy;
+
+    /** @var \DateTime|null */
+    protected $deletedAt;
+
+    /** @var string|null */
+    protected $deletedBy;
+
+    /** @var int|null */
+    protected $movedFromTicketId;
+
     /** @var \DateTime */
     protected $createdAt;
 
@@ -73,6 +98,11 @@ class Comment extends Entity
         $this->addType('content', 'string');
         $this->addType('isInternal', 'boolean');
         $this->addType('checklistItemId', 'integer');
+        $this->addType('editedAt', 'datetime');
+        $this->addType('editedBy', 'string');
+        $this->addType('deletedAt', 'datetime');
+        $this->addType('deletedBy', 'string');
+        $this->addType('movedFromTicketId', 'integer');
         $this->addType('createdAt', 'datetime');
     }
 

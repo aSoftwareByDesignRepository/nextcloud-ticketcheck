@@ -63,6 +63,45 @@ class ActivityEventService
     }
 
     /**
+     * Comment lifecycle audit events (comment-management spec MH-A09).
+     * $internalStaffOnly mirrors the comment's own visibility so internal
+     * notes never leak their lifecycle to non-staff recipients.
+     *
+     * @param array<string, string|int> $extra
+     */
+    public function logTicketCommentEdited(string $actorUserId, Ticket $ticket, array $extra, bool $internalStaffOnly): void
+    {
+        $this->publish($actorUserId, $ticket, 'ticket_comment_edited', $extra, $internalStaffOnly);
+    }
+
+    /**
+     * @param array<string, string|int> $extra
+     */
+    public function logTicketCommentDeleted(string $actorUserId, Ticket $ticket, array $extra, bool $internalStaffOnly): void
+    {
+        $this->publish($actorUserId, $ticket, 'ticket_comment_deleted', $extra, $internalStaffOnly);
+    }
+
+    /**
+     * @param array<string, string|int> $extra
+     */
+    public function logTicketCommentPurged(string $actorUserId, Ticket $ticket, array $extra, bool $internalStaffOnly): void
+    {
+        $this->publish($actorUserId, $ticket, 'ticket_comment_purged', $extra, $internalStaffOnly);
+    }
+
+    /**
+     * Selective-move audit event — emitted once per side (source gets
+     * direction=out, target direction=in) with counts + counterpart id.
+     *
+     * @param array<string, string|int> $extra
+     */
+    public function logTicketCommentMoved(string $actorUserId, Ticket $ticket, array $extra, bool $internalStaffOnly): void
+    {
+        $this->publish($actorUserId, $ticket, 'ticket_comment_moved', $extra, $internalStaffOnly);
+    }
+
+    /**
      * @param array<string, string> $extra
      */
     /**
@@ -81,6 +120,9 @@ class ActivityEventService
         ], true);
     }
 
+    /**
+     * @param array<string,mixed> $extra
+     */
     private function publish(string $actorUserId, Ticket $ticket, string $subject, array $extra, bool $internalStaffOnly): void
     {
         if (!$this->appManager->isInstalled('activity')) {

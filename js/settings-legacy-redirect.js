@@ -22,6 +22,7 @@
 		'ticket-categories': 'categories',
 		'ticket-resources': 'resources',
 		'settings-resources-heading': 'resources',
+		'settings-comments-heading': 'comments',
 		'settings-email-heading': 'email',
 		'settings-inbound-mail-heading': 'inbound-mail',
 		'settings-kb-heading': 'knowledge-base',

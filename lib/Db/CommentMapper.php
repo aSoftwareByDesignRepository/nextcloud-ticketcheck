@@ -43,13 +43,35 @@ class CommentMapper extends QBMapper
     }
 
     /**
-     * Find all comments for a ticket
+     * Find all comments for a ticket (soft-deleted tombstones excluded — the
+     * default safe direction for every reader; staff uses
+     * {@see findByTicketIdIncludingDeleted} to render tombstones).
      *
      * @param int $ticketId
      * @param bool $includeInternal Include internal notes
      * @return Comment[]
      */
     public function findByTicketId(int $ticketId, bool $includeInternal = true): array
+    {
+        return $this->findByTicketIdQuery($ticketId, $includeInternal, false);
+    }
+
+    /**
+     * Find all comments including tombstoned rows (staff thread rendering).
+     *
+     * @param int $ticketId
+     * @param bool $includeInternal Include internal notes
+     * @return Comment[]
+     */
+    public function findByTicketIdIncludingDeleted(int $ticketId, bool $includeInternal = true): array
+    {
+        return $this->findByTicketIdQuery($ticketId, $includeInternal, true);
+    }
+
+    /**
+     * @return Comment[]
+     */
+    private function findByTicketIdQuery(int $ticketId, bool $includeInternal, bool $includeDeleted): array
     {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
@@ -59,8 +81,30 @@ class CommentMapper extends QBMapper
         if (!$includeInternal) {
             $qb->andWhere($qb->expr()->eq('is_internal', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)));
         }
+        if (!$includeDeleted) {
+            $qb->andWhere($qb->expr()->isNull('deleted_at'));
+        }
 
         $qb->orderBy('created_at', 'ASC');
+        return $this->findEntities($qb);
+    }
+
+    /**
+     * Find comments by id regardless of ticket (move selection validation).
+     *
+     * @param int[] $ids
+     * @return Comment[]
+     */
+    public function findByIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('*')
+            ->from($this->getTableName())
+            ->where($qb->expr()->in('id', $qb->createNamedParameter($ids, IQueryBuilder::PARAM_INT_ARRAY)));
         return $this->findEntities($qb);
     }
 
@@ -99,7 +143,8 @@ class CommentMapper extends QBMapper
     }
 
     /**
-     * Count comments for a ticket
+     * Count comments for a ticket — tombstones excluded (EC-10: dependency
+     * counts and CSV comment_count stay honest).
      *
      * @param int $ticketId
      * @param bool $includeInternal Include internal notes
@@ -110,7 +155,8 @@ class CommentMapper extends QBMapper
         $qb = $this->db->getQueryBuilder();
         $qb->select($qb->createFunction('COUNT(*)'))
             ->from($this->getTableName())
-            ->where($qb->expr()->eq('ticket_id', $qb->createNamedParameter($ticketId, IQueryBuilder::PARAM_INT)));
+            ->where($qb->expr()->eq('ticket_id', $qb->createNamedParameter($ticketId, IQueryBuilder::PARAM_INT)))
+            ->andWhere($qb->expr()->isNull('deleted_at'));
 
         if (!$includeInternal) {
             $qb->andWhere($qb->expr()->eq('is_internal', $qb->createNamedParameter(false, IQueryBuilder::PARAM_BOOL)));
@@ -165,6 +211,53 @@ class CommentMapper extends QBMapper
         $qb = $this->db->getQueryBuilder();
         $qb->delete($this->getTableName())
             ->where($qb->expr()->eq('ticket_id', $qb->createNamedParameter($ticketId, IQueryBuilder::PARAM_INT)));
+        return $qb->executeStatement();
+    }
+
+    /**
+     * Move a selected subset of comments to the target ticket. Re-verifies
+     * ticket binding inside the statement so a row re-homed by a concurrent
+     * merge is skipped instead of dragged along (TOCTOU guard under the
+     * ticket lock). Clears the ticket-local checklist binding and stamps
+     * moved_from provenance.
+     *
+     * @param int[] $commentIds
+     * @return int Number of rows actually moved
+     */
+    public function moveByIdsToTicket(array $commentIds, int $sourceTicketId, int $targetTicketId): int
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $commentIds), static fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return 0;
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->update($this->getTableName())
+            ->set('ticket_id', $qb->createNamedParameter($targetTicketId, IQueryBuilder::PARAM_INT))
+            ->set('moved_from_ticket_id', $qb->createNamedParameter($sourceTicketId, IQueryBuilder::PARAM_INT))
+            ->set('checklist_item_id', $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL))
+            ->where($qb->expr()->in('id', $qb->createNamedParameter($ids, IQueryBuilder::PARAM_INT_ARRAY)))
+            ->andWhere($qb->expr()->eq('ticket_id', $qb->createNamedParameter($sourceTicketId, IQueryBuilder::PARAM_INT)))
+            ->andWhere($qb->expr()->isNull('deleted_at'));
+        return $qb->executeStatement();
+    }
+
+    /**
+     * GDPR erasure: scrub content and author PII on tombstoned comments
+     * authored by the erased actor. Active comments keep history per the
+     * existing erasure semantics (actor string resolves anonymized).
+     */
+    public function scrubDeletedByUserId(string $userId, string $scrubbedName): int
+    {
+        if ($userId === '') {
+            return 0;
+        }
+        $qb = $this->db->getQueryBuilder();
+        $qb->update($this->getTableName())
+            ->set('content', $qb->createNamedParameter(''))
+            ->set('author_name', $qb->createNamedParameter($scrubbedName))
+            ->set('author_email', $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL))
+            ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+            ->andWhere($qb->expr()->isNotNull('deleted_at'));
         return $qb->executeStatement();
     }
 }

@@ -22,6 +22,9 @@ class GuestMiglogMapper extends QBMapper
         parent::__construct($db, 'helpdesk_guest_miglog', GuestMiglog::class);
     }
 
+    /**
+     * @param array<string,mixed> $detail
+     */
     public function log(?string $legacyUid, ?int $identityId, string $stage, array $detail, string $createdBy): GuestMiglog
     {
         $e = new GuestMiglog();

@@ -425,6 +425,7 @@ class CsvExportService
      * @param array<string,string> $assignedNames
      * @param array<int,int> $commentCounts
      * @param array<int,int> $attachmentCounts
+     * @param array<int,list<string>> $resourceLabels
      * @return list<string>
      */
     private function buildTicketRow(
@@ -612,6 +613,10 @@ class CsvExportService
         return $out;
     }
 
+    /**
+     * @param array<string,mixed> $filters
+     * @return array<string,mixed>
+     */
     private function normalizeTicketDateFilters(array $filters): array
     {
         $dateFrom = isset($filters['date_from']) && is_string($filters['date_from']) ? $filters['date_from'] : null;

@@ -40,8 +40,6 @@ class PortalAuthController extends Controller
 {
     use CSPTrait;
 
-    private const SEND_MAIL_CAP = 5;
-
     public function __construct(
         string $appName,
         IRequest $request,
@@ -321,7 +319,12 @@ class PortalAuthController extends Controller
         return $this->withSessionCookies($resp, $identityId, $ip, $via);
     }
 
-    private function withSessionCookies($resp, int $identityId, string $ip, string $via)
+    /**
+     * @template T of Http\Response
+     * @param T $resp
+     * @return T|JSONResponse
+     */
+    private function withSessionCookies(Http\Response $resp, int $identityId, string $ip, string $via): Http\Response
     {
         $identity = $this->identities->find($identityId);
         if ($identity === null || $identity->getStatus() !== 'active') {
@@ -396,6 +399,9 @@ class PortalAuthController extends Controller
         };
     }
 
+    /**
+     * @param array<string,mixed> $params
+     */
     private function renderPortalPage(string $template, string $pageId, array $params, string $title = '', string $help = ''): TemplateResponse
     {
         $l = $this->l10nFactory->get($this->appName);

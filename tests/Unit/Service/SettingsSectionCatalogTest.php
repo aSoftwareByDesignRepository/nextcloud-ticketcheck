@@ -62,7 +62,7 @@ final class SettingsSectionCatalogTest extends TestCase
 		}
 		// Routable = SECTIONS minus HIDDEN, order preserved.
 		self::assertSame(
-			['access', 'categories', 'resources', 'email', 'inbound-mail', 'knowledge-base', 'kb-categories', 'escalation', 'sla', 'license', 'about', 'transfer'],
+			['access', 'categories', 'resources', 'comments', 'email', 'inbound-mail', 'knowledge-base', 'kb-categories', 'escalation', 'sla', 'license', 'about', 'transfer'],
 			SettingsSectionCatalog::routableSections(),
 		);
 	}
@@ -164,6 +164,7 @@ final class SettingsSectionCatalogTest extends TestCase
 			'access' => 'T:Access control',
 			'categories' => 'T:Ticket categories',
 			'resources' => 'T:Ticket resources',
+			'comments' => 'T:Comment management',
 			'email' => 'T:Email notifications',
 			'inbound-mail' => 'T:Inbound email (IMAP)',
 			'knowledge-base' => 'T:Knowledge base settings',
@@ -188,6 +189,7 @@ final class SettingsSectionCatalogTest extends TestCase
 			'access' => 'T:Access',
 			'categories' => 'T:Categories',
 			'resources' => 'T:Resources',
+			'comments' => 'T:Comments',
 			'email' => 'T:Email',
 			'inbound-mail' => 'T:Inbound mail',
 			'knowledge-base' => 'T:Knowledge base',

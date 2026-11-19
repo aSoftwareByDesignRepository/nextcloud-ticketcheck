@@ -50,7 +50,7 @@ $createTicketUrl = $_['urlGenerator']->linkToRoute(
                             </li>
                             <li class="tc-kb-article__meta-item">
                                 <?php print_unescaped(IconCatalog::render('eye', 'tc-icon--inline')); ?>
-                                <?php p($l->n('ticketcheck', '%n view', '%n views', (int)$article->getViews())); ?>
+                                <?php p($l->n('%n view', '%n views', (int)$article->getViews())); ?>
                             </li>
                             <li class="tc-kb-article__meta-item">
                                 <?php print_unescaped(IconCatalog::render('thumbs-up', 'tc-icon--inline')); ?>

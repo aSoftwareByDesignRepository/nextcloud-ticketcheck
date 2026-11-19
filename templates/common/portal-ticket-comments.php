@@ -36,6 +36,11 @@ $c_commentsWithAttachments = $commentContext['commentsWithAttachments'] ?? [];
 		if ($comment->getIsInternal()) {
 			continue;
 		}
+		// Defense in depth: tombstoned rows never reach guest/requester
+		// output (spec MH-A09) even if a caller passes an unfiltered list.
+		if ($comment->getDeletedAt() !== null) {
+			continue;
+		}
 		$commentAttachments = $commentData['attachments'];
 		$authorName = (string)($commentData['authorName'] ?? $c_l->t('unknown'));
 		$isEven = $index % 2 === 0;
@@ -56,6 +61,15 @@ $c_commentsWithAttachments = $commentContext['commentsWithAttachments'] ?? [];
 								: $commentAt->format('Y-m-d H:i'));
 							?>
 						</span>
+						<?php if ($comment->getEditedAt() !== null): ?>
+							<span class="ticket-detail-comment-edited helpdesk-text-muted"><?php p($c_l->t('comment_edited')); ?></span>
+						<?php endif; ?>
+						<?php if ($comment->getMovedFromTicketId() !== null): ?>
+							<span class="ticket-detail-comment-moved helpdesk-text-muted">
+								<?php print_unescaped(IconCatalog::render('merge', 'ticket-detail-comment-moved-icon')); ?>
+								<?php p($c_l->t('comment_moved_from_generic')); ?>
+							</span>
+						<?php endif; ?>
 					</div>
 					<p class="ticket-detail-comment-content"><?php p($comment->getContent()); ?></p>
 					<?php if (!empty($commentAttachments)): ?>

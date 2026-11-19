@@ -166,6 +166,10 @@ class CompanionGateService
 			'limits' => [
 				'maxAttachmentBytes' => $maxAttachment,
 				'maxCommentChars' => 10000,
+				// Author self-edit window (minutes); 0 = self-edit disabled.
+				'commentEditWindowMinutes' => $this->permissions->commentEditWindowMinutes(),
+				// Max selectable comments+attachments per selective move.
+				'moveSelectionLimit' => \OCA\Ticketcheck\Service\CommentLifecycleService::MOVE_ITEM_LIMIT,
 			],
 			'capabilities' => [
 				'companionMin' => self::COMPANION_MIN,

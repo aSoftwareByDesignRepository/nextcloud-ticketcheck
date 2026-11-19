@@ -53,6 +53,7 @@ final class GuestIdentityServiceGrantTest extends TestCase
 			$this->createMock(PortalOtpMapper::class),
 			$this->createMock(GuestDeviceMapper::class),
 			$this->audit,
+			$this->createMock(\OCA\Ticketcheck\Db\CommentMapper::class),
 			$this->db,
 		);
 	}

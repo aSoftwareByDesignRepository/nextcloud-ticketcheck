@@ -168,6 +168,7 @@ class MailOutboxMapper extends QBMapper
         return $qb->executeStatement();
     }
 
+    /** @param list<string> $keys */
     public function deleteByIdentityKeys(array $keys): void
     {
         if ($keys === []) {

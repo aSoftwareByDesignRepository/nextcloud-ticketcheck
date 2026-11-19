@@ -784,10 +784,11 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 				continue;
 			}
 			$value = $this->valueForReturnType($retType, $ticket, $name);
-			// Attachment mappers: callers iterate rows and call attachment-only
-			// getters (getCommentId/getFileId/…). A generic Ticket row throws
-			// BadFunctionCallException — empty list is the honest happy shape.
-			if ($value === [$ticket] && str_contains(strtolower($typeName), 'attachment')) {
+			// Attachment/move-audit mappers: callers iterate rows and call
+			// entity-only getters (getCommentId/getBatchId/…). A generic Ticket
+			// row throws BadFunctionCallException — empty list is the honest
+			// happy shape.
+			if ($value === [$ticket] && (str_contains(strtolower($typeName), 'attachment') || str_contains(strtolower($typeName), 'commentmove'))) {
 				$value = [];
 			}
 			try {
@@ -1135,6 +1136,14 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			'parts' => [['title' => 'A', 'description' => 'a'], ['title' => 'B', 'description' => 'b']],
 			'split_parts' => [['title' => 'A', 'description' => 'a'], ['title' => 'B', 'description' => 'b']],
 			'field' => 'status',
+			'is_internal' => 'false',
+			'edit_window_minutes' => '60',
+			'commentIds' => [1],
+			'comment_ids' => [1],
+			'attachmentIds' => [],
+			'attachment_ids' => [],
+			'idempotencyKey' => 'atlashappy01',
+			'idempotency_key' => 'atlashappy01',
 			'type' => 'tickets',
 			'format' => 'csv',
 			'rating' => 5,
