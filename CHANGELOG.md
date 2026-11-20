@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.6.3 - 2026-11-20
 
 ### Added
 - **Comment lifecycle management (issue #6):** staff can edit any comment, switch a comment between customer-visible and staff-only internal note, and soft-delete it (staff see a "deleted by" note in the thread, customers see a clean thread); helpdesk admins can purge deleted comments permanently for real erasure. Comment authors can edit or delete their own comments within a configurable window (`comment_edit_window_minutes`, default 24h). Edited comments carry an "(edited)" marker on every surface, and edits, deletes, purges and moves are written to the activity log. Available in the web UI and the mobile companion.
@@ -39,6 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Dual-role staff may rate their own done tickets (but never other
   customers'), and `/portal/logout` + `/portal/change-password` no longer
   end or misrender their NC-managed session
+- **Localization catalog heal** (post-seal corpus pass): restored ~80
+  zh_CN/zh_TW strings that were cut mid-sentence plus a truncated Danish
+  fragment; fixed a Spanish negation inversion and wrong-word renderings,
+  a Swedish wrong-sense value, and Russian entries that dropped clauses
+  from their English source
 
 ## 2.6.2 - 2026-11-14
 
