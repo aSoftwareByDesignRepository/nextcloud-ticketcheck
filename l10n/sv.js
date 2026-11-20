@@ -1943,7 +1943,7 @@ OC.L10N.register(
 	"no_projects_lowercase" : "Inga projekt",
 	"no_projects_match" : "Inga projekt match",
 	"no_projects_yet" : "Inga projekt ännu",
-	"no_recent_activity" : "Ny verksamhet",
+	"no_recent_activity" : "Ingen nylig aktivitet",
 	"no_replies_yet" : "Inga svar ännu",
 	"no_resources_yet" : "Inga resurser än — lägg till de rum och enheter som anmälarna ska kunna välja.",
 	"no_results_found" : "Inga resultat hittades",
