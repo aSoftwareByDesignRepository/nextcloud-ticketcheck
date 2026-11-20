@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Dual-role staff may rate their own done tickets (but never other
   customers'), and `/portal/logout` + `/portal/change-password` no longer
   end or misrender their NC-managed session
-- **Localization catalog heal** (post-seal corpus pass): restored ~80
+- **Localization catalog heal** (post-seal corpus pass): restored ~190
   zh_CN/zh_TW strings that were cut mid-sentence plus a truncated Danish
   fragment; fixed a Spanish negation inversion and wrong-word renderings,
   a Swedish wrong-sense value, and Russian entries that dropped clauses
