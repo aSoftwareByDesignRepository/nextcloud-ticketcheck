@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+- **Comment lifecycle management (issue #6):** staff can edit any comment, switch a comment between customer-visible and staff-only internal note, and soft-delete it (staff see a "deleted by" note in the thread, customers see a clean thread); helpdesk admins can purge deleted comments permanently for real erasure. Comment authors can edit or delete their own comments within a configurable window (`comment_edit_window_minutes`, default 24h). Edited comments carry an "(edited)" marker on every surface, and edits, deletes, purges and moves are written to the activity log. Available in the web UI and the mobile companion.
+- **Selective comment and attachment transfer (issue #7):** staff can select individual comments (bound attachments travel with them automatically) and standalone ticket attachments and move them to another ticket via a search picker. Moves keep the internal flag and original timestamps, clear checklist bindings, are idempotent against retries, and leave an audit line in both ticket threads without leaking the counterpart ticket number to readers who cannot see it. Available in the web UI and the mobile companion.
+- **Russian (ru) localization (issue #8):** the app is now fully translated into Russian, including the mobile companion.
+
 ### Changed
 - The "Mobile license" settings section is hidden until the Prototype Fund grant period ends — the mobile companion cannot launch before that, so the purchase/seat page is temporarily unreachable. The section, its API and all restore wiring stay in place for re-enabling (planned on/after 2026-01-15).
 
