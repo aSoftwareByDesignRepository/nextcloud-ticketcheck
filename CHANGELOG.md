@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Russian (ru) localization (issue #8):** the app is now fully translated into Russian, including the mobile companion.
 
 ### Changed
-- The "Mobile license" settings section is hidden until the Prototype Fund grant period ends — the mobile companion cannot launch before that, so the purchase/seat page is temporarily unreachable. The section, its API and all restore wiring stay in place for re-enabling (planned on/after 2026-01-15).
+- The "Mobile license" settings section is hidden until the Prototype Fund grant period ends — the mobile companion cannot launch before that, so the purchase/seat page is temporarily unreachable. The section, its API and all restore wiring stay in place for re-enabling (planned on/after 2027-01-15).
 
 ### Fixed
 - App-Access user picker: visible "Searching / no matches / search failed" status (aria-live) instead of a silently empty dropdown; Enter picks the highlighted or first result; in-flight searches are aborted on short queries (same for the group picker).

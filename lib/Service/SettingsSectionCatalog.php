@@ -56,7 +56,7 @@ final class SettingsSectionCatalog
 	 * support is hidden until further notice (product decision). license is
 	 * hidden until the Prototype Fund grant period ends — the TKC2 mobile
 	 * companion cannot launch before that, so the purchase/seat surface must
-	 * not be reachable. TODO: re-enable on/after 2026-01-15. Templates, the
+	 * not be reachable. TODO: re-enable on/after 2027-01-15. Templates, the
 	 * controller arm and the license API routes stay in place; restoring is
 	 * a one-line removal here.
 	 *
