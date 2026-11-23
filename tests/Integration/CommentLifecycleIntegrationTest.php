@@ -226,7 +226,6 @@ class CommentLifecycleIntegrationTest extends TestCase
         // Drive the private purge path directly — deleteTicket needs authz
         // scaffolding we don't want to fake here.
         $m = new \ReflectionMethod(TicketService::class, 'purgeTicketRowAndDependencies');
-        $m->setAccessible(true);
         $m->invoke($this->ticketService, (int)$source->getId());
 
         $this->assertCount(
