@@ -85,8 +85,11 @@ class EnrichTemplateShellContext implements IEventListener
 
 		// Portal templates render for identity sessions too — those are
 		// anonymous to NC (isLoggedIn() is false) but are real guests.
+		// renderAs 'guest' (e.g. the anonymous extmail optout page) renders
+		// inside the same guest layout and must reach the guest asset
+		// registration path as well.
 		$isPortalRender = str_starts_with($template, 'portal/');
-		if (!$event->isLoggedIn() && !$isPortalRender) {
+		if (!$event->isLoggedIn() && !$isPortalRender && !$isGuestRender) {
 			return;
 		}
 
@@ -99,7 +102,7 @@ class EnrichTemplateShellContext implements IEventListener
 		$shellComplete = !empty($params['navigation']) && is_array($params['navigation']);
 
 		$isPortalTemplate = str_starts_with($template, 'portal/');
-		$isGuest = $this->permissionService->isGuest() || $isPortalTemplate;
+		$isGuest = $this->permissionService->isGuest() || $isPortalTemplate || $isGuestRender;
 
 		$l = $params['l'] ?? null;
 		if (!$l instanceof IL10N) {

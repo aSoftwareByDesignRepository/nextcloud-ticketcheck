@@ -98,6 +98,9 @@ class FrontEndAssetService
 			'portal-email-prefs' => 'personal-settings',
 			'rate-limit' => null,
 			'error' => null,
+			// Anonymous extmail opt-out page: styled by app/guest-portal CSS,
+			// no dedicated JS module.
+			'extmail-optout' => null,
 		];
 
 		if ($pageScript === 'settings') {

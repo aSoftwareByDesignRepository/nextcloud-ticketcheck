@@ -40,9 +40,16 @@ class ExternalMailOptoutController extends Controller
 
     private function page(string $state, int $t, string $e, string $k): TemplateResponse
     {
+        $l = $this->l10nFactory->get($this->appName);
         return new TemplateResponse($this->appName, 'optout', [
             'state' => $state, 't' => $t, 'e' => $e, 'k' => $k,
             'formUrl' => '/apps/' . $this->appName . '/extmail/optout',
+            // Non-portal guest render: explicit page id + guest nav mode so the
+            // shell-context listener registers guest assets instead of
+            // misreading the /extmail path as a staff surface.
+            'pageId' => 'extmail-optout',
+            'navMode' => 'guest',
+            'pageTitle' => $l->t('extmail_optout_title'),
         ] + $this->layoutParams->getParams(), 'guest');
     }
 

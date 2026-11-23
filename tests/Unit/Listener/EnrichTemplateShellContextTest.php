@@ -240,4 +240,101 @@ class EnrichTemplateShellContextTest extends TestCase
         $this->assertFalse($params['isAdmin']);
         $this->assertFalse($params['isAgent']);
     }
+
+    /**
+     * Regression: the anonymous extmail optout page renders via renderAs 'guest'
+     * on a non-portal template — the listener must NOT early-return, and the
+     * guest asset registration path must run (app + guest-portal CSS).
+     */
+    public function testAnonymousGuestRenderOptoutReachesGuestAssetRegistration(): void
+    {
+        $navContext = $this->createMock(NavigationContextService::class);
+        $navContext->method('resolvePageIdFromPath')->willReturn('dashboard');
+        $navContext->method('buildNavigation')->willReturn([]);
+        $navContext->method('buildCanonicalUrls')->willReturn(['portalHome' => '/h']);
+        $navContext->method('buildScopeContext')->willReturn(['roleLabel' => 'Guest', 'roleBadge' => 'guest']);
+        $navContext->method('resolvePageMeta')->willReturn(['pageTitle' => 'E-mail preferences', 'pageHelp' => '']);
+        $navContext->method('buildSidebarFooterStats')->willReturn(null);
+
+        $perm = $this->createMock(PermissionService::class);
+        $perm->method('isGuest')->willReturn(false);
+        $perm->method('isRequester')->willReturn(false);
+        $perm->method('isHelpdeskAdmin')->willReturn(false);
+        $perm->method('isAgent')->willReturn(false);
+        $perm->method('canExportData')->willReturn(false);
+        $perm->method('isKnowledgeBaseIndexAvailable')->willReturn(false);
+        $perm->method('isKnowledgeBasePortalContentEnabled')->willReturn(false);
+
+        $localeFormat = $this->createMock(LocaleFormatService::class);
+        $localeFormat->method('clientHints')->willReturn(['locale' => 'en', 'htmlLang' => 'en']);
+
+        $urlGenerator = $this->createMock(IURLGenerator::class);
+        $l10n = $this->createMock(IL10N::class);
+        $l10nFactory = $this->createMock(IFactory::class);
+        $l10nFactory->method('get')->willReturn($l10n);
+
+        $response = new TemplateResponse(Application::APP_ID, 'optout', [
+            'state' => 'invalid',
+            'formUrl' => '/apps/ticketcheck/extmail/optout',
+            'pageId' => 'extmail-optout',
+            'navMode' => 'guest',
+            'requesttoken' => 'unit-test-csrf',
+            'l' => $l10n,
+        ], TemplateResponse::RENDER_AS_GUEST);
+        // Anonymous request — BeforeTemplateRenderedEvent::isLoggedIn() is false.
+        $event = new BeforeTemplateRenderedEvent(false, $response);
+
+        $frontEndAssets = $this->createMock(FrontEndAssetService::class);
+        $frontEndAssets->expects($this->once())->method('registerForPage')->with(
+            'extmail-optout',
+            'guest',
+            $this->callback(static function (array $p): bool {
+                return ($p['navMode'] ?? '') === 'guest';
+            }),
+        );
+
+        $userSession = $this->createMock(IUserSession::class);
+        $userSession->method('getUser')->willReturn(null);
+        $cspService = $this->createMock(CSPService::class);
+        $cspService->expects($this->once())->method('applyPolicyWithNonce')->with(
+            $this->anything(),
+            'guest',
+        )->willReturnArgument(0);
+        $listener = new EnrichTemplateShellContext($navContext, $perm, $localeFormat, $frontEndAssets, $cspService, $urlGenerator, $l10nFactory, $userSession, $this->createMock(IRequest::class));
+        $listener->handle($event);
+
+        $params = $response->getParams();
+        $this->assertSame('guest', $params['navMode']);
+        $this->assertTrue($params['isGuest']);
+    }
+
+    /**
+     * Security: an anonymous request to a non-portal, non-guest app template
+     * must still early-return — no asset/param enrichment leaks to renders the
+     * app did not deliberately publish.
+     */
+    public function testAnonymousNonGuestNonPortalRenderStillEarlyReturns(): void
+    {
+        $navContext = $this->createMock(NavigationContextService::class);
+        $navContext->expects($this->never())->method('buildNavigation');
+
+        $perm = $this->createMock(PermissionService::class);
+        $localeFormat = $this->createMock(LocaleFormatService::class);
+        $urlGenerator = $this->createMock(IURLGenerator::class);
+        $l10nFactory = $this->createMock(IFactory::class);
+
+        $response = new TemplateResponse(Application::APP_ID, 'tickets', [], TemplateResponse::RENDER_AS_USER);
+        $event = new BeforeTemplateRenderedEvent(false, $response);
+
+        $frontEndAssets = $this->createMock(FrontEndAssetService::class);
+        $frontEndAssets->expects($this->never())->method('registerForPage');
+
+        $userSession = $this->createMock(IUserSession::class);
+        $cspService = $this->createMock(CSPService::class);
+        $cspService->method('applyPolicyWithNonce')->willReturnArgument(0);
+        $listener = new EnrichTemplateShellContext($navContext, $perm, $localeFormat, $frontEndAssets, $cspService, $urlGenerator, $l10nFactory, $userSession, $this->createMock(IRequest::class));
+        $listener->handle($event);
+
+        $this->assertArrayNotHasKey('navigation', $response->getParams());
+    }
 }
