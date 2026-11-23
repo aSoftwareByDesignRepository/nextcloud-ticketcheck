@@ -16,7 +16,7 @@ test.describe('Guest admin: lifecycle persistence', () => {
 		await ensureAuthenticated(page);
 	});
 
-	// Index renders a <table> on wide viewports and a <ul class="tc-card-list">
+	// Index renders a <table> on wide viewports and a <ul class="tc-list-cards">
 	// on narrow ones — both carry the guest email and the same edit/delete
 	// controls. Match whichever representation is actually rendered.
 	function findGuestRow(page, email) {

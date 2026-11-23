@@ -181,7 +181,7 @@ $appAccess = $_['appAccessSettings'] ?? [];
 				</fieldset>
 
 				<fieldset class="tc-settings__access-fieldset tc-settings__requesters-fieldset">
-					<legend class="tc-settings__legend"><?php p($l->t('requesters_section_title')); ?></legend>
+					<legend class="tc-fieldset__legend"><?php p($l->t('requesters_section_title')); ?></legend>
 					<p class="helpdesk-form-help tc-settings__requesters-lead"><?php p($l->t('requesters_section_lead')); ?></p>
 					<div class="tc-form-grid">
 						<div class="helpdesk-form-group tc-field tc-field--checkbox tc-field--full-width">

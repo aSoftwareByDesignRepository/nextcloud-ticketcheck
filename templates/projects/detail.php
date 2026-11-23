@@ -223,7 +223,7 @@ $customerDetailHref = ($customerIdForLink > 0 && !empty($_['isAdmin']))
                                 </tbody>
                             </table>
                         </div>
-                        <ul class="tc-card-list tc-project-detail-ticket-cards" aria-label="<?php p($l->t('recent_tickets')); ?>">
+                        <ul class="tc-list-cards tc-project-detail-ticket-cards" aria-label="<?php p($l->t('recent_tickets')); ?>">
                             <?php foreach ($recentTickets as $ticket): ?>
                                 <?php
                                 $tid = $ticket->getId();

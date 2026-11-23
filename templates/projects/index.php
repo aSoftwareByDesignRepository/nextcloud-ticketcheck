@@ -202,7 +202,7 @@ $createProjectUrl = $_['urlGenerator']->linkToRoute('ticketcheck.project.create'
                             </table>
                         </div>
 
-                        <ul class="tc-card-list tc-projects-card-list" aria-label="<?php p($l->t('projects_list_section')); ?>">
+                        <ul class="tc-list-cards tc-projects-card-list" aria-label="<?php p($l->t('projects_list_section')); ?>">
                             <?php foreach ($projects as $project): ?>
                                 <?php
                                 $pid = (int)($project['id'] ?? 0);

@@ -74,10 +74,10 @@ const READY = {
 	'portal-create': { current: '.portal-create' },
 	'portal-kb': { populated: '.portal-shortcuts, .helpdesk-card, .tc-shell' },
 	'requester-portal-empty': { empty: '.helpdesk-empty' },
-	'requester-portal-populated': { populated: '.tc-tickets-list, .tc-table-wrap, .tc-card-list' },
+	'requester-portal-populated': { populated: '.tc-tickets-list, .tc-table-wrap, .tc-list-cards' },
 	'requester-create': { current: '.portal-create' },
 	'my-requests-empty': { empty: '.helpdesk-empty' },
-	'my-requests-populated': { populated: '.tc-tickets-list, .tc-table-wrap, .tc-card-list' },
+	'my-requests-populated': { populated: '.tc-tickets-list, .tc-table-wrap, .tc-list-cards' },
 };
 
 const capturedFiles = [];
@@ -286,7 +286,7 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 					await page.setViewportSize({ width: vp.width, height: vp.height });
 					await page.goto(url, { waitUntil: 'domcontentloaded' });
 					// attached, not visible: templates emit both .tc-table-wrap and
-					// .tc-card-list and CSS picks one per width — a comma selector
+					// .tc-list-cards and CSS picks one per width — a comma selector
 					// would pin the wait on a hidden sibling.
 					await page.waitForSelector(ready, { state: 'attached', timeout: 30_000 });
 					await shot(

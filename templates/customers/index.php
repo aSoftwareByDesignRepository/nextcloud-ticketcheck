@@ -152,7 +152,7 @@ $clearFiltersUrl = $_['urlGenerator']->linkToRoute('ticketcheck.customer.index')
                             </table>
                         </div>
 
-                        <ul class="tc-card-list tc-customers-card-list" aria-label="<?php p($l->t('customers_list_section')); ?>">
+                        <ul class="tc-list-cards tc-customers-card-list" aria-label="<?php p($l->t('customers_list_section')); ?>">
                             <?php foreach ($customers as $customer): ?>
                                 <?php
                                 $cid = (int)($customer['id'] ?? 0);

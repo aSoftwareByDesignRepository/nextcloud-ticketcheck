@@ -237,7 +237,7 @@ foreach ($projects as $proj) {
                                 </tbody>
                             </table>
                         </div>
-                        <ul class="tc-card-list tc-customer-detail-ticket-cards" aria-label="<?php p($l->t('recent_tickets')); ?>">
+                        <ul class="tc-list-cards tc-customer-detail-ticket-cards" aria-label="<?php p($l->t('recent_tickets')); ?>">
                             <?php foreach ($recentTickets as $ticket): ?>
                                 <?php
                                 $tid = $ticket->getId();
@@ -357,7 +357,7 @@ foreach ($projects as $proj) {
                                 </tbody>
                             </table>
                         </div>
-                        <ul class="tc-card-list tc-customer-detail-project-cards" aria-label="<?php p($l->t('projects')); ?>">
+                        <ul class="tc-list-cards tc-customer-detail-project-cards" aria-label="<?php p($l->t('projects')); ?>">
                             <?php foreach ($projects as $project): ?>
                                 <?php
                                 $pid = (int)($project['id'] ?? 0);
@@ -459,7 +459,7 @@ foreach ($projects as $proj) {
                                 </tbody>
                             </table>
                         </div>
-                        <ul class="tc-card-list tc-customer-detail-guest-cards" aria-label="<?php p($l->t('guest_users')); ?>">
+                        <ul class="tc-list-cards tc-customer-detail-guest-cards" aria-label="<?php p($l->t('guest_users')); ?>">
                             <?php foreach ($guestUsers as $guest): ?>
                                 <li class="tc-card helpdesk-card tc-customer-detail-guest-card" data-customer-detail-guest-row="<?php p($guest['user_id'] ?? ''); ?>">
                                     <div class="helpdesk-card__body">

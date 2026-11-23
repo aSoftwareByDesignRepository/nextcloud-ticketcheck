@@ -258,7 +258,7 @@ $categoryLabel = static function (?string $key) use ($categoryLabelMap): string 
                         </table>
                     </div>
 
-                    <ul class="tc-card-list" aria-label="<?php p($l->t('tickets_list_section')); ?>">
+                    <ul class="tc-list-cards" aria-label="<?php p($l->t('tickets_list_section')); ?>">
                         <?php foreach ($_['tickets'] as $ticket):
                             $daysSinceUpdate = (new DateTime())->diff($ticket->getUpdatedAt())->days;
                             $isOld = $daysSinceUpdate > 3 && !in_array($ticket->getStatus(), ['done', 'resolved', 'closed'], true);

@@ -156,7 +156,7 @@ $formatGuestDate = static function ($raw) use ($localeFormat, $l): string {
                                 </table>
                             </div>
 
-                            <ul class="tc-card-list" aria-label="<?php p($l->t('guest_users')); ?>">
+                            <ul class="tc-list-cards" aria-label="<?php p($l->t('guest_users')); ?>">
                                 <?php foreach ($guests as $guest): ?>
                                     <li class="tc-card tc-guests-card">
                                         <div class="tc-card__body">

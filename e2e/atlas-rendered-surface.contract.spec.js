@@ -44,10 +44,10 @@ test.describe('Rendered-surface contract — staff', () => {
 				navExclude: '#app-navigation, nav, .tc-nav',
 				// Intentional marker-less designs: project chips row (flex badges),
 				// the bordered app-access preview (listbox-style rows),
-				// tc-card-list — a semantic <ul> whose <li>s render as cards,
+				// tc-list-cards — a semantic <ul> whose <li>s render as cards,
 				// the migration stage strip (horizontal badge row) and the
 				// uid action rows inside each bucket's <details>.
-				listAllow: '.tc-guests-project-access, .settings-app-access-preview__list, .tc-card-list, .tc-stage__list, .tc-bucket__list ul',
+				listAllow: '.tc-guests-project-access, .settings-app-access-preview__list, .tc-list-cards, .tc-stage__list, .tc-bucket__list ul',
 				// SLA target hour inputs are deliberately compact (9rem skinned
 				// cells inside a wide table) — pinned-control covers the rest.
 				controlAllow: '.tc-sla-hours',
@@ -85,8 +85,8 @@ test.describe('Rendered-surface contract — guest portal', () => {
 				navExclude: '#app-navigation, nav, .tc-nav',
 				// Intentional marker-less designs on guest pages: password-step
 				// badges, requirement rows (check icons), the prefs list, and
-				// tc-card-list — a semantic <ul> whose <li>s render as cards.
-				listAllow: '.portal-password__steps, .portal-password__requirements-list, .portal-email-prefs__list, .tc-card-list, .tc-session-list',
+				// tc-list-cards — a semantic <ul> whose <li>s render as cards.
+				listAllow: '.portal-password__steps, .portal-password__requirements-list, .portal-email-prefs__list, .tc-list-cards, .tc-session-list',
 			});
 			await assertIconsAcrossSchemes(page);
 		});

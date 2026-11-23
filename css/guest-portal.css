@@ -52,6 +52,20 @@
 	background: color-mix(in srgb, var(--color-primary-element-light, #e4eef6) 70%, var(--color-main-background));
 	border: 1px solid var(--color-border, #d8d8d8);
 }
+.tc-notice--success {
+	background: var(--tc-tint-success, color-mix(in srgb, #2d7b41 18%, var(--color-main-background)));
+	border-color: color-mix(in srgb, var(--tc-success-element, #2d7b41) 45%, var(--color-main-background));
+}
+.tc-label {
+	display: block;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+.tc-hint {
+	margin: 0;
+	font-size: var(--tc-fs-sm, 0.875rem);
+	color: var(--color-text-maxcontrast, #666);
+}
 .tc-field-error {
 	color: var(--color-error-text, var(--tc-danger-ink, var(--color-error, #e9322d)));
 	font-weight: 600;

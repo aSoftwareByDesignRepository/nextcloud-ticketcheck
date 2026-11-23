@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
 				ticketsContainer.querySelectorAll('.tc-tickets-table tbody .tc-tickets-row[data-status]')
 			),
 			cards: Array.prototype.slice.call(
-				ticketsContainer.querySelectorAll('.tc-card-list > .tc-card[data-status]')
+				ticketsContainer.querySelectorAll('.tc-list-cards > .tc-card[data-status]')
 			),
 			// Legacy portal-ticket-row links (kept for backwards compatibility).
 			legacy: Array.prototype.slice.call(
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		};
 
 		const tbody = ticketsContainer.querySelector('.tc-tickets-table tbody');
-		const cardList = ticketsContainer.querySelector('.tc-card-list');
+		const cardList = ticketsContainer.querySelector('.tc-list-cards');
 
 		if (items.rows.length || items.cards.length) {
 			// Table + card dual layout: count once from rows (desktop) to avoid double-counting.
