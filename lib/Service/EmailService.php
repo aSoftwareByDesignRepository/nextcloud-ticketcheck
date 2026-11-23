@@ -1499,6 +1499,11 @@ class EmailService
         if ($this->mailOutboxMapper !== null) {
             try {
                 $ledgerRowId = $this->mailOutboxMapper->recordExternalLegDigest((int)$ticket->getId(), $e);
+                if ($ledgerRowId === false) {
+                    // Unique-index dedupe: a racing sender already ledgered
+                    // this (ticket,address) hour — no second digest.
+                    return false;
+                }
             } catch (\Throwable $ex) {
                 $this->logger->warning('ticketcheck.customer_mail: digest ledger write failed', [
                     'app' => 'ticketcheck',

@@ -187,7 +187,17 @@ class MailOutboxMapper extends QBMapper
         $now = new \DateTime();
         $row->setSentAt($now);
         $row->setCreatedAt($now);
-        $saved = $this->insert($row);
+        try {
+            $saved = $this->insert($row);
+        } catch (\OCP\DB\Exception $e) {
+            // Random per-attempt key cannot collide by construction; the
+            // catch encodes the conflict contract so a future deterministic
+            // key degrades to an unledgered attempt, not a raw 500.
+            if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                return null;
+            }
+            throw $e;
+        }
         $id = $saved->getId();
         return is_int($id) ? $id : null;
     }
@@ -229,7 +239,15 @@ class MailOutboxMapper extends QBMapper
         $row->setStatus('capped');
         $row->setAttempts(0);
         $row->setCreatedAt(new \DateTime());
-        $this->insert($row);
+        try {
+            $this->insert($row);
+        } catch (\OCP\DB\Exception $e) {
+            // See recordExternalLegSend — random key; a unique hit loses one
+            // bookkeeping row, which must never break the send path.
+            if ($e->getReason() !== \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                throw $e;
+            }
+        }
     }
 
     /**
@@ -292,12 +310,24 @@ class MailOutboxMapper extends QBMapper
         return is_string($v) && $v !== '' ? new \DateTime($v) : null;
     }
 
-    /** Ledger one digest send (dedupe anchor; excluded from the send cap). */
-    public function recordExternalLegDigest(int $ticketId, string $email): ?int
+    /**
+     * Ledger one digest send (dedupe anchor; excluded from the send cap).
+     * The key is deterministic per (ticket,address,hour bucket) so the
+     * hd_mbox_idem_uq unique index serialises racing senders at the write
+     * boundary — the service-level lastExternalDigestTime check is only a
+     * fast-path and cannot close the check-then-act race on its own.
+     *
+     * @return int|false|null row id, false when the unique index deduped
+     * (a concurrent sender already ledgered this hour), null when the
+     * insert yielded no int id
+     */
+    public function recordExternalLegDigest(int $ticketId, string $email): int|false|null
     {
         $row = new MailOutbox();
         $row->setIdempotencyKey(
-            self::EXTERNAL_DIGEST_KEY_PREFIX . $ticketId . ':' . bin2hex(random_bytes(8))
+            self::EXTERNAL_DIGEST_KEY_PREFIX . $ticketId . ':'
+            . substr(hash('sha256', strtolower(trim($email))), 0, 32) . ':'
+            . (new \DateTime())->format('YmdH')
         );
         $row->setToEmail($email);
         $row->setTemplate('ticket_external_digest');
@@ -307,7 +337,14 @@ class MailOutboxMapper extends QBMapper
         $now = new \DateTime();
         $row->setSentAt($now);
         $row->setCreatedAt($now);
-        $saved = $this->insert($row);
+        try {
+            $saved = $this->insert($row);
+        } catch (\OCP\DB\Exception $e) {
+            if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                return false;
+            }
+            throw $e;
+        }
         $id = $saved->getId();
         return is_int($id) ? $id : null;
     }
