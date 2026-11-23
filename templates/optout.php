@@ -10,7 +10,7 @@
 $l = $_['l'];
 $state = $_['state'] ?? 'invalid';
 ?>
-<main class="helpdesk-portal" style="display:flex;justify-content:center;padding:48px 16px;">
+<main class="helpdesk-portal" data-tc-nav-mode="guest" style="display:flex;justify-content:center;padding:48px 16px;">
   <section class="helpdesk-card" style="max-width:420px;width:100%;text-align:center;" role="region" aria-labelledby="extmail-optout-title">
     <div class="helpdesk-card__body" style="padding:32px 24px;">
       <h1 id="extmail-optout-title" class="helpdesk-card__title" style="margin:0 0 12px;"><?php p($l->t('extmail_optout_title')); ?></h1>
