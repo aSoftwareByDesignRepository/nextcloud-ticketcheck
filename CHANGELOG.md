@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.7.0 - 2026-11-23
 
 ### Added
 - **Companion quick actions (mobile):** ticket push notifications now carry an Expo `categoryId`, so the companion can offer tap-level actions — **Reply** (opens the ticket with the composer armed), **Resolve** and **Reopen** (each opens the ticket with a confirmation sheet that names the current→target status). Actions never mutate from the notification itself: the confirm sheet is armed only after a fresh server-side ticket load and is disabled with a visible reason when the target transition is no longer allowed, so a stale or deleted ticket can never write back.
