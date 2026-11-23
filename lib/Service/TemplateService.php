@@ -130,6 +130,21 @@ class TemplateService
      */
     public function processTemplate(int $templateId, array $variables): string
     {
+        return $this->renderTemplate($templateId, $variables, true);
+    }
+
+    /**
+     * Plain-text rendering for non-HTML consumers (companion composer).
+     * Ticket comments are stored raw and escaped at render (p()), so
+     * substituting escaped values here would double-escape for the customer.
+     */
+    public function processTemplatePlain(int $templateId, array $variables): string
+    {
+        return $this->renderTemplate($templateId, $variables, false);
+    }
+
+    private function renderTemplate(int $templateId, array $variables, bool $escapeForHtml): string
+    {
         $template = $this->getTemplate($templateId);
         if (!$template) {
             throw new \Exception('Template not found');
@@ -137,18 +152,22 @@ class TemplateService
 
         $content = $template['content'];
 
+        // Single-pass replacement — a substituted VALUE that happens to look
+        // like a placeholder ("{{agent_name}}" inside a customer name) must
+        // stay literal; sequential str_replace would resolve it in a later
+        // pass (ordering-dependent injection into the wrong slot).
+        $replacements = [];
         foreach ($variables as $key => $value) {
             // Only process keys that are safe placeholder names (alphanumeric + underscore)
             if (!is_string($key) || !preg_match('/^[a-zA-Z0-9_]+$/', $key)) {
                 continue;
             }
-            $placeholder = '{{' . $key . '}}';
-            // Escape value for HTML context (prevents XSS when output is rendered as HTML)
-            $safeValue = htmlspecialchars((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-            $content = str_replace($placeholder, $safeValue, $content);
+            $replacements['{{' . $key . '}}'] = $escapeForHtml
+                ? htmlspecialchars((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8')
+                : (string) $value;
         }
 
-        return $content;
+        return strtr($content, $replacements);
     }
 }
 

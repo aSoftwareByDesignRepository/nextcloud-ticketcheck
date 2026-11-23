@@ -13,7 +13,6 @@ use OCA\Ticketcheck\Db\TicketMapper;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\EmailPreferencesService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\GuestLayoutParamsProvider;
 use OCA\Ticketcheck\Service\HtmlSanitizerService;
 use OCA\Ticketcheck\Service\PermissionService;
@@ -55,7 +54,6 @@ class CustomerPortalControllerTicketLinksAccessTest extends TestCase
         $this->ticketService = $this->createMock(TicketService::class);
         $this->permissionService = $this->createMock(PermissionService::class);
         $projectService = $this->createMock(ProjectService::class);
-        $emailService = $this->createMock(EmailService::class);
         $this->ticketMapper = $this->createMock(TicketMapper::class);
         $kbArticleMapper = $this->createMock(KBArticleMapper::class);
         $attachmentMapper = $this->createMock(AttachmentMapper::class);
@@ -86,7 +84,6 @@ class CustomerPortalControllerTicketLinksAccessTest extends TestCase
             $this->ticketService,
             $this->permissionService,
             $projectService,
-            $emailService,
             $this->ticketMapper,
             $kbArticleMapper,
             $attachmentMapper,

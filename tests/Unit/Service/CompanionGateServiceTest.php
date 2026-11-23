@@ -183,6 +183,12 @@ final class CompanionGateServiceTest extends TestCase
 		}
 		self::assertNotContains('push', $payload['capabilities']['features']);
 		self::assertFalse($payload['capabilities']['pushAvailable']);
+		// TC-COMP-QUICKACT: quickActions rides the push feature — never
+		// advertised when delivery is off; templates tracks agent role only.
+		self::assertNotContains('quickActions', $payload['capabilities']['features']);
+		self::assertFalse($payload['capabilities']['quickActions']);
+		self::assertTrue($payload['capabilities']['templates']);
+		self::assertContains('templates', $payload['capabilities']['features']);
 		self::assertTrue($payload['licensing']['seat']['assigned']);
 		self::assertSame('2027-01-01', $payload['licensing']['seat']['validUntil']);
 	}
@@ -225,5 +231,10 @@ final class CompanionGateServiceTest extends TestCase
 
 		self::assertContains('push', $payload['capabilities']['features']);
 		self::assertTrue($payload['capabilities']['pushAvailable']);
+		// TC-COMP-QUICKACT: honest capability — armed notification actions are
+		// only advertised when the delivery path they depend on is live.
+		self::assertContains('quickActions', $payload['capabilities']['features']);
+		self::assertTrue($payload['capabilities']['quickActions']);
+		self::assertTrue($payload['capabilities']['templates']);
 	}
 }

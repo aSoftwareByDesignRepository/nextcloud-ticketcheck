@@ -12,7 +12,6 @@ use OCA\Ticketcheck\Service\ActivityEventService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\DeletionService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\MergeService;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Service\ProjectService;
@@ -52,7 +51,6 @@ class TicketControllerAttachmentOwnershipTest extends TestCase
         $this->ticketService = $this->createMock(TicketService::class);
         $this->permissionService = $this->createMock(PermissionService::class);
         $mergeService = $this->createMock(MergeService::class);
-        $emailService = $this->createMock(EmailService::class);
         $projectService = $this->createMock(ProjectService::class);
         $deletionService = $this->createMock(DeletionService::class);
         $ticketMapper = $this->createMock(TicketMapper::class);
@@ -81,7 +79,6 @@ class TicketControllerAttachmentOwnershipTest extends TestCase
             $this->ticketService,
             $this->permissionService,
             $mergeService,
-            $emailService,
             $projectService,
             $deletionService,
             $ticketMapper,

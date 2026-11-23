@@ -45,6 +45,8 @@ class CompanionController extends Controller
 		private readonly CompanionPushService $push,
 		private readonly KnowledgeBaseService $knowledgeBase,
 		private readonly ?\OCA\Ticketcheck\Service\CommentLifecycleService $commentLifecycle = null,
+		private readonly ?\OCA\Ticketcheck\Service\TemplateService $templates = null,
+		private readonly ?\OCP\L10N\IFactory $l10nFactory = null,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -643,6 +645,104 @@ class CompanionController extends Controller
 			'registered' => true,
 			'delivery' => $this->push->isFeatureEnabled() ? 'enabled' : 'deferred',
 		]);
+	}
+
+	/**
+	 * Canned replies — metadata list only (TC-COMP-QUICKACT MH-06).
+	 * Content is fetched per-template via processTemplate so the list stays
+	 * cheap and a deleted row cannot ship a stale body (AC-B01-1).
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function templates(): JSONResponse
+	{
+		$this->requireUid();
+		if ($this->templates === null) {
+			return $this->error('not_supported', Http::STATUS_NOT_IMPLEMENTED);
+		}
+		$items = [];
+		foreach ($this->templates->getAllTemplates() as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+			$category = trim((string)($row['category'] ?? ''));
+			$items[] = [
+				'id' => (int)($row['id'] ?? 0),
+				'name' => (string)($row['name'] ?? ''),
+				'category' => $category !== '' ? $category : null,
+			];
+		}
+		return new JSONResponse(['ok' => true, 'items' => $items]);
+	}
+
+	/**
+	 * Render a canned reply for a ticket — all {{vars}} are derived
+	 * server-side from the ticket + acting agent (NN-07: a caller-supplied
+	 * `variables` map is never read; spoofed customer_name/agent_name is the
+	 * injection vector OC-2 exists to prevent). Unknown template and
+	 * invisible ticket collapse to the SAME uniform-404 body (TH-01).
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function processTemplate(int $id): JSONResponse
+	{
+		try {
+			$uid = $this->requireUid();
+			if ($this->templates === null) {
+				return $this->error('not_supported', Http::STATUS_NOT_IMPLEMENTED);
+			}
+			// Accept int JSON and digit-string form posts alike (same
+			// coercion convention as the other companion endpoints).
+			$ticketRaw = $this->request->getParam('ticket_id');
+			$ticketId = is_int($ticketRaw)
+				? $ticketRaw
+				: (is_string($ticketRaw) && ctype_digit($ticketRaw) ? (int)$ticketRaw : 0);
+			if ($ticketId < 1) {
+				return $this->error('invalid_ticket_id', Http::STATUS_UNPROCESSABLE_ENTITY);
+			}
+			$template = $this->templates->getTemplate($id);
+			if (!is_array($template) || (int)($template['is_active'] ?? 0) !== 1) {
+				return $this->error('template_not_found', Http::STATUS_NOT_FOUND);
+			}
+			// A deleted/inactive template and an invisible ticket must produce
+			// the SAME body — the pair is never a two-step oracle.
+			try {
+				$ticket = $this->tickets->requireTicketForRead($ticketId);
+			} catch (CompanionNotFoundException) {
+				// Same body as an unknown template — process is not a
+				// ticket-existence oracle (spec §9.3).
+				return $this->error('template_not_found', Http::STATUS_NOT_FOUND);
+			}
+			$statusKey = \OCA\Ticketcheck\Db\Ticket::normalizeStatus($ticket->getStatus())
+				?? (string)$ticket->getStatus();
+			$variables = [
+				'ticket_number' => (string)$ticket->getTicketNumber(),
+				'title' => (string)$ticket->getTitle(),
+				'customer_name' => $ticket->getCustomerName() !== ''
+					? $ticket->getCustomerName()
+					: (string)$ticket->getCustomerEmail(),
+				'customer_email' => (string)$ticket->getCustomerEmail(),
+				'agent_name' => trim((string)($this->userSession->getUser()?->getDisplayName() ?? '')) !== ''
+					? (string)$this->userSession->getUser()->getDisplayName()
+					: $uid,
+				'status' => $this->l10nFactory !== null
+					? $this->l10nFactory->get(Application::APP_ID)->t('status_' . $statusKey)
+					: $statusKey,
+			];
+			try {
+				// Plain substitution — the composer is plain text and comments
+				// are stored raw and escaped at render (p()). The HTML-escaped
+				// variant would double-escape for the customer.
+				$content = $this->templates->processTemplatePlain($id, $variables);
+			} catch (\Throwable) {
+				// Row deleted between the metadata check and the render —
+				// identical uniform-404, no partial body.
+				return $this->error('template_not_found', Http::STATUS_NOT_FOUND);
+			}
+			return new JSONResponse(['ok' => true, 'content' => $content]);
+		} catch (CompanionNotFoundException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_NOT_FOUND);
+		}
 	}
 
 	#[NoAdminRequired]

@@ -259,6 +259,7 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
                 null,
                 $c->get(\OCA\Ticketcheck\Db\CommentMoveMapper::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketNotificationDispatcher::class),
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\TicketService::class, function ($c) {
@@ -299,7 +300,32 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Service\InboundSmtpSendService::class),
                 $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
                 $c->get('PermissionService'),
-                $c->get(\OCA\Ticketcheck\Service\CompanionNotificationService::class)
+                $c->get(\OCA\Ticketcheck\Service\CompanionNotificationService::class),
+                $c->get(\OCA\Ticketcheck\Db\MailOutboxMapper::class),
+                $c->get(\OCA\Ticketcheck\Service\ExternalMailOptoutService::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\GuestInviteService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\GuestInviteService(
+                $c->get(\OCA\Ticketcheck\Service\GuestIdentityService::class),
+                $c->get(\OCA\Ticketcheck\Service\PortalOtpService::class),
+                $c->get(\OCA\Ticketcheck\Service\GuestMailOutboxService::class),
+                $c->get(\OCP\IURLGenerator::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\ExternalMailOptoutService::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\ExternalMailOptoutService(
+                $c->get(\OCP\IConfig::class),
+                $c->get(\OCP\IAppConfig::class),
+                $c->get(\OCP\IURLGenerator::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Service\TicketNotificationDispatcher::class, function ($c) {
+            return new \OCA\Ticketcheck\Service\TicketNotificationDispatcher(
+                $c->get('EmailService'),
+                $c->get(\OCP\IUserSession::class),
+                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
+                $c->get(\Psr\Log\LoggerInterface::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\ActivityEventService::class, function ($c) {
@@ -553,7 +579,6 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Service\InboundMailConfigService::class),
                 $c->get(\OCA\Ticketcheck\Db\InboundMessageMapper::class),
                 $c->get(\OCA\Ticketcheck\Service\ReplyTokenService::class),
-                $c->get('EmailService'),
                 $c->get(\OCA\Ticketcheck\Db\HelpdeskCustomerMapper::class),
                 $c->get(\OCA\Ticketcheck\Db\HelpdeskProjectMapper::class),
                 $c->get(\OCP\L10N\IFactory::class),
@@ -671,6 +696,16 @@ class Application extends App implements IBootstrap
                 $c->get(\OCP\IGroupManager::class),
                 $c->get(\OCP\IURLGenerator::class),
                 $c->get(\OCP\Lock\ILockingProvider::class),
+            );
+        });
+
+        $context->registerService(\OCA\Ticketcheck\BackgroundJob\ExternalMailDigestJob::class, function ($c) {
+            return new \OCA\Ticketcheck\BackgroundJob\ExternalMailDigestJob(
+                $c->get(\OCP\AppFramework\Utility\ITimeFactory::class),
+                $c->get(\OCA\Ticketcheck\Db\MailOutboxMapper::class),
+                $c->get(\OCA\Ticketcheck\Db\TicketMapper::class),
+                $c->get('EmailService'),
+                $c->get(\Psr\Log\LoggerInterface::class),
             );
         });
 

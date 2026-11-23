@@ -36,6 +36,7 @@ class GuestIdentityController extends Controller
         private readonly IURLGenerator $urlGenerator,
         private readonly IFactory $l10nFactory,
         private readonly GuestAuditMapper $audit,
+        private readonly ?\OCA\Ticketcheck\Service\GuestInviteService $guestInvite = null,
     ) {
         parent::__construct($appName, $request);
     }
@@ -206,20 +207,6 @@ class GuestIdentityController extends Controller
     /** Invite mail = magic link, never a credential (US-T03 AC-2). */
     private function sendInvite(int $identityId): bool
     {
-        try {
-            $identity = $this->identities->requireIdentity($identityId);
-        } catch (\InvalidArgumentException) {
-            return false;
-        }
-        if ($identity->getStatus() !== 'active') {
-            return false;
-        }
-        $email = (string)$identity->getEmail();
-        [, $magic, $otpId] = $this->otp->issue($email, $identityId, 'staff-invite');
-        return $this->outbox->enqueue('invite:' . $otpId, $email, GuestMailOutboxService::TPL_INVITE, [
-            'display_name' => (string)$identity->getDisplayName(),
-            'magic_url' => $this->urlGenerator->linkToRouteAbsolute('ticketcheck.portalAuth.magic', ['token' => $magic]),
-            'locale' => (string)($identity->getLocale() ?? ''),
-        ], capped: false) !== null;
+        return $this->guestInvite !== null ? $this->guestInvite->sendInvite($identityId) : false;
     }
 }

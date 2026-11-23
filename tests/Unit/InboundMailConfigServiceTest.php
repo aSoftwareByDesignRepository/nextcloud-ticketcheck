@@ -106,7 +106,7 @@ class InboundMailConfigServiceTest extends TestCase
 	public function testInvalidPortRejected(): void
 	{
 		try {
-			$this->service()->validateInput($this->validInput(['host' => 'imap.example.com', 'port' => 99999]));
+			$this->service()->validateInput($this->validInput(['host' => '93.184.216.34', 'port' => 99999]));
 			self::fail('expected ValidationException');
 		} catch (ValidationException $e) {
 			self::assertArrayHasKey('port', $e->getErrors());
@@ -289,7 +289,7 @@ class InboundMailConfigServiceTest extends TestCase
 	public function testTestPassedHashIgnoresFlagsButBindsPasswordSecret(): void
 	{
 		$svc = $this->service();
-		$v = $svc->validateInput($this->validInput(['host' => 'imap.example.com', 'port' => 993]));
+		$v = $svc->validateInput($this->validInput(['host' => '93.184.216.34', 'port' => 993]));
 		$same = $v;
 		$same['dsgvo_ack'] = false;
 		self::assertSame($svc->testPassedHash($v), $svc->testPassedHash($same));

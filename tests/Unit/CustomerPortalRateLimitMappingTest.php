@@ -11,7 +11,6 @@ use OCA\Ticketcheck\Db\TicketMapper;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\EmailPreferencesService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\GuestLayoutParamsProvider;
 use OCA\Ticketcheck\Service\GuestPortalPageService;
 use OCA\Ticketcheck\Service\HtmlSanitizerService;
@@ -75,7 +74,6 @@ class CustomerPortalRateLimitMappingTest extends TestCase
 			$this->ticketService,
 			$permission,
 			$this->createMock(ProjectService::class),
-			$this->createMock(EmailService::class),
 			$this->createMock(TicketMapper::class),
 			$this->createMock(KBArticleMapper::class),
 			$this->createMock(AttachmentMapper::class),

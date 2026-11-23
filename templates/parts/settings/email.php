@@ -59,6 +59,17 @@ $emailSettings = $_['emailSettings'] ?? [];
 						<span class="helpdesk-form-help tc-field__hint-block"><?php p($l->t('enable_weekly_digest_emails_help')); ?></span>
 					</div>
 
+					<div class="helpdesk-form-group tc-field tc-field--checkbox tc-field--full-width">
+						<input type="checkbox"
+							name="external_customer_mail_enabled"
+							id="external-customer-mail-enabled"
+							<?php if (($emailSettings['external_customer_mail_enabled'] ?? 'yes') === 'yes') {
+								p('checked');
+							} ?>>
+						<label for="external-customer-mail-enabled"><?php p($l->t('external_customer_mail_enabled_label')); ?></label>
+						<span class="helpdesk-form-help tc-field__hint-block"><?php p($l->t('external_customer_mail_enabled_help')); ?></span>
+					</div>
+
 					<div class="helpdesk-form-group tc-field tc-field--full-width">
 						<label for="inbound-email-address" class="helpdesk-form-label">
 							<?php p($l->t('inbound_email_address_label')); ?>

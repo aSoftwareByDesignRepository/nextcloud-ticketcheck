@@ -171,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 enabled: formData.get('enabled') ? 'yes' : 'no',
                 daily_digest_enabled: formData.get('daily_digest_enabled') ? 'yes' : 'no',
                 weekly_digest_enabled: formData.get('weekly_digest_enabled') ? 'yes' : 'no',
+                external_customer_mail_enabled: formData.get('external_customer_mail_enabled') ? 'yes' : 'no',
                 inbound_email_address: (formData.get('inbound_email_address') || '').trim(),
                 inbound_email_enabled: formData.get('inbound_email_enabled') ? 'yes' : 'no'
             };

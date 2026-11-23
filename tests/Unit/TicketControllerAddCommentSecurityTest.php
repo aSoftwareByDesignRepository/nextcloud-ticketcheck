@@ -13,7 +13,6 @@ use OCA\Ticketcheck\Service\ActivityEventService;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\DeletionService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\FrontEndAssetService;
 use OCA\Ticketcheck\Service\LocaleFormatService;
 use OCA\Ticketcheck\Service\MergeService;
@@ -51,8 +50,6 @@ class TicketControllerAddCommentSecurityTest extends TestCase
 	private $permissionService;
 	/** @var TicketMapper&MockObject */
 	private $ticketMapper;
-	/** @var EmailService&MockObject */
-	private $emailService;
 	/** @var ActivityEventService&MockObject */
 	private $activityEventService;
 	/** @var IUserSession&MockObject */
@@ -67,7 +64,6 @@ class TicketControllerAddCommentSecurityTest extends TestCase
 		$this->ticketService = $this->createMock(TicketService::class);
 		$this->permissionService = $this->createMock(PermissionService::class);
 		$this->ticketMapper = $this->createMock(TicketMapper::class);
-		$this->emailService = $this->createMock(EmailService::class);
 		$this->activityEventService = $this->createMock(ActivityEventService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
@@ -82,7 +78,6 @@ class TicketControllerAddCommentSecurityTest extends TestCase
 			$this->ticketService,
 			$this->permissionService,
 			$this->createMock(MergeService::class),
-			$this->emailService,
 			$this->createMock(ProjectService::class),
 			$this->createMock(DeletionService::class),
 			$this->ticketMapper,
@@ -139,7 +134,6 @@ class TicketControllerAddCommentSecurityTest extends TestCase
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('member1');
 		$this->userSession->method('getUser')->willReturn($user);
-		$this->emailService->expects(self::once())->method('sendNewCommentNotification');
 		$this->activityEventService->expects(self::once())
 			->method('logTicketCommentAdded')
 			->with('member1', $ticket, false);
@@ -180,7 +174,6 @@ class TicketControllerAddCommentSecurityTest extends TestCase
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('agent1');
 		$this->userSession->method('getUser')->willReturn($user);
-		$this->emailService->expects(self::never())->method('sendNewCommentNotification');
 		$this->activityEventService->expects(self::once())
 			->method('logTicketCommentAdded')
 			->with('agent1', $ticket, true);
@@ -231,9 +224,6 @@ class TicketControllerAddCommentSecurityTest extends TestCase
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('member1');
 		$this->userSession->method('getUser')->willReturn($user);
-		$this->emailService->expects(self::once())
-			->method('sendNewCommentNotification')
-			->with($survivor, 'Member', 'Follow-up on merged thread', 'member1');
 		$this->activityEventService->expects(self::once())
 			->method('logTicketCommentAdded')
 			->with('member1', $survivor, false);

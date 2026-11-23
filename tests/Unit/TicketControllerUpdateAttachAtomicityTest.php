@@ -12,7 +12,6 @@ use OCA\Ticketcheck\Service\ActivityEventService;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\DeletionService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\FrontEndAssetService;
 use OCA\Ticketcheck\Service\LocaleFormatService;
 use OCA\Ticketcheck\Service\MergeService;
@@ -50,8 +49,6 @@ class TicketControllerUpdateAttachAtomicityTest extends TestCase
 	private PermissionService $permissionService;
 	/** @var AttachmentUploadService&MockObject */
 	private AttachmentUploadService $attachmentUploadService;
-	/** @var EmailService&MockObject */
-	private EmailService $emailService;
 	private TicketController $controller;
 
 	protected function setUp(): void
@@ -61,7 +58,6 @@ class TicketControllerUpdateAttachAtomicityTest extends TestCase
 		$this->ticketService = $this->createMock(TicketService::class);
 		$this->permissionService = $this->createMock(PermissionService::class);
 		$this->attachmentUploadService = $this->createMock(AttachmentUploadService::class);
-		$this->emailService = $this->createMock(EmailService::class);
 
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn (string $key): string => $key);
@@ -80,7 +76,6 @@ class TicketControllerUpdateAttachAtomicityTest extends TestCase
 			$this->ticketService,
 			$this->permissionService,
 			$this->createMock(MergeService::class),
-			$this->emailService,
 			$this->createMock(ProjectService::class),
 			$this->createMock(DeletionService::class),
 			$this->createMock(TicketMapper::class),
@@ -142,7 +137,6 @@ class TicketControllerUpdateAttachAtomicityTest extends TestCase
 		$this->ticketService->expects(self::once())->method('getActiveTicket')->with(42)->willReturn($ticket);
 		$this->ticketService->expects(self::never())->method('updateTicket');
 		$this->ticketService->expects(self::never())->method('deleteAttachmentWherever');
-		$this->emailService->expects(self::never())->method('sendTicketUpdatedNotification');
 
 		$response = $this->controller->updatePost(42);
 		self::assertSame(400, $response->getStatus());
@@ -183,7 +177,6 @@ class TicketControllerUpdateAttachAtomicityTest extends TestCase
 
 		$this->ticketService->expects(self::once())->method('getActiveTicket')->with(9)->willReturn($ticket);
 		$this->ticketService->expects(self::once())->method('updateTicket')->willReturn($updated);
-		$this->emailService->method('sendTicketUpdatedNotification')->willThrowException(new \RuntimeException('smtp down'));
 
 		$response = $this->controller->updatePost(9);
 		self::assertSame(200, $response->getStatus());

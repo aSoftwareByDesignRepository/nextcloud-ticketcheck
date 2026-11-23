@@ -48,6 +48,7 @@ final class TransferHooks implements ConfigTransferHooks
 		'email_notifications_enabled',
 		'daily_digest_enabled',
 		'weekly_digest_enabled',
+		'external_customer_mail_enabled',
 		'sla_business_hours_enabled',
 		'inbound_imap_process_backlog',
 		'inbound_imap_require_reply_token',

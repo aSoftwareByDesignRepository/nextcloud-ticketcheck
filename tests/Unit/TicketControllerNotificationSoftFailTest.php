@@ -13,7 +13,6 @@ use OCA\Ticketcheck\Service\ActivityEventService;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\DeletionService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\FrontEndAssetService;
 use OCA\Ticketcheck\Service\LocaleFormatService;
 use OCA\Ticketcheck\Service\MergeService;
@@ -23,6 +22,7 @@ use OCA\Ticketcheck\Service\ProjectService;
 use OCA\Ticketcheck\Service\SafeFilenameService;
 use OCA\Ticketcheck\Service\SplitService;
 use OCA\Ticketcheck\Service\TicketLinkService;
+use OCA\Ticketcheck\Service\TicketNotificationDispatcher;
 use OCA\Ticketcheck\Service\TicketService;
 use OCA\Ticketcheck\Service\TicketWatcherService;
 use OCP\IConfig;
@@ -39,7 +39,12 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * Successful mutations must stay HTTP 200 when email/activity throw (no retry duplicates).
+ * Mutation responses stay HTTP 200 regardless of notification outcome.
+ *
+ * Customer-mail fan-out now lives inside TicketService (mocked here) via the
+ * soft-fail TicketNotificationDispatcher — see TicketNotificationDispatcherTest
+ * for the throw-isolation contract and TicketControllerCreateAttachCompensationTest
+ * for the deferred create-mail dispatch seam.
  */
 final class TicketControllerNotificationSoftFailTest extends TestCase
 {
@@ -49,8 +54,8 @@ final class TicketControllerNotificationSoftFailTest extends TestCase
 	private TicketService $ticketService;
 	/** @var PermissionService&MockObject */
 	private PermissionService $permissionService;
-	/** @var EmailService&MockObject */
-	private EmailService $emailService;
+	/** @var TicketNotificationDispatcher&MockObject */
+	private TicketNotificationDispatcher $notificationDispatcher;
 	/** @var ActivityEventService&MockObject */
 	private ActivityEventService $activityEventService;
 	/** @var IUserSession&MockObject */
@@ -63,7 +68,7 @@ final class TicketControllerNotificationSoftFailTest extends TestCase
 		$this->request = $this->createMock(IRequest::class);
 		$this->ticketService = $this->createMock(TicketService::class);
 		$this->permissionService = $this->createMock(PermissionService::class);
-		$this->emailService = $this->createMock(EmailService::class);
+		$this->notificationDispatcher = $this->createMock(TicketNotificationDispatcher::class);
 		$this->activityEventService = $this->createMock(ActivityEventService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
@@ -89,7 +94,6 @@ final class TicketControllerNotificationSoftFailTest extends TestCase
 			$this->ticketService,
 			$this->permissionService,
 			$this->createMock(MergeService::class),
-			$this->emailService,
 			$this->createMock(ProjectService::class),
 			$this->createMock(DeletionService::class),
 			$this->createMock(TicketMapper::class),
@@ -111,10 +115,15 @@ final class TicketControllerNotificationSoftFailTest extends TestCase
 			$this->createMock(NavigationContextService::class),
 			$this->createMock(FrontEndAssetService::class),
 			$this->createMock(AttachmentDeliveryService::class),
+			null,
+			null,
+			null,
+			null,
+			$this->notificationDispatcher,
 		);
 	}
 
-	public function testAddCommentSucceedsWhenEmailThrows(): void
+	public function testAddCommentSucceeds(): void
 	{
 		$ticket = new Ticket();
 		$ticket->setId(5);
@@ -133,8 +142,6 @@ final class TicketControllerNotificationSoftFailTest extends TestCase
 			default => $d,
 		});
 
-		$this->emailService->method('sendNewCommentNotification')
-			->willThrowException(new \RuntimeException('smtp down'));
 		$this->activityEventService->expects(self::once())->method('logTicketCommentAdded');
 
 		$response = $this->controller->addComment(5);
@@ -142,7 +149,7 @@ final class TicketControllerNotificationSoftFailTest extends TestCase
 		self::assertTrue($response->getData()['success'] ?? false);
 	}
 
-	public function testChangeStatusSucceedsWhenEmailThrows(): void
+	public function testChangeStatusSucceeds(): void
 	{
 		$ticket = new Ticket();
 		$ticket->setId(5);
@@ -159,8 +166,6 @@ final class TicketControllerNotificationSoftFailTest extends TestCase
 			default => $d,
 		});
 
-		$this->emailService->method('sendStatusChangedNotification')
-			->willThrowException(new \RuntimeException('smtp down'));
 		$this->activityEventService->expects(self::once())->method('logTicketStatusChanged');
 
 		$response = $this->controller->changeStatus(5);
@@ -168,7 +173,7 @@ final class TicketControllerNotificationSoftFailTest extends TestCase
 		self::assertTrue($response->getData()['success'] ?? false);
 	}
 
-	public function testAssignSucceedsWhenEmailThrowsError(): void
+	public function testAssignSucceeds(): void
 	{
 		$ticket = new Ticket();
 		$ticket->setId(5);
@@ -182,8 +187,6 @@ final class TicketControllerNotificationSoftFailTest extends TestCase
 			default => $d,
 		});
 
-		$this->emailService->method('sendTicketAssignedNotification')
-			->willThrowException(new \Error('engine fatal in mailer'));
 		$this->activityEventService->expects(self::once())->method('logTicketAssigned');
 
 		$response = $this->controller->assign(5);

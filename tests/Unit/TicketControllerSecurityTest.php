@@ -12,7 +12,6 @@ use OCA\Ticketcheck\Service\ActivityEventService;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\DeletionService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\FrontEndAssetService;
 use OCA\Ticketcheck\Service\LocaleFormatService;
 use OCA\Ticketcheck\Service\MergeService;
@@ -77,7 +76,6 @@ class TicketControllerSecurityTest extends TestCase
             $this->createMock(TicketService::class),
             $this->permissionService,
             $this->createMock(MergeService::class),
-            $this->createMock(EmailService::class),
             $this->createMock(ProjectService::class),
             $this->createMock(DeletionService::class),
             $this->ticketMapper,

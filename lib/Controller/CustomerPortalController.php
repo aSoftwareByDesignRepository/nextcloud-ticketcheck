@@ -18,7 +18,6 @@ namespace OCA\Ticketcheck\Controller;
 use OCA\Ticketcheck\Service\TicketService;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Service\ProjectService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\EmailPreferencesService;
 use OCA\Ticketcheck\Service\GuestLayoutParamsProvider;
 use OCA\Ticketcheck\Service\GuestPasswordPolicyService;
@@ -70,7 +69,6 @@ class CustomerPortalController extends Controller
     private TicketService $ticketService;
     private PermissionService $permissionService;
     private ProjectService $projectService;
-    private EmailService $emailService;
     private TicketMapper $ticketMapper;
     private KBArticleMapper $kbArticleMapper;
     private AttachmentMapper $attachmentMapper;
@@ -100,6 +98,7 @@ class CustomerPortalController extends Controller
     private ?TicketCategoryService $ticketCategories;
     private ?\OCA\Ticketcheck\Service\PortalSessionService $portalSessions = null;
     private ?\OCA\Ticketcheck\Db\GuestIdentityMapper $guestIdentities = null;
+    private ?\OCA\Ticketcheck\Service\TicketNotificationDispatcher $notificationDispatcher = null;
 
     /** Maximum tickets loaded for guest list pages (email-scoped). */
     private const PORTAL_TICKET_LIST_LIMIT = 500;
@@ -110,7 +109,6 @@ class CustomerPortalController extends Controller
         TicketService $ticketService,
         PermissionService $permissionService,
         ProjectService $projectService,
-        EmailService $emailService,
         TicketMapper $ticketMapper,
         KBArticleMapper $kbArticleMapper,
         AttachmentMapper $attachmentMapper,
@@ -139,14 +137,15 @@ class CustomerPortalController extends Controller
         ?TicketCategoryService $ticketCategories = null,
         ?\OCA\Ticketcheck\Service\PortalSessionService $portalSessions = null,
         ?\OCA\Ticketcheck\Db\GuestIdentityMapper $guestIdentities = null,
+        ?\OCA\Ticketcheck\Service\TicketNotificationDispatcher $notificationDispatcher = null,
     ) {
+        $this->notificationDispatcher = $notificationDispatcher;
         $this->portalSessions = $portalSessions;
         $this->guestIdentities = $guestIdentities;
         parent::__construct($appName, $request);
         $this->ticketService = $ticketService;
         $this->permissionService = $permissionService;
         $this->projectService = $projectService;
-        $this->emailService = $emailService;
         $this->ticketMapper = $ticketMapper;
         $this->kbArticleMapper = $kbArticleMapper;
         $this->attachmentMapper = $attachmentMapper;
@@ -692,7 +691,11 @@ class CustomerPortalController extends Controller
                         }
                     }
 
-                    $created = $this->ticketService->createTicket($ticketData);
+                    // notifyCustomer=false: the created-mail is deferred
+                    // until the attachment batch below succeeds — a failed
+                    // batch compensation-deletes the ticket and a
+                    // confirmation for a deleted row must never escape.
+                    $created = $this->ticketService->createTicket($ticketData, false);
                     if ($pendingAttachmentCount > 0) {
                         try {
                             $uploadedFiles = $this->handleMultipleFileUploads(
@@ -744,12 +747,12 @@ class CustomerPortalController extends Controller
                 ], 429);
             }
 
-            // Send email notification
+            // Customer mail fans out service-side through the shared
+            // dispatcher — soft-fail by contract (MH-10/US-07 parity).
             try {
-                $this->emailService->sendTicketCreatedNotification($ticket);
+                $this->notificationDispatcher?->ticketCreatedFromCurrentActor($ticket);
             } catch (\Throwable $e) {
-                // Soft-fail: never turn a successful portal create into a false 400.
-                $this->logger->warning('Failed to send ticket created email: ' . $e->getMessage());
+                $this->logger->warning('Portal ticket created mail dispatch failed', ['exception' => $e]);
             }
 
             return new JSONResponse([
@@ -1341,7 +1344,8 @@ class CustomerPortalController extends Controller
                         trim($comment),
                         false, // Not an internal note
                         true,  // Guests cannot reply to closed tickets (re-check under lock)
-                        $this->buildPortalTicketAuthzAssert()
+                        $this->buildPortalTicketAuthzAssert(),
+                        true   // Portal replies are customer-side comments (incl. requesters — MH-10)
                     );
                     if ($pendingAttachmentCount > 0) {
                         try {
@@ -1376,23 +1380,10 @@ class CustomerPortalController extends Controller
             }
             $commentObj = $commentOrLimit;
 
-            // Send email notification
-            try {
-                $currentUser = $this->userSession->getUser();
-                $currentUserId = $currentUser ? $currentUser->getUID() : null;
-
-                $this->emailService->sendNewCommentNotification(
-                    $ticket,
-                    (string)($this->permissionService->getCurrentUserDisplayName() ?? ''),
-                    $comment,
-                    $currentUserId, // Exclude comment author from notifications
-                    true // Portal replies are customer-side comments (incl. requesters — MH-10)
-                );
-            } catch (\Throwable $e) {
-                // Soft-fail: never turn a successful portal reply into a false 400.
-                $this->logger->warning('Failed to send comment notification email: ' . $e->getMessage());
-            }
-
+            // Customer mail fans out inside TicketService::addComment —
+            // soft-fail by contract, identical recipient legs as the web
+            // staff path (US-07 parity). Comment attachments are bound to
+            // the comment id and ride the same notification.
             return new JSONResponse([
                 'success' => true,
                 'comment' => $commentObj,
@@ -1626,17 +1617,16 @@ class CustomerPortalController extends Controller
             }
             $attachment = $attachmentOrLimit;
 
-            // Send email notification if file is not linked to a comment
-            // (comment attachments are notified via comment notification)
+            // Standalone (comment-less) uploads notify as a ticket update —
+            // comment-bound files ride the comment notification instead.
             if ($commentId === null) {
                 try {
-                    $this->emailService->sendTicketUpdatedNotification(
+                    $this->notificationDispatcher?->ticketUpdatedFromCurrentActor(
                         $ticket,
-                            sprintf('Attachment added: %s', $originalName)
+                        sprintf('Attachment added: %s', $originalName)
                     );
                 } catch (\Throwable $e) {
-                    // Soft-fail: never turn a successful portal upload into a false 400.
-                    $this->logger->warning('Failed to send attachment notification email: ' . $e->getMessage());
+                    $this->logger->warning('Portal attachment mail dispatch failed', ['exception' => $e]);
                 }
             }
 

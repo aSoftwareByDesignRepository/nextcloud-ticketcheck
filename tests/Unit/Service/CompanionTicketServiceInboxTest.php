@@ -52,7 +52,6 @@ final class CompanionTicketServiceInboxTest extends TestCase
 			$this->createStub(CompanionNotificationService::class),
 			$this->createStub(TicketWatcherService::class),
 			$this->createStub(TicketWatcherMapper::class),
-			$this->createStub(EmailService::class),
 			$this->createStub(LoggerInterface::class),
 			$workflowLock,
 		);

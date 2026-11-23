@@ -1956,5 +1956,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     });
+
+    // NH-01: invite an account-less customer_email to the guest portal.
+    const inviteBtn = document.getElementById('tc-invite-customer');
+    if (inviteBtn) {
+        inviteBtn.addEventListener('click', function () {
+            inviteBtn.disabled = true;
+            tcApiPost(inviteBtn.dataset.inviteUrl, {})
+                .then(function (data) {
+                    if (!data.success) {
+                        throw data;
+                    }
+                    inviteBtn.textContent = tSafe('invite_sent_label', 'Invite sent');
+                    showSuccess(tSafe('invite_sent', 'Invite e-mail sent to the customer.'));
+                })
+                .catch(function (err) {
+                    inviteBtn.disabled = false;
+                    const msg = (err && (err.error || err.message)) || tSafe('invite_failed', 'Could not send the invite.');
+                    showAlert(msg);
+                });
+        });
+    }
 });
 

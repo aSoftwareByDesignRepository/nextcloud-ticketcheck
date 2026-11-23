@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 /**
- * Mutation: addComment/changeStatus must soft-fail email (no false 400 after success).
+ * Mutation: customer-mail dispatch must soft-fail at every seam — the
+ * dispatcher's safe() wrapper (NN-03) and the deferred controller calls
+ * used for attachment-compensation ordering (US-07).
  *
  *   php tests/Mutation/run-notification-soft-fail-mutations.php
  *
@@ -12,8 +14,6 @@ declare(strict_types=1);
  */
 
 $appRoot = dirname(__DIR__, 2);
-$source = $appRoot . '/lib/Controller/TicketController.php';
-$backup = $source . '.mutation-bak';
 $phpunit = is_file($appRoot . '/vendor/bin/phpunit')
 	? $appRoot . '/vendor/bin/phpunit'
 	: 'phpunit';
@@ -23,7 +23,7 @@ function run_tests(string $appRoot, string $phpunit): int {
 		. ' -d opcache.enable_cli=0 -d opcache.enable=0 '
 		. escapeshellarg($phpunit)
 		. ' -c ' . escapeshellarg($appRoot . '/phpunit.xml')
-		. ' --filter TicketControllerNotificationSoftFailTest';
+		. ' --filter ' . escapeshellarg('TicketNotificationDispatcherTest|TicketControllerCreateAttachCompensationTest|CustomerPortalControllerNotificationSoftFailTest|TicketControllerNotificationSoftFailTest');
 	passthru($cmd, $code);
 	return (int)$code;
 }
@@ -41,27 +41,40 @@ if (run_tests($appRoot, $phpunit) !== 0) {
 }
 
 $mutations = [
-	'unwrap_comment_email_soft_fail' => [
-		'from' => "                try {\n                    \$this->emailService->sendNewCommentNotification(\n                        \$ticket,\n                        (string)(\$this->permissionService->getCurrentUserDisplayName() ?? ''),\n                        \$content,\n                        \$currentUserId // Exclude comment author from notifications\n                    );\n                } catch (\\Throwable \$e) {\n                    \$this->logger->warning('New comment email failed', ['exception' => \$e]);\n                }",
-		'to' => "                \$this->emailService->sendNewCommentNotification(\n                    \$ticket,\n                    (string)(\$this->permissionService->getCurrentUserDisplayName() ?? ''),\n                    \$content,\n                    \$currentUserId\n                );",
+	[
+		'name' => 'unwrap_dispatcher_safe',
+		'source' => $appRoot . '/lib/Service/TicketNotificationDispatcher.php',
+		'from' => "        try {\n            \$send();\n        } catch (\\Throwable \$e) {\n            \$this->logger->warning('ticketcheck notification dispatch failed', [\n                'app' => 'ticketcheck',\n                'event' => \$event,\n                'ticket_id' => \$ticket->getId(),\n                'exception' => \$e,\n            ]);\n        }",
+		'to' => "        \$send();",
 	],
-	'unwrap_status_email_soft_fail' => [
-		'from' => "            try {\n                \$this->emailService->sendStatusChangedNotification(\$updatedTicket, \$oldStatus, \$newStatus, \$changedByName);\n            } catch (\\Throwable \$e) {\n                \$this->logger->warning('Status changed email failed', ['exception' => \$e]);\n            }",
-		'to' => "            \$this->emailService->sendStatusChangedNotification(\$updatedTicket, \$oldStatus, \$newStatus, \$changedByName);",
+	[
+		'name' => 'unwrap_web_create_dispatch',
+		'source' => $appRoot . '/lib/Controller/TicketController.php',
+		'from' => "            try {\n                \$this->notificationDispatcher?->ticketCreatedFromCurrentActor(\$ticket);\n            } catch (\\Throwable \$e) {\n                \$this->logger->warning('Ticket created mail dispatch failed', ['exception' => \$e]);\n            }",
+		'to' => "            \$this->notificationDispatcher?->ticketCreatedFromCurrentActor(\$ticket);",
+	],
+	[
+		'name' => 'unwrap_portal_create_dispatch',
+		'source' => $appRoot . '/lib/Controller/CustomerPortalController.php',
+		'from' => "            try {\n                \$this->notificationDispatcher?->ticketCreatedFromCurrentActor(\$ticket);\n            } catch (\\Throwable \$e) {\n                \$this->logger->warning('Portal ticket created mail dispatch failed', ['exception' => \$e]);\n            }",
+		'to' => "            \$this->notificationDispatcher?->ticketCreatedFromCurrentActor(\$ticket);",
 	],
 ];
 
 $failed = [];
-foreach ($mutations as $name => $pair) {
+foreach ($mutations as $mutation) {
+	$name = $mutation['name'];
+	$source = $mutation['source'];
+	$backup = $source . '.mutation-bak';
 	echo "\n== mutation: {$name} ==\n";
 	$original = file_get_contents($source);
-	if ($original === false || !str_contains($original, $pair['from'])) {
+	if ($original === false || !str_contains($original, $mutation['from'])) {
 		$failed[] = $name . ' (anchor missing)';
 		continue;
 	}
 	file_put_contents($backup, $original);
 	try {
-		file_put_contents($source, str_replace($pair['from'], $pair['to'], $original));
+		file_put_contents($source, str_replace($mutation['from'], $mutation['to'], $original));
 		$code = run_tests($appRoot, $phpunit);
 		if ($code === 0) {
 			$failed[] = $name;
@@ -74,7 +87,6 @@ foreach ($mutations as $name => $pair) {
 	}
 }
 
-restore($source, $backup);
 if ($failed !== []) {
 	fwrite(STDERR, 'Mutations not killed: ' . implode(', ', $failed) . "\n");
 	exit(1);

@@ -209,6 +209,12 @@ class CompanionPushService
 				+ array_intersect_key($payload, array_flip(['ticketId', 'number'])),
 			'sound' => 'default',
 		];
+		// Quick actions (TC-COMP-QUICKACT): Expo categoryId is a message-level
+		// field (APS category / FCM channel meta), never inside the audited
+		// data whitelist. Only the three registered intent names are emitted.
+		if (in_array($type, [self::INTENT_ASSIGNED, self::INTENT_PUBLIC_COMMENT, self::INTENT_WAITING], true)) {
+			$message['categoryId'] = $type;
+		}
 		try {
 			$client = $this->http->newClient();
 			$response = $client->post(self::EXPO_PUSH_URL, [

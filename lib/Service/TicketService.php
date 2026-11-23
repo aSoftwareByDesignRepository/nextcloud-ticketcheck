@@ -66,6 +66,7 @@ class TicketService
         ?PortalActorResolver $actorResolver = null,
         ?SlaPolicyService $slaPolicy = null,
         private readonly ?\OCA\Ticketcheck\Db\CommentMoveMapper $commentMoveMapper = null,
+        private readonly ?TicketNotificationDispatcher $notifier = null,
     ) {
         $this->actorResolver = $actorResolver;
         $this->ticketMapper = $ticketMapper;
@@ -153,16 +154,25 @@ class TicketService
      * @return Ticket
      * @throws \Exception
      */
-    public function createTicket(array $data): Ticket
+    public function createTicket(array $data, bool $notifyCustomer = true): Ticket
     {
         // Shared category write-guard: an in-flight category delete+reassign
         // (exclusive lock) cannot slip past the resolve→insert sequence.
-        if ($this->ticketCategories !== null) {
-            return $this->ticketCategories->withCategoryWriteGuard(
+        $actor = $this->actorTriple();
+        $ticket = $this->ticketCategories !== null
+            ? $this->ticketCategories->withCategoryWriteGuard(
                 fn (): Ticket => $this->doCreateTicket($data)
-            );
+            )
+            : $this->doCreateTicket($data);
+        if ($notifyCustomer) {
+            // Customer mail fans out from the shared mutation path so web,
+            // portal and companion create identical recipient sets (MH-10).
+            // $notifyCustomer=false is for internal restructuring writes
+            // (split) running inside an outer transaction — mail must never
+            // reference uncommitted rows.
+            $this->notifier?->ticketCreated($ticket, $actor[2] ?? null);
         }
-        return $this->doCreateTicket($data);
+        return $ticket;
     }
 
     /**
@@ -266,12 +276,17 @@ class TicketService
      */
     public function createTicketFromEmail(array $data): Ticket
     {
-        if ($this->ticketCategories !== null) {
-            return $this->ticketCategories->withCategoryWriteGuard(
+        $ticket = $this->ticketCategories !== null
+            ? $this->ticketCategories->withCategoryWriteGuard(
                 fn (): Ticket => $this->doCreateTicketFromEmail($data)
-            );
-        }
-        return $this->doCreateTicketFromEmail($data);
+            )
+            : $this->doCreateTicketFromEmail($data);
+        // Exactly one automated reply: the created-ticket confirmation. Its
+        // Reply-To carries the tokenized address so "reply to this email"
+        // closes the email-first loop (MH-19). authorEmail is null — the
+        // sender IS the customer and must not self_author-suppress (US-01).
+        $this->notifier?->ticketCreated($ticket, null);
+        return $ticket;
     }
 
     /**
@@ -334,6 +349,9 @@ class TicketService
      */
     public function updateTicket(int $id, array $data, ?callable $assertAuthorized = null): Ticket
     {
+        // Actor context drives customer-mail fan-out; background/system
+        // writers (escalation rules run actorless) keep their silent posture.
+        $actor = $this->actorTriple();
         try {
             // Shared category write-guard only when the update actually
             // touches the category column — keeps non-category updates
@@ -342,7 +360,7 @@ class TicketService
             if ($this->ticketCategories !== null && isset($data['category'])) {
                 $work = fn (): Ticket => $this->ticketCategories->withCategoryWriteGuard($work);
             }
-            return $this->workflowLock->withTicketLocks(
+            $updated = $this->workflowLock->withTicketLocks(
                 [$id],
                 $work,
                 'TicketCheck update'
@@ -350,6 +368,10 @@ class TicketService
         } catch (\InvalidArgumentException $e) {
             throw new \Exception($e->getMessage(), 0, $e);
         }
+        if ($actor !== null) {
+            $this->notifier?->ticketUpdated($updated, 'Ticket details updated', $actor[2]);
+        }
+        return $updated;
     }
 
     /**
@@ -454,15 +476,29 @@ class TicketService
      */
     public function changeStatus(int $id, string $status, ?callable $assertAuthorized = null): Ticket
     {
+        $actor = $this->actorTriple();
+        // The old status must be captured under the lock — a read outside it
+        // could race a concurrent transition and report a false from-value.
+        $oldStatus = null;
+        $assertAndCapture = function (Ticket $t) use ($assertAuthorized, &$oldStatus): void {
+            $oldStatus = $t->getStatus();
+            if ($assertAuthorized !== null) {
+                $assertAuthorized($t);
+            }
+        };
         try {
-            return $this->workflowLock->withTicketLocks(
+            $updated = $this->workflowLock->withTicketLocks(
                 [$id],
-                fn (): Ticket => $this->changeStatusLocked($id, $status, $assertAuthorized),
+                fn (): Ticket => $this->changeStatusLocked($id, $status, $assertAndCapture),
                 'TicketCheck status'
             );
         } catch (\InvalidArgumentException $e) {
             throw new \Exception($e->getMessage(), 0, $e);
         }
+        if ($actor !== null && $oldStatus !== null) {
+            $this->notifier?->statusChanged($updated, (string)$oldStatus, $status, $actor[1], $actor[2]);
+        }
+        return $updated;
     }
 
     /**
@@ -510,8 +546,9 @@ class TicketService
      */
     public function assignTicket(int $id, ?string $userId, ?callable $assertAuthorized = null): Ticket
     {
+        $actor = $this->actorTriple();
         try {
-            return $this->workflowLock->withTicketLocks(
+            $updated = $this->workflowLock->withTicketLocks(
                 [$id],
                 fn (): Ticket => $this->assignTicketLocked($id, $userId, $assertAuthorized),
                 'TicketCheck assign'
@@ -519,6 +556,10 @@ class TicketService
         } catch (\InvalidArgumentException $e) {
             throw new \Exception($e->getMessage(), 0, $e);
         }
+        if ($actor !== null && $userId !== null && $userId !== '') {
+            $this->notifier?->assigned($updated, $userId, $actor[1]);
+        }
+        return $updated;
     }
 
     /**
@@ -735,34 +776,58 @@ class TicketService
         string $content,
         bool $isInternal = false,
         bool $requireOpen = false,
-        ?callable $assertAuthorized = null
+        ?callable $assertAuthorized = null,
+        ?bool $isCustomerComment = null
     ): Comment {
         $actor = $this->actorTriple();
         if ($actor === null) {
             throw new \Exception('User not authenticated');
         }
 
+        $notifyTicket = null;
         try {
-            return $this->workflowLock->withTicketLocks(
+            $comment = $this->workflowLock->withTicketLocks(
                 [$ticketId],
-                fn (): Comment => $this->addCommentLocked(
-                    $ticketId,
-                    $content,
-                    $isInternal,
-                    $actor,
-                    $requireOpen,
-                    $assertAuthorized
-                ),
+                // fn() would capture $notifyTicket by value — the by-ref
+                // ticket hand-off requires a real closure (US-07).
+                function () use ($ticketId, $content, $isInternal, $actor, $requireOpen, $assertAuthorized, &$notifyTicket): Comment {
+                    return $this->addCommentLocked(
+                        $ticketId,
+                        $content,
+                        $isInternal,
+                        $actor,
+                        $requireOpen,
+                        $assertAuthorized,
+                        $notifyTicket
+                    );
+                },
                 'TicketCheck comment'
             );
         } catch (\InvalidArgumentException $e) {
             throw new \Exception($e->getMessage(), 0, $e);
         }
+
+        // Customer-facing fan-out lives here so web, portal and companion
+        // comments produce the identical recipient set (US-07). Internal
+        // notes never trigger customer mail (NN-04).
+        if (!$isInternal && $notifyTicket instanceof Ticket) {
+            $isCustomer = $isCustomerComment ?? PortalActorResolver::isIdentityActor($actor[0]);
+            $this->notifier?->commentAdded(
+                $notifyTicket,
+                (string)$comment->getAuthorName(),
+                $content,
+                $actor[0],
+                $isCustomer,
+                $actor[2]
+            );
+        }
+        return $comment;
     }
 
     /**
      * @param array{0:string,1:string,2:?string} $actor [uid, displayName, email]
      * @param null|callable(Ticket):void $assertAuthorized
+     * @param-out Ticket $ticketOut
      */
     private function addCommentLocked(
         int $ticketId,
@@ -770,7 +835,8 @@ class TicketService
         bool $isInternal,
         array $actor,
         bool $requireOpen = false,
-        ?callable $assertAuthorized = null
+        ?callable $assertAuthorized = null,
+        ?Ticket &$ticketOut = null
     ): Comment {
         [$actorUid, $actorName, $actorEmail] = $actor;
         // Callers must authorize the surviving ticket and pass its id.
@@ -781,6 +847,7 @@ class TicketService
             throw new \Exception('Ticket not found');
         }
         $this->assertTicketNotMerged($ticket);
+        $ticketOut = $ticket;
         if ($assertAuthorized !== null) {
             $assertAuthorized($ticket);
         }
@@ -875,14 +942,16 @@ class TicketService
             }
             $activeId = (int) $ticket->getId();
 
+            $notifyTicket = null;
             try {
-                return $this->workflowLock->withTicketLocks(
+                $saved = $this->workflowLock->withTicketLocks(
                     [$activeId],
-                    function () use ($activeId, $content, $authorEmail, $authorName): Comment {
+                    function () use ($activeId, $content, $authorEmail, $authorName, &$notifyTicket): Comment {
                         // Re-resolve under the lock. If a merge just finished, the
                         // source lock does not protect the survivor — bail out so
                         // the outer retry locks the real active ticket.
                         $ticket = $this->getActiveTicket($activeId);
+                        $notifyTicket = $ticket;
                         $lockedId = (int) $ticket->getId();
                         if ($lockedId !== $activeId) {
                             throw new \Exception('Cannot modify a ticket that has been merged into another ticket');
@@ -926,6 +995,14 @@ class TicketService
                     },
                     'TicketCheck inbound comment'
                 );
+                // Parity with a portal-posted customer comment (US-07 AC-4):
+                // the same guest/requester/creator/external legs are
+                // evaluated. self_author suppresses echoing the reply back to
+                // the sender (authorEmail == customer_email by authz rule).
+                if ($notifyTicket instanceof Ticket) {
+                    $this->notifier?->commentAdded($notifyTicket, $saved->getAuthorName(), $content, null, true, $authorEmail);
+                }
+                return $saved;
             } catch (\InvalidArgumentException $e) {
                 $lastError = new \Exception($e->getMessage(), 0, $e);
                 continue;

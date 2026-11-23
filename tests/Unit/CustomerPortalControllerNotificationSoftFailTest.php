@@ -14,7 +14,7 @@ use OCA\Ticketcheck\Db\TicketMapper;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\EmailPreferencesService;
-use OCA\Ticketcheck\Service\EmailService;
+use OCA\Ticketcheck\Service\TicketNotificationDispatcher;
 use OCA\Ticketcheck\Service\GuestLayoutParamsProvider;
 use OCA\Ticketcheck\Service\GuestPasswordPolicyService;
 use OCA\Ticketcheck\Service\GuestPortalPageService;
@@ -49,8 +49,8 @@ final class CustomerPortalControllerNotificationSoftFailTest extends TestCase
 	private TicketService $ticketService;
 	/** @var PermissionService&MockObject */
 	private PermissionService $permissionService;
-	/** @var EmailService&MockObject */
-	private EmailService $emailService;
+	/** @var TicketNotificationDispatcher&MockObject */
+	private TicketNotificationDispatcher $notificationDispatcher;
 	/** @var AttachmentUploadService&MockObject */
 	private AttachmentUploadService $attachmentUploadService;
 	/** @var TicketMapper&MockObject */
@@ -63,7 +63,7 @@ final class CustomerPortalControllerNotificationSoftFailTest extends TestCase
 		parent::setUp();
 		$this->ticketService = $this->createMock(TicketService::class);
 		$this->permissionService = $this->createMock(PermissionService::class);
-		$this->emailService = $this->createMock(EmailService::class);
+		$this->notificationDispatcher = $this->createMock(TicketNotificationDispatcher::class);
 		$this->attachmentUploadService = $this->createMock(AttachmentUploadService::class);
 		$this->ticketMapper = $this->createMock(TicketMapper::class);
 		$this->navigationContext = $this->createMock(NavigationContextService::class);
@@ -105,7 +105,6 @@ final class CustomerPortalControllerNotificationSoftFailTest extends TestCase
 			$this->ticketService,
 			$this->permissionService,
 			$this->createMock(ProjectService::class),
-			$this->emailService,
 			$this->ticketMapper,
 			$this->createMock(KBArticleMapper::class),
 			$this->createMock(AttachmentMapper::class),
@@ -131,6 +130,10 @@ final class CustomerPortalControllerNotificationSoftFailTest extends TestCase
 			new GuestPasswordPolicyService(),
 			new PortalTicketListFilterService(),
 			new AttachmentDeliveryService($this->createMock(IConfig::class), new SafeFilenameService()),
+			null,
+			null,
+			null,
+			$this->notificationDispatcher,
 		);
 	}
 
@@ -149,7 +152,7 @@ final class CustomerPortalControllerNotificationSoftFailTest extends TestCase
 		$ticket = new Ticket();
 		$ticket->setId(9);
 		$this->ticketService->method('createTicket')->willReturn($ticket);
-		$this->emailService->method('sendTicketCreatedNotification')
+		$this->notificationDispatcher->method('ticketCreatedFromCurrentActor')
 			->willThrowException(new \Error('mailer fatal'));
 
 		$response = $this->buildController($request)->storeTicket();
@@ -175,8 +178,6 @@ final class CustomerPortalControllerNotificationSoftFailTest extends TestCase
 		$comment = new Comment();
 		$comment->setId(44);
 		$this->ticketService->method('addComment')->willReturn($comment);
-		$this->emailService->method('sendNewCommentNotification')
-			->willThrowException(new \Error('mailer fatal'));
 
 		$response = $this->buildController($request)->addReply(7);
 		self::assertSame(200, $response->getStatus());

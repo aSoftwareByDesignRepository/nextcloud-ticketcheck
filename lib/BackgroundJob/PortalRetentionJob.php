@@ -51,6 +51,7 @@ class PortalRetentionJob extends TimedJob
         }
         try {
             $this->outbox->deleteSentOlderThan(new \DateTime('-30 days'), 'sent');
+            $this->outbox->deleteSentOlderThan(new \DateTime('-30 days'), 'capped');
             $this->outbox->deleteSentOlderThan(new \DateTime('-90 days'), 'failed');
         } catch (\Throwable) {
         }

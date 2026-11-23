@@ -52,6 +52,7 @@ final class TransferManifest extends AbstractTransferManifest
 			'email_notifications_enabled' => ['class' => 'plain', 'section' => 'email'],
 			'daily_digest_enabled' => ['class' => 'plain', 'section' => 'email'],
 			'weekly_digest_enabled' => ['class' => 'plain', 'section' => 'email'],
+			'external_customer_mail_enabled' => ['class' => 'plain', 'section' => 'email'],
 			'max_attachment_size' => ['class' => 'plain', 'section' => 'email'],
 			// ── comment lifecycle (Settings → Comments) ──
 			'comment_edit_window_minutes' => ['class' => 'plain', 'section' => 'comments'],
@@ -145,11 +146,14 @@ final class TransferManifest extends AbstractTransferManifest
 			'transfer_receipts' => 'internal',
 			'transfer_job_state' => 'internal',
 			'transfer_last_import_at' => 'internal',
+			// External-leg hourly rate_cap drop counter (bucketed, observability).
+			'external_leg_cap_drops' => 'internal',
 			// Dynamic/prefix key families — prefixes, not keys; members are
 			// dynamic and never transferred by definition:
 			//   'ticketcheck/ticket/<id>'   TicketWorkflowLock per-ticket flags
 			//   'ticketcheck/<job>'         background-job lock keys
 			//   'upgrade_backup_*'          snapshot-restore rewrites
+			//   'extmail_optout:<id>:<hash>' NH-02 per-ticket opt-out records
 		]);
 	}
 

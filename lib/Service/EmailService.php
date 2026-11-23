@@ -13,7 +13,9 @@ namespace OCA\Ticketcheck\Service;
 
 use OCA\Ticketcheck\Db\Ticket;
 use OCA\Ticketcheck\Db\GuestProjectAccessMapper;
+use OCA\Ticketcheck\Db\MailOutboxMapper;
 use OCA\Ticketcheck\Db\TicketWatcherMapper;
+use OCA\Ticketcheck\Service\ExternalMailOptoutService;
 use OCA\Ticketcheck\Service\PortalActorResolver;
 use OCA\Ticketcheck\Service\ProjectService;
 use OCP\Mail\IMailer;
@@ -49,6 +51,29 @@ class EmailService
     private ?PortalActorResolver $actorResolver;
     private ?PermissionService $permissionService;
     private ?CompanionNotificationService $companionNotify;
+    private ?MailOutboxMapper $mailOutboxMapper;
+    private ?ExternalMailOptoutService $optout;
+
+    /** Per-(ticket,address) hourly cap for the external customer leg (spec MH-04). */
+    private const EXTERNAL_LEG_HOURLY_CAP = 5;
+    /** Instance-wide rate_cap drops/hour that trips the abuse warning (spec §6). */
+    private const EXTERNAL_LEG_CAP_STORM_THRESHOLD = 50;
+    private const EXTERNAL_LEG_CAP_DROPS_KEY = 'external_leg_cap_drops';
+
+    // Suppression reason codes for the customer-mail resolution summary (US-06).
+    private const REASON_AUTHOR_EXCLUDED = 'author_excluded';
+    private const REASON_PREF_OFF = 'pref_off';
+    private const REASON_INVALID_EMAIL = 'invalid_email';
+    private const REASON_NOT_PARTY = 'not_party';
+    private const REASON_NH05 = 'nh05_restricted';
+    private const REASON_PLACEHOLDER = 'placeholder_domain';
+    private const REASON_RATE_CAP = 'rate_cap';
+    private const REASON_DISABLED = 'disabled';
+    private const REASON_NO_ACCOUNT = 'no_account_match';
+    private const REASON_CLAIMED = 'claimed';
+    private const REASON_SELF_AUTHOR = 'self_author';
+    private const REASON_DAEMON = 'daemon_or_own';
+    private const REASON_OPTOUT = 'optout';
 
     public function __construct(
         IMailer $mailer,
@@ -67,11 +92,15 @@ class EmailService
         ?InboundSmtpSendService $inboundSmtp = null,
         ?PortalActorResolver $actorResolver = null,
         ?PermissionService $permissionService = null,
-        ?CompanionNotificationService $companionNotify = null
+        ?CompanionNotificationService $companionNotify = null,
+        ?MailOutboxMapper $mailOutboxMapper = null,
+        ?\OCA\Ticketcheck\Service\ExternalMailOptoutService $optout = null
     ) {
+        $this->optout = $optout;
         $this->actorResolver = $actorResolver;
         $this->permissionService = $permissionService;
         $this->companionNotify = $companionNotify;
+        $this->mailOutboxMapper = $mailOutboxMapper;
         $this->mailer = $mailer;
         $this->config = $config;
         $this->urlGenerator = $urlGenerator;
@@ -154,22 +183,22 @@ class EmailService
      * @param Ticket $ticket
      * @return bool
      */
-    public function sendTicketCreatedNotification(Ticket $ticket): bool
+    public function sendTicketCreatedNotification(Ticket $ticket, ?string $authorEmail = null): bool
     {
-        $compose = function () use ($ticket): array {
+        $compose = function (string $audience = 'guest') use ($ticket): array {
             $appName = $this->getAppNameForSubject();
             $subject = sprintf('[%s] %s', $appName,
                 $this->getL()->t('email_ticket_created_subject', [$ticket->getTicketNumber(), $ticket->getTitle()]));
-            $ticketUrl = $this->getTicketUrl($ticket, 'guest');
+            $cta = $this->customerCta($ticket, $audience, $this->getL()->t('email_ticket_created_view'));
 
             return [
                 'subject' => $subject,
-                'htmlBody' => $this->renderTicketCreatedEmail($ticket, $ticketUrl),
-                'textBody' => $this->renderTicketCreatedEmailText($ticket, $ticketUrl),
+                'htmlBody' => $this->renderTicketCreatedEmail($ticket, $cta),
+                'textBody' => $this->renderTicketCreatedEmailText($ticket, $cta),
             ];
         };
 
-        $sentGuests = $this->sendToGuestRecipients($ticket, null, EmailPreferencesService::PREF_GUEST_TICKET_CREATED, $compose);
+        $sentGuests = $this->sendToGuestRecipients($ticket, null, EmailPreferencesService::PREF_GUEST_TICKET_CREATED, $compose, $authorEmail);
 
         // Also notify internal project members
         $this->sendInternalNewTicketNotification($ticket);
@@ -184,34 +213,34 @@ class EmailService
      * @param string $updateMessage
      * @return bool
      */
-    public function sendTicketUpdatedNotification(Ticket $ticket, string $updateMessage): bool
+    public function sendTicketUpdatedNotification(Ticket $ticket, string $updateMessage, ?string $authorEmail = null): bool
     {
-        $composeGuest = function () use ($ticket, $updateMessage): array {
+        $composeGuest = function (string $audience = 'guest') use ($ticket, $updateMessage): array {
             $appName = $this->getAppNameForSubject();
             $subject = sprintf('[%s] %s', $appName,
                 $this->getL()->t('email_ticket_updated_subject', [$ticket->getTicketNumber(), $ticket->getTitle()]));
-            $ticketUrl = $this->getTicketUrl($ticket, 'guest');
+            $cta = $this->customerCta($ticket, $audience, $this->getL()->t('email_ticket_updated_view'), true);
 
             return [
                 'subject' => $subject,
-                'htmlBody' => $this->renderTicketUpdatedEmail($ticket, $updateMessage, $ticketUrl),
-                'textBody' => $this->renderTicketUpdatedEmailText($ticket, $updateMessage, $ticketUrl),
+                'htmlBody' => $this->renderTicketUpdatedEmail($ticket, $updateMessage, $cta),
+                'textBody' => $this->renderTicketUpdatedEmailText($ticket, $updateMessage, $cta),
             ];
         };
         $composeStaff = function () use ($ticket, $updateMessage): array {
             $appName = $this->getAppNameForSubject();
             $subject = sprintf('[%s] %s', $appName,
                 $this->getL()->t('email_ticket_updated_subject', [$ticket->getTicketNumber(), $ticket->getTitle()]));
-            $ticketUrl = $this->getTicketUrl($ticket, 'staff');
+            $cta = $this->linkCta($this->getTicketUrl($ticket, 'staff'), $this->getL()->t('email_ticket_updated_view'), true);
 
             return [
                 'subject' => $subject,
-                'htmlBody' => $this->renderTicketUpdatedEmail($ticket, $updateMessage, $ticketUrl),
-                'textBody' => $this->renderTicketUpdatedEmailText($ticket, $updateMessage, $ticketUrl),
+                'htmlBody' => $this->renderTicketUpdatedEmail($ticket, $updateMessage, $cta),
+                'textBody' => $this->renderTicketUpdatedEmailText($ticket, $updateMessage, $cta),
             ];
         };
 
-        $sent = $this->sendToGuestRecipients($ticket, null, EmailPreferencesService::PREF_GUEST_TICKET_UPDATED, $composeGuest);
+        $sent = $this->sendToGuestRecipients($ticket, null, EmailPreferencesService::PREF_GUEST_TICKET_UPDATED, $composeGuest, $authorEmail);
         $this->notifyRequesterBells($ticket, null, 'ticket_requester_update');
         $this->notifyWatchersIfAvailable($ticket, $composeStaff, null);
         return $sent;
@@ -225,35 +254,35 @@ class EmailService
      * @param string $newStatus
      * @return bool
      */
-    public function sendStatusChangedNotification(Ticket $ticket, string $oldStatus, string $newStatus, ?string $changedByDisplayName = null): bool
+    public function sendStatusChangedNotification(Ticket $ticket, string $oldStatus, string $newStatus, ?string $changedByDisplayName = null, ?string $authorEmail = null): bool
     {
         $actorName = $this->normalizeActorDisplayName($changedByDisplayName);
-        $composeGuest = function () use ($ticket, $oldStatus, $newStatus, $actorName): array {
+        $composeGuest = function (string $audience = 'guest') use ($ticket, $oldStatus, $newStatus, $actorName): array {
             $appName = $this->getAppNameForSubject();
             $subject = sprintf('[%s] %s', $appName,
                 $this->getL()->t('email_status_changed_subject', [$ticket->getTicketNumber(), $ticket->getTitle()]));
-            $ticketUrl = $this->getTicketUrl($ticket, 'guest');
+            $cta = $this->customerCta($ticket, $audience, $this->getL()->t('email_status_changed_view'), true);
 
             return [
                 'subject' => $subject,
-                'htmlBody' => $this->renderStatusChangedEmail($ticket, $oldStatus, $newStatus, $ticketUrl, $actorName),
-                'textBody' => $this->renderStatusChangedEmailText($ticket, $oldStatus, $newStatus, $ticketUrl, $actorName),
+                'htmlBody' => $this->renderStatusChangedEmail($ticket, $oldStatus, $newStatus, $cta, $actorName),
+                'textBody' => $this->renderStatusChangedEmailText($ticket, $oldStatus, $newStatus, $cta, $actorName),
             ];
         };
         $composeStaff = function () use ($ticket, $oldStatus, $newStatus, $actorName): array {
             $appName = $this->getAppNameForSubject();
             $subject = sprintf('[%s] %s', $appName,
                 $this->getL()->t('email_status_changed_subject', [$ticket->getTicketNumber(), $ticket->getTitle()]));
-            $ticketUrl = $this->getTicketUrl($ticket, 'staff');
+            $cta = $this->linkCta($this->getTicketUrl($ticket, 'staff'), $this->getL()->t('email_status_changed_view'), true);
 
             return [
                 'subject' => $subject,
-                'htmlBody' => $this->renderStatusChangedEmail($ticket, $oldStatus, $newStatus, $ticketUrl, $actorName),
-                'textBody' => $this->renderStatusChangedEmailText($ticket, $oldStatus, $newStatus, $ticketUrl, $actorName),
+                'htmlBody' => $this->renderStatusChangedEmail($ticket, $oldStatus, $newStatus, $cta, $actorName),
+                'textBody' => $this->renderStatusChangedEmailText($ticket, $oldStatus, $newStatus, $cta, $actorName),
             ];
         };
 
-        $sent = $this->sendToGuestRecipients($ticket, null, EmailPreferencesService::PREF_GUEST_TICKET_STATUS_CHANGED, $composeGuest);
+        $sent = $this->sendToGuestRecipients($ticket, null, EmailPreferencesService::PREF_GUEST_TICKET_STATUS_CHANGED, $composeGuest, $authorEmail);
         $this->notifyRequesterBells($ticket, null, 'ticket_requester_status');
         $this->notifyWatchersIfAvailable($ticket, $composeStaff, null);
         return $sent;
@@ -267,34 +296,34 @@ class EmailService
      * @param string $commentContent
      * @return bool
      */
-    public function sendNewCommentNotification(Ticket $ticket, string $commentAuthor, string $commentContent, ?string $excludeUserId = null, bool $isCustomerComment = false): bool
+    public function sendNewCommentNotification(Ticket $ticket, string $commentAuthor, string $commentContent, ?string $excludeUserId = null, bool $isCustomerComment = false, ?string $authorEmail = null): bool
     {
-        $composeGuest = function () use ($ticket, $commentAuthor, $commentContent): array {
+        $composeGuest = function (string $audience = 'guest') use ($ticket, $commentAuthor, $commentContent): array {
             $appName = $this->getAppNameForSubject();
             $subject = sprintf('[%s] %s', $appName,
                 $this->getL()->t('email_comment_subject', [$ticket->getTicketNumber(), $ticket->getTitle()]));
-            $ticketUrl = $this->getTicketUrl($ticket, 'guest');
+            $cta = $this->customerCta($ticket, $audience, $this->getL()->t('email_comment_view'), true);
 
             return [
                 'subject' => $subject,
-                'htmlBody' => $this->renderNewCommentEmail($ticket, $commentAuthor, $commentContent, $ticketUrl),
-                'textBody' => $this->renderNewCommentEmailText($ticket, $commentAuthor, $commentContent, $ticketUrl),
+                'htmlBody' => $this->renderNewCommentEmail($ticket, $commentAuthor, $commentContent, $cta),
+                'textBody' => $this->renderNewCommentEmailText($ticket, $commentAuthor, $commentContent, $cta),
             ];
         };
         $composeStaff = function () use ($ticket, $commentAuthor, $commentContent): array {
             $appName = $this->getAppNameForSubject();
             $subject = sprintf('[%s] %s', $appName,
                 $this->getL()->t('email_comment_subject', [$ticket->getTicketNumber(), $ticket->getTitle()]));
-            $ticketUrl = $this->getTicketUrl($ticket, 'staff');
+            $cta = $this->linkCta($this->getTicketUrl($ticket, 'staff'), $this->getL()->t('email_comment_view'), true);
 
             return [
                 'subject' => $subject,
-                'htmlBody' => $this->renderNewCommentEmail($ticket, $commentAuthor, $commentContent, $ticketUrl),
-                'textBody' => $this->renderNewCommentEmailText($ticket, $commentAuthor, $commentContent, $ticketUrl),
+                'htmlBody' => $this->renderNewCommentEmail($ticket, $commentAuthor, $commentContent, $cta),
+                'textBody' => $this->renderNewCommentEmailText($ticket, $commentAuthor, $commentContent, $cta),
             ];
         };
 
-        $sentGuests = $this->sendToGuestRecipients($ticket, $excludeUserId, EmailPreferencesService::PREF_GUEST_TICKET_COMMENT, $composeGuest);
+        $sentGuests = $this->sendToGuestRecipients($ticket, $excludeUserId, EmailPreferencesService::PREF_GUEST_TICKET_COMMENT, $composeGuest, $authorEmail);
         $this->notifyRequesterBells($ticket, $excludeUserId, 'ticket_requester_reply');
 
         // Notify internal members only when the comment is from a customer.
@@ -460,7 +489,7 @@ class EmailService
     {
         // Validate email address
         if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
-            $this->logger->error('Invalid email address: ' . $to);
+            $this->logger->error('Invalid email address: ' . $this->logAddress($to));
             return false;
         }
 
@@ -483,12 +512,12 @@ class EmailService
             try {
                 $replyTo = $this->buildReplyToAddress($ticketId, $customerEmail);
                 $this->inboundSmtp->send($to, $toName, $subject, $textBody, $htmlBody, $replyTo, [], $threadMsgId, $threadAnchor);
-                $this->logger->info('Email sent via mailbox SMTP to: ' . $to);
+                $this->logger->info('Email sent via mailbox SMTP to: ' . $this->logAddress($to));
                 return true;
             } catch (\Throwable $e) {
-                $this->logger->error('Mailbox SMTP send failed to ' . $to . ': ' . $e->getMessage(), [
+                $this->logger->error('Mailbox SMTP send failed to ' . $this->logAddress($to) . ': ' . $e->getMessage(), [
                     'exception' => $e,
-                    'to' => $to,
+                    'to' => $this->logAddress($to),
                     'subject' => $subject,
                 ]);
                 return false;
@@ -539,16 +568,28 @@ class EmailService
             }
 
             $this->mailer->send($message);
-            $this->logger->info('Email sent successfully to: ' . $to);
+            $this->logger->info('Email sent successfully to: ' . $this->logAddress($to));
             return true;
         } catch (\Exception $e) {
-            $this->logger->error('Failed to send email to ' . $to . ': ' . $e->getMessage(), [
+            $this->logger->error('Failed to send email to ' . $this->logAddress($to) . ': ' . $e->getMessage(), [
                 'exception' => $e,
-                'to' => $to,
+                'to' => $this->logAddress($to),
                 'subject' => $subject
             ]);
             return false;
         }
+    }
+
+    /**
+     * NN-06: raw recipient addresses never hit logs — correlate via a
+     * short hash of the local part while keeping the domain for ops.
+     */
+    private function logAddress(string $e): string
+    {
+        $e = strtolower(trim($e));
+        $atPos = strrpos($e, '@');
+        $domain = $atPos !== false ? substr($e, $atPos + 1) : '';
+        return substr(hash('sha256', $e), 0, 12) . ($domain !== '' ? '@' . $domain : '');
     }
 
     /**
@@ -1092,7 +1133,7 @@ class EmailService
                     $sentCount++;
                 }
             } else {
-                $this->logger->warning('Member has no valid email', ['user_id' => $userId, 'email' => $email]);
+                $this->logger->warning('Member has no valid email', ['user_id' => $userId, 'email' => $this->logAddress((string)$email)]);
             }
         }
 
@@ -1107,114 +1148,556 @@ class EmailService
      *
      * @param string|null $notificationType One of EmailPreferencesService::PREF_GUEST_* for per-user opt-in check
      */
-    private function sendToGuestRecipients(Ticket $ticket, ?string $excludeUserId, ?string $notificationType, callable $composeContent): bool
+    private function sendToGuestRecipients(Ticket $ticket, ?string $excludeUserId, ?string $notificationType, callable $composeContent, ?string $authorEmail = null): bool
     {
         $projectId = $ticket->getProjectId();
         $sentAny = false;
+        $sentCount = 0;
+        $evaluated = 0;
         $handledUids = [];
+        // Lowercased address => true for every evaluated candidate that
+        // resolved an address — claimed on evaluation, NOT on successful
+        // send, so the raw leg can never double-mail or pref-bypass (MH-02).
+        $claimed = [];
+        /** @var array<string, int> $suppressed reason => count */
+        $suppressed = [];
 
         if ($projectId === null) {
             // No guest_access recipients exist for project-less tickets —
-            // requester recipients below still run (MH-10).
-            $this->logger->info('Skipping guest-project notification fan-out: no project on ticket #' . $ticket->getTicketNumber());
+            // requester + creator + external legs below still run (MH-10/G-3).
+            $this->logger->debug('ticketcheck.customer_mail: no project on ticket — guest_access leg empty', [
+                'app' => 'ticketcheck',
+                'ticket_id' => $ticket->getId(),
+            ]);
         } else {
-        $guestUserIds = $this->guestProjectAccessMapper->getUsersForProject((int)$projectId);
+            // ---- Leg 1: project guest_access (candidate source unchanged) ----
+            $guestUserIds = $this->guestProjectAccessMapper->getUsersForProject((int)$projectId);
+            foreach ($guestUserIds as $guestUserId) {
+                $handledUids[$guestUserId] = true;
+                $evaluated++;
+                if ($excludeUserId && $guestUserId === $excludeUserId) {
+                    $this->recordSuppression($suppressed, self::REASON_AUTHOR_EXCLUDED, $guestUserId, $ticket);
+                    continue;
+                }
 
-        if (empty($guestUserIds)) {
-            $this->logger->info('No guest recipients for project ' . $projectId . ' (ticket #' . $ticket->getTicketNumber() . ')');
-        }
+                [$email, $name, $resolved] = $this->resolveAccountRecipient($guestUserId);
+                if (!$resolved) {
+                    $this->recordSuppression($suppressed, self::REASON_NO_ACCOUNT, $guestUserId, $ticket);
+                    continue;
+                }
+                if ($email === null) {
+                    $this->recordSuppression($suppressed, self::REASON_INVALID_EMAIL, $guestUserId, $ticket);
+                    continue;
+                }
+                $claimed[strtolower($email)] = true;
 
-        foreach ($guestUserIds as $guestUserId) {
-            $handledUids[$guestUserId] = true;
-            // Skip the comment author
-            if ($excludeUserId && $guestUserId === $excludeUserId) {
-                $this->logger->debug('Skipping notification to comment author: ' . $guestUserId);
-                continue;
-            }
+                // Check guest's email preference for this notification type
+                if ($notificationType && !$this->emailPreferences->userWantsEmail($guestUserId, $notificationType)) {
+                    $this->recordSuppression($suppressed, self::REASON_PREF_OFF, $guestUserId, $ticket);
+                    continue;
+                }
 
-            $identityEmail = null;
-            $identityName = null;
-            if ($this->actorResolver !== null && PortalActorResolver::isIdentityActor($guestUserId)) {
-                $identityEmail = $this->actorResolver->emailForActor($guestUserId);
-                $identityName = $this->actorResolver->displayNameForActor($guestUserId, $guestUserId);
-            }
-            $user = $this->userManager->get($guestUserId);
-            if (!$user && $identityEmail === null) {
-                continue;
-            }
+                // Align with portal canViewTicket: project access alone is not enough.
+                // Only the ticket creator or the customer_email party may receive content.
+                if (!$this->guestMayReceiveTicketEmail($ticket, $guestUserId, $email)) {
+                    $this->recordSuppression($suppressed, self::REASON_NOT_PARTY, $guestUserId, $ticket);
+                    continue;
+                }
 
-            // Check guest's email preference for this notification type
-            if ($notificationType && !$this->emailPreferences->userWantsEmail($guestUserId, $notificationType)) {
-                $this->logger->debug('Skipping guest notification: user has disabled ' . $notificationType, ['userId' => $guestUserId]);
-                continue;
-            }
+                // NH-05: a requester-scope uid holding a guest_access row is
+                // evaluated under the restricted requester leg (D-R15) — the
+                // looser guest e-mail match must never leak a peer's ticket.
+                if ($this->permissionService !== null
+                    && $this->permissionService->isRequesterGroupMember($guestUserId)
+                    && !$this->permissionService->isRequesterScopedTicket($ticket, $guestUserId, $email)) {
+                    $this->recordSuppression($suppressed, self::REASON_NH05, $guestUserId, $ticket);
+                    continue;
+                }
 
-            $email = $identityEmail ?? ($user !== null ? $user->getEMailAddress() : null);
-            $name = $identityName ?? ($user !== null ? ($user->getDisplayName() ?: $guestUserId) : $guestUserId);
-
-            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                continue;
-            }
-
-            // Align with portal canViewTicket: project access alone is not enough.
-            // Only the ticket creator or the customer_email party may receive content.
-            if (!$this->guestMayReceiveTicketEmail($ticket, $guestUserId, $email)) {
-                $this->logger->debug('Skipping guest notification: not a portal-visible party', [
-                    'userId' => $guestUserId,
-                    'ticketId' => $ticket->getId(),
-                ]);
-                continue;
-            }
-
-            // NH-05: a requester-scope uid holding a guest_access row is
-            // evaluated under the restricted requester leg (D-R15) — the
-            // looser guest e-mail match must never leak a peer's ticket.
-            if ($this->permissionService !== null
-                && $this->permissionService->isRequesterGroupMember($guestUserId)
-                && !$this->permissionService->isRequesterScopedTicket($ticket, $guestUserId, $email)) {
-                continue;
-            }
-
-            $payload = $this->withUserLanguage($guestUserId, fn () => $composeContent());
-            if ($this->sendEmail($email, $name, (string)$payload['subject'], (string)$payload['htmlBody'], (string)$payload['textBody'], $ticket->getId(), $ticket->getCustomerEmail())) {
-                $sentAny = true;
+                $payload = $this->withUserLanguage($guestUserId, fn () => $composeContent('guest'));
+                if ($this->sendEmail($email, $name, (string)$payload['subject'], (string)$payload['htmlBody'], (string)$payload['textBody'], $ticket->getId(), $ticket->getCustomerEmail())) {
+                    $sentAny = true;
+                    $sentCount++;
+                }
             }
         }
 
-        if (!$sentAny) {
-            $this->logger->info('No valid guest recipient emails for project ' . $projectId . ' (ticket #' . $ticket->getTicketNumber() . ')');
-        }
+        // ---- Leg 2: creator (G-3) — guest-scope created_by is a candidate
+        // even without a project (guest_access can't cover project_id=null).
+        // The party check is trivially true: the creator IS the party.
+        $creatorUid = trim((string)$ticket->getCreatedBy());
+        if ($creatorUid !== '' && !isset($handledUids[$creatorUid])
+            && (PortalActorResolver::isIdentityActor($creatorUid)
+                || $this->groupManager->isInGroup($creatorUid, 'helpdesk_customers'))) {
+            $handledUids[$creatorUid] = true;
+            $evaluated++;
+            if ($excludeUserId !== null && $excludeUserId !== '' && $creatorUid === $excludeUserId) {
+                $this->recordSuppression($suppressed, self::REASON_AUTHOR_EXCLUDED, $creatorUid, $ticket);
+            } else {
+                [$email, $name, $resolved] = $this->resolveAccountRecipient($creatorUid);
+                if (!$resolved) {
+                    $this->recordSuppression($suppressed, self::REASON_NO_ACCOUNT, $creatorUid, $ticket);
+                } elseif ($email === null) {
+                    $this->recordSuppression($suppressed, self::REASON_INVALID_EMAIL, $creatorUid, $ticket);
+                } else {
+                    $claimed[strtolower($email)] = true;
+                    if ($notificationType && !$this->emailPreferences->userWantsEmail($creatorUid, $notificationType)) {
+                        $this->recordSuppression($suppressed, self::REASON_PREF_OFF, $creatorUid, $ticket);
+                    } else {
+                        $payload = $this->withUserLanguage($creatorUid, fn () => $composeContent('guest'));
+                        if ($this->sendEmail($email, $name, (string)$payload['subject'], (string)$payload['htmlBody'], (string)$payload['textBody'], $ticket->getId(), $ticket->getCustomerEmail())) {
+                            $sentAny = true;
+                            $sentCount++;
+                        }
+                    }
+                }
+            }
         }
 
-        // Internal requesters (spec MH-10/D-R09): uid recipients resolved
-        // through the single requester-scope authority — their tickets reach
-        // them even with project_id=null, which the guest_access path can
-        // never cover. guest_access members already handled are skipped.
+        // ---- Leg 3: internal requesters (spec MH-10/D-R09): uid recipients
+        // resolved through the single requester-scope authority — their
+        // tickets reach them even with project_id=null, which the
+        // guest_access path can never cover. Candidates already evaluated
+        // are skipped (their addresses stay claimed).
         foreach ($this->requesterRecipientUids($ticket) as $uid) {
             if (isset($handledUids[$uid])) {
                 continue;
             }
+            $handledUids[$uid] = true;
+            $evaluated++;
             if ($excludeUserId !== null && $excludeUserId !== '' && $uid === $excludeUserId) {
-                continue;
-            }
-            if ($notificationType && !$this->emailPreferences->userWantsEmail($uid, $notificationType)) {
-                $this->logger->debug('Skipping requester notification: user has disabled ' . $notificationType, ['userId' => $uid]);
+                $this->recordSuppression($suppressed, self::REASON_AUTHOR_EXCLUDED, $uid, $ticket);
                 continue;
             }
             $user = $this->userManager->get($uid);
-            $email = $user !== null ? $user->getEMailAddress() : null;
-            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                // E-15: requesters without an NC e-mail simply get no mail.
+            if ($user === null) {
+                $this->recordSuppression($suppressed, self::REASON_NO_ACCOUNT, $uid, $ticket);
                 continue;
             }
-            $name = $user !== null ? ($user->getDisplayName() ?: $uid) : $uid;
-            $payload = $this->withUserLanguage($uid, fn () => $composeContent());
+            $email = $user->getEMailAddress();
+            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                // E-15: requesters without an NC e-mail simply get no mail.
+                $this->recordSuppression($suppressed, self::REASON_INVALID_EMAIL, $uid, $ticket);
+                continue;
+            }
+            $claimed[strtolower($email)] = true;
+            if ($notificationType && !$this->emailPreferences->userWantsEmail($uid, $notificationType)) {
+                $this->recordSuppression($suppressed, self::REASON_PREF_OFF, $uid, $ticket);
+                continue;
+            }
+            $name = $user->getDisplayName() ?: $uid;
+            $payload = $this->withUserLanguage($uid, fn () => $composeContent('guest'));
             if ($this->sendEmail($email, $name, (string)$payload['subject'], (string)$payload['htmlBody'], (string)$payload['textBody'], $ticket->getId(), $ticket->getCustomerEmail())) {
                 $sentAny = true;
+                $sentCount++;
             }
         }
 
+        // ---- Leg 4: external raw customer_email (G-1/G-2) — account-less
+        // customers only; an address claimed by any evaluated account
+        // candidate suppresses this leg (claim semantics, MH-02).
+        if ($this->sendToExternalRecipient($ticket, $claimed, $authorEmail, $composeContent, $suppressed)) {
+            $sentAny = true;
+            $sentCount++;
+        }
+
+        // US-06 AC-1: one structured info line per resolution — never the
+        // address verbatim (NN-06), only uids / hashed candidate keys.
+        $this->logger->info('ticketcheck.customer_mail', [
+            'app' => 'ticketcheck',
+            'ticket_id' => $ticket->getId(),
+            'event' => $notificationType,
+            'evaluated' => $evaluated,
+            'sent' => $sentCount,
+            'suppressed' => $suppressed,
+        ]);
+
         return $sentAny;
+    }
+
+    /**
+     * Resolve an account candidate (NC uid or portal:<id> actor) to
+     * [email|null, displayName, resolved]. `resolved` is false when no
+     * account material exists at all (deleted user / erased identity).
+     *
+     * @return array{0: ?string, 1: string, 2: bool}
+     */
+    private function resolveAccountRecipient(string $actorUid): array
+    {
+        $identityEmail = null;
+        $identityName = null;
+        if ($this->actorResolver !== null && PortalActorResolver::isIdentityActor($actorUid)) {
+            $identityEmail = $this->actorResolver->emailForActor($actorUid);
+            $identityName = $this->actorResolver->displayNameForActor($actorUid, $actorUid);
+        }
+        $user = $this->userManager->get($actorUid);
+        if ($user === null && $identityEmail === null) {
+            return [null, $actorUid, false];
+        }
+        $email = $identityEmail ?? ($user !== null ? $user->getEMailAddress() : null);
+        $name = $identityName ?? ($user !== null ? ($user->getDisplayName() ?: $actorUid) : $actorUid);
+        if ($email === null || $email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return [null, $name, true];
+        }
+        return [$email, $name, true];
+    }
+
+    /**
+     * Count + debug-log one suppressed candidate. The candidate key is a uid
+     * or an 'ext:' address hash — never the e-mail address itself (NN-06).
+     *
+     * @param array<string, int> $suppressed
+     */
+    private function recordSuppression(array &$suppressed, string $reason, string $candidateKey, Ticket $ticket): void
+    {
+        $suppressed[$reason] = ($suppressed[$reason] ?? 0) + 1;
+        $this->logger->debug('ticketcheck.customer_mail candidate suppressed', [
+            'app' => 'ticketcheck',
+            'ticket_id' => $ticket->getId(),
+            'candidate' => $candidateKey,
+            'reason' => $reason,
+        ]);
+    }
+
+    /**
+     * External raw-address leg (spec §9 leg 4): send to ticket.customer_email
+     * when no evaluated account candidate claimed the address. Returns true
+     * when a mail was actually sent.
+     *
+     * @param array<string, bool> $claimed
+     * @param array<string, int> $suppressed
+     */
+    private function sendToExternalRecipient(Ticket $ticket, array $claimed, ?string $authorEmail, callable $composeContent, array &$suppressed): bool
+    {
+        $e = strtolower(trim((string)$ticket->getCustomerEmail()));
+        $candidateKey = 'ext:' . substr(hash('sha256', $e), 0, 12);
+
+        $reason = $this->externalLegSuppression($ticket, $e, $claimed, $authorEmail);
+        if ($reason !== null) {
+            $this->recordSuppression($suppressed, $reason, $candidateKey, $ticket);
+            if ($reason === self::REASON_RATE_CAP && $this->mailOutboxMapper !== null) {
+                // NH-03: ledger the dropped event so the digest job can
+                // recover it — 'extdrop:' rows never count toward the cap.
+                try {
+                    $this->mailOutboxMapper->recordExternalLegDrop((int)$ticket->getId(), $e);
+                } catch (\Throwable) {
+                    // Digest bookkeeping is best-effort like the cap ledger.
+                }
+            }
+            return false;
+        }
+
+        // Ledger the attempt BEFORE the send: the (ticket,address) cap counts
+        // attempts, matching the outbox's queued-or-sent semantics — a
+        // failing-address flood is still bounded.
+        $ledgerRowId = null;
+        if ($this->mailOutboxMapper !== null) {
+            try {
+                $ledgerRowId = $this->mailOutboxMapper->recordExternalLegSend((int)$ticket->getId(), $e);
+            } catch (\Throwable $ex) {
+                // Missing table on legacy schema must not break notification.
+                $this->logger->warning('ticketcheck.customer_mail: cap ledger write failed', [
+                    'app' => 'ticketcheck',
+                    'ticket_id' => $ticket->getId(),
+                    'exception' => $ex,
+                ]);
+            }
+        }
+
+        // Raw addresses have no locale source — instance default language
+        // (AS-04); the 'external' audience composes the no-portal-CTA variant.
+        $payload = $composeContent('external');
+        $name = trim((string)$ticket->getCustomerName());
+        if ($name === '') {
+            $name = $e;
+        }
+        $sent = $this->sendEmail($e, $name, (string)$payload['subject'], (string)$payload['htmlBody'], (string)$payload['textBody'], $ticket->getId(), $ticket->getCustomerEmail());
+
+        if (!$sent && $ledgerRowId !== null) {
+            try {
+                $this->mailOutboxMapper?->markExternalLegFailed($ledgerRowId);
+            } catch (\Throwable) {
+                // Ledger hygiene is best-effort; the attempt still counts.
+            }
+        }
+        return $sent;
+    }
+
+    /**
+     * First failing gate for the external leg, or null when the send may
+     * proceed. Gate order: cheap/deterministic checks first — the cap query
+     * runs last. 'disabled' precedes 'claimed' so a kill-switch report shows
+     * the true root cause (US-05 AC-1).
+     *
+     * @param array<string, bool> $claimed
+     */
+    private function externalLegSuppression(Ticket $ticket, string $e, array $claimed, ?string $authorEmail): ?string
+    {
+        if ($e === '' || !filter_var($e, FILTER_VALIDATE_EMAIL)) {
+            return self::REASON_INVALID_EMAIL;
+        }
+        if (!$this->isExternalCustomerMailEnabled()) {
+            return self::REASON_DISABLED;
+        }
+        if (isset($claimed[$e])) {
+            return self::REASON_CLAIMED;
+        }
+        if ($this->optout !== null && $this->optout->isOptedOut((int)$ticket->getId(), $e)) {
+            return self::REASON_OPTOUT;
+        }
+        if ($authorEmail !== null && $authorEmail !== '' && $e === strtolower(trim($authorEmail))) {
+            return self::REASON_SELF_AUTHOR;
+        }
+        if ($this->isPlaceholderDomain($e)) {
+            return self::REASON_PLACEHOLDER;
+        }
+        if ($this->isDaemonOrOwnAddress($e)) {
+            return self::REASON_DAEMON;
+        }
+        if ($this->externalLegCapped((int)$ticket->getId(), $e)) {
+            $this->bumpExternalCapDrops();
+            return self::REASON_RATE_CAP;
+        }
+        return null;
+    }
+
+    /**
+     * NH-03: hourly recovery digest for cap-suppressed external-leg events.
+     * Called by ExternalMailDigestJob for (ticket,address) pairs that had
+     * 'capped' drops since the last digest. Same safety gates as the live
+     * leg minus the cap itself (the digest IS the cap relief): enabled flag,
+     * valid address, opt-out. The 'extdigest:' ledger row is written BEFORE
+     * the send — a failed send must not spin a retry storm either.
+     */
+    public function sendExternalLegDigest(Ticket $ticket, string $email, int $droppedCount): bool
+    {
+        $e = strtolower(trim($email));
+        if ($e === '' || !filter_var($e, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+        if (!$this->isExternalCustomerMailEnabled()) {
+            return false;
+        }
+        if ($this->optout !== null && $this->optout->isOptedOut((int)$ticket->getId(), $e)) {
+            return false;
+        }
+
+        // Dedupe at the service boundary — the job's own check is only a
+        // fast-path. A racing tick or a second caller must not double-send.
+        if ($this->mailOutboxMapper !== null) {
+            try {
+                $last = $this->mailOutboxMapper->lastExternalDigestTime((int)$ticket->getId(), $e);
+                if ($last !== null && $last > new \DateTime('-60 minutes')) {
+                    return false;
+                }
+            } catch (\Throwable) {
+                // Ledger read failure degrades to best-effort posture.
+            }
+        }
+
+        $ledgerRowId = null;
+        if ($this->mailOutboxMapper !== null) {
+            try {
+                $ledgerRowId = $this->mailOutboxMapper->recordExternalLegDigest((int)$ticket->getId(), $e);
+            } catch (\Throwable $ex) {
+                $this->logger->warning('ticketcheck.customer_mail: digest ledger write failed', [
+                    'app' => 'ticketcheck',
+                    'ticket_id' => $ticket->getId(),
+                    'exception' => $ex,
+                ]);
+            }
+        }
+
+        $l = $this->getL();
+        $appName = $this->getAppNameForSubject();
+        $subject = sprintf('[%s] %s', $appName,
+            $l->t('extmail_digest_subject', [$ticket->getTicketNumber(), $droppedCount]));
+        $body = $l->t('extmail_digest_body', [$ticket->getTicketNumber(), $droppedCount]);
+        $cta = $this->customerCta($ticket, 'external', '');
+        $title = $l->t('extmail_digest_title');
+        $footer = $l->t('extmail_digest_footer');
+
+        $htmlBody = sprintf(
+            '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+            . 'body{font-family:Arial,sans-serif;line-height:1.6;color:#333}'
+            . '.container{max-width:600px;margin:0 auto;padding:20px}'
+            . '.header{background:#0082c9;color:white;padding:20px;text-align:center}'
+            . '.content{background:#f9f9f9;padding:20px;border:1px solid #ddd}'
+            . '.update-info{background:white;padding:15px;margin:15px 0;border-left:4px solid #ffa726}'
+            . '.footer{text-align:center;padding:20px;color:#666;font-size:12px}'
+            . '</style></head><body><div class="container">'
+            . '<div class="header"><h1>%s</h1></div>'
+            . '<div class="content"><p>%s</p>'
+            . '<div class="update-info"><p><strong>%s</strong></p></div>'
+            . '%s</div><div class="footer"><p>%s</p></div></div></body></html>',
+            htmlspecialchars($title),
+            htmlspecialchars($body),
+            htmlspecialchars((string)$ticket->getTitle()),
+            $cta['html'],
+            htmlspecialchars($footer)
+        );
+        $textBody = $title . "\n\n" . $body . "\n" . (string)$ticket->getTitle() . "\n\n"
+            . ($cta['text'] !== '' ? $cta['text'] . "\n\n" : '') . $footer;
+
+        $name = trim((string)$ticket->getCustomerName());
+        if ($name === '') {
+            $name = $e;
+        }
+        $sent = $this->sendEmail($e, $name, $subject, $htmlBody, $textBody, $ticket->getId(), $e);
+        if (!$sent && $ledgerRowId !== null) {
+            try {
+                $this->mailOutboxMapper?->markExternalLegFailed($ledgerRowId);
+            } catch (\Throwable) {
+            }
+        }
+        return $sent;
+    }
+
+    private function optoutUrl(Ticket $ticket): string
+    {
+        if ($this->optout === null) {
+            return '';
+        }
+        try {
+            return $this->optout->optoutUrl((int)$ticket->getId(), (string)$ticket->getCustomerEmail());
+        } catch (\Throwable) {
+            return ''; // link generation failure must not block the mail
+        }
+    }
+
+    private function isExternalCustomerMailEnabled(): bool
+    {
+        return $this->config->getAppValue($this->appName, 'external_customer_mail_enabled', 'yes') === 'yes';
+    }
+
+    /**
+     * Synthesized/test domains that must never receive outbound (NN-02):
+     * the RFC 2606/6761 reserved set — `localhost`, `*.test`, `*.invalid`,
+     * `example`, `example.*`, `*.example` and `*.example.{com,net,org}` —
+     * catches the companion-parity `uid@ticketcheck.invalid` default and
+     * canonical test addresses like `x@sub.example.com`. `.local` is NOT
+     * rejected: on-prem AD mail domains legitimately use it.
+     */
+    private function isPlaceholderDomain(string $e): bool
+    {
+        $atPos = strrpos($e, '@');
+        $domain = $atPos !== false ? substr($e, $atPos + 1) : '';
+        if ($domain === 'localhost' || str_ends_with($domain, '.localhost')) {
+            return true;
+        }
+        if ($domain === 'invalid' || str_ends_with($domain, '.invalid')) {
+            return true;
+        }
+        if ($domain === 'test' || str_ends_with($domain, '.test')) {
+            return true;
+        }
+        return $domain === 'example'
+            || str_starts_with($domain, 'example.')
+            || str_ends_with($domain, '.example')
+            || preg_match('/(^|\.)example\.(com|net|org)$/i', $domain) === 1;
+    }
+
+    /**
+     * Daemon-class local parts + our own inbound address — replying to them
+     * would bounce or loop (US-01 AC-3 belt-and-suspenders; the inbound
+     * skip-list already prevents these tickets upstream).
+     */
+    private function isDaemonOrOwnAddress(string $e): bool
+    {
+        $atPos = strrpos($e, '@');
+        $local = $atPos !== false ? substr($e, 0, $atPos) : '';
+        if (in_array($local, ['mailer-daemon', 'postmaster', 'hostmaster', 'abuse'], true)) {
+            return true;
+        }
+        $inbound = strtolower($this->inboundMailAddress());
+        return $inbound !== '' && $e === $inbound;
+    }
+
+    private function externalLegCapped(int $ticketId, string $e): bool
+    {
+        if ($this->mailOutboxMapper === null) {
+            return false; // ledger unwired (unit-test construction) — cap inactive
+        }
+        try {
+            return $this->mailOutboxMapper->recentExternalLegCount(
+                $ticketId,
+                $e,
+                new \DateTime('-1 hour')
+            ) >= self::EXTERNAL_LEG_HOURLY_CAP;
+        } catch (\Throwable $ex) {
+            // Cap read failure degrades to best-effort posture, not silence.
+            $this->logger->warning('ticketcheck.customer_mail: cap ledger read failed', [
+                'app' => 'ticketcheck',
+                'ticket_id' => $ticketId,
+                'exception' => $ex,
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Instance-wide rate_cap drop counter per hour bucket; warns once when
+     * the storm threshold is crossed (spec §6 observability).
+     */
+    private function bumpExternalCapDrops(): void
+    {
+        try {
+            $bucket = (new \DateTime())->format('YmdH');
+            $raw = (string)$this->config->getAppValue($this->appName, self::EXTERNAL_LEG_CAP_DROPS_KEY, '');
+            $parts = explode(':', $raw, 2);
+            $count = ($parts[0] === $bucket && isset($parts[1])) ? ((int)$parts[1] + 1) : 1;
+            $this->config->setAppValue($this->appName, self::EXTERNAL_LEG_CAP_DROPS_KEY, $bucket . ':' . $count);
+            if ($count === self::EXTERNAL_LEG_CAP_STORM_THRESHOLD + 1) {
+                $this->logger->warning('ticketcheck.customer_mail: external-leg rate_cap drops exceeded threshold — possible spoofed-From abuse', [
+                    'app' => 'ticketcheck',
+                    'threshold' => self::EXTERNAL_LEG_CAP_STORM_THRESHOLD,
+                    'hour' => $bucket,
+                ]);
+            }
+        } catch (\Throwable) {
+            // Observability must never break notification.
+        }
+    }
+
+    /**
+     * CTA block for customer-bound mail. 'guest' audience keeps the portal
+     * deep-link; 'external' gets a reply-by-mail CTA when inbound routing is
+     * configured, or no CTA at all — never a dead portal link (spec §7).
+     * `$labelFirst` preserves each template's legacy text-body arg order.
+     *
+     * @return array{html: string, text: string}
+     */
+    private function customerCta(Ticket $ticket, string $audience, string $viewLabel, bool $labelFirst = false): array
+    {
+        if ($audience === 'external') {
+            if ($this->inboundMailAddress() === '') {
+                return ['html' => '', 'text' => ''];
+            }
+            $cta = $this->getL()->t('email_external_reply_cta');
+            $html = '<p>' . htmlspecialchars($cta) . '</p>';
+            $text = $cta;
+            $oo = $this->optoutUrl($ticket);
+            if ($oo !== '') {
+                $lbl = $this->getL()->t('extmail_optout_cta');
+                $html .= '<p style="font-size:12px;color:#666"><a href="' . htmlspecialchars($oo) . '">' . htmlspecialchars($lbl) . '</a></p>';
+                $text .= "\n" . $lbl . ': ' . $oo;
+            }
+            return ['html' => $html, 'text' => $text];
+        }
+        return $this->linkCta($this->getTicketUrl($ticket, 'guest'), $viewLabel, $labelFirst);
+    }
+
+    /**
+     * Button/link CTA pair for HTML + plain-text bodies.
+     *
+     * @return array{html: string, text: string}
+     */
+    private function linkCta(string $url, string $viewLabel, bool $labelFirst = false): array
+    {
+        return [
+            'html' => '<p><a href="' . htmlspecialchars($url) . '" class="button">' . htmlspecialchars($viewLabel) . '</a></p>',
+            'text' => $labelFirst ? ($viewLabel . ': ' . $url) : ($url . ': ' . $viewLabel),
+        ];
     }
 
     /**
@@ -1280,8 +1763,10 @@ class EmailService
 
     /**
      * Render ticket created email (HTML)
+     *
+     * @param array{html: string, text: string} $cta
      */
-    private function renderTicketCreatedEmail(Ticket $ticket, string $ticketUrl): string
+    private function renderTicketCreatedEmail(Ticket $ticket, array $cta): string
     {
         $priority = htmlspecialchars($this->getL()->t('priority_' . $ticket->getPriority()));
         $status = htmlspecialchars($this->getL()->t('status_' . $ticket->getStatus()));
@@ -1316,7 +1801,7 @@ class EmailService
                 <p><strong>%s:</strong> %s</p>
                 <p><strong>%s:</strong> %s</p>
             </div>
-            <p><a href="%s" class="button">%s</a></p>
+            %s
         </div>
         <div class="footer">
             <p>%s</p>
@@ -1336,20 +1821,21 @@ class EmailService
             $priority,
             htmlspecialchars($this->getL()->t('email_ticket_created_status')),
             $status,
-            htmlspecialchars($ticketUrl),
-            htmlspecialchars($this->getL()->t('email_ticket_created_view')),
+            $cta['html'],
             htmlspecialchars($this->getL()->t('email_ticket_created_footer'))
         );
     }
 
     /**
      * Render ticket created email (plain text)
+     *
+     * @param array{html: string, text: string} $cta
      */
-    private function renderTicketCreatedEmailText(Ticket $ticket, string $ticketUrl): string
+    private function renderTicketCreatedEmailText(Ticket $ticket, array $cta): string
     {
         $priority = $this->getL()->t('priority_' . $ticket->getPriority());
         $status = $this->getL()->t('status_' . $ticket->getStatus());
-        
+
         return sprintf(
             "%s\n\n" .
                 "%s\n\n" .
@@ -1357,7 +1843,7 @@ class EmailService
                 "%s: %s\n" .
                 "%s: %s\n" .
                 "%s: %s\n\n" .
-                "%s: %s\n\n" .
+                "%s\n\n" .
                 "%s",
             $this->getL()->t('email_ticket_created_hello', [$ticket->getCustomerName()]),
             $this->getL()->t('email_ticket_created_intro'),
@@ -1369,16 +1855,17 @@ class EmailService
             $priority,
             $this->getL()->t('email_ticket_created_status'),
             $status,
-            $ticketUrl,
-            $this->getL()->t('email_ticket_created_view'),
+            $cta['text'],
             $this->getL()->t('email_ticket_created_footer')
         );
     }
 
     /**
      * Render ticket updated email (HTML)
+     *
+     * @param array{html: string, text: string} $cta
      */
-    private function renderTicketUpdatedEmail(Ticket $ticket, string $updateMessage, string $ticketUrl): string
+    private function renderTicketUpdatedEmail(Ticket $ticket, string $updateMessage, array $cta): string
     {
         return sprintf(
             '
@@ -1407,7 +1894,7 @@ class EmailService
             <div class="update-info">
                 <p><strong>%s:</strong> %s</p>
             </div>
-            <p><a href="%s" class="button">%s</a></p>
+            %s
         </div>
         <div class="footer">
             <p>%s</p>
@@ -1421,29 +1908,29 @@ class EmailService
             htmlspecialchars($this->getL()->t('email_ticket_updated_intro', [$ticket->getTicketNumber()])),
             htmlspecialchars($this->getL()->t('email_ticket_updated_update')),
             htmlspecialchars($updateMessage),
-            htmlspecialchars($ticketUrl),
-            htmlspecialchars($this->getL()->t('email_ticket_updated_view')),
+            $cta['html'],
             htmlspecialchars($this->getL()->t('email_ticket_updated_footer'))
         );
     }
 
     /**
      * Render ticket updated email (plain text)
+     *
+     * @param array{html: string, text: string} $cta
      */
-    private function renderTicketUpdatedEmailText(Ticket $ticket, string $updateMessage, string $ticketUrl): string
+    private function renderTicketUpdatedEmailText(Ticket $ticket, string $updateMessage, array $cta): string
     {
         return sprintf(
             "%s\n\n" .
                 "%s\n\n" .
                 "%s: %s\n\n" .
-                "%s: %s\n\n" .
+                "%s\n\n" .
                 "%s",
             $this->getL()->t('email_ticket_created_hello', [$ticket->getCustomerName()]),
             $this->getL()->t('email_ticket_updated_intro', [$ticket->getTicketNumber()]),
             $this->getL()->t('email_ticket_updated_update'),
             $updateMessage,
-            $this->getL()->t('email_ticket_updated_view'),
-            $ticketUrl,
+            $cta['text'],
             $this->getL()->t('email_ticket_updated_footer')
         );
     }
@@ -1457,7 +1944,8 @@ class EmailService
         return $trimmed !== '' ? $trimmed : null;
     }
 
-    private function renderStatusChangedEmail(Ticket $ticket, string $oldStatus, string $newStatus, string $ticketUrl, ?string $changedByDisplayName = null): string
+    /** @param array{html: string, text: string} $cta */
+    private function renderStatusChangedEmail(Ticket $ticket, string $oldStatus, string $newStatus, array $cta, ?string $changedByDisplayName = null): string
     {
         $oldStatusLabel = htmlspecialchars($this->getL()->t('status_' . $oldStatus));
         $newStatusLabel = htmlspecialchars($this->getL()->t('status_' . $newStatus));
@@ -1494,7 +1982,7 @@ class EmailService
                 <p><strong>%s:</strong> %s</p>
                 <p><strong>%s:</strong> %s</p>
             </div>
-            <p><a href="%s" class="button">%s</a></p>
+            %s
         </div>
         <div class="footer">
             <p>%s</p>
@@ -1511,16 +1999,17 @@ class EmailService
             $oldStatusLabel,
             htmlspecialchars($this->getL()->t('email_status_changed_to')),
             $newStatusLabel,
-            htmlspecialchars($ticketUrl),
-            htmlspecialchars($this->getL()->t('email_status_changed_view')),
+            $cta['html'],
             htmlspecialchars($this->getL()->t('email_status_changed_footer'))
         );
     }
 
     /**
      * Render status changed email (plain text)
+     *
+     * @param array{html: string, text: string} $cta
      */
-    private function renderStatusChangedEmailText(Ticket $ticket, string $oldStatus, string $newStatus, string $ticketUrl, ?string $changedByDisplayName = null): string
+    private function renderStatusChangedEmailText(Ticket $ticket, string $oldStatus, string $newStatus, array $cta, ?string $changedByDisplayName = null): string
     {
         $oldStatusLabel = $this->getL()->t('status_' . $oldStatus);
         $newStatusLabel = $this->getL()->t('status_' . $newStatus);
@@ -1534,7 +2023,7 @@ class EmailService
                 "%s" .
                 "%s: %s\n" .
                 "%s: %s\n\n" .
-                "%s: %s\n\n" .
+                "%s\n\n" .
                 "%s",
             $this->getL()->t('email_ticket_created_hello', [$ticket->getCustomerName()]),
             $this->getL()->t('email_status_changed_intro', [$ticket->getTicketNumber()]),
@@ -1543,16 +2032,17 @@ class EmailService
             $oldStatusLabel,
             $this->getL()->t('email_status_changed_to'),
             $newStatusLabel,
-            $this->getL()->t('email_status_changed_view'),
-            $ticketUrl,
+            $cta['text'],
             $this->getL()->t('email_status_changed_footer')
         );
     }
 
     /**
      * Render new comment email (HTML)
+     *
+     * @param array{html: string, text: string} $cta
      */
-    private function renderNewCommentEmail(Ticket $ticket, string $authorName, string $content, string $ticketUrl): string
+    private function renderNewCommentEmail(Ticket $ticket, string $authorName, string $content, array $cta): string
     {
         return sprintf(
             '
@@ -1582,7 +2072,7 @@ class EmailService
                 <p><strong>%s</strong></p>
                 <p>%s</p>
             </div>
-            <p><a href="%s" class="button">%s</a></p>
+            %s
         </div>
         <div class="footer">
             <p>%s</p>
@@ -1596,30 +2086,30 @@ class EmailService
             htmlspecialchars($this->getL()->t('email_comment_intro', [$authorName, $ticket->getTicketNumber()])),
             htmlspecialchars($this->getL()->t('email_comment_wrote', [$authorName])),
             nl2br(htmlspecialchars($content)),
-            htmlspecialchars($ticketUrl),
-            htmlspecialchars($this->getL()->t('email_comment_view')),
+            $cta['html'],
             htmlspecialchars($this->getL()->t('email_comment_footer'))
         );
     }
 
     /**
      * Render new comment email (plain text)
+     *
+     * @param array{html: string, text: string} $cta
      */
-    private function renderNewCommentEmailText(Ticket $ticket, string $authorName, string $content, string $ticketUrl): string
+    private function renderNewCommentEmailText(Ticket $ticket, string $authorName, string $content, array $cta): string
     {
         return sprintf(
             "%s\n\n" .
                 "%s\n\n" .
                 "%s\n" .
                 "%s\n\n" .
-                "%s: %s\n\n" .
+                "%s\n\n" .
                 "%s",
             $this->getL()->t('email_ticket_created_hello', [$ticket->getCustomerName()]),
             $this->getL()->t('email_comment_intro', [$authorName, $ticket->getTicketNumber()]),
             $this->getL()->t('email_comment_wrote', [$authorName]),
             $content,
-            $this->getL()->t('email_comment_view'),
-            $ticketUrl,
+            $cta['text'],
             $this->getL()->t('email_comment_footer')
         );
     }

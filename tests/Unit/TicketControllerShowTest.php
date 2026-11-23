@@ -9,7 +9,6 @@ use OCA\Ticketcheck\Db\AttachmentMapper;
 use OCA\Ticketcheck\Db\Ticket;
 use OCA\Ticketcheck\Db\TicketMapper;
 use OCA\Ticketcheck\Service\DeletionService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\MergeService;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Service\ProjectService;
@@ -43,7 +42,6 @@ class TicketControllerShowTest extends TestCase
     private TicketService $ticketService;
     private PermissionService $permissionService;
     private MergeService $mergeService;
-    private EmailService $emailService;
     private ProjectService $projectService;
     private DeletionService $deletionService;
     private TicketMapper $ticketMapper;
@@ -72,7 +70,6 @@ class TicketControllerShowTest extends TestCase
         $this->ticketService = $this->createMock(TicketService::class);
         $this->permissionService = $this->createMock(PermissionService::class);
         $this->mergeService = $this->createMock(MergeService::class);
-        $this->emailService = $this->createMock(EmailService::class);
         $this->projectService = $this->createMock(ProjectService::class);
         $this->deletionService = $this->createMock(DeletionService::class);
         $this->ticketMapper = $this->createMock(TicketMapper::class);
@@ -140,7 +137,6 @@ class TicketControllerShowTest extends TestCase
             $this->ticketService,
             $this->permissionService,
             $this->mergeService,
-            $this->emailService,
             $this->projectService,
             $this->deletionService,
             $this->ticketMapper,

@@ -12,7 +12,6 @@ use OCA\Ticketcheck\Db\TicketMapper;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\EmailPreferencesService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\GuestLayoutParamsProvider;
 use OCA\Ticketcheck\Service\HtmlSanitizerService;
 use OCA\Ticketcheck\Service\NavigationContextService;
@@ -80,7 +79,6 @@ class CustomerPortalControllerAccountDeletionTest extends TestCase
             $this->createMock(TicketService::class),
             $this->createMock(PermissionService::class),
             $this->createMock(ProjectService::class),
-            $this->createMock(EmailService::class),
             $this->createMock(TicketMapper::class),
             $this->createMock(KBArticleMapper::class),
             $this->createMock(AttachmentMapper::class),

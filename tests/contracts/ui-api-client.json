@@ -1,790 +1,844 @@
 {
- "schemaVersion": 1,
- "appId": "ticketcheck",
- "companionDir": "mobile/ticketcheck",
- "contracts": [
-  {
-   "id": "requester-create-fields",
-   "param": "title+description",
-   "description": "Requester create uses server-owned NC identity and no project. Both clients collect title and description; companion requires an automatically generated idempotency header.",
-   "errorCodes": [
-    "request_failed",
-    "idempotency_key_required"
-   ],
-   "server": [
+  "schemaVersion": 1,
+  "appId": "ticketcheck",
+  "companionDir": "mobile/ticketcheck",
+  "contracts": [
     {
-     "file": "lib/Controller/CustomerPortalController.php",
-     "needles": [
-      "getParam('title'",
-      "getParam('description'",
-      "title_is_required",
-      "description_is_required"
-     ]
+      "id": "requester-create-fields",
+      "param": "title+description",
+      "description": "Requester create uses server-owned NC identity and no project. Both clients collect title and description; companion requires an automatically generated idempotency header.",
+      "errorCodes": [
+        "request_failed",
+        "idempotency_key_required"
+      ],
+      "server": [
+        {
+          "file": "lib/Controller/CustomerPortalController.php",
+          "needles": [
+            "getParam('title'",
+            "getParam('description'",
+            "title_is_required",
+            "description_is_required"
+          ]
+        },
+        {
+          "file": "lib/Controller/RequesterCompanionController.php",
+          "needles": [
+            "storeTicket()",
+            "requester.create",
+            "idempotency_key_required"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/portal/create-ticket.php",
+          "needles": [
+            "name=\"title\"",
+            "name=\"description\""
+          ]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/RequesterPortalScreen.tsx",
+          "needles": [
+            "field('title'",
+            "field('description'",
+            "create.titleRequired",
+            "create.descriptionRequired",
+            "createRequesterTicket(",
+            "newIdempotencyKey()"
+          ]
+        },
+        {
+          "file": "src/api/requester.ts",
+          "needles": [
+            "JSON.stringify({ title, description",
+            "X-TC-Idempotency-Key"
+          ]
+        }
+      ]
     },
     {
-     "file": "lib/Controller/RequesterCompanionController.php",
-     "needles": [
-      "storeTicket()",
-      "requester.create",
-      "idempotency_key_required"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/portal/create-ticket.php",
-     "needles": [
-      "name=\"title\"",
-      "name=\"description\""
-     ]
-    }
-   ],
-   "mobile": [
-    {
-     "file": "src/screens/RequesterPortalScreen.tsx",
-     "needles": [
-      "field('title'",
-      "field('description'",
-      "create.titleRequired",
-      "create.descriptionRequired",
-      "createRequesterTicket(",
-      "newIdempotencyKey()"
-     ]
+      "id": "requester-public-reply",
+      "param": "comment",
+      "description": "Portal and native requester replies require a nonempty public message; optional attachments travel with the same reply. Internal-note and staff identity inputs are not exposed.",
+      "errorCodes": [
+        "request_failed",
+        "idempotency_key_required"
+      ],
+      "server": [
+        {
+          "file": "lib/Controller/CustomerPortalController.php",
+          "needles": [
+            "getParam('comment'",
+            "comment_required"
+          ]
+        },
+        {
+          "file": "lib/Controller/RequesterCompanionController.php",
+          "needles": [
+            "addReply($id)",
+            "requester.reply."
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/portal/ticket-detail.php",
+          "needles": [
+            "name=\"comment\""
+          ]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/RequesterPortalScreen.tsx",
+          "needles": [
+            "field('comment'",
+            "ticket.commentEmpty",
+            "replyToRequesterTicket("
+          ]
+        },
+        {
+          "file": "src/api/requester.ts",
+          "needles": [
+            "body.append('comment', comment)",
+            "X-TC-Idempotency-Key",
+            "attachments[]"
+          ]
+        }
+      ]
     },
     {
-     "file": "src/api/requester.ts",
-     "needles": [
-      "JSON.stringify({ title, description",
-      "X-TC-Idempotency-Key"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "requester-public-reply",
-   "param": "comment",
-   "description": "Portal and native requester replies require a nonempty public message; optional attachments travel with the same reply. Internal-note and staff identity inputs are not exposed.",
-   "errorCodes": [
-    "request_failed",
-    "idempotency_key_required"
-   ],
-   "server": [
-    {
-     "file": "lib/Controller/CustomerPortalController.php",
-     "needles": [
-      "getParam('comment'",
-      "comment_required"
-     ]
+      "id": "ticket-resources-select",
+      "param": "resources",
+      "description": "Optional multi-select of enabled resource keys on staff ticket create/edit and companion create. Server validates every key exists+enabled (uniform 422 `fields:{resources}`); portal never binds the param.",
+      "errorCodes": [
+        "invalid_resource",
+        "too_many_resources",
+        "invalid_resources"
+      ],
+      "server": [
+        {
+          "file": "lib/Service/TicketResourceService.php",
+          "needles": [
+            "resolveWriteKeys",
+            "invalid_resource",
+            "too_many_resources"
+          ]
+        },
+        {
+          "file": "lib/Controller/TicketController.php",
+          "needles": [
+            "resolveResourceParam",
+            "assignTicketResources"
+          ]
+        },
+        {
+          "file": "lib/Service/CompanionTicketService.php",
+          "needles": [
+            "resolveWriteKeys",
+            "invalid_resource",
+            "'resources'"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/ticket-form.php",
+          "needles": [
+            "name=\"resources[]\"",
+            "resources"
+          ]
+        },
+        {
+          "file": "js/ticket-resources-picker.js",
+          "needles": [
+            "resources[]",
+            "tc-res-listbox",
+            "setValues"
+          ]
+        },
+        {
+          "file": "templates/parts/settings/resources.php",
+          "needles": [
+            "ticket-resources",
+            "ticketResources"
+          ]
+        },
+        {
+          "file": "js/settings-resources.js",
+          "needles": [
+            "api/settings/ticket-resources",
+            "requesttoken"
+          ]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/CreateTicketScreen.tsx",
+          "needles": [
+            "create.resources",
+            "resources",
+            "options?.resources"
+          ]
+        },
+        {
+          "file": "src/api/client.ts",
+          "needles": [
+            "resources"
+          ]
+        },
+        {
+          "file": "src/types.ts",
+          "needles": [
+            "resources"
+          ]
+        }
+      ]
     },
     {
-     "file": "lib/Controller/RequesterCompanionController.php",
-     "needles": [
-      "addReply($id)",
-      "requester.reply."
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/portal/ticket-detail.php",
-     "needles": [
-      "name=\"comment\""
-     ]
-    }
-   ],
-   "mobile": [
-    {
-     "file": "src/screens/RequesterPortalScreen.tsx",
-     "needles": [
-      "field('comment'",
-      "ticket.commentEmpty",
-      "replyToRequesterTicket("
-     ]
+      "id": "portal-otp-request",
+      "param": "email",
+      "description": "Public passwordless OTP request + verify: server requires a valid email (uniform 202, never an oracle) and a 6-digit code (uniform INVALID_CODE). Web login page collects both.",
+      "errorCodes": [
+        "INVALID_CODE"
+      ],
+      "server": [
+        {
+          "file": "lib/Controller/PortalAuthController.php",
+          "needles": [
+            "getParam('email'",
+            "getParam('code'",
+            "invalidCode"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/portal/login.php",
+          "needles": [
+            "name=\"email\"",
+            "name=\"code\"",
+            "data-tc-portal-send",
+            "data-tc-portal-verify"
+          ]
+        },
+        {
+          "file": "js/portal-login.js",
+          "needles": [
+            "/portal/auth/otp",
+            "/portal/auth/verify",
+            "email",
+            "code"
+          ]
+        }
+      ],
+      "mobile": null
     },
     {
-     "file": "src/api/requester.ts",
-     "needles": [
-      "body.append('comment', comment)",
-      "X-TC-Idempotency-Key",
-      "attachments[]"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "ticket-resources-select",
-   "param": "resources",
-   "description": "Optional multi-select of enabled resource keys on staff ticket create/edit and companion create. Server validates every key exists+enabled (uniform 422 `fields:{resources}`); portal never binds the param.",
-   "errorCodes": [
-    "invalid_resource",
-    "too_many_resources",
-    "invalid_resources"
-   ],
-   "server": [
-    {
-     "file": "lib/Service/TicketResourceService.php",
-     "needles": [
-      "resolveWriteKeys",
-      "invalid_resource",
-      "too_many_resources"
-     ]
+      "id": "guest-migration-door",
+      "param": "door",
+      "description": "S3 door flip: server requires door in {allowed,refused} + acknowledged=yes + fresh dry-run before refusing NC guest login. Migration wizard provides the acknowledgement checkbox + door button.",
+      "errorCodes": [],
+      "server": [
+        {
+          "file": "lib/Controller/GuestMigrationController.php",
+          "needles": [
+            "getParam('door'",
+            "migration_dryrun_required",
+            "setDoor"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/guests/migration.php",
+          "needles": [
+            "tc-ack",
+            "data-tc-door",
+            "migration_ack"
+          ]
+        },
+        {
+          "file": "js/guest-migration.js",
+          "needles": [
+            "/api/guests/migration/door",
+            "acknowledged",
+            "door"
+          ]
+        }
+      ],
+      "mobile": null
     },
     {
-     "file": "lib/Controller/TicketController.php",
-     "needles": [
-      "resolveResourceParam",
-      "assignTicketResources"
-     ]
+      "id": "guest-migration-exempt",
+      "param": "uid+exempt",
+      "description": "NC-fallback exemption toggle (US-T05): server requires uid, blocks portal: actors; exempt=1/0. Wizard per-uid exempt/unexempt buttons send both fields.",
+      "errorCodes": [],
+      "server": [
+        {
+          "file": "lib/Controller/GuestMigrationController.php",
+          "needles": [
+            "getParam('uid'",
+            "getParam('exempt'",
+            "exempt"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/guests/migration.php",
+          "needles": [
+            "data-tc-exempt",
+            "data-tc-unexempt"
+          ]
+        },
+        {
+          "file": "js/guest-migration.js",
+          "needles": [
+            "/api/guests/migration/exempt",
+            "uid",
+            "exempt"
+          ]
+        }
+      ],
+      "mobile": null
     },
     {
-     "file": "lib/Service/CompanionTicketService.php",
-     "needles": [
-      "resolveWriteKeys",
-      "invalid_resource",
-      "'resources'"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/ticket-form.php",
-     "needles": [
-      "name=\"resources[]\"",
-      "resources"
-     ]
+      "id": "guest-migration-resolve",
+      "param": "uid+resolution+reason",
+      "description": "S5 resolution: resolution=abandon records abandoned uid with optional reason; resolution=migrate re-runs the single-guest path. Wizard abandon dialog collects reason.",
+      "errorCodes": [],
+      "server": [
+        {
+          "file": "lib/Controller/GuestMigrationController.php",
+          "needles": [
+            "getParam('resolution'",
+            "markAbandoned",
+            "getParam('reason'"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/guests/migration.php",
+          "needles": [
+            "data-tc-abandon"
+          ]
+        },
+        {
+          "file": "js/guest-migration.js",
+          "needles": [
+            "/api/guests/migration/resolve",
+            "resolution",
+            "reason"
+          ]
+        }
+      ],
+      "mobile": null
     },
     {
-     "file": "js/ticket-resources-picker.js",
-     "needles": [
-      "resources[]",
-      "tc-res-listbox",
-      "setValues"
-     ]
+      "id": "guest-migration-rollback",
+      "param": "uid",
+      "description": "Per-uid rollback to the migrated NC account (audited, restores access rows + deletes alias). Wizard rollback button.",
+      "errorCodes": [],
+      "server": [
+        {
+          "file": "lib/Controller/GuestMigrationController.php",
+          "needles": [
+            "getParam('uid'",
+            "rollbackOne"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/guests/migration.php",
+          "needles": [
+            "data-tc-rollback"
+          ]
+        },
+        {
+          "file": "js/guest-migration.js",
+          "needles": [
+            "/api/guests/migration/rollback",
+            "uid"
+          ]
+        }
+      ],
+      "mobile": null
     },
     {
-     "file": "templates/parts/settings/resources.php",
-     "needles": [
-      "ticket-resources",
-      "ticketResources"
-     ]
+      "id": "guest-migration-merge",
+      "param": "uid+identity_id+confirm",
+      "description": "NH-T01 merge tool: attach a blocked uid's access to a chosen identity. Server requires confirm=merge; wizard merge picker collects identity_id.",
+      "errorCodes": [],
+      "server": [
+        {
+          "file": "lib/Controller/GuestMigrationController.php",
+          "needles": [
+            "getParam('identity_id'",
+            "'merge'",
+            "getParam('confirm'"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/guests/migration.php",
+          "needles": [
+            "data-tc-merge",
+            "data-tc-merge-target"
+          ]
+        },
+        {
+          "file": "js/guest-migration.js",
+          "needles": [
+            "/api/guests/migration/merge",
+            "identity_id",
+            "merge"
+          ]
+        }
+      ],
+      "mobile": null
     },
     {
-     "file": "js/settings-resources.js",
-     "needles": [
-      "api/settings/ticket-resources",
-      "requesttoken"
-     ]
-    }
-   ],
-   "mobile": [
-    {
-     "file": "src/screens/CreateTicketScreen.tsx",
-     "needles": [
-      "create.resources",
-      "resources",
-      "options?.resources"
-     ]
+      "id": "guest-migration-run",
+      "param": "confirm",
+      "description": "S2 run: server requires confirm=run; wizard run button posts after modal confirm.",
+      "errorCodes": [],
+      "server": [
+        {
+          "file": "lib/Controller/GuestMigrationController.php",
+          "needles": [
+            "getParam('confirm'",
+            "'run'"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/guests/migration.php",
+          "needles": [
+            "data-tc-run"
+          ]
+        },
+        {
+          "file": "js/guest-migration.js",
+          "needles": [
+            "/api/guests/migration/run",
+            "confirm"
+          ]
+        }
+      ],
+      "mobile": null
     },
     {
-     "file": "src/api/client.ts",
-     "needles": [
-      "resources"
-     ]
+      "id": "guest-migration-disable-nc",
+      "param": "confirm",
+      "description": "S4 disable: server requires confirm=disable; wizard disable button posts after modal confirm (reversible via occ user:enable).",
+      "errorCodes": [],
+      "server": [
+        {
+          "file": "lib/Controller/GuestMigrationController.php",
+          "needles": [
+            "getParam('confirm'",
+            "'disable'",
+            "disableMigratedAccounts"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/guests/migration.php",
+          "needles": [
+            "data-tc-disable"
+          ]
+        },
+        {
+          "file": "js/guest-migration.js",
+          "needles": [
+            "/api/guests/migration/disable-nc",
+            "confirm"
+          ]
+        }
+      ],
+      "mobile": null
     },
     {
-     "file": "src/types.ts",
-     "needles": [
-      "resources"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "portal-otp-request",
-   "param": "email",
-   "description": "Public passwordless OTP request + verify: server requires a valid email (uniform 202, never an oracle) and a 6-digit code (uniform INVALID_CODE). Web login page collects both.",
-   "errorCodes": [
-    "INVALID_CODE"
-   ],
-   "server": [
-    {
-     "file": "lib/Controller/PortalAuthController.php",
-     "needles": [
-      "getParam('email'",
-      "getParam('code'",
-      "invalidCode"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/portal/login.php",
-     "needles": [
-      "name=\"email\"",
-      "name=\"code\"",
-      "data-tc-portal-send",
-      "data-tc-portal-verify"
-     ]
+      "id": "staff-comment-update",
+      "param": "content+is_internal",
+      "description": "Staff comment edit (content) and visibility toggle (is_internal). Web edit dialog sends content; kebab one-click toggles send is_internal as 'true'/'false' parsed via FILTER_VALIDATE_BOOLEAN. Companion sends body/visibility + CAS version. Per-field authz is atomic server-side (MH-A12).",
+      "errorCodes": [
+        "access_denied",
+        "comment_not_found",
+        "edit_window_expired",
+        "content_required",
+        "invalid_selection",
+        "version_conflict"
+      ],
+      "server": [
+        {
+          "file": "lib/Controller/TicketController.php",
+          "needles": [
+            "getParam('content'",
+            "getParam('is_internal'",
+            "FILTER_VALIDATE_BOOLEAN",
+            "updateComment("
+          ]
+        },
+        {
+          "file": "lib/Controller/CompanionController.php",
+          "needles": [
+            "getParam('body'",
+            "getParam('visibility'",
+            "requireVersion()",
+            "invalid_visibility"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/ticket-detail.php",
+          "needles": [
+            "comment-edit-content",
+            "data-comment-action=\"make-internal\"",
+            "data-comment-action=\"make-public\""
+          ]
+        },
+        {
+          "file": "js/ticket-detail.js",
+          "needles": [
+            "content: body",
+            "is_internal",
+            "/update"
+          ]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/TicketDetailScreen.tsx",
+          "needles": [
+            "updateTicketComment(",
+            "visibility",
+            "body"
+          ]
+        },
+        {
+          "file": "src/api/client.ts",
+          "needles": [
+            "body, visibility, version",
+            "...input, version",
+            "/update"
+          ]
+        }
+      ]
     },
     {
-     "file": "js/portal-login.js",
-     "needles": [
-      "/portal/auth/otp",
-      "/portal/auth/verify",
-      "email",
-      "code"
-     ]
-    }
-   ],
-   "mobile": null
-  },
-  {
-   "id": "guest-migration-door",
-   "param": "door",
-   "description": "S3 door flip: server requires door in {allowed,refused} + acknowledged=yes + fresh dry-run before refusing NC guest login. Migration wizard provides the acknowledgement checkbox + door button.",
-   "errorCodes": [],
-   "server": [
-    {
-     "file": "lib/Controller/GuestMigrationController.php",
-     "needles": [
-      "getParam('door'",
-      "migration_dryrun_required",
-      "setDoor"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/guests/migration.php",
-     "needles": [
-      "tc-ack",
-      "data-tc-door",
-      "migration_ack"
-     ]
+      "id": "staff-comment-delete-purge",
+      "param": "(path commentId only)",
+      "description": "Staff soft delete tombstones the comment and wipes bound attachments; purge (admin only) removes the tombstone row. Companion exposes delete only (CAS version). No body fields beyond the path-bound comment id.",
+      "errorCodes": [
+        "access_denied",
+        "comment_not_found",
+        "comment_not_deleted",
+        "version_conflict"
+      ],
+      "server": [
+        {
+          "file": "lib/Controller/TicketController.php",
+          "needles": [
+            "softDeleteComment(",
+            "purgeComment("
+          ]
+        },
+        {
+          "file": "lib/Controller/CompanionController.php",
+          "needles": [
+            "softDeleteComment(",
+            "requireVersion()"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/ticket-detail.php",
+          "needles": [
+            "comment-delete-dialog",
+            "comment-purge-dialog",
+            "data-comment-action=\"delete\"",
+            "data-comment-action=\"purge\""
+          ]
+        },
+        {
+          "file": "js/ticket-detail.js",
+          "needles": [
+            "/delete",
+            "/purge"
+          ]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/TicketDetailScreen.tsx",
+          "needles": [
+            "deleteTicketComment("
+          ]
+        },
+        {
+          "file": "src/api/client.ts",
+          "needles": [
+            "deleteTicketComment",
+            "{ version }",
+            "/delete"
+          ]
+        }
+      ]
     },
     {
-     "file": "js/guest-migration.js",
-     "needles": [
-      "/api/guests/migration/door",
-      "acknowledged",
-      "door"
-     ]
-    }
-   ],
-   "mobile": null
-  },
-  {
-   "id": "guest-migration-exempt",
-   "param": "uid+exempt",
-   "description": "NC-fallback exemption toggle (US-T05): server requires uid, blocks portal: actors; exempt=1/0. Wizard per-uid exempt/unexempt buttons send both fields.",
-   "errorCodes": [],
-   "server": [
-    {
-     "file": "lib/Controller/GuestMigrationController.php",
-     "needles": [
-      "getParam('uid'",
-      "getParam('exempt'",
-      "exempt"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/guests/migration.php",
-     "needles": [
-      "data-tc-exempt",
-      "data-tc-unexempt"
-     ]
+      "id": "comment-move",
+      "param": "target+comment_ids+attachment_ids+idempotency",
+      "description": "Selective move of comments (with bound attachments) and standalone attachments. Web sends target_ticket_id + comment_ids + attachment_ids + idempotency_key (body or X-TC-Idempotency-Key). Companion sends targetTicketId/commentIds/attachmentIds and a MANDATORY idempotencyKey (offline replays). One ordered [source,target] lock; replay returns the stored receipt, key+payload mismatch is idempotency_conflict.",
+      "errorCodes": [
+        "invalid_selection",
+        "too_many_items",
+        "ticket_not_found",
+        "ticket_merged",
+        "access_denied",
+        "comment_deleted",
+        "attachment_bound_to_comment",
+        "idempotency_conflict",
+        "idempotency_key_required"
+      ],
+      "server": [
+        {
+          "file": "lib/Controller/TicketController.php",
+          "needles": [
+            "getParam('target_ticket_id'",
+            "getParam('comment_ids'",
+            "getParam('attachment_ids'",
+            "getParam('idempotency_key'",
+            "X-TC-Idempotency-Key"
+          ]
+        },
+        {
+          "file": "lib/Controller/CompanionController.php",
+          "needles": [
+            "optionalPositiveInt('targetTicketId'",
+            "idListParam('commentIds'",
+            "idListParam('attachmentIds'",
+            "idempotency_key_required"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/ticket-detail.php",
+          "needles": [
+            "data-comment-select",
+            "comment-move-dialog",
+            "move-target-ticket-id",
+            "data-select-move"
+          ]
+        },
+        {
+          "file": "js/ticket-detail.js",
+          "needles": [
+            "comments/move",
+            "target_ticket_id",
+            "comment_ids",
+            "attachment_ids",
+            "idempotency_key"
+          ]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/TicketDetailScreen.tsx",
+          "needles": [
+            "toggleSelectComment",
+            "toggleSelectAttachment",
+            "MoveTargets"
+          ]
+        },
+        {
+          "file": "src/screens/MoveTargetsScreen.tsx",
+          "needles": [
+            "searchMoveTargets",
+            "moveTicketItems",
+            "newIdempotencyKey",
+            "targetTicketId"
+          ]
+        },
+        {
+          "file": "src/api/client.ts",
+          "needles": [
+            "targetTicketId",
+            "commentIds",
+            "attachmentIds",
+            "idempotencyKey",
+            "move-targets"
+          ]
+        }
+      ]
     },
     {
-     "file": "js/guest-migration.js",
-     "needles": [
-      "/api/guests/migration/exempt",
-      "uid",
-      "exempt"
-     ]
-    }
-   ],
-   "mobile": null
-  },
-  {
-   "id": "guest-migration-resolve",
-   "param": "uid+resolution+reason",
-   "description": "S5 resolution: resolution=abandon records abandoned uid with optional reason; resolution=migrate re-runs the single-guest path. Wizard abandon dialog collects reason.",
-   "errorCodes": [],
-   "server": [
-    {
-     "file": "lib/Controller/GuestMigrationController.php",
-     "needles": [
-      "getParam('resolution'",
-      "markAbandoned",
-      "getParam('reason'"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/guests/migration.php",
-     "needles": [
-      "data-tc-abandon"
-     ]
+      "id": "settings-comment-edit-window",
+      "param": "edit_window_minutes",
+      "description": "Author self-edit window (minutes, 0..100000, 0 disables). Settings catalog section 'comments' with field error parity; GET exposes commentEditWindowMinutes, companion bootstrap exposes it under limits.commentEditWindowMinutes for mobile gating. Mobile manages no admin settings (mobile: null).",
+      "errorCodes": [
+        "settings_comments_window_invalid"
+      ],
+      "server": [
+        {
+          "file": "lib/Controller/SettingsController.php",
+          "needles": [
+            "getParam('edit_window_minutes'",
+            "comment_edit_window_minutes",
+            "settings_comments_window_invalid"
+          ]
+        },
+        {
+          "file": "lib/Service/CompanionGateService.php",
+          "needles": [
+            "commentEditWindowMinutes"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "templates/parts/settings/comments.php",
+          "needles": [
+            "name=\"edit_window_minutes\"",
+            "data-field-error=\"edit_window_minutes\""
+          ]
+        },
+        {
+          "file": "js/settings.js",
+          "needles": [
+            "edit_window_minutes",
+            "settings/comments"
+          ]
+        }
+      ],
+      "mobile": null
     },
     {
-     "file": "js/guest-migration.js",
-     "needles": [
-      "/api/guests/migration/resolve",
-      "resolution",
-      "reason"
-     ]
-    }
-   ],
-   "mobile": null
-  },
-  {
-   "id": "guest-migration-rollback",
-   "param": "uid",
-   "description": "Per-uid rollback to the migrated NC account (audited, restores access rows + deletes alias). Wizard rollback button.",
-   "errorCodes": [],
-   "server": [
-    {
-     "file": "lib/Controller/GuestMigrationController.php",
-     "needles": [
-      "getParam('uid'",
-      "rollbackOne"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/guests/migration.php",
-     "needles": [
-      "data-tc-rollback"
-     ]
+      "id": "comment-move-target-search",
+      "param": "query(+purpose=move / sourceTicketId)",
+      "description": "Target-ticket search backing both move pickers. Web merge-targets endpoint accepts purpose=move (editable, unmerged, non-source); companion exposes GET move-targets with sourceTicketId+query (>=2 chars).",
+      "errorCodes": [
+        "access_denied"
+      ],
+      "server": [
+        {
+          "file": "lib/Controller/TicketController.php",
+          "needles": [
+            "purpose"
+          ]
+        },
+        {
+          "file": "lib/Controller/CompanionController.php",
+          "needles": [
+            "moveTargets",
+            "sourceTicketId"
+          ]
+        },
+        {
+          "file": "lib/Service/CompanionTicketService.php",
+          "needles": [
+            "searchMoveTargets"
+          ]
+        }
+      ],
+      "web": [
+        {
+          "file": "js/common/ticket-search-picker.js",
+          "needles": [
+            "purpose"
+          ]
+        },
+        {
+          "file": "js/ticket-detail.js",
+          "needles": [
+            "purpose: 'move'"
+          ]
+        }
+      ],
+      "mobile": [
+        {
+          "file": "src/screens/MoveTargetsScreen.tsx",
+          "needles": [
+            "searchMoveTargets",
+            "minChars"
+          ]
+        },
+        {
+          "file": "src/api/client.ts",
+          "needles": [
+            "move-targets",
+            "sourceTicketId",
+            "query"
+          ]
+        }
+      ]
     },
     {
-     "file": "js/guest-migration.js",
-     "needles": [
-      "/api/guests/migration/rollback",
-      "uid"
-     ]
+      "id": "companion-template-process",
+      "param": "ticket_id",
+      "description": "Companion canned replies (TC-COMP-QUICKACT): GET /companion/api/v1/templates returns metadata only (id,name,category); POST /companion/api/v1/templates/{id}/process requires body ticket_id and renders server-derived variables \u2014 a caller-supplied variables map is ignored by design (NN-07). Web surfaces never call these routes.",
+      "errorCodes": [
+        "invalid_ticket_id",
+        "template_not_found"
+      ],
+      "server": [
+        {
+          "file": "lib/Controller/CompanionController.php",
+          "needles": [
+            "processTemplate(",
+            "getParam('ticket_id'",
+            "invalid_ticket_id",
+            "template_not_found"
+          ]
+        },
+        {
+          "file": "appinfo/routes.php",
+          "needles": [
+            "/companion/api/v1/templates",
+            "process"
+          ]
+        }
+      ],
+      "web": [],
+      "mobile": [
+        {
+          "file": "src/api/client.ts",
+          "needles": [
+            "listTemplates(",
+            "processTemplate(",
+            "ticket_id: ticketId",
+            "templates/${id}/process"
+          ]
+        },
+        {
+          "file": "src/screens/TicketDetailScreen.tsx",
+          "needles": [
+            "processTemplate(session",
+            "insertTemplateBody(",
+            "templates.pick"
+          ]
+        },
+        {
+          "file": "src/screens/parts/TemplatePickerSheet.tsx",
+          "needles": [
+            "templates.title",
+            "templates.filter"
+          ]
+        }
+      ]
     }
-   ],
-   "mobile": null
-  },
-  {
-   "id": "guest-migration-merge",
-   "param": "uid+identity_id+confirm",
-   "description": "NH-T01 merge tool: attach a blocked uid's access to a chosen identity. Server requires confirm=merge; wizard merge picker collects identity_id.",
-   "errorCodes": [],
-   "server": [
-    {
-     "file": "lib/Controller/GuestMigrationController.php",
-     "needles": [
-      "getParam('identity_id'",
-      "'merge'",
-      "getParam('confirm'"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/guests/migration.php",
-     "needles": [
-      "data-tc-merge",
-      "data-tc-merge-target"
-     ]
-    },
-    {
-     "file": "js/guest-migration.js",
-     "needles": [
-      "/api/guests/migration/merge",
-      "identity_id",
-      "merge"
-     ]
-    }
-   ],
-   "mobile": null
-  },
-  {
-   "id": "guest-migration-run",
-   "param": "confirm",
-   "description": "S2 run: server requires confirm=run; wizard run button posts after modal confirm.",
-   "errorCodes": [],
-   "server": [
-    {
-     "file": "lib/Controller/GuestMigrationController.php",
-     "needles": [
-      "getParam('confirm'",
-      "'run'"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/guests/migration.php",
-     "needles": [
-      "data-tc-run"
-     ]
-    },
-    {
-     "file": "js/guest-migration.js",
-     "needles": [
-      "/api/guests/migration/run",
-      "confirm"
-     ]
-    }
-   ],
-   "mobile": null
-  },
-  {
-   "id": "guest-migration-disable-nc",
-   "param": "confirm",
-   "description": "S4 disable: server requires confirm=disable; wizard disable button posts after modal confirm (reversible via occ user:enable).",
-   "errorCodes": [],
-   "server": [
-    {
-     "file": "lib/Controller/GuestMigrationController.php",
-     "needles": [
-      "getParam('confirm'",
-      "'disable'",
-      "disableMigratedAccounts"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/guests/migration.php",
-     "needles": [
-      "data-tc-disable"
-     ]
-    },
-    {
-     "file": "js/guest-migration.js",
-     "needles": [
-      "/api/guests/migration/disable-nc",
-      "confirm"
-     ]
-    }
-   ],
-   "mobile": null
-  },
-  {
-   "id": "staff-comment-update",
-   "param": "content+is_internal",
-   "description": "Staff comment edit (content) and visibility toggle (is_internal). Web edit dialog sends content; kebab one-click toggles send is_internal as 'true'/'false' parsed via FILTER_VALIDATE_BOOLEAN. Companion sends body/visibility + CAS version. Per-field authz is atomic server-side (MH-A12).",
-   "errorCodes": [
-    "access_denied",
-    "comment_not_found",
-    "edit_window_expired",
-    "content_required",
-    "invalid_selection",
-    "version_conflict"
-   ],
-   "server": [
-    {
-     "file": "lib/Controller/TicketController.php",
-     "needles": [
-      "getParam('content'",
-      "getParam('is_internal'",
-      "FILTER_VALIDATE_BOOLEAN",
-      "updateComment("
-     ]
-    },
-    {
-     "file": "lib/Controller/CompanionController.php",
-     "needles": [
-      "getParam('body'",
-      "getParam('visibility'",
-      "requireVersion()",
-      "invalid_visibility"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/ticket-detail.php",
-     "needles": [
-      "comment-edit-content",
-      "data-comment-action=\"make-internal\"",
-      "data-comment-action=\"make-public\""
-     ]
-    },
-    {
-     "file": "js/ticket-detail.js",
-     "needles": [
-      "content: body",
-      "is_internal",
-      "/update"
-     ]
-    }
-   ],
-   "mobile": [
-    {
-     "file": "src/screens/TicketDetailScreen.tsx",
-     "needles": [
-      "updateTicketComment(",
-      "visibility",
-      "body"
-     ]
-    },
-    {
-     "file": "src/api/client.ts",
-     "needles": [
-      "body, visibility, version",
-      "...input, version",
-      "/update"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "staff-comment-delete-purge",
-   "param": "(path commentId only)",
-   "description": "Staff soft delete tombstones the comment and wipes bound attachments; purge (admin only) removes the tombstone row. Companion exposes delete only (CAS version). No body fields beyond the path-bound comment id.",
-   "errorCodes": [
-    "access_denied",
-    "comment_not_found",
-    "comment_not_deleted",
-    "version_conflict"
-   ],
-   "server": [
-    {
-     "file": "lib/Controller/TicketController.php",
-     "needles": [
-      "softDeleteComment(",
-      "purgeComment("
-     ]
-    },
-    {
-     "file": "lib/Controller/CompanionController.php",
-     "needles": [
-      "softDeleteComment(",
-      "requireVersion()"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/ticket-detail.php",
-     "needles": [
-      "comment-delete-dialog",
-      "comment-purge-dialog",
-      "data-comment-action=\"delete\"",
-      "data-comment-action=\"purge\""
-     ]
-    },
-    {
-     "file": "js/ticket-detail.js",
-     "needles": [
-      "/delete",
-      "/purge"
-     ]
-    }
-   ],
-   "mobile": [
-    {
-     "file": "src/screens/TicketDetailScreen.tsx",
-     "needles": [
-      "deleteTicketComment("
-     ]
-    },
-    {
-     "file": "src/api/client.ts",
-     "needles": [
-      "deleteTicketComment",
-      "{ version }",
-      "/delete"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "comment-move",
-   "param": "target+comment_ids+attachment_ids+idempotency",
-   "description": "Selective move of comments (with bound attachments) and standalone attachments. Web sends target_ticket_id + comment_ids + attachment_ids + idempotency_key (body or X-TC-Idempotency-Key). Companion sends targetTicketId/commentIds/attachmentIds and a MANDATORY idempotencyKey (offline replays). One ordered [source,target] lock; replay returns the stored receipt, key+payload mismatch is idempotency_conflict.",
-   "errorCodes": [
-    "invalid_selection",
-    "too_many_items",
-    "ticket_not_found",
-    "ticket_merged",
-    "access_denied",
-    "comment_deleted",
-    "attachment_bound_to_comment",
-    "idempotency_conflict",
-    "idempotency_key_required"
-   ],
-   "server": [
-    {
-     "file": "lib/Controller/TicketController.php",
-     "needles": [
-      "getParam('target_ticket_id'",
-      "getParam('comment_ids'",
-      "getParam('attachment_ids'",
-      "getParam('idempotency_key'",
-      "X-TC-Idempotency-Key"
-     ]
-    },
-    {
-     "file": "lib/Controller/CompanionController.php",
-     "needles": [
-      "optionalPositiveInt('targetTicketId'",
-      "idListParam('commentIds'",
-      "idListParam('attachmentIds'",
-      "idempotency_key_required"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/ticket-detail.php",
-     "needles": [
-      "data-comment-select",
-      "comment-move-dialog",
-      "move-target-ticket-id",
-      "data-select-move"
-     ]
-    },
-    {
-     "file": "js/ticket-detail.js",
-     "needles": [
-      "comments/move",
-      "target_ticket_id",
-      "comment_ids",
-      "attachment_ids",
-      "idempotency_key"
-     ]
-    }
-   ],
-   "mobile": [
-    {
-     "file": "src/screens/TicketDetailScreen.tsx",
-     "needles": [
-      "toggleSelectComment",
-      "toggleSelectAttachment",
-      "MoveTargets"
-     ]
-    },
-    {
-     "file": "src/screens/MoveTargetsScreen.tsx",
-     "needles": [
-      "searchMoveTargets",
-      "moveTicketItems",
-      "newIdempotencyKey",
-      "targetTicketId"
-     ]
-    },
-    {
-     "file": "src/api/client.ts",
-     "needles": [
-      "targetTicketId",
-      "commentIds",
-      "attachmentIds",
-      "idempotencyKey",
-      "move-targets"
-     ]
-    }
-   ]
-  },
-  {
-   "id": "settings-comment-edit-window",
-   "param": "edit_window_minutes",
-   "description": "Author self-edit window (minutes, 0..100000, 0 disables). Settings catalog section 'comments' with field error parity; GET exposes commentEditWindowMinutes, companion bootstrap exposes it under limits.commentEditWindowMinutes for mobile gating. Mobile manages no admin settings (mobile: null).",
-   "errorCodes": [
-    "settings_comments_window_invalid"
-   ],
-   "server": [
-    {
-     "file": "lib/Controller/SettingsController.php",
-     "needles": [
-      "getParam('edit_window_minutes'",
-      "comment_edit_window_minutes",
-      "settings_comments_window_invalid"
-     ]
-    },
-    {
-     "file": "lib/Service/CompanionGateService.php",
-     "needles": [
-      "commentEditWindowMinutes"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "templates/parts/settings/comments.php",
-     "needles": [
-      "name=\"edit_window_minutes\"",
-      "data-field-error=\"edit_window_minutes\""
-     ]
-    },
-    {
-     "file": "js/settings.js",
-     "needles": [
-      "edit_window_minutes",
-      "settings/comments"
-     ]
-    }
-   ],
-   "mobile": null
-  },
-  {
-   "id": "comment-move-target-search",
-   "param": "query(+purpose=move / sourceTicketId)",
-   "description": "Target-ticket search backing both move pickers. Web merge-targets endpoint accepts purpose=move (editable, unmerged, non-source); companion exposes GET move-targets with sourceTicketId+query (>=2 chars).",
-   "errorCodes": [
-    "access_denied"
-   ],
-   "server": [
-    {
-     "file": "lib/Controller/TicketController.php",
-     "needles": [
-      "purpose"
-     ]
-    },
-    {
-     "file": "lib/Controller/CompanionController.php",
-     "needles": [
-      "moveTargets",
-      "sourceTicketId"
-     ]
-    },
-    {
-     "file": "lib/Service/CompanionTicketService.php",
-     "needles": [
-      "searchMoveTargets"
-     ]
-    }
-   ],
-   "web": [
-    {
-     "file": "js/common/ticket-search-picker.js",
-     "needles": [
-      "purpose"
-     ]
-    },
-    {
-     "file": "js/ticket-detail.js",
-     "needles": [
-      "purpose: 'move'"
-     ]
-    }
-   ],
-   "mobile": [
-    {
-     "file": "src/screens/MoveTargetsScreen.tsx",
-     "needles": [
-      "searchMoveTargets",
-      "minChars"
-     ]
-    },
-    {
-     "file": "src/api/client.ts",
-     "needles": [
-      "move-targets",
-      "sourceTicketId",
-      "query"
-     ]
-    }
-   ]
-  }
- ]
+  ]
 }

@@ -348,6 +348,7 @@ Almanya Federal Araştırma, Teknoloji ve Uzay Bakanlığı (BMFTR) TicketCheck'
 		<job>OCA\Ticketcheck\BackgroundJob\InboundMailRetentionJob</job>
 		<job>OCA\Ticketcheck\BackgroundJob\PortalMailOutboxJob</job>
 		<job>OCA\Ticketcheck\BackgroundJob\PortalRetentionJob</job>
+		<job>OCA\Ticketcheck\BackgroundJob\ExternalMailDigestJob</job>
 	</background-jobs>
 
 	<keywords>

@@ -357,6 +357,7 @@ class SettingsController extends Controller
             'enabled' => $this->config->getAppValue('ticketcheck', 'email_notifications_enabled', 'yes'),
             'daily_digest_enabled' => $this->config->getAppValue('ticketcheck', 'daily_digest_enabled', 'yes'),
             'weekly_digest_enabled' => $this->config->getAppValue('ticketcheck', 'weekly_digest_enabled', 'yes'),
+            'external_customer_mail_enabled' => $this->config->getAppValue('ticketcheck', 'external_customer_mail_enabled', 'yes'),
             'inbound_email_address' => $this->config->getAppValue('ticketcheck', 'inbound_email_address', ''),
             'inbound_email_enabled' => $this->config->getAppValue('ticketcheck', 'inbound_email_enabled', 'no'),
         ];
@@ -844,6 +845,7 @@ class SettingsController extends Controller
         $enabled = $this->normalizeYesNo($this->request->getParam('enabled', 'yes'));
         $dailyDigestEnabled = $this->normalizeYesNo($this->request->getParam('daily_digest_enabled', 'yes'));
         $weeklyDigestEnabled = $this->normalizeYesNo($this->request->getParam('weekly_digest_enabled', 'yes'));
+        $externalCustomerMailEnabled = $this->normalizeYesNo($this->request->getParam('external_customer_mail_enabled', 'yes'));
         $inboundEmailEnabled = $this->normalizeYesNo($this->request->getParam('inbound_email_enabled', 'no'));
 
         $inboundAddressRaw = $this->request->getParam('inbound_email_address');
@@ -856,6 +858,8 @@ class SettingsController extends Controller
         }
 
         // Dependent settings are forced off when global notifications are disabled.
+        // external_customer_mail_enabled persists its own value — it gates only
+        // the raw-address leg; the global toggle already silences all mail.
         if ($enabled !== 'yes') {
             $dailyDigestEnabled = 'no';
             $weeklyDigestEnabled = 'no';
@@ -866,6 +870,7 @@ class SettingsController extends Controller
         $this->config->setAppValue('ticketcheck', 'email_notifications_enabled', $enabled);
         $this->config->setAppValue('ticketcheck', 'daily_digest_enabled', $dailyDigestEnabled);
         $this->config->setAppValue('ticketcheck', 'weekly_digest_enabled', $weeklyDigestEnabled);
+        $this->config->setAppValue('ticketcheck', 'external_customer_mail_enabled', $externalCustomerMailEnabled);
         $this->config->setAppValue('ticketcheck', 'inbound_email_address', $inboundAddress);
         $this->config->setAppValue('ticketcheck', 'inbound_email_enabled', $inboundEmailEnabled);
 
@@ -874,6 +879,7 @@ class SettingsController extends Controller
         $savedEnabled = $this->config->getAppValue('ticketcheck', 'email_notifications_enabled');
         $savedDailyDigest = $this->config->getAppValue('ticketcheck', 'daily_digest_enabled');
         $savedWeeklyDigest = $this->config->getAppValue('ticketcheck', 'weekly_digest_enabled');
+        $savedExternalCustomerMail = $this->config->getAppValue('ticketcheck', 'external_customer_mail_enabled');
         $savedInboundAddress = $this->config->getAppValue('ticketcheck', 'inbound_email_address');
         $savedInboundEnabled = $this->config->getAppValue('ticketcheck', 'inbound_email_enabled');
 
@@ -884,6 +890,7 @@ class SettingsController extends Controller
                 'enabled' => $savedEnabled,
                 'daily_digest_enabled' => $savedDailyDigest,
                 'weekly_digest_enabled' => $savedWeeklyDigest,
+                'external_customer_mail_enabled' => $savedExternalCustomerMail,
                 'inbound_email_address' => $savedInboundAddress,
                 'inbound_email_enabled' => $savedInboundEnabled,
             ]

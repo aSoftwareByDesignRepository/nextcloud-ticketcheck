@@ -12,7 +12,7 @@ use OCA\Ticketcheck\Service\ActivityEventService;
 use OCA\Ticketcheck\Service\AttachmentDeliveryService;
 use OCA\Ticketcheck\Service\AttachmentUploadService;
 use OCA\Ticketcheck\Service\DeletionService;
-use OCA\Ticketcheck\Service\EmailService;
+use OCA\Ticketcheck\Service\TicketNotificationDispatcher;
 use OCA\Ticketcheck\Service\FrontEndAssetService;
 use OCA\Ticketcheck\Service\LocaleFormatService;
 use OCA\Ticketcheck\Service\MergeService;
@@ -49,8 +49,8 @@ class TicketControllerCreateAttachCompensationTest extends TestCase
 	private PermissionService $permissionService;
 	/** @var AttachmentUploadService&MockObject */
 	private AttachmentUploadService $attachmentUploadService;
-	/** @var EmailService&MockObject */
-	private EmailService $emailService;
+	/** @var TicketNotificationDispatcher&MockObject */
+	private TicketNotificationDispatcher $notificationDispatcher;
 	private TicketController $controller;
 
 	protected function setUp(): void
@@ -60,7 +60,7 @@ class TicketControllerCreateAttachCompensationTest extends TestCase
 		$this->ticketService = $this->createMock(TicketService::class);
 		$this->permissionService = $this->createMock(PermissionService::class);
 		$this->attachmentUploadService = $this->createMock(AttachmentUploadService::class);
-		$this->emailService = $this->createMock(EmailService::class);
+		$this->notificationDispatcher = $this->createMock(TicketNotificationDispatcher::class);
 
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn (string $key): string => $key);
@@ -79,7 +79,6 @@ class TicketControllerCreateAttachCompensationTest extends TestCase
 			$this->ticketService,
 			$this->permissionService,
 			$this->createMock(MergeService::class),
-			$this->emailService,
 			$this->createMock(ProjectService::class),
 			$this->createMock(DeletionService::class),
 			$this->createMock(TicketMapper::class),
@@ -101,6 +100,11 @@ class TicketControllerCreateAttachCompensationTest extends TestCase
 			$this->createMock(NavigationContextService::class),
 			$this->createMock(FrontEndAssetService::class),
 			$this->createMock(AttachmentDeliveryService::class),
+			null,
+			null,
+			null,
+			null,
+			$this->notificationDispatcher,
 		);
 	}
 
@@ -142,7 +146,7 @@ class TicketControllerCreateAttachCompensationTest extends TestCase
 
 		$this->ticketService->expects(self::once())->method('createTicket')->willReturn($ticket);
 		$this->ticketService->expects(self::once())->method('deleteTicket')->with(42);
-		$this->emailService->expects(self::never())->method('sendTicketCreatedNotification');
+		$this->notificationDispatcher->expects(self::never())->method('ticketCreatedFromCurrentActor');
 
 		$response = $this->controller->store();
 		self::assertSame(400, $response->getStatus());
@@ -194,7 +198,7 @@ class TicketControllerCreateAttachCompensationTest extends TestCase
 		$this->ticketService->method('addAttachmentFromUploadedFile')
 			->willThrowException(new \Error('engine fatal during attach'));
 		$this->ticketService->expects(self::once())->method('deleteTicket')->with(55);
-		$this->emailService->expects(self::never())->method('sendTicketCreatedNotification');
+		$this->notificationDispatcher->expects(self::never())->method('ticketCreatedFromCurrentActor');
 
 		$response = $this->controller->store();
 		self::assertSame(400, $response->getStatus());
@@ -232,7 +236,7 @@ class TicketControllerCreateAttachCompensationTest extends TestCase
 
 		$this->ticketService->expects(self::once())->method('createTicket')->willReturn($ticket);
 		$this->ticketService->expects(self::never())->method('deleteTicket');
-		$this->emailService->method('sendTicketCreatedNotification')->willThrowException(new \RuntimeException('smtp down'));
+		$this->notificationDispatcher->method('ticketCreatedFromCurrentActor')->willThrowException(new \RuntimeException('smtp down'));
 
 		$response = $this->controller->store();
 		self::assertSame(200, $response->getStatus());

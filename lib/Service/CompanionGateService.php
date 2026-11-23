@@ -41,6 +41,9 @@ class CompanionGateService
 		'offlineRead',
 		// G-KB (WP-113): read-only agent KB search + article view.
 		'kb',
+		// TC-COMP-QUICKACT: canned-reply list/process routes ship with this
+		// build (staff-only by construction — FEATURES emits for agents).
+		'templates',
 	];
 
 	public function __construct(
@@ -140,6 +143,9 @@ class CompanionGateService
 		}
 		if ($pushEnabled) {
 			$features[] = 'push';
+			// Quick actions ride the push surface — never advertise them when
+			// delivery is ops-disabled (same honesty rule as `push` itself).
+			$features[] = 'quickActions';
 		}
 
 		return [
@@ -178,6 +184,11 @@ class CompanionGateService
 				// are configured — registered tokens without delivery stay
 				// `delivery: deferred` (CompanionController::pushRegister).
 				'pushAvailable' => $pushEnabled,
+				// TC-COMP-QUICKACT: computed, never stored. quickActions tracks
+				// the push feature exactly (armed deep links need delivery);
+				// templates means the routes exist AND the caller is staff.
+				'quickActions' => $pushEnabled,
+				'templates' => $staff,
 			],
 		];
 	}

@@ -81,6 +81,8 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 	 */
 	private const DESIGNED_HAPPY_STATUS = [
 		'TicketController::exportCsv' => 410,
+		'TicketController::inviteCustomer' => 422, // happy-path ticket has no valid customer_email → designed validation
+		'CompanionController::processTemplate' => 404, // stubbed TemplateService finds no row → designed uniform 404 (TH-01)
 		'TicketController::exportPdf' => 410,
 	];
 
@@ -1130,6 +1132,7 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			'category' => 'general',
 			'content' => 'article',
 			'rule' => [],
+			'ticket_id' => 1,
 			'ticket_ids' => [1, 2],
 			'ids' => [1, 2],
 			'action' => 'assign',

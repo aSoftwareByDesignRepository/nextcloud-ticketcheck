@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+- **Companion quick actions (mobile):** ticket push notifications now carry an Expo `categoryId`, so the companion can offer tap-level actions — **Reply** (opens the ticket with the composer armed), **Resolve** and **Reopen** (each opens the ticket with a confirmation sheet that names the current→target status). Actions never mutate from the notification itself: the confirm sheet is armed only after a fresh server-side ticket load and is disabled with a visible reason when the target transition is no longer allowed, so a stale or deleted ticket can never write back.
+- **Canned replies (mobile):** agents get a template picker in the ticket composer — grouped by category with search — fed by two new read-only companion routes. `GET /companion/api/v1/templates` returns metadata only (`id`, `name`, `category`); `POST /companion/api/v1/templates/{id}/process` renders the body with server-derived ticket/agent variables (caller-supplied variables are ignored), so template content never sits in the list payload and the processed body is inserted at the cursor without touching the rest of the draft.
+- Companion bootstrap now reports `capabilities.quickActions` (mirrors live push delivery) and `capabilities.templates` (agent role), so older and newer app/server combinations degrade cleanly in both directions.
+
+- **Account-less customer mail (issue #9):** tickets whose `customer_email` has no matching account or portal identity now receive the same customer-side notifications as portal guests — ticket creation, updates, comments and status changes — on every entry point (web, customer portal, mobile companion, inbound mail, escalation facades). The external leg reuses the tokenized Reply-To/thread anchor so customers can answer by mail when inbound routing is configured; when it is not, the message carries no dead portal link. Address claiming is shared across guest-access, requester, creator and raw legs, so an address covered by an account (including one that opted out of mail) is never mailed twice, and account suppression can never be bypassed by the raw leg. Sends are capped at 5 per ticket+address per hour (ledgered in `helpdesk_mail_outbox`), placeholder/daemon/self-author/own-inbound addresses are never mailed, and suppression decisions are logged reason-coded with hashed candidate identifiers, never raw addresses.
+- New admin setting **"Send notifications to customers without an account"** (`external_customer_mail_enabled`, default: on) in the E-mail settings section; it isolates only the external leg — all account-bound recipient legs are unaffected.
+- Every external-recipient mail now carries a per-ticket **"Stop receiving e-mails about this ticket"** link. The link opens a public confirmation page (token-signed, no e-mail address in the URL or in logs); confirming records a per-ticket opt-out that suppresses future external sends for that ticket only.
+- When the hourly cap suppresses external customer mail, the dropped events are now recovered by a new hourly background job: instead of silent loss, the customer receives **one summary e-mail** per ticket+address per hour ("N updates in the last hour"), deduplicated and rate-limited like the live leg, honoring opt-out and the kill switch.
+- Staff viewing a ticket whose customer address has no account get an **"Invite to portal"** action that creates (or reuses) the guest identity, grants the ticket's project, and sends the existing magic-link invite mail.
+- The staff create form now hints that an empty customer e-mail falls back to the agent's own address and when customers actually get mail.
+
+### Changed
+- Customer-facing notification fan-out moved from controllers into the service layer (`TicketNotificationDispatcher` invoked by `TicketService`), so web, portal, companion and inbound writers produce the identical recipient set and previously silent paths (companion comment/status/assign mail) now notify consistently. Notification dispatch remains strictly soft-fail: mail errors never turn a committed mutation into a client error.
+- Outbound mail logging no longer records raw recipient addresses — log lines and error contexts carry a hashed local part plus the domain instead.
+
+### Fixed
+- A comment-notification hand-off captured the ticket by value inside the workflow lock, which silently suppressed customer comment mail on one path; the closure now hands the ticket out by reference.
+
 ## 2.6.3 - 2026-11-20
 
 ### Added

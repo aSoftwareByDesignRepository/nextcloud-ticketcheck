@@ -10,7 +10,6 @@ use OCA\Ticketcheck\Db\HelpdeskProjectMapper;
 use OCA\Ticketcheck\Db\InboundMessage;
 use OCA\Ticketcheck\Db\InboundMessageMapper;
 use OCA\Ticketcheck\Db\Ticket;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\InboundEmailService;
 use OCA\Ticketcheck\Service\InboundMailConfigService;
 use OCA\Ticketcheck\Service\ReplyTokenService;
@@ -33,7 +32,6 @@ class InboundEmailServicePipelineTest extends TestCase
 	private array $store = [];
 	private TicketService $ticketService;
 	private InboundMessageMapper $inboundMapper;
-	private EmailService $emailService;
 	private HelpdeskProjectMapper $projectMapper;
 	private InboundEmailService $service;
 	private ?string $finishedAction = null;
@@ -60,7 +58,6 @@ class InboundEmailServicePipelineTest extends TestCase
 		$mailboxConfig = new InboundMailConfigService($appConfig, $config, $crypto, $l);
 
 		$this->ticketService = $this->createMock(TicketService::class);
-		$this->emailService = $this->createMock(EmailService::class);
 		$this->projectMapper = $this->createMock(HelpdeskProjectMapper::class);
 		$this->inboundMapper = $this->createMock(InboundMessageMapper::class);
 		$this->inboundMapper->method('claim')
@@ -83,7 +80,6 @@ class InboundEmailServicePipelineTest extends TestCase
 			$mailboxConfig,
 			$this->inboundMapper,
 			new ReplyTokenService($config),
-			$this->emailService,
 			$this->createMock(HelpdeskCustomerMapper::class),
 			$this->projectMapper,
 			$l10nFactory,
@@ -118,7 +114,6 @@ class InboundEmailServicePipelineTest extends TestCase
 				&& str_contains($d['description'], 'Please help me')
 			))
 			->willReturn($ticket);
-		$this->emailService->expects(self::once())->method('sendTicketCreatedNotification');
 
 		$r = $this->service->processInboundMessage($this->msg(), 'imap', 10, 1);
 		self::assertSame(InboundMessage::ACTION_TICKET_CREATED, $r['action']);

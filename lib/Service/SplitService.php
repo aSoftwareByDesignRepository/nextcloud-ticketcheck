@@ -105,7 +105,10 @@ class SplitService
                     'assigned_to' => null,
                     'created_by_guest' => $sourceFresh->getCreatedByGuest(),
                 ];
-                $newTicket = $this->ticketService->createTicket($data);
+                // No customer confirmation for split-off tickets: this is
+                // internal restructuring inside an outer transaction, and
+                // mail must never reference uncommitted rows.
+                $newTicket = $this->ticketService->createTicket($data, false);
                 $resources = $this->ticketResources;
                 if ($resources !== null) {
                     $sourceKeys = $resources->keysForTicket($sourceTicketId);

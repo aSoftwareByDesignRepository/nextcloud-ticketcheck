@@ -10,7 +10,6 @@ use OCA\Ticketcheck\Db\HelpdeskProjectMapper;
 use OCA\Ticketcheck\Db\InboundMessage;
 use OCA\Ticketcheck\Db\InboundMessageMapper;
 use OCA\Ticketcheck\Db\Ticket;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\InboundEmailService;
 use OCA\Ticketcheck\Service\InboundMailConfigService;
 use OCA\Ticketcheck\Service\ReplyTokenService;
@@ -34,7 +33,6 @@ class InboundEmailServiceSenderAuthzTest extends TestCase
 {
 	private TicketService $ticketService;
 	private InboundMessageMapper $inboundMapper;
-	private EmailService $emailService;
 	private ?string $finishedAction = null;
 	private InboundEmailService $service;
 
@@ -56,7 +54,6 @@ class InboundEmailServiceSenderAuthzTest extends TestCase
 		$replyTokens = new ReplyTokenService($config);
 
 		$this->ticketService = $this->createMock(TicketService::class);
-		$this->emailService = $this->createMock(EmailService::class);
 		$this->inboundMapper = $this->createMock(InboundMessageMapper::class);
 		$this->inboundMapper->method('claim')
 			->willReturnCallback(static fn (InboundMessage $row) => ['row' => $row, 'status' => 'claimed']);
@@ -74,7 +71,6 @@ class InboundEmailServiceSenderAuthzTest extends TestCase
 			$mailboxConfig,
 			$this->inboundMapper,
 			$replyTokens,
-			$this->emailService,
 			$this->createMock(HelpdeskCustomerMapper::class),
 			$this->createMock(HelpdeskProjectMapper::class),
 			$l10nFactory,

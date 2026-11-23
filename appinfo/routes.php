@@ -42,6 +42,7 @@ return [
         ['name' => 'ticket#delete', 'url' => '/tickets/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
         ['name' => 'ticket#changeStatus', 'url' => '/tickets/{id}/status', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
         ['name' => 'ticket#assign', 'url' => '/tickets/{id}/assign', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'ticket#inviteCustomer', 'url' => '/tickets/{id}/invite-customer', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
         ['name' => 'ticket#merge', 'url' => '/tickets/{id}/merge', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
         ['name' => 'ticket#split', 'url' => '/api/tickets/{id}/split', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
         ['name' => 'ticket#getLinks', 'url' => '/api/tickets/{id}/links', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
@@ -235,6 +236,11 @@ return [
         ['name' => 'guestUser#grantProjectAccess', 'url' => '/api/guests/{userId}/projects/{projectId}', 'verb' => 'POST', 'requirements' => ['projectId' => '\\d+']],
         ['name' => 'guestUser#revokeProjectAccess', 'url' => '/api/guests/{userId}/projects/{projectId}', 'verb' => 'DELETE', 'requirements' => ['projectId' => '\\d+']],
 
+        // Per-ticket opt-out for the account-less external mail leg (NH-02) —
+        // public capability-token link mailed inside external notifications.
+        ['name' => 'externalMailOptout#confirm', 'url' => '/extmail/optout', 'verb' => 'GET'],
+        ['name' => 'externalMailOptout#apply', 'url' => '/extmail/optout', 'verb' => 'POST'],
+
         // Passwordless portal auth (spec §10.3) — public, dual-auth era safe
         ['name' => 'portalAuth#login', 'url' => '/portal/login', 'verb' => 'GET'],
         ['name' => 'portalAuth#sendOtp', 'url' => '/portal/auth/otp', 'verb' => 'POST'],
@@ -335,6 +341,10 @@ return [
         ['name' => 'companion#kbArticle', 'url' => '/companion/api/v1/kb/articles/{id}', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
         ['name' => 'companion#pushRegister', 'url' => '/companion/api/v1/push/register', 'verb' => 'POST'],
         ['name' => 'companion#pushUnregister', 'url' => '/companion/api/v1/push/unregister', 'verb' => 'POST'],
+        // TC-COMP-QUICKACT: canned replies — metadata list + server-side
+        // variable processing (read-only; web admin stays the editor).
+        ['name' => 'companion#templates', 'url' => '/companion/api/v1/templates', 'verb' => 'GET'],
+        ['name' => 'companion#processTemplate', 'url' => '/companion/api/v1/templates/{id}/process', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 
         // ── Config & data transfer (test → production) ──────────────────
         ['name' => 'transferApi#status', 'url' => '/api/admin/transfer/status', 'verb' => 'GET'],

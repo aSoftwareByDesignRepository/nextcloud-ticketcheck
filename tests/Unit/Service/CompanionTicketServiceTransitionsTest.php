@@ -28,7 +28,6 @@ final class CompanionTicketServiceTransitionsTest extends TestCase
 			$this->createStub(\OCA\Ticketcheck\Service\CompanionNotificationService::class),
 			$this->createStub(\OCA\Ticketcheck\Service\TicketWatcherService::class),
 			$this->createStub(\OCA\Ticketcheck\Db\TicketWatcherMapper::class),
-			$this->createStub(\OCA\Ticketcheck\Service\EmailService::class),
 			$this->createStub(\Psr\Log\LoggerInterface::class),
 			$workflowLock,
 		);

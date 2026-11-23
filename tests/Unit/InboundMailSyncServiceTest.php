@@ -38,7 +38,7 @@ class InboundMailSyncServiceTest extends TestCase
 		$this->store = [
 			'inbound_imap_enabled' => 'yes',
 			'inbound_imap_address' => 'support@example.com',
-			'inbound_imap_host' => 'imap.example.com',
+			'inbound_imap_host' => '93.184.216.34', // public IP literal: no DNS, deterministic under wildcard resolvers
 			'inbound_imap_port' => '993',
 			'inbound_imap_enc' => 'ssl',
 			'inbound_imap_username' => 'support@example.com',

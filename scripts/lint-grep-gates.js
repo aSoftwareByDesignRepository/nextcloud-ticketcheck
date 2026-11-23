@@ -51,7 +51,7 @@ const gates = [
 		name: 'no duplicate h1 outside shell/access-denied',
 		pattern: '<h1 ',
 		glob: 'templates',
-		extraArgs: '--glob "!templates/common/page-start.php" --glob "!templates/access-denied.php" --glob "!templates/redirect.php" --glob "!templates/kb/index.php" --glob "!templates/portal/kb.php" --glob "!templates/needs-role.php"',
+		extraArgs: '--glob "!templates/common/page-start.php" --glob "!templates/access-denied.php" --glob "!templates/redirect.php" --glob "!templates/kb/index.php" --glob "!templates/portal/kb.php" --glob "!templates/needs-role.php" --glob "!templates/optout.php"',
 	},
 	{
 		name: 'no window.confirm in js',

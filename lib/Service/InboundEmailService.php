@@ -47,7 +47,6 @@ class InboundEmailService
 		private InboundMailConfigService $mailboxConfig,
 		private InboundMessageMapper $inboundMapper,
 		private ReplyTokenService $replyTokens,
-		private EmailService $emailService,
 		private HelpdeskCustomerMapper $customerMapper,
 		private HelpdeskProjectMapper $projectMapper,
 		private L10NFactory $l10nFactory,
@@ -384,8 +383,10 @@ class InboundEmailService
 			}
 		}
 
-		$this->notifyInboundComment($ticket, $authorName, $body);
-
+		// Staff-facing "customer replied" mail + customer-side party legs both
+		// fan out inside TicketService::addCommentFromEmail via the shared
+		// dispatcher — the identical leg set a portal reply would evaluate
+		// (US-07 AC-4). No duplicate staff mail from here.
 		$this->finish($row, InboundMessage::ACTION_COMMENT, ticketId: $activeId, commentId: $commentId);
 		$this->logger->info('Inbound email: comment added', ['app' => 'ticketcheck', 'ticket_id' => $activeId]);
 
@@ -468,13 +469,8 @@ class InboundEmailService
 
 		// Exactly one automated reply: the created-ticket confirmation. Its
 		// Reply-To carries the tokenized address so "reply to this email"
-		// closes the email-first loop (MH-19).
-		try {
-			$this->emailService->sendTicketCreatedNotification($ticket);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Inbound confirmation mail failed', ['exception' => $e, 'ticket_id' => $ticketId]);
-		}
-
+		// closes the email-first loop (MH-19). Fan-out happens inside
+		// TicketService::createTicketFromEmail (soft-fail dispatcher).
 		$this->finish($row, InboundMessage::ACTION_TICKET_CREATED, ticketId: $ticketId);
 		$this->logger->info('Inbound email: ticket created', ['app' => 'ticketcheck', 'ticket_id' => $ticketId]);
 
@@ -506,15 +502,6 @@ class InboundEmailService
 			$out .= "\n" . $l->t('inbound_attachments_rejected') . ' ' . implode(', ', $lines);
 		}
 		return $out;
-	}
-
-	private function notifyInboundComment(Ticket $ticket, string $authorName, string $body): void
-	{
-		try {
-			$this->emailService->sendInternalCustomerCommentNotification($ticket, $authorName, $body, null);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Inbound comment staff notification failed', ['exception' => $e]);
-		}
 	}
 
 	private function projectExists(int $projectId): bool

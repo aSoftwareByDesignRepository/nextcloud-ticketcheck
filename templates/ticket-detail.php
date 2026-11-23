@@ -548,6 +548,18 @@ $localeFormat = $_['localeFormat'] ?? null;
                                 <div class="helpdesk-text-muted ticket-detail-info-label"><?php p($l->t('Email')); ?></div>
                                 <a class="tc-link" href="mailto:<?php p($_['ticket']->getCustomerEmail()); ?>"><?php p($_['ticket']->getCustomerEmail()); ?></a>
                             </div>
+                            <?php if (!empty($_['customerCanInvite'])): ?>
+                                <div>
+                                    <div class="helpdesk-text-muted ticket-detail-info-label"><?php p($l->t('portal_access')); ?></div>
+                                    <button type="button" id="tc-invite-customer" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm"
+                                        data-ticket-id="<?php p((int)$_['ticket']->getId()); ?>"
+                                        data-invite-url="<?php p($_['urlGenerator']->linkToRoute('ticketcheck.ticket.inviteCustomer', ['id' => (int)$_['ticket']->getId()])); ?>"
+                                        aria-describedby="tc-invite-help">
+                                        <?php p($l->t('invite_to_portal')); ?>
+                                    </button>
+                                    <div id="tc-invite-help" class="helpdesk-form-help"><?php p($l->t('invite_to_portal_help')); ?></div>
+                                </div>
+                            <?php endif; ?>
                             <?php if ($_['project']): ?>
                                 <div>
                                     <div class="helpdesk-text-muted ticket-detail-info-label"><?php p($l->t('Project')); ?></div>

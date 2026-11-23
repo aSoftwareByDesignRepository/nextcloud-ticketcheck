@@ -14,7 +14,6 @@ use OCA\Ticketcheck\Exception\CompanionNotFoundException;
 use OCA\Ticketcheck\Exception\CompanionValidationException;
 use OCA\Ticketcheck\Service\CompanionNotificationService;
 use OCA\Ticketcheck\Service\CompanionTicketService;
-use OCA\Ticketcheck\Service\EmailService;
 use OCA\Ticketcheck\Service\PermissionService;
 use OCA\Ticketcheck\Service\ProjectService;
 use OCA\Ticketcheck\Service\TicketService;
@@ -39,8 +38,6 @@ final class CompanionTicketServiceMutationsTest extends TestCase
 	private TicketWatcherService $watcherService;
 	/** @var TicketWatcherMapper&MockObject */
 	private TicketWatcherMapper $watcherMapper;
-	/** @var EmailService&MockObject */
-	private EmailService $emailService;
 	/** @var AttachmentMapper&MockObject */
 	private AttachmentMapper $attachmentMapper;
 	/** @var TicketWorkflowLock&MockObject */
@@ -55,7 +52,6 @@ final class CompanionTicketServiceMutationsTest extends TestCase
 		$this->projectService = $this->createMock(ProjectService::class);
 		$this->watcherService = $this->createMock(TicketWatcherService::class);
 		$this->watcherMapper = $this->createMock(TicketWatcherMapper::class);
-		$this->emailService = $this->createMock(EmailService::class);
 		$this->attachmentMapper = $this->createMock(AttachmentMapper::class);
 
 		$this->workflowLock = $this->createMock(TicketWorkflowLock::class);
@@ -73,7 +69,6 @@ final class CompanionTicketServiceMutationsTest extends TestCase
 			$this->createStub(CompanionNotificationService::class),
 			$this->watcherService,
 			$this->watcherMapper,
-			$this->emailService,
 			$this->createStub(LoggerInterface::class),
 			$this->workflowLock,
 		);
@@ -537,7 +532,6 @@ final class CompanionTicketServiceMutationsTest extends TestCase
 			$this->createStub(CompanionNotificationService::class),
 			$this->watcherService,
 			$this->watcherMapper,
-			$this->emailService,
 			$this->createStub(LoggerInterface::class),
 			$this->workflowLock,
 		);
@@ -627,8 +621,6 @@ final class CompanionTicketServiceMutationsTest extends TestCase
 		$this->ticketService->method('getComments')->willReturn([]);
 		$this->attachmentMapper->method('findByTicketId')->willReturn([]);
 		$this->watcherMapper->method('isWatching')->willReturn(false);
-		$this->emailService->method('sendTicketCreatedNotification')
-			->willThrowException(new \RuntimeException('smtp down'));
 
 		$result = $this->service->create('alice', 9, ' New printer ', 'It jams.', Ticket::PRIORITY_HIGH);
 

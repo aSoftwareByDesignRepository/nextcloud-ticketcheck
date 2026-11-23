@@ -49,6 +49,8 @@ $shellExempt = [
 	// chrome) — page-start.php is the authenticated portal shell only.
 	'/templates/portal/login.php',
 	'/templates/portal/sign-in.php',
+	// External opt-out landing also renders inside layout.guest.php.
+	'/templates/optout.php',
 	'/templates/portal/magic-confirm.php',
 	'/templates/portal/login-unavailable.php',
 	'/templates/portal/nc-login-retired.php',

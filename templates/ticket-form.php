@@ -159,6 +159,9 @@ foreach ($categoryOptions as $opt) {
                                 <span class="helpdesk-form-help">
                                     <?php p($l->t('all_tickets_must_belong_project')); ?>
                                 </span>
+                                <span class="helpdesk-form-help">
+                                    <?php p($l->t('create_customer_email_hint')); ?>
+                                </span>
                             </div>
 
                             <!-- Customer Info Display -->

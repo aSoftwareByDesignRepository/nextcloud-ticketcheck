@@ -19,7 +19,7 @@ use OCA\Ticketcheck\Service\TicketResourceService;
 use OCA\Ticketcheck\Exception\ValidationException;
 use OCA\Ticketcheck\Service\TicketService;
 use OCA\Ticketcheck\Service\PermissionService;
-use OCA\Ticketcheck\Service\EmailService;
+use OCA\Ticketcheck\Service\TicketNotificationDispatcher;
 use OCA\Ticketcheck\Service\MergeService;
 use OCA\Ticketcheck\Service\ProjectService;
 use OCA\Ticketcheck\Service\DeletionService;
@@ -70,7 +70,6 @@ class TicketController extends Controller
     private TicketService $ticketService;
     private PermissionService $permissionService;
     private MergeService $mergeService;
-    private EmailService $emailService;
     private ProjectService $projectService;
     private DeletionService $deletionService;
     private TicketMapper $ticketMapper;
@@ -96,6 +95,9 @@ class TicketController extends Controller
     private ?\OCA\Ticketcheck\Db\CommentMoveMapper $commentMoveMapper;
     private ?TicketCategoryService $ticketCategories;
     private ?TicketResourceService $ticketResources;
+    private ?TicketNotificationDispatcher $notificationDispatcher;
+    private ?\OCA\Ticketcheck\Service\GuestIdentityService $guestIdentities = null;
+    private ?\OCA\Ticketcheck\Service\GuestInviteService $guestInvite = null;
 
     public function __construct(
         string $appName,
@@ -103,7 +105,6 @@ class TicketController extends Controller
         TicketService $ticketService,
         PermissionService $permissionService,
         MergeService $mergeService,
-        EmailService $emailService,
         ProjectService $projectService,
         DeletionService $deletionService,
         TicketMapper $ticketMapper,
@@ -129,12 +130,16 @@ class TicketController extends Controller
         ?\OCA\Ticketcheck\Db\CommentMoveMapper $commentMoveMapper = null,
         ?TicketCategoryService $ticketCategories = null,
         ?TicketResourceService $ticketResources = null,
+        ?TicketNotificationDispatcher $notificationDispatcher = null,
+        ?\OCA\Ticketcheck\Service\GuestIdentityService $guestIdentities = null,
+        ?\OCA\Ticketcheck\Service\GuestInviteService $guestInvite = null,
     ) {
+        $this->guestIdentities = $guestIdentities;
+        $this->guestInvite = $guestInvite;
         parent::__construct($appName, $request);
         $this->ticketService = $ticketService;
         $this->permissionService = $permissionService;
         $this->mergeService = $mergeService;
-        $this->emailService = $emailService;
         $this->projectService = $projectService;
         $this->deletionService = $deletionService;
         $this->ticketMapper = $ticketMapper;
@@ -160,6 +165,7 @@ class TicketController extends Controller
         $this->commentMoveMapper = $commentMoveMapper;
         $this->ticketCategories = $ticketCategories;
         $this->ticketResources = $ticketResources;
+        $this->notificationDispatcher = $notificationDispatcher;
     }
 
     /**
@@ -746,6 +752,7 @@ class TicketController extends Controller
                     'canCreateInternal' => $this->permissionService->canCreateInternalNotes(),
                     'currentUser' => $this->userSession->getUser(),
                     'invoicingCheckReceivablesUrl' => $invoicingCheckReceivablesUrl,
+                    'customerCanInvite' => $this->customerCanInvite($ticket),
                     // Merge redirect flash: count of related records (watchers,
                     // links, surveys) that could not be transferred to this
                     // survivor ticket. Strict digit-parse — anything else is 0.
@@ -1299,7 +1306,11 @@ class TicketController extends Controller
             if ($resourceKeys instanceof JSONResponse) {
                 return $resourceKeys;
             }
-            $ticket = $this->ticketService->createTicket($data);
+            // Customer mail is deferred (notifyCustomer=false) until the
+            // attachment batch lands — a failed attach compensation-deletes
+            // the ticket, and a confirmation for a deleted row must never
+            // escape. Dispatch runs service-side via the shared dispatcher.
+            $ticket = $this->ticketService->createTicket($data, false);
             $this->assignTicketResources((int)$ticket->getId(), $resourceKeys);
 
             $uploadedFiles = [];
@@ -1343,9 +1354,9 @@ class TicketController extends Controller
 
             // Soft-fail notifications (same contract as createWithAttachments).
             try {
-                $this->emailService->sendTicketCreatedNotification($ticket);
+                $this->notificationDispatcher?->ticketCreatedFromCurrentActor($ticket);
             } catch (\Throwable $e) {
-                $this->logger->warning('Ticket created email failed', ['exception' => $e]);
+                $this->logger->warning('Ticket created mail dispatch failed', ['exception' => $e]);
             }
 
             return new JSONResponse([
@@ -1447,12 +1458,7 @@ class TicketController extends Controller
             }
             $this->assignTicketResources($activeId ?? $id, $updKeys);
 
-            // Soft-fail notifications: never turn a successful update into a false 400.
-            try {
-                $this->emailService->sendTicketUpdatedNotification($updatedTicket, 'Ticket details updated');
-            } catch (\Throwable $e) {
-                $this->logger->warning('Ticket updated email failed', ['exception' => $e]);
-            }
+            // Customer mail fans out inside TicketService::updateTicket (MH-10 parity).
             $currentUser = $this->userSession->getUser();
             if ($currentUser !== null) {
                 try {
@@ -1590,12 +1596,7 @@ class TicketController extends Controller
                 throw $e;
             }
 
-            // Soft-fail notifications: ticket fields + attaches already saved.
-            try {
-                $this->emailService->sendTicketUpdatedNotification($updatedTicket, 'Ticket details updated');
-            } catch (\Throwable $e) {
-                $this->logger->warning('Ticket updated email failed', ['exception' => $e]);
-            }
+            // Customer mail fans out inside TicketService::updateTicket (MH-10 parity).
             $currentUser = $this->userSession->getUser();
             if ($currentUser !== null) {
                 try {
@@ -1751,13 +1752,7 @@ class TicketController extends Controller
             );
 
             $currentUser = $this->userSession->getUser();
-            $changedByName = $currentUser !== null ? $currentUser->getDisplayName() : null;
-            // Soft-fail notifications: never turn a successful status change into a false 400.
-            try {
-                $this->emailService->sendStatusChangedNotification($updatedTicket, $oldStatus, $newStatus, $changedByName);
-            } catch (\Throwable $e) {
-                $this->logger->warning('Status changed email failed', ['exception' => $e]);
-            }
+            // Customer mail fans out inside TicketService::changeStatus (MH-10 parity).
             if ($currentUser !== null) {
                 try {
                     $this->activityEventService->logTicketStatusChanged($currentUser->getUID(), $updatedTicket, $oldStatus, (string)$newStatus);
@@ -2142,21 +2137,8 @@ class TicketController extends Controller
             );
 
             $currentUser = $this->userSession->getUser();
-            $assignedByName = $currentUser !== null ? $currentUser->getDisplayName() : null;
 
-            // Send assignment notification to agent
-            if ($userId) {
-                try {
-                    $this->emailService->sendTicketAssignedNotification($updatedTicket, $userId, $assignedByName);
-                } catch (\Throwable $e) {
-                    // Soft-fail: never turn a successful assign into a false failure.
-                    try {
-                        $this->logger->warning('Failed to send assignment email: ' . $e->getMessage());
-                    } catch (\Throwable $logEx) {
-                        // ignore logging failures
-                    }
-                }
-            }
+            // Assignment mail fans out inside TicketService::assignTicket (MH-10 parity).
             if ($currentUser !== null) {
                 try {
                     $this->activityEventService->logTicketAssigned($currentUser->getUID(), $updatedTicket, $userId !== null ? (string)$userId : null);
@@ -2234,21 +2216,8 @@ class TicketController extends Controller
                 $this->buildTicketCommentAuthzAssert()
             );
 
-            // Soft-fail notifications: never turn a successful comment into a false 400 (retry → duplicates).
-            if (!$isInternal) {
-                $currentUser = $this->userSession->getUser();
-                $currentUserId = $currentUser ? $currentUser->getUID() : null;
-                try {
-                    $this->emailService->sendNewCommentNotification(
-                        $ticket,
-                        (string)($this->permissionService->getCurrentUserDisplayName() ?? ''),
-                        $content,
-                        $currentUserId // Exclude comment author from notifications
-                    );
-                } catch (\Throwable $e) {
-                    $this->logger->warning('New comment email failed', ['exception' => $e]);
-                }
-            }
+            // Customer mail fans out inside TicketService::addComment (MH-10 parity);
+            // internal notes never trigger customer mail (NN-04).
             $currentUser = $this->userSession->getUser();
             if ($currentUser !== null) {
                 try {
@@ -3902,4 +3871,71 @@ class TicketController extends Controller
         return $out;
     }
 
+
+    /** Account-less customer_email that can be invited to the portal (NH-01). */
+    private function customerCanInvite(\OCA\Ticketcheck\Db\Ticket $ticket): bool
+    {
+        $email = strtolower(trim((string)$ticket->getCustomerEmail()));
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+        if ($this->guestIdentities !== null && $this->guestIdentities->findByEmail($email) !== null) {
+            return false;
+        }
+        try {
+            return empty($this->userManager->getByEmail($email));
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Invite an account-less ticket customer to the guest portal (NH-01):
+     * find-or-create the identity, grant the ticket's project, send the
+     * magic-link invite mail. Idempotent — a second invite reuses the same
+     * identity and re-enqueues a fresh OTP mail.
+     */
+    #[NoAdminRequired]
+    public function inviteCustomer(int $id): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        if (!$this->permissionService->canAccessGuestUserAdministration()) {
+            return new JSONResponse(['success' => false, 'error' => $l->t('access_denied')], 403);
+        }
+        try {
+            $ticket = $this->ticketMapper->find($id);
+        } catch (\Throwable) {
+            return new JSONResponse(['success' => false, 'error' => $l->t('ticket_not_found')], 404);
+        }
+        if ($this->guestIdentities === null || $this->guestInvite === null) {
+            return new JSONResponse(['success' => false, 'error' => $l->t('an_error_occurred')], 503);
+        }
+        $email = strtolower(trim((string)$ticket->getCustomerEmail()));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return new JSONResponse(['success' => false, 'error' => $l->t('invalid_email_address')], 422);
+        }
+        if (!empty($this->userManager->getByEmail($email))) {
+            return new JSONResponse(['success' => false, 'error' => $l->t('invite_account_exists')], 409);
+        }
+        $actor = (string)($this->permissionService->getCurrentUserId() ?? 'system');
+        [$identity, $reused] = $this->guestIdentities->findOrCreateWithReuse(
+            $email, (string)$ticket->getCustomerName(), $actor
+        );
+        $identityId = (int)$identity->getId();
+        if ($ticket->getProjectId()) {
+            try {
+                $this->guestIdentities->grantProjects($identityId, [(int)$ticket->getProjectId()], null, $actor);
+            } catch (\InvalidArgumentException) {
+                // Phantom project id on the ticket — invite still proceeds;
+                // the identity simply has no project grant.
+            }
+        }
+        $sent = $this->guestInvite->sendInvite($identityId);
+        return new JSONResponse([
+            'success' => $sent,
+            'identity_id' => $identityId,
+            'reused' => $reused,
+            'invite_sent' => $sent,
+        ]);
+    }
 }

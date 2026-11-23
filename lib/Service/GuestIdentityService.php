@@ -247,6 +247,11 @@ class GuestIdentityService
         return ($this->prefs->mapForIdentity($identityId)[$key] ?? 'no') === 'yes';
     }
 
+    public function findByEmail(string $email): ?GuestIdentity
+    {
+        return $this->identities->findByEmail(strtolower(trim($email)));
+    }
+
     public function requireIdentity(int $id): GuestIdentity
     {
         $i = $this->findIdentity($id);

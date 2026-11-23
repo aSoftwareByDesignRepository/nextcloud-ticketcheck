@@ -48,7 +48,6 @@ class CompanionTicketService
 		private readonly CompanionNotificationService $notifications,
 		private readonly TicketWatcherService $watcherService,
 		private readonly TicketWatcherMapper $watcherMapper,
-		private readonly EmailService $emailService,
 		private readonly LoggerInterface $logger,
 		private readonly TicketWorkflowLock $workflowLock,
 		private readonly ?TicketCategoryService $ticketCategories = null,
@@ -602,12 +601,9 @@ class CompanionTicketService
 			}
 		}
 
-		// Web parity: creation email is soft-fail.
-		try {
-			$this->emailService->sendTicketCreatedNotification($ticket);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Companion ticket created email failed', ['exception' => $e]);
-		}
+		// Customer confirmation mail already fanned out inside
+		// TicketService::createTicket — identical legs as the web/portal
+		// create paths (US-07/MH-10 parity, soft-fail inside the dispatcher).
 
 		return $this->detail((int)$ticket->getId(), $uid);
 	}
