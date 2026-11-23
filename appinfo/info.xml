@@ -6,316 +6,443 @@
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>ticketcheck</id>
 	<name>TicketCheck</name>
-	<summary>Customer support ticketing system with guest access and email integration</summary>
-	<description><![CDATA[
-		A complete standalone helpdesk and customer support system for Nextcloud.
-		Works out of the box with no dependencies.
+	<summary>Helpdesk with a guest portal — tickets, Kanban, SLA alerts, knowledge base and two-way email on your Nextcloud</summary>
+	<summary lang="de">Helpdesk mit Gästeportal — Tickets, Kanban, SLA-Warnungen, Wissensdatenbank und E-Mail-Anbindung in Ihrer Nextcloud</summary>
+	<description><![CDATA[# TicketCheck — the helpdesk that lives where your data does
 
-		Features:
-		- Multi-tenant project-based access control
-		- Built-in projects and customers management
-		- Secure guest portal (restricted to helpdesk only)
-		- Automated email notifications and background jobs
-		- Rich text editor for knowledge base
-		- File attachments with image previews
-		- Visual charts and reporting
-		- CSV export
-		- SLA monitoring and breach alerts
-		- Daily digest emails for agents
-		- Interface in 13 languages
+Full customer support inside your own Nextcloud: tickets with priorities, categories and assignments, a Kanban board, SLA clocks with breach alerts and escalations, a searchable knowledge base — and a guest portal your customers sign in to without a Nextcloud account.
+
+No per-agent pricing. No SaaS middleman. No support conversations leaving your server.
+
+## Why teams install it
+
+- **Everything in one queue** — list and Kanban views, quick filters, bulk actions, attachments with image previews
+- **A portal guests actually use** — customers get a helpdesk-only login: open tickets, track progress, browse the knowledge base — nothing else is reachable
+- **SLA clocks that mean it** — targets per project, breach alerts and escalations before deadlines slip
+- **Mail in both directions** — incoming mail becomes tickets via IMAP; replies and a daily digest go out via SMTP
+- **Knowledge base that deflects tickets** — rich-text articles in categories, linked in the portal
+- **Built for several customers** — projects keep each client's tickets, contacts and portal users cleanly separated
+- **Numbers when needed** — charts and CSV export
+- **Interface in 13 languages**
+
+## Clear limits
+
+- Inbound mail is polled on a schedule — not real-time push.
+- Audit entries are append-only.
+- Declared databases: MySQL/MariaDB and PostgreSQL.
 
 ## Feedback welcome
 
-We improve this app with real-world use. Bug reports, rough edges, and ideas help — open a GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Your feedback directly shapes what we build next.
+Something rough, something missing? Open a GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) or write to info@software-by-design.de — reports from real helpdesks shape what gets built next.
 
 ## Funding
 
 TicketCheck (grant project NEXTICK) is funded by the German Federal Ministry of Research, Technology and Space (BMFTR) through the Prototype Fund programme (https://www.prototypefund.de/) — funding measure "Software Sprint" (round 2), June to November 2026 (Förderkennzeichen: 16IS26S24). The complete source code is published as free and open-source software under the AGPL-3.0-or-later license.
-]]></description>
 
-	<description lang="de"><![CDATA[
-Komplettes, eigenständiges Helpdesk- und Kundensupportsystem für Nextcloud.
-Funktioniert direkt ohne Abhängigkeiten.
+## Requirements
 
-Funktionen:
-- Multi-tenant projektbasierte Zugriffskontrolle
-- Integrierte Verwaltung von Projekten und Kunden
-- Sicheres Gäste-Portal (nur für den Helpdesk, eingeschränkt)
-- Automatisierte E-Mail-Benachrichtigungen und Hintergrundjobs
-- Editor für Rich Text zur Wissensdatenbank
-- Dateianhänge mit Bildvorschau
-- Visuelle Diagramme und Auswertungen
-- CSV-Export
-- SLA-Überwachung und Warnmeldungen bei Verstößen
-- Tägliche Zusammenfassungs-E-Mails für Agenten
-- Benutzeroberfläche in 13 Sprachen
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB or PostgreSQL]]></description>
+
+	<description lang="de"><![CDATA[# TicketCheck — das Helpdesk dort, wo Ihre Daten liegen
+
+Vollständiger Kundensupport in Ihrer eigenen Nextcloud: Tickets mit Prioritäten, Kategorien und Zuweisungen, ein Kanban-Board, SLA-Uhren mit Verstoßwarnungen und Eskalationen, eine durchsuchbare Wissensdatenbank — und ein Gästeportal, in das sich Ihre Kunden ohne Nextcloud-Konto einloggen.
+
+Keine Lizenz pro Agent. Kein SaaS-Zwischenhändler. Keine Support-Gespräche, die Ihren Server verlassen.
+
+## Warum Teams es installieren
+
+- **Alles in einer Warteschlange** — Listen- und Kanban-Ansicht, Schnellfilter, Sammelaktionen, Anhänge mit Bildvorschau
+- **Ein Portal, das Gäste wirklich nutzen** — Kunden erhalten einen reinen Helpdesk-Login: Tickets anlegen, Verlauf verfolgen, die Wissensdatenbank durchsuchen — sonst ist nichts erreichbar
+- **SLA-Uhren, die es ernst meinen** — Ziele pro Projekt, Verstoßwarnungen und Eskalationen, bevor Fristen reißen
+- **Mail in beide Richtungen** — eingehende Mails werden per IMAP zu Tickets; Antworten und eine tägliche Zusammenfassung gehen per SMTP raus
+- **Wissensdatenbank, die Tickets abfängt** — Rich-Text-Artikel in Kategorien, direkt im Portal verlinkt
+- **Für mehrere Kunden gebaut** — Projekte halten Tickets, Kontakte und Portal-Nutzer jedes Kunden sauber getrennt
+- **Zahlen bei Bedarf** — Diagramme und CSV-Export
+- **Oberfläche in 13 Sprachen**
+
+## Klare Grenzen
+
+- Eingehende Mails werden im Intervall abgerufen — kein Echtzeit-Push.
+- Audit-Einträge sind append-only.
+- Deklarierte Datenbanken: MySQL/MariaDB und PostgreSQL.
 
 ## Feedback willkommen
 
-Wir verbessern diese App mit Rückmeldungen aus der Praxis. Fehlerberichte, Stolpersteine und Ideen helfen — öffnen Sie ein GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Ihr Feedback prägt direkt, was wir als Nächstes bauen.
+Etwas hakt oder fehlt? Öffnen Sie ein GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) oder schreiben Sie an info@software-by-design.de — Meldungen aus echten Helpdesks bestimmen, was als Nächstes gebaut wird.
 
 ## Förderung
 
 TicketCheck (Förderprojekt NEXTICK) wird vom Bundesministerium für Forschung, Technologie und Raumfahrt (BMFTR) im Förderprogramm Prototype Fund (https://www.prototypefund.de/) gefördert — Fördermaßnahme „Software Sprint – Förderung von Open Source Entwicklerinnen und Entwicklern“ (2. Jahrgang), Juni bis November 2026 (Förderkennzeichen: 16IS26S24). Der vollständige Quellcode wird als freie Open-Source-Software unter der AGPL-3.0-or-later-Lizenz veröffentlicht.
-]]></description>
-	<description lang="fr"><![CDATA[
-Un système complet, autonome de helpdesk et de support client pour Nextcloud.
-Fonctionne dès la mise en service, sans dépendances.
 
-Fonctions :
-- Contrôle d’accès basé sur des projets et multi-tenant
-- Gestion intégrée des projets et des clients
-- Portail invité sécurisé (limité au helpdesk uniquement)
-- Notifications par e-mail automatisées et tâches d’arrière-plan
-- Éditeur de texte enrichi pour la base de connaissances
-- Pièces jointes avec aperçu des images
-- Graphiques visuels et reporting
-- Export CSV
-- Suivi des SLA et alertes en cas de non-respect
-- E-mails récapitulatifs quotidiens pour les agents
-- Interface disponible en 13 langues
+## Voraussetzungen
+
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB oder PostgreSQL]]></description>
+	<description lang="fr"><![CDATA[# TicketCheck — le helpdesk là où vivent vos données
+
+Un support client complet dans votre propre Nextcloud : tickets avec priorités, catégories et assignations, un tableau Kanban, des horloges SLA avec alertes de dépassement et escalades, une base de connaissances interrogeable — et un portail invité où vos clients se connectent sans compte Nextcloud.
+
+Pas de licence par agent. Pas d'intermédiaire SaaS. Aucune conversation de support ne quitte votre serveur.
+
+## Pourquoi les équipes l'installent
+
+- **Tout dans une seule file** — vues liste et Kanban, filtres rapides, actions groupées, pièces jointes avec aperçu d'images
+- **Un portail que les invités utilisent vraiment** — vos clients reçoivent un identifiant limité au helpdesk : ouvrir des tickets, suivre l'avancement, consulter la base de connaissances — rien d'autre n'est accessible
+- **Des SLA qui comptent** — objectifs par projet, alertes de dépassement et escalades avant que les délais ne filent
+- **Le mail dans les deux sens** — le courrier entrant devient des tickets via IMAP ; les réponses et un digest quotidien partent via SMTP
+- **Une base de connaissances qui dévie les tickets** — articles en texte riche par catégories, proposés dans le portail
+- **Pensé pour plusieurs clients** — les projets séparent proprement tickets, contacts et utilisateurs du portail de chaque client
+- **Des chiffres quand il en faut** — graphiques et export CSV
+- **Interface en 13 langues**
+
+## Limites claires
+
+- Le courrier entrant est relevé par intervalles — pas de push en temps réel.
+- Les entrées d'audit sont append-only.
+- Bases de données déclarées : MySQL/MariaDB et PostgreSQL.
 
 ## Retours bienvenus
 
-Nous améliorons cette app grâce à votre usage réel. Bugs, frottements et idées aident — ouvrez une GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Vos retours façonnent directement la suite.
+Quelque chose coince ou manque ? Ouvrez une GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) ou écrivez à info@software-by-design.de — les retours de vrais helpdesks décident de la suite.
 
 ## Financement
 
 TicketCheck (projet subventionné NEXTICK) est financé par le ministère fédéral allemand de la Recherche, de la Technologie et de l'Espace (BMFTR) via le programme Prototype Fund (https://www.prototypefund.de/) — mesure « Software Sprint » (2e promotion), juin à novembre 2026 (Förderkennzeichen : 16IS26S24). Le code source complet est publié en logiciel libre et open source sous licence AGPL-3.0-or-later.
-]]></description>
-	<description lang="es"><![CDATA[
-Un sistema completo de mesa de ayuda y atención al cliente, autónomo, para Nextcloud.
-Funciona de forma inmediata y sin dependencias.
 
-Funciones:
-- Control de acceso basado en proyectos y multi-tenant
-- Gestión integrada de proyectos y clientes
-- Portal de invitados seguro (restringido solo al helpdesk)
-- Notificaciones por correo automatizadas y trabajos en segundo plano
-- Editor de texto enriquecido para la base de conocimiento
-- Adjuntos de archivos con vista previa de imágenes
-- Gráficos y reportes visuales
-- Exportación CSV
-- Supervisión de SLA y alertas de incumplimiento
-- Correos electrónicos de resumen diarios para los agentes
-- Interfaz disponible en 13 idiomas
+## Prérequis
+
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB ou PostgreSQL]]></description>
+	<description lang="es"><![CDATA[# TicketCheck — el helpdesk donde viven tus datos
+
+Soporte al cliente completo dentro de tu propio Nextcloud: tickets con prioridades, categorías y asignaciones, un tablero Kanban, relojes SLA con alertas de incumplimiento y escalados, una base de conocimiento consultable — y un portal de invitados donde tus clientes entran sin cuenta de Nextcloud.
+
+Sin licencia por agente. Sin intermediario SaaS. Ninguna conversación de soporte sale de tu servidor.
+
+## Por qué lo instalan los equipos
+
+- **Todo en una sola cola** — vistas de lista y Kanban, filtros rápidos, acciones en lote, adjuntos con vista previa de imágenes
+- **Un portal que los invitados sí usan** — tus clientes reciben un acceso limitado al helpdesk: abrir tickets, seguir el avance, consultar la base de conocimiento — nada más es accesible
+- **SLA que van en serio** — objetivos por proyecto, alertas de incumplimiento y escalados antes de que venzan los plazos
+- **Correo en ambos sentidos** — el correo entrante se convierte en tickets vía IMAP; las respuestas y un resumen diario salen por SMTP
+- **Base de conocimiento que desvía tickets** — artículos en texto enriquecido por categorías, enlazados en el portal
+- **Pensado para varios clientes** — los proyectos mantienen separados con limpieza los tickets, contactos y usuarios del portal de cada cliente
+- **Números cuando hacen falta** — gráficos y exportación CSV
+- **Interfaz en 13 idiomas**
+
+## Límites claros
+
+- El correo entrante se comprueba por intervalos — no es push en tiempo real.
+- Las entradas de auditoría son append-only.
+- Bases de datos declaradas: MySQL/MariaDB y PostgreSQL.
 
 ## Comentarios bienvenidos
 
-Mejoramos esta app con el uso real. Informes de errores, fricciones e ideas ayudan — abra un GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Su feedback da forma directa a lo que construimos después.
+¿Algo falla o falta? Abre una GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) o escribe a info@software-by-design.de — los informes de helpdesks reales deciden lo que se construye después.
 
 ## Financiación
 
 TicketCheck (proyecto subvencionado NEXTICK) está financiado por el Ministerio Federal Alemán de Investigación, Tecnología y Espacio (BMFTR) a través del programa Prototype Fund (https://www.prototypefund.de/) — medida «Software Sprint» (2.ª promoción), junio a noviembre de 2026 (Förderkennzeichen: 16IS26S24). El código fuente completo se publica como software libre y de código abierto bajo la licencia AGPL-3.0-or-later.
-]]></description>
-	<description lang="da"><![CDATA[
-Et komplet, selvstændigt helpdesk- og kundesupportsystem til Nextcloud.
-Fungerer lige fra starten uden afhængigheder.
 
-Funktioner:
-- Multi-tenant projektbaseret adgangskontrol
-- Indbygget administration af projekter og kunder
-- Sikret gæsteportal (kun adgang til helpdesk, begrænset)
-- Automatiserede e-mail-notifikationer og baggrundsjob
-- Rigt tekstredigeringsværktøj til vidensbase
-- Filvedhæftninger med billedforhåndsvisning
-- Visuelle diagrammer og rapportering
-- CSV-export
-- SLA-overvågning og alarmer ved brud
-- Daglige opsummerings-e-mails til agenter
-- Brugerflade på 13 sprog
+## Requisitos
 
-## Feedback er velkommen
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB o PostgreSQL]]></description>
+	<description lang="da"><![CDATA[# TicketCheck — helpdesken dér, hvor dine data bor
 
-Vi forbedrer denne app med brug i praksis. Fejlrapporter, friktioner og idéer hjælper — åbn et GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Jeres feedback former direkte det, vi bygger næste gang.
+Komplet kundesupport i din egen Nextcloud: sager med prioriteter, kategorier og tildelinger, et Kanban-board, SLA-ure med brudalarmer og eskalationer, en søgbar vidensbase — og en gæsteportal, hvor dine kunder logger ind uden en Nextcloud-konto.
+
+Ingen licens pr. agent. Ingen SaaS-mellemmand. Ingen supportsamtaler forlader din server.
+
+## Hvorfor teams installerer det
+
+- **Alt i én kø** — liste- og Kanban-visning, hurtigfiltre, massehandlinger, vedhæftninger med billedforhåndsvisning
+- **En portal, gæster rent faktisk bruger** — kunder får et login kun til helpdesken: opret sager, følg fremskridt, gennemse vidensbasen — intet andet er tilgængeligt
+- **SLA-ure, der mener det** — mål pr. projekt, brudalarmer og eskalationer, før deadlines glipper
+- **Mail i begge retninger** — indgående post bliver til sager via IMAP; svar og en daglig digest sendes via SMTP
+- **Vidensbase, der afleder sager** — rich-text-artikler i kategorier, vist i portalen
+- **Bygget til flere kunder** — projekter holder hver klients sager, kontakter og portalbrugere rent adskilt
+- **Tal når det kræves** — diagrammer og CSV-eksport
+- **Grænseflade på 13 sprog**
+
+## Klare grænser
+
+- Indgående mail hentes med intervaller — ikke push i realtid.
+- Revisionslinjer er append-only.
+- Deklarerede databaser: MySQL/MariaDB og PostgreSQL.
+
+## Feedback velkommen
+
+Noget der hakker eller mangler? Åbn et GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) eller skriv til info@software-by-design.de — meldinger fra rigtige helpdesks styrer, hvad der bygges næst.
 
 ## Finansiering
 
 TicketCheck (støtteprojektet NEXTICK) finansieres af det tyske forbundsministerium for forskning, teknologi og rumfart (BMFTR) gennem Prototype Fund-programmet (https://www.prototypefund.de/) — støtteprogrammet "Software Sprint" (årgang 2), juni til november 2026 (Förderkennzeichen: 16IS26S24). Den komplette kildekode udgives som fri open source-software under AGPL-3.0-or-later-licensen.
-]]></description>
-	<description lang="nl"><![CDATA[
-Een volledig standalone helpdesk- en klantenservicesysteem voor Nextcloud.
-Werkt direct zonder afhankelijkheden.
 
-Functies:
-- Multi-tenant, projectgebaseerde toegangscontrole
-- Beheer van projecten en klanten ingebouwd
-- Beveiligd gastenportaal (alleen beperkt tot de helpdesk)
-- Geautomatiseerde e-mailmeldingen en achtergrondjobs
-- Rijke teksteditor voor de kennisbank
-- Bestandsbijlagen met voorbeeld van afbeeldingen
-- Visuele grafieken en rapportage
-- Exporteren naar CSV
-- SLA-monitoring en meldingen bij overtredingen
-- Dagelijkse samenvattende e-mails voor agenten
-- Interface in 13 talen
+## Krav
+
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB eller PostgreSQL]]></description>
+	<description lang="nl"><![CDATA[# TicketCheck — de helpdesk waar je data woont
+
+Complete klantensupport in je eigen Nextcloud: tickets met prioriteiten, categorieën en toewijzingen, een Kanban-bord, SLA-klokken met waarschuwingen bij overschrijding en escalaties, een doorzoekbare kennisbank — en een gastenportaal waar je klanten inloggen zonder Nextcloud-account.
+
+Geen licentie per agent. Geen SaaS-tussenpersoon. Geen supportgesprekken die je server verlaten.
+
+## Waarom teams het installeren
+
+- **Alles in één wachtrij** — lijst- en Kanban-weergave, snelfilters, bulkbewerkingen, bijlagen met afbeeldingsvoorbeeld
+- **Een portaal dat gasten echt gebruiken** — klanten krijgen een login alleen voor de helpdesk: tickets aanmaken, voortgang volgen, de kennisbank raadplegen — verder is niets bereikbaar
+- **SLA-klokken die het menen** — doelen per project, waarschuwingen en escalaties voordat deadlines verlopen
+- **Mail in beide richtingen** — inkomende mail wordt tickets via IMAP; antwoorden en een dagelijkse digest gaan via SMTP de deur uit
+- **Kennisbank die tickets afvangt** — artikelen met opgemaakte tekst per categorie, direct in het portaal
+- **Gebouwd voor meerdere klanten** — projecten houden tickets, contacten en portalgebruikers van elke klant netjes gescheiden
+- **Cijfers wanneer nodig** — grafieken en CSV-export
+- **Interface in 13 talen**
+
+## Duidelijke grenzen
+
+- Inkomende mail wordt intervalsgewijs opgehaald — geen realtime push.
+- Audit-regels zijn append-only.
+- Gedeclareerde databases: MySQL/MariaDB en PostgreSQL.
 
 ## Feedback welkom
 
-We verbeteren deze app met gebruik in de praktijk. Bugmeldingen, struikelblokken en ideeën helpen — open een GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Uw feedback bepaalt mede wat we als volgende bouwen.
+Iets hapert of ontbreekt? Open een GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) of mail naar info@software-by-design.de — meldingen van echte helpdesks bepalen wat er hierna gebouwd wordt.
 
 ## Financiering
 
 TicketCheck (subsidieproject NEXTICK) wordt gefinancierd door het Duitse federale ministerie van Onderzoek, Technologie en Ruimtevaart (BMFTR) via het Prototype Fund-programma (https://www.prototypefund.de/) — financieringsmaatregel "Software Sprint" (lichting 2), juni tot november 2026 (Förderkennzeichen: 16IS26S24). De volledige broncode wordt gepubliceerd als vrije open-sourcesoftware onder de AGPL-3.0-or-later-licentie.
-]]></description>
-	<description lang="it"><![CDATA[
-Un sistema completo e autonomo di helpdesk e assistenza clienti per Nextcloud.
-Funziona out of the box senza dipendenze.
 
-Funzionalità:
-- Controllo dell’accesso basato su progetti e multi-tenant
-- Gestione integrata di progetti e clienti
-- Portale ospiti sicuro (limitato solo all’helpdesk)
-- Notifiche email automatizzate e processi in background
-- Editor di testo arricchito per la knowledge base
-- Allegati dei file con anteprima delle immagini
-- Grafici e reportistica visivi
-- Esportazione CSV
-- Monitoraggio SLA e avvisi in caso di violazioni
-- E-mail riepilogative giornaliere per gli agenti
-- Interfaccia in 13 lingue
+## Vereisten
+
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB of PostgreSQL]]></description>
+	<description lang="it"><![CDATA[# TicketCheck — l'helpdesk dove vivono i tuoi dati
+
+Supporto clienti completo dentro il tuo Nextcloud: ticket con priorità, categorie e assegnazioni, una board Kanban, orologi SLA con avvisi di violazione ed escalation, una knowledge base ricercabile — e un portale ospiti dove i tuoi clienti accedono senza account Nextcloud.
+
+Nessuna licenza per agente. Nessun intermediario SaaS. Nessuna conversazione di supporto lascia il tuo server.
+
+## Perché i team lo installano
+
+- **Tutto in un'unica coda** — viste lista e Kanban, filtri rapidi, azioni di massa, allegati con anteprima immagini
+- **Un portale che gli ospiti usano davvero** — i clienti ricevono un accesso solo helpdesk: aprire ticket, seguire l'avanzamento, consultare la knowledge base — nient'altro è raggiungibile
+- **SLA che fanno sul serio** — obiettivi per progetto, avvisi di violazione ed escalation prima che le scadenze slittino
+- **Posta in entrambe le direzioni** — la mail in arrivo diventa ticket via IMAP; risposte e un digest quotidiano escono via SMTP
+- **Knowledge base che devia i ticket** — articoli in rich text per categorie, proposti nel portale
+- **Pensato per più clienti** — i progetti tengono separati in modo pulito ticket, contatti e utenti del portale di ogni cliente
+- **Numeri quando servono** — grafici ed export CSV
+- **Interfaccia in 13 lingue**
+
+## Limiti chiari
+
+- La posta in arrivo viene scaricata a intervalli — niente push in tempo reale.
+- Le voci di audit sono append-only.
+- Database dichiarati: MySQL/MariaDB e PostgreSQL.
 
 ## Feedback benvenuto
 
-Miglioriamo questa app con l’uso reale. Segnalazioni di bug, punti deboli e idee aiutano — aprite una GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Il vostro feedback guida direttamente ciò che costruiamo dopo.
+Qualcosa non va o manca? Apri una GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) o scrivi a info@software-by-design.de — le segnalazioni degli helpdesk reali decidono cosa costruiamo dopo.
 
 ## Finanziamento
 
 TicketCheck (progetto finanziato NEXTICK) è finanziato dal Ministero Federale tedesco della Ricerca, della Tecnologia e dello Spazio (BMFTR) tramite il programma Prototype Fund (https://www.prototypefund.de/) — misura «Software Sprint» (2ª edizione), da giugno a novembre 2026 (Förderkennzeichen: 16IS26S24). Il codice sorgente completo è pubblicato come software libero e open source con licenza AGPL-3.0-or-later.
-]]></description>
-	<description lang="pl"><![CDATA[
-Kompletny, samodzielny system helpdesku i obsługi klienta dla Nextcloud.
-Działa od razu po wdrożeniu, bez zależności.
 
-Funkcje:
-- Wielodostępna (multi-tenant) kontrola dostępu oparta na projektach
-- Wbudowane zarządzanie projektami i klientami
-- Bezpieczny portal dla gości (ograniczony wyłącznie do helpdesku)
-- Automatyczne powiadomienia e-mail oraz zadania w tle
-- Edytor tekstu sformatowanego dla bazy wiedzy
-- Załączniki plików z podglądem obrazów
-- Przejrzyste wykresy i raportowanie
-- Eksport CSV
-- Monitorowanie SLA i alerty o naruszeniach
-- Codzienne wiadomości e-mail podsumowujące dla agentów
-- Interfejs w 13 językach
+## Requisiti
 
-## Feedback mile widziany
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB o PostgreSQL]]></description>
+	<description lang="pl"><![CDATA[# TicketCheck — helpdesk tam, gdzie mieszkają Twoje dane
 
-Ulepszamy tę aplikację dzięki realnemu użyciu. Zgłoszenia błędów, tarcia i pomysły pomagają — otwórz GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Wasza opinia bezpośrednio kształtuje to, co budujemy dalej.
+Pełna obsługa klienta w Twojej własnej Nextcloud: zgłoszenia z priorytetami, kategoriami i przypisaniami, tablica Kanban, zegary SLA z alertami o naruszeniu i eskalacjami, przeszukiwalna baza wiedzy — oraz portal gościa, w którym Twoi klienci logują się bez konta Nextcloud.
+
+Brak licencji per agent. Brak pośrednika SaaS. Żadna rozmowa z supportem nie opuszcza Twojego serwera.
+
+## Dlaczego zespoły je instalują
+
+- **Wszystko w jednej kolejce** — widoki listy i Kanban, szybkie filtry, akcje zbiorcze, załączniki z podglądem obrazów
+- **Portal, z którego goście naprawdę korzystają** — klienci dostają login wyłącznie do helpdesku: zgłaszają tickety, śledzą postęp, przeglądają bazę wiedzy — nic więcej nie jest dostępne
+- **SLA na serio** — cele per projekt, alerty o naruszeniu i eskalacje, zanim terminy miną
+- **Poczta w obie strony** — przychodząca poczta zamienia się w tickety przez IMAP; odpowiedzi i dzienny digest wychodzą przez SMTP
+- **Baza wiedzy, która odcina tickety** — artykuły w rich text w kategoriach, podlinkowane w portalu
+- **Zbudowane pod wielu klientów** — projekty trzymają tickety, kontakty i użytkowników portalu każdego klienta czysto osobno
+- **Liczby gdy potrzeba** — wykresy i eksport CSV
+- **Interfejs w 13 językach**
+
+## Jasne granice
+
+- Poczta przychodząca jest pobierana cyklicznie — brak push w czasie rzeczywistym.
+- Wpisy audytu są append-only.
+- Zadeklarowane bazy danych: MySQL/MariaDB i PostgreSQL.
+
+## Opinie mile widziane
+
+Coś zgrzyta lub brakuje? Otwórz GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) lub napisz na info@software-by-design.de — zgłoszenia z prawdziwych helpdesków decydują o tym, co powstaje dalej.
 
 ## Finansowanie
 
 TicketCheck (projekt grantowy NEXTICK) jest finansowany przez Federalne Ministerstwo Badań, Technologii i Przestrzeni Kosmicznej (BMFTR) w ramach programu Prototype Fund (https://www.prototypefund.de/) — działanie „Software Sprint” (edycja 2), czerwiec–listopad 2026 (Förderkennzeichen: 16IS26S24). Pełny kod źródłowy jest publikowany jako wolne i otwarte oprogramowanie na licencji AGPL-3.0-or-later.
-]]></description>
-	<description lang="sv"><![CDATA[
-Ett komplett, fristående helpdesk- och kundsupportsystem för Nextcloud.
-Fungerar direkt utan beroenden.
 
-Funktioner:
-- Multi-tenant projektbaserad åtkomstkontroll
-- Inbyggd hantering av projekt och kunder
-- Säker gästportal (endast begränsad till helpdesk)
-- Automatiska e-postaviseringar och bakgrundsjobb
-- Kunskapsbas med redigering av rik text
-- Filbilagor med bildförhandsvisning
-- Visuella diagram och rapportering
-- Export till CSV
-- SLA-övervakning och varningsmeddelanden vid överträdelser
-- Dagliga sammanfattningsmejl för agenter
-- Gränssnitt på 13 språk
+## Wymagania
 
-## Feedback välkomnas
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB lub PostgreSQL]]></description>
+	<description lang="sv"><![CDATA[# TicketCheck — helpdesken där dina data bor
 
-Vi förbättrar den här appen med verklig användning. Felrapporter, friktioner och idéer hjälper — öppna en GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Er feedback formar direkt det vi bygger härnäst.
+Komplett kundsupport i din egen Nextcloud: ärenden med prioriteter, kategorier och tilldelningar, en Kanban-tavla, SLA-klockor med brottslarm och eskalationer, en sökbar kunskapsbas — och en gästportal där dina kunder loggar in utan Nextcloud-konto.
+
+Ingen licens per agent. Ingen SaaS-mellanhand. Inga supportsamtal lämnar din server.
+
+## Varför team installerar det
+
+- **Allt i en kö** — list- och Kanban-vyer, snabbfilter, massåtgärder, bilagor med bildförhandsvisning
+- **En portal som gäster faktiskt använder** — kunder får en inloggning bara för helpdesken: skapa ärenden, följa framsteg, söka i kunskapsbasen — inget annat är nåbart
+- **SLA-klockor som menar allvar** — mål per projekt, brottslarm och eskalationer innan deadlines hinner rinna ut
+- **Mail åt båda hållen** — inkommande post blir ärenden via IMAP; svar och en daglig sammanfattning skickas via SMTP
+- **Kunskapsbas som avleder ärenden** — rich-text-artiklar i kategorier, länkade i portalen
+- **Byggd för flera kunder** — projekt håller varje kunds ärenden, kontakter och portalanvändare rent åtskilda
+- **Siffror vid behov** — diagram och CSV-export
+- **Gränssnitt på 13 språk**
+
+## Tydliga gränser
+
+- Inkommande mail hämtas med intervall — inte push i realtid.
+- Granskningsposter är append-only.
+- Deklarerade databaser: MySQL/MariaDB och PostgreSQL.
+
+## Feedback välkommen
+
+Något som hackar eller saknas? Öppna ett GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) eller skriv till info@software-by-design.de — rapporter från riktiga helpdesk styr vad som byggs härnäst.
 
 ## Finansiering
 
 TicketCheck (bidragsprojektet NEXTICK) finansieras av det tyska federala ministeriet för forskning, teknik och rymd (BMFTR) via Prototype Fund-programmet (https://www.prototypefund.de/) — stödåtgärden "Software Sprint" (omgång 2), juni till november 2026 (Förderkennzeichen: 16IS26S24). Hela källkoden publiceras som fri och öppen programvara under licensen AGPL-3.0-or-later.
-]]></description>
-	<description lang="nb"><![CDATA[
-Et komplett, frittstående helpdesk- og kundesupportsystem for Nextcloud.
-Fungerer ut av esken uten avhengigheter.
 
-Funksjoner:
-- Multi-tenant prosjektbasert tilgangskontroll
-- Innebygd håndtering av prosjekter og kunder
-- Sikret gjesteportal (begrenset til bare helpdesk)
-- Automatiserte e-postvarsler og bakgrunnsjobber
-- Redigeringsverktøy med rik tekst for kunnskapsbase
-- Filvedlegg med bilde-forhåndsvisning
-- Visuelle diagrammer og rapportering
-- CSV-eksport
-- SLA-overvåking og varsler ved brudd
-- Daglige sammendrags-e-poster for agenter
-- Grensesnitt på 13 språk
+## Krav
 
-## Feedback er velkommen
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB eller PostgreSQL]]></description>
+	<description lang="nb"><![CDATA[# TicketCheck — helpdesken der dataene dine bor
 
-Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer hjelper — åpne en GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Tilbakemeldingen deres former direkte det vi bygger videre.
+Full kundestøtte i din egen Nextcloud: saker med prioriteter, kategorier og tildelinger, et Kanban-bord, SLA-klokker med bruddvarsler og eskaleringer, en søkbar kunnskapsbase — og en gjesteportal der kundene dine logger inn uten Nextcloud-konto.
+
+Ingen lisens per agent. Ingen SaaS-mellommann. Ingen supportsamtaler forlater serveren din.
+
+## Hvorfor team installerer det
+
+- **Alt i én kø** — liste- og Kanban-visning, hurtigfiltre, massehandlinger, vedlegg med bildeforhåndsvisning
+- **En portal gjestene faktisk bruker** — kunder får en innlogging kun til helpdesken: opprett saker, følg fremdriften, søk i kunnskapsbasen — ingenting annet er tilgjengelig
+- **SLA-klokker som mener det** — mål per prosjekt, bruddvarsler og eskaleringer før frister glipper
+- **E-post i begge retninger** — innkommende post blir til saker via IMAP; svar og et daglig sammendrag sendes via SMTP
+- **Kunnskapsbase som avleder saker** — rich-text-artikler i kategorier, lenket i portalen
+- **Bygd for flere kunder** — prosjekter holder hver kundes saker, kontakter og portalbrukere rent adskilt
+- **Tall ved behov** — diagrammer og CSV-eksport
+- **Grensesnitt på 13 språk**
+
+## Klare grenser
+
+- Innkommende e-post hentes med intervaller — ikke push i sanntid.
+- Revisjonslinjer er append-only.
+- Erklærte databaser: MySQL/MariaDB og PostgreSQL.
+
+## Tilbakemeldinger velkommen
+
+Noe som hakker eller mangler? Åpne et GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) eller skriv til info@software-by-design.de — meldinger fra ekte helpdesks styrer hva som bygges videre.
 
 ## Finansiering
 
 TicketCheck (tilskuddsprosjektet NEXTICK) finansieres av det tyske forsknings-, teknologi- og romfartsdepartementet (BMFTR) gjennom Prototype Fund-programmet (https://www.prototypefund.de/) — støttetiltaket "Software Sprint" (kull 2), juni til november 2026 (Förderkennzeichen: 16IS26S24). Hele kildekoden publiseres som fri og åpen programvare under AGPL-3.0-or-later-lisensen.
-]]></description>
 
-	<description lang="pt"><![CDATA[
-Um helpdesk e sistema de apoio ao cliente completo e autónomo para Nextcloud.
-Funciona de imediato, sem dependências.
+## Krav
 
-Funcionalidades:
-- Controlo de acesso multi-inquilino baseado em projetos
-- Gestão integrada de projetos e clientes
-- Portal de convidados seguro (restrito ao helpdesk)
-- Notificações automáticas por e-mail e tarefas em segundo plano
-- Editor de texto formatado para a base de conhecimento
-- Anexos de ficheiros com pré-visualização de imagens
-- Gráficos visuais e relatórios
-- Exportação CSV
-- Monitorização de SLA e alertas de incumprimento
-- E-mails diários de resumo para agentes
-- Interface em 13 línguas
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB eller PostgreSQL]]></description>
 
-## O seu feedback é bem-vindo
+	<description lang="pt"><![CDATA[# TicketCheck — o helpdesk onde vivem os seus dados
 
-Melhoramos esta aplicação com a utilização real. Relatórios de erros, arestas e ideias ajudam — abra uma GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). O seu feedback influencia diretamente o que construímos a seguir.
+Suporte ao cliente completo dentro do seu próprio Nextcloud: tickets com prioridades, categorias e atribuições, um quadro Kanban, relógios SLA com alertas de violação e escaladas, uma base de conhecimento pesquisável — e um portal de convidados onde os seus clientes entram sem conta Nextcloud.
+
+Sem licença por agente. Sem intermediário SaaS. Nenhuma conversa de suporte sai do seu servidor.
+
+## Por que as equipes o instalam
+
+- **Tudo numa só fila** — vistas de lista e Kanban, filtros rápidos, ações em massa, anexos com pré-visualização de imagens
+- **Um portal que os convidados realmente usam** — os clientes recebem um login só para o helpdesk: abrir tickets, acompanhar o progresso, consultar a base de conhecimento — mais nada fica acessível
+- **SLA a sério** — objetivos por projeto, alertas de violação e escaladas antes dos prazos correrem
+- **E-mail nos dois sentidos** — o correio recebido vira tickets via IMAP; as respostas e um resumo diário saem por SMTP
+- **Base de conhecimento que desvia tickets** — artigos em rich text por categorias, ligados no portal
+- **Feito para vários clientes** — os projetos mantêm separados com clareza os tickets, contactos e utilizadores do portal de cada cliente
+- **Números quando precisa** — gráficos e exportação CSV
+- **Interface em 13 idiomas**
+
+## Limites claros
+
+- O correio recebido é verificado em intervalos — não é push em tempo real.
+- As entradas de auditoria são append-only.
+- Bases de dados declaradas: MySQL/MariaDB e PostgreSQL.
+
+## Comentários bem-vindos
+
+Algo emperra ou falta? Abra uma GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) ou escreva para info@software-by-design.de — os relatos de helpdesks reais decidem o que é construído a seguir.
 
 ## Financiamento
 
 O TicketCheck (projeto financiado NEXTICK) é financiado pelo Ministério Federal Alemão da Investigação, Tecnologia e Espaço (BMFTR) através do programa Prototype Fund (https://www.prototypefund.de/) — medida de financiamento "Software Sprint" (edição 2), junho a novembro de 2026 (Förderkennzeichen: 16IS26S24). Todo o código-fonte é publicado como software livre e de código aberto sob a licença AGPL-3.0-or-later.
-]]></description>
 
-	<description lang="tr"><![CDATA[
-Nextcloud için eksiksiz ve bağımsız bir yardım masası ve müşteri destek sistemi.
-Kurulduğu anda çalışır, başka bir uygulamaya ihtiyaç duymaz.
+## Requisitos
 
-Özellikler:
-- Projelere dayalı, çok kiracılı erişim denetimi
-- Yerleşik proje ve müşteri yönetimi
-- Güvenli konuk portalı (yalnız yardım masasıyla sınırlı)
-- Otomatik e-posta bildirimleri ve arka plan işleri
-- Bilgi bankası için zengin metin düzenleyici
-- Görsel önizlemeli ek dosyalar
-- Grafikler ve raporlar
-- CSV dışa aktarma
-- SLA izleme ve ihlal uyarıları
-- Destek temsilcilerine günlük özet e-postaları
-- Türkçe dahil birçok dilde arayüz
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB ou PostgreSQL]]></description>
 
-## Geri bildirim
+	<description lang="tr"><![CDATA[# TicketCheck — verilerinizin yaşadığı yerde bir helpdesk
 
-Bu uygulamayı gerçek kullanımdan öğrenerek geliştiriyoruz. Hata bildirimleri, pürüzler ve fikirler işimize yarar. GitHub'da bir issue açın (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues). Görüşleriniz sıradaki işlerimizi doğrudan belirler.
+Kendi Nextcloud'unuzun içinde eksiksiz müşteri desteği: öncelikler, kategoriler ve atamalar içeren talepler, bir Kanban panosu, ihlal uyarıları ve eskalasyonlarla SLA saatleri, aranabilir bilgi tabanı — ve müşterilerinizin Nextcloud hesabı olmadan giriş yaptığı bir misafir portalı.
+
+Temsilci başına lisans yok. SaaS aracısı yok. Destek konuşmaları sunucunuzdan çıkmaz.
+
+## Ekipler neden kuruyor
+
+- **Her şey tek kuyrukta** — liste ve Kanban görünümleri, hızlı filtreler, toplu işlemler, görsel önizlemeli ekler
+- **Misafirlerin gerçekten kullandığı bir portal** — müşteriler yalnızca helpdesk'e özel bir giriş alır: talep açar, ilerlemeyi izler, bilgi tabanını gezer — başka hiçbir şeye erişemez
+- **Ciddi SLA saatleri** — proje başına hedefler, süreler dolmadan ihlal uyarıları ve eskalasyonlar
+- **İki yönlü e-posta** — gelen posta IMAP ile talebe dönüşür; yanıtlar ve günlük özet SMTP ile gider
+- **Talepleri karşılayan bilgi tabanı** — kategorili zengin metin makaleler, portalda bağlantılı
+- **Birden çok müşteri için tasarlandı** — projeler her müşterinin taleplerini, kişilerini ve portal kullanıcılarını düzgünce ayrı tutar
+- **Gerektiğinde rakamlar** — grafikler ve CSV dışa aktarımı
+- **13 dilde arayüz**
+
+## Net sınırlar
+
+- Gelen posta aralıklarla denetlenir — gerçek zamanlı push değildir.
+- Denetim kayıtları append-only'dir.
+- Beyan edilen veritabanları: MySQL/MariaDB ve PostgreSQL.
+
+## Geri bildirim bekliyoruz
+
+Bir şey mi aksıyor ya da eksik? Bir GitHub Issue açın (https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues) ya da info@software-by-design.de adresine yazın — gerçek helpdesk'lerden gelen raporlar, sıradaki geliştirmeyi belirler.
 
 ## Destek
 
 Almanya Federal Araştırma, Teknoloji ve Uzay Bakanlığı (BMFTR) TicketCheck'i (NEXTICK hibe projesi) Prototype Fund programıyla (https://www.prototypefund.de/) destekliyor. Destek "Software Sprint" önleminin ikinci turunda, Haziran–Kasım 2026 arasında veriliyor (Förderkennzeichen: 16IS26S24). Kaynak kodun tamamı AGPL-3.0-or-later lisansıyla özgür ve açık kaynaklı yazılım olarak yayımlandı.
-]]></description>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/01.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/01.png</screenshot>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/02.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/02.png</screenshot>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/03.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/03.png</screenshot>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/04.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/04.png</screenshot>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png</screenshot>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png</screenshot>
+
+## Gereksinimler
+
+- Nextcloud 32–35
+- PHP 8.2–8.5
+- MySQL/MariaDB veya PostgreSQL]]></description>
 
 	<version>2.7.0</version>
 	<licence>agpl</licence>
@@ -330,6 +457,12 @@ Almanya Federal Araştırma, Teknoloji ve Uzay Bakanlığı (BMFTR) TicketCheck'
 	<bugs>https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/issues</bugs>
 	<repository>https://github.com/aSoftwareByDesignRepository/nextcloud-ticketcheck.git</repository>
 
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/01.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/01.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/02.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/02.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/03.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/03.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/04.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/04.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/05.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png">https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-ticketcheck/main/screenshots/appstore/06.png</screenshot>
 	<dependencies>
 		<!-- NC 33.0.3: major 33; includes all 33.x patches. Same through max-version 37. -->
 		<nextcloud min-version="32" max-version="35"/>
