@@ -92,8 +92,8 @@ foreach ($projects as $proj) {
                             <?php if (!empty($_['invoicingCheckUrl'])): ?>
                                 <a href="<?php p($_['invoicingCheckUrl']); ?>"
                                     class="helpdesk-btn helpdesk-btn--secondary"
-                                    aria-label="<?php p($l->t('Open unpaid invoices for this customer in InvoiceCheck')); ?>">
-                                    <?php p($l->t('Open InvoiceCheck')); ?>
+                                    aria-label="<?php p($l->t('Open unpaid invoices for this customer in the invoicing app')); ?>">
+                                    <?php p($l->t('Open the invoicing app')); ?>
                                 </a>
                             <?php endif; ?>
                             <a href="<?php p($_['urlGenerator']->linkToRoute('ticketcheck.customer.edit', ['id' => $cid])); ?>"
@@ -110,8 +110,8 @@ foreach ($projects as $proj) {
                         <div class="tc-customer-detail__section-actions" role="toolbar" aria-label="<?php p($l->t('customer_actions_toolbar')); ?>">
                             <a href="<?php p($_['invoicingCheckUrl']); ?>"
                                 class="helpdesk-btn helpdesk-btn--secondary"
-                                aria-label="<?php p($l->t('Open unpaid invoices for this customer in InvoiceCheck')); ?>">
-                                <?php p($l->t('Open InvoiceCheck')); ?>
+                                aria-label="<?php p($l->t('Open unpaid invoices for this customer in the invoicing app')); ?>">
+                                <?php p($l->t('Open the invoicing app')); ?>
                             </a>
                         </div>
                     <?php endif; ?>

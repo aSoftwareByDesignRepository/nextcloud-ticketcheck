@@ -7,7 +7,7 @@ namespace OCA\Ticketcheck\Tests\Unit\Controller;
 use PHPUnit\Framework\TestCase;
 
 /**
- * CORE V5/V8 TicketCheck → InvoiceCheck deep links (pc_customer_id → receivables).
+ * CORE V5/V8 TicketCheck → the invoicing app deep links (pc_customer_id → receivables).
  */
 final class InvoiceCheckDeepLinkContractTest extends TestCase
 {
@@ -28,7 +28,7 @@ final class InvoiceCheckDeepLinkContractTest extends TestCase
 			dirname(__DIR__, 3) . '/templates/customers/detail.php'
 		);
 		self::assertStringContainsString('invoicingCheckUrl', $tpl);
-		self::assertStringContainsString('Open InvoiceCheck', $tpl);
+		self::assertStringContainsString('Open the invoicing app', $tpl);
 	}
 
 	public function testTicketShowWiresReceivablesWhenCustomerPresent(): void

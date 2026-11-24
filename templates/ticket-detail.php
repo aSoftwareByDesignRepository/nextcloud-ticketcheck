@@ -573,7 +573,7 @@ $localeFormat = $_['localeFormat'] ?? null;
                                     <div class="helpdesk-text-muted ticket-detail-info-label"><?php p($l->t('Invoicing')); ?></div>
                                     <a class="tc-link helpdesk-btn helpdesk-btn--secondary"
                                         href="<?php p($_['invoicingCheckReceivablesUrl']); ?>"
-                                        aria-label="<?php p($l->t('Open receivables in InvoiceCheck')); ?>">
+                                        aria-label="<?php p($l->t('Open receivables in the invoicing app')); ?>">
                                         <?php p($l->t('Open receivables')); ?>
                                     </a>
                                 </div>

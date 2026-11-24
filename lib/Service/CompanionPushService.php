@@ -14,7 +14,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Companion push registration + Expo delivery (WP-070).
  *
- * Security model (mirrors MobilityCheck MobilePushService):
+ * Security model (mirrors the mobility app MobilePushService):
  *  - Always store a SHA-256 fingerprint for revoke matching.
  *  - Store the token encrypted (ICrypto) so Expo delivery works without re-registration.
  *  - {@see enqueue()} records an outbound intent whenever a token exists.
