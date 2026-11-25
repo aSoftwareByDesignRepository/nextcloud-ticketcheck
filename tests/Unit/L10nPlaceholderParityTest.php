@@ -131,6 +131,31 @@ final class L10nPlaceholderParityTest extends TestCase
 	}
 
 	/**
+	 * Every rostered catalog must carry the full English key set in en.json
+	 * order — a copy sweep that renames a msgid without re-adding the
+	 * localized msgstr ships English fallback text in that locale, and a
+	 * partial catalog regen leaves sibling catalogs in a mixed key order.
+	 */
+	public function testSiblingCatalogsMirrorEnglishKeySetAndOrder(): void
+	{
+		$enKeys = array_keys($this->loadTranslations('en'));
+		foreach (array_diff($this->rosteredLocales(), ['en']) as $locale) {
+			$trKeys = array_keys($this->loadTranslations($locale));
+			$missing = array_values(array_diff($enKeys, $trKeys));
+			self::assertSame(
+				[],
+				$missing,
+				$locale . ' catalog misses English msgids (msgstr dropped, English fallback renders): ' . implode(', ', array_slice($missing, 0, 8)),
+			);
+			self::assertSame(
+				array_values(array_intersect($enKeys, $trKeys)),
+				array_values(array_intersect($trKeys, $enKeys)),
+				$locale . ' catalog diverges from en.json key order — re-emit via the canonical regen path',
+			);
+		}
+	}
+
+	/**
 	 * @return array<string, mixed>
 	 */
 	private function loadTranslations(string $locale): array
