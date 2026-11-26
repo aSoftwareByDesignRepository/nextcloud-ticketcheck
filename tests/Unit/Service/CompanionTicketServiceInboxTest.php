@@ -133,6 +133,52 @@ final class CompanionTicketServiceInboxTest extends TestCase
 		self::assertSame(Ticket::PRIORITY_HIGH, $captured[2][6]);
 	}
 
+	public function testTeamQueueResolvesGroupIdsFromUser(): void
+	{
+		// Regression: queue=team passed the raw uid string to
+		// IGroupManager::getUserGroupIds(IUser) — TypeError -> OCS 500 on
+		// GET /companion/api/v1/inbox?queue=team. The path must resolve the
+		// IUser first (same userGroupIds() helper queueCounts uses).
+		$user = $this->createStub(\OCP\IUser::class);
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->expects(self::once())->method('get')
+			->with('alice')->willReturn($user);
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->expects(self::once())->method('getUserGroupIds')
+			->with($user)->willReturn(['tkc_avd_team']);
+
+		$workflowLock = $this->createMock(TicketWorkflowLock::class);
+		$workflowLock->method('withTicketLocks')->willReturnCallback(
+			static fn (array $ids, callable $cb): mixed => $cb()
+		);
+		$service = new CompanionTicketService(
+			$this->ticketMapper,
+			$this->createStub(TicketService::class),
+			$this->permissions,
+			$this->createStub(AttachmentMapper::class),
+			$this->createStub(ProjectService::class),
+			$userManager,
+			$groupManager,
+			$this->createStub(CompanionNotificationService::class),
+			$this->createStub(TicketWatcherService::class),
+			$this->createStub(TicketWatcherMapper::class),
+			$this->createStub(LoggerInterface::class),
+			$workflowLock,
+		);
+
+		$captured = null;
+		$this->ticketMapper->method('findCompanionInboxPage')
+			->willReturnCallback(function (...$args) use (&$captured): array {
+				$captured = $args;
+				return [];
+			});
+		$this->permissions->method('canViewTicket')->willReturn(true);
+
+		$service->inbox('alice', 'team', null, 25);
+
+		self::assertSame(['tkc_avd_team'], $captured[8]);
+	}
+
 	public function testPermissionFilteringExcludesForbiddenTickets(): void
 	{
 		$visible = self::makeTicket(1);
