@@ -24,11 +24,26 @@ test('form posts hidden co_assignees CSV fed by staged chips', () => {
 
 	const js = read('js/ticket-form.js');
 	assert.match(js, /getElementById\('co_assignees'\)/, 'JS never reads the hidden CSV input');
-	assert.match(js, /syncHidden[\s\S]{0,300}?\.join\(','\)/, 'chips must join uids into CSV');
+	assert.match(js, /tcSyncCoAssigneesHidden[\s\S]{0,500}?\.join\(','\)/, 'chips must join uids into CSV');
 	assert.match(js, /tc-chip__remove/, 'removable chip wiring missing');
 	assert.match(js, /MAX_CO\s*=\s*10/, 'client-side cap of 10 missing');
 	// Primary/cohabitation guard: picking the primary uid must not stage a chip.
 	assert.match(js, /primarySelect\.value\s*===\s*uid|primarySelect\.value == uid/, 'no primary-uid chip guard');
+});
+
+test('create form hydrates #coassignee-pick from the project roster (not a dead control)', () => {
+	const js = read('js/ticket-form.js');
+	const fn = js.match(/function loadUsersForProject[\s\S]*?\n    \}/);
+	assert.ok(fn, 'loadUsersForProject not found in ticket-form.js');
+	// The project-scoped user payload must repopulate the picker — a
+	// placeholder-only select on the create form dead-ends (r52 finding).
+	assert.match(fn[0], /coAssigneePick\.textContent\s*=\s*''/, 'picker options never rebuilt on project load');
+	assert.match(fn[0], /coAssigneePick\.appendChild/, 'picker never receives roster options');
+	assert.match(fn[0], /coassignee_pick_placeholder/, 'picker placeholder not rebuilt');
+	// Chips staged under another project's roster must be pruned to the new
+	// roster, otherwise submit can only fail server-side validation.
+	assert.match(fn[0], /li\[data-uid\]/, 'stale-chip prune on roster change missing');
+	assert.match(fn[0], /tcSyncCoAssigneesHidden/, 'prune never re-serializes the hidden CSV');
 });
 
 test('detail page calls incremental co-assignee endpoints', () => {

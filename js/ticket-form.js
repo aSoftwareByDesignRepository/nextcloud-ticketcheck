@@ -6,6 +6,18 @@
  * - robust API error parsing
  */
 
+// TC-MULTI-ASSIGN: staged chip <li data-uid> rows serialize to the hidden
+// co_assignees CSV (replace-set semantics — the posted CSV is the whole set).
+function tcSyncCoAssigneesHidden() {
+    const hidden = document.getElementById('co_assignees');
+    const chips = document.getElementById('coassignee-chips');
+    if (!hidden || !chips) return;
+    hidden.value = Array.from(chips.querySelectorAll('li[data-uid]'))
+        .map((li) => li.dataset.uid)
+        .filter(Boolean)
+        .join(',');
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     function notify(message, kind) {
         const text = String(message || '');
@@ -72,6 +84,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const customerDisplay = document.getElementById('customer-info-display');
     const customerText = document.getElementById('customer-display-text');
     const assignedToSelect = document.getElementById('assigned_to');
+    const coAssigneePick = document.getElementById('coassignee-pick');
+    const coAssigneeChips = document.getElementById('coassignee-chips');
     const customerFilter = document.getElementById('customer_filter');
 
     const fileInput = document.getElementById('ticket-attachments');
@@ -531,6 +545,10 @@ document.addEventListener('DOMContentLoaded', function () {
         // strand the current assignee (edit page) if the request fails.
         assignedToSelect.disabled = true;
         assignedToSelect.setAttribute('aria-busy', 'true');
+        if (coAssigneePick) {
+            coAssigneePick.disabled = true;
+            coAssigneePick.setAttribute('aria-busy', 'true');
+        }
 
         api.get('/apps/ticketcheck/api/tickets/projects/' + projectId + '/users')
             .then(function (data) {
@@ -539,22 +557,51 @@ document.addEventListener('DOMContentLoaded', function () {
                 unassignedOption.value = '';
                 unassignedOption.textContent = '-- ' + tSafe('unassigned', 'Unassigned') + ' --';
                 assignedToSelect.appendChild(unassignedOption);
+                if (coAssigneePick) {
+                    coAssigneePick.textContent = '';
+                    const pickPlaceholder = document.createElement('option');
+                    pickPlaceholder.value = '';
+                    pickPlaceholder.textContent = tSafe('coassignee_pick_placeholder', 'Select a co-assignee…');
+                    coAssigneePick.appendChild(pickPlaceholder);
+                }
                 if (data.success && Array.isArray(data.users)) {
                     data.users.forEach((user) => {
                         const option = document.createElement('option');
                         option.value = user.user_id;
                         option.textContent = user.user_name;
                         assignedToSelect.appendChild(option);
+                        if (coAssigneePick) {
+                            coAssigneePick.appendChild(option.cloneNode(true));
+                        }
                     });
                     if (preserveValue) assignedToSelect.value = preserveValue;
+                    // Chips staged under another project's roster can only fail
+                    // server-side validation on submit — drop the ones the new
+                    // project does not offer (primary-select preserve parity).
+                    if (coAssigneeChips) {
+                        const roster = new Set(data.users.map((user) => user.user_id));
+                        Array.from(coAssigneeChips.querySelectorAll('li[data-uid]'))
+                            .forEach((li) => {
+                                if (!roster.has(li.dataset.uid)) li.remove();
+                            });
+                        tcSyncCoAssigneesHidden();
+                    }
                 }
                 assignedToSelect.disabled = false;
                 assignedToSelect.removeAttribute('aria-busy');
+                if (coAssigneePick) {
+                    coAssigneePick.disabled = false;
+                    coAssigneePick.removeAttribute('aria-busy');
+                }
             })
             .catch(() => {
                 // Options untouched — whatever the server rendered stays valid.
                 assignedToSelect.disabled = false;
                 assignedToSelect.removeAttribute('aria-busy');
+                if (coAssigneePick) {
+                    coAssigneePick.disabled = false;
+                    coAssigneePick.removeAttribute('aria-busy');
+                }
             });
     }
 
@@ -616,6 +663,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     unassignedOption.value = '';
                     unassignedOption.textContent = '-- ' + tSafe('unassigned', 'Unassigned') + ' --';
                     assignedToSelect.appendChild(unassignedOption);
+                }
+                if (coAssigneePick) {
+                    coAssigneePick.textContent = '';
+                    const pickPlaceholder = document.createElement('option');
+                    pickPlaceholder.value = '';
+                    pickPlaceholder.textContent = tSafe('coassignee_pick_placeholder', 'Select a co-assignee…');
+                    coAssigneePick.appendChild(pickPlaceholder);
                 }
                 persistDraft();
                 return;
@@ -943,12 +997,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!pick || !hidden || !chips) return;
         const MAX_CO = 10;
 
-        function syncHidden() {
-            hidden.value = Array.from(chips.querySelectorAll('li[data-uid]'))
-                .map((li) => li.dataset.uid)
-                .filter(Boolean)
-                .join(',');
-        }
+        const syncHidden = tcSyncCoAssigneesHidden;
 
         function addChip(uid, label) {
             uid = (uid || '').trim();
