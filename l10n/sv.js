@@ -2740,7 +2740,7 @@ OC.L10N.register(
 	"add_co_assignee" : "Lägg till medtilldelad",
 	"remove_co_assignee" : "Ta bort medtilldelad",
 	"no_co_assignees" : "Inga medtilldelade ännu",
-	"co_assignees_hint" : "Medtilldelade delar ansvaret för detta ärende och får samma aviseringar.",
+	"co_assignees_hint" : "Medtilldelade delar ansvaret för detta ärende och får samma typ av aviseringar.",
 	"add_coassignee_dialog_description" : "Sök och välj en kollega att lägga till som medtilldelad.",
 	"coassignee_search_label" : "Medtilldelad",
 	"coassignee_pick_placeholder" : "Välj en medtilldelad…",
