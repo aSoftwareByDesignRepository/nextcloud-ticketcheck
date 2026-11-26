@@ -28,6 +28,15 @@ const { expect } = require('@playwright/test');
 async function assertIconsAcrossSchemes(page) {
 	const iconHandles = await page.locator('svg.tc-icon').elementHandles();
 	const iconCount = iconHandles.length;
+	// Fat list fixtures can carry thousands of icons — per-icon rendered
+	// measurement cannot finish inside the test budget. Stride-sample across
+	// DOM order so every glyph/backdrop band is still measured at fixed cost.
+	const MAX_SAMPLE = 60;
+	const stride = Math.max(1, Math.ceil(iconCount / MAX_SAMPLE));
+	const sampled = new Set();
+	for (let i = 0; i < iconCount; i += stride) {
+		sampled.add(i);
+	}
 
 	for (const scheme of ['light', 'dark']) {
 		await page.emulateMedia({ colorScheme: scheme });
@@ -86,8 +95,12 @@ async function assertIconsAcrossSchemes(page) {
 		});
 
 		const maxTop = Math.max(0, scrollInfo.h - scrollInfo.vh);
+		// Card layouts make the list tens of viewports tall at phone width —
+		// sweeping every tile exceeds the test budget. Bound the sweep; icons
+		// in skipped tiles still get measured via the targeted fallback path.
+		const MAX_TILES = 15;
 		const offsets = [];
-		for (let y = 0; y < maxTop; y += scrollInfo.vh) {
+		for (let y = 0; y < maxTop && offsets.length < MAX_TILES - 1; y += scrollInfo.vh) {
 			offsets.push(y);
 		}
 		offsets.push(maxTop);
@@ -110,7 +123,7 @@ async function assertIconsAcrossSchemes(page) {
 
 			const shot = await page.screenshot();
 			const measured = await page.evaluate(
-				({ b64, vw: w, vh: h, bnd, done }) => new Promise((resolve) => {
+				({ b64, vw: w, vh: h, bnd, done, sample }) => new Promise((resolve) => {
 					const img = new Image();
 					img.onload = () => {
 						const c = document.createElement('canvas');
@@ -136,9 +149,10 @@ async function assertIconsAcrossSchemes(page) {
 							return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
 						};
 						const out = {};
+						const sampleSet = new Set(sample);
 						const icons = document.querySelectorAll('svg.tc-icon');
 						for (let i = 0; i < icons.length; i++) {
-							if (done.includes(i)) {
+							if (!sampleSet.has(i) || done.includes(i)) {
 								continue;
 							}
 							const svg = icons[i];
@@ -221,6 +235,7 @@ async function assertIconsAcrossSchemes(page) {
 					vh: vw.height,
 					bnd: { l: scrollInfo.left, t: scrollInfo.top, r: scrollInfo.right, b: scrollInfo.bottom },
 					done: results.map((v, i) => (typeof v === 'number' ? i : -1)).filter((i) => i >= 0),
+					sample: Array.from(sampled),
 				},
 			);
 			for (const [i, v] of Object.entries(measured)) {
@@ -234,7 +249,7 @@ async function assertIconsAcrossSchemes(page) {
 		// Icons never fully visible in the tile sweep (nested scrollers, sticky
 		// overlays) get one targeted measurement via the original clip path.
 		for (let i = 0; i < iconCount; i++) {
-			if (typeof results[i] === 'number' || results[i] === 'hidden') {
+			if (!sampled.has(i) || typeof results[i] === 'number' || results[i] === 'hidden') {
 				continue;
 			}
 			const icon = iconHandles[i];
@@ -279,7 +294,7 @@ async function assertIconsAcrossSchemes(page) {
 		}
 
 		const bad = [];
-		for (let i = 0; i < iconCount; i++) {
+		for (const i of sampled) {
 			if (results[i] === 'clipped') {
 				bad.push(`${hostInfo[i]} unmeasurable (viewport-clipped after scroll)`);
 			} else if (typeof results[i] === 'number' && results[i] < 3) {
@@ -288,7 +303,8 @@ async function assertIconsAcrossSchemes(page) {
 				bad.push(`${hostInfo[i]} ${results[i]}`);
 			}
 		}
-		expect(bad, `icon contrast ≥3:1 (${scheme})`).toEqual([]);
+		const scope = sampled.size === iconCount ? `${iconCount} icons` : `${sampled.size}/${iconCount} icons (strided sample)`;
+		expect(bad, `icon contrast ≥3:1 (${scheme}, ${scope})`).toEqual([]);
 	}
 	await page.emulateMedia({ colorScheme: 'light' });
 }

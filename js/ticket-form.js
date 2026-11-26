@@ -1008,4 +1008,4 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         syncHidden();
-    })();
+    });
