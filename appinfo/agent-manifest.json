@@ -1,0 +1,504 @@
+{
+  "schemaVersion": 1,
+  "appId": "ticketcheck",
+  "agentExposure": "declared",
+  "tools": [
+    {
+      "name": "tc_list_inbox",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#inbox",
+      "method": "GET",
+      "path": "/companion/api/v1/inbox",
+      "scope": "ticketcheck:tickets:read",
+      "label": "Ticket inbox",
+      "description": "List the staff ticket inbox for the token owner, with cursor pagination.",
+      "params": {
+        "queue": {"type": "string", "required": false, "description": "Queue name (default 'open')."},
+        "cursor": {"type": "string", "required": false, "description": "Pagination cursor from a previous page."},
+        "limit": {"type": "integer", "required": false, "description": "Page size (default 25)."},
+        "projectId": {"type": "integer", "required": false, "description": "Restrict to one project."},
+        "priority": {"type": "string", "required": false, "description": "Priority filter."}
+      }
+    },
+    {
+      "name": "tc_get_filter_options",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#filterOptions",
+      "method": "GET",
+      "path": "/companion/api/v1/filter-options",
+      "scope": "ticketcheck:tickets:read",
+      "label": "Filter options",
+      "description": "Queues, statuses, priorities and other filter metadata for the inbox."
+    },
+    {
+      "name": "tc_get_queue_counts",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#queueCounts",
+      "method": "GET",
+      "path": "/companion/api/v1/queue-counts",
+      "scope": "ticketcheck:tickets:read",
+      "label": "Queue counts",
+      "description": "Ticket counts per queue."
+    },
+    {
+      "name": "tc_get_ticket",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#show",
+      "method": "GET",
+      "path": "/companion/api/v1/tickets/{id}",
+      "scope": "ticketcheck:tickets:read",
+      "label": "Ticket detail",
+      "description": "Full staff-side ticket detail including comments and metadata.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."}
+      }
+    },
+    {
+      "name": "tc_create_ticket",
+      "kind": "write",
+      "riskClass": 1,
+      "route": "companion#create",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets",
+      "idempotency": "clientRequestId",
+      "scope": "ticketcheck:tickets:write",
+      "label": "Create ticket",
+      "description": "Create a ticket as the token owner. Pass idempotencyKey (or the X-TC-Idempotency-Key header) to deduplicate retries.",
+      "params": {
+        "title": {"type": "string", "required": true, "description": "Ticket title."},
+        "description": {"type": "string", "required": false, "description": "Ticket body."},
+        "priority": {"type": "string", "required": false, "description": "Priority enum (default normal)."},
+        "category": {"type": "string", "required": false, "description": "Category name."},
+        "projectId": {"type": "integer", "required": false, "description": "Project id."},
+        "resources": {"type": "array", "required": false, "description": "Resource names to link."},
+        "idempotencyKey": {"type": "string", "required": false, "description": "Dedup key — a retry with the same key returns the original ticket."}
+      }
+    },
+    {
+      "name": "tc_set_status",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "companion#changeStatus",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/status",
+      "idempotency": "natural",
+      "scope": "ticketcheck:tickets:write",
+      "label": "Change status",
+      "description": "Change a ticket's workflow status (state transition — confirm required).",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."},
+        "status": {"type": "string", "required": true, "description": "Target status."},
+        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard against stale-state transitions."}
+      }
+    },
+    {
+      "name": "tc_bulk_set_status",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "companion#bulkStatus",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/bulk-status",
+      "idempotency": "natural",
+      "scope": "ticketcheck:tickets:write",
+      "label": "Bulk status change",
+      "description": "Change status on many tickets at once (state transition — confirm required).",
+      "params": {
+        "ticketIds": {"type": "array", "required": true, "description": "Ticket ids to transition."},
+        "status": {"type": "string", "required": true, "description": "Target status."},
+        "versions": {"type": "array", "required": false, "description": "Map of ticket id to expected version — CAS guard per ticket."}
+      }
+    },
+    {
+      "name": "tc_set_owner",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "companion#assign",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/assign",
+      "idempotency": "natural",
+      "scope": "ticketcheck:tickets:write",
+      "label": "Set assignee",
+      "description": "Assign a ticket to a staff user, or clear the assignee (state transition — confirm required).",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."},
+        "assignedTo": {"type": "string", "required": false, "description": "Assignee uid; omit/empty to unassign. Aliases: assignee, userId."},
+        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+      }
+    },
+    {
+      "name": "tc_list_owner_candidates",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#assignableUsers",
+      "method": "GET",
+      "path": "/companion/api/v1/tickets/{id}/assignable-users",
+      "scope": "ticketcheck:tickets:read",
+      "label": "Assignable users",
+      "description": "List staff users who may take this ticket.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."},
+        "query": {"type": "string", "required": false, "description": "Name search."},
+        "limit": {"type": "integer", "required": false, "description": "Result cap (default 25)."}
+      }
+    },
+    {
+      "name": "tc_list_team_candidates",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#assignableGroups",
+      "method": "GET",
+      "path": "/companion/api/v1/tickets/{id}/assignable-groups",
+      "scope": "ticketcheck:tickets:read",
+      "label": "Assignable groups",
+      "description": "List groups a ticket may be team-assigned to.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."}
+      }
+    },
+    {
+      "name": "tc_add_co_owner",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "companion#addCoAssignee",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/co-assignees",
+      "idempotency": "natural",
+      "scope": "ticketcheck:tickets:write",
+      "label": "Add co-assignee",
+      "description": "Add a co-assignee to a ticket (state transition — confirm required).",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."},
+        "userId": {"type": "string", "required": true, "description": "Co-assignee uid. Alias: coAssignee."},
+        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+      }
+    },
+    {
+      "name": "tc_remove_co_owner",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "companion#removeCoAssignee",
+      "method": "DELETE",
+      "path": "/companion/api/v1/tickets/{id}/co-assignees/{userId}",
+      "idempotency": "natural",
+      "scope": "ticketcheck:tickets:write",
+      "label": "Remove co-assignee",
+      "description": "Remove a co-assignee from a ticket (state transition — confirm required).",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."},
+        "userId": {"type": "string", "required": true, "description": "Path parameter — co-assignee uid."},
+        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+      }
+    },
+    {
+      "name": "tc_set_team",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "companion#assignTeam",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/teams",
+      "idempotency": "natural",
+      "scope": "ticketcheck:tickets:write",
+      "label": "Assign team",
+      "description": "Team-assign a ticket to a group (state transition — confirm required).",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."},
+        "groupId": {"type": "string", "required": true, "description": "Group id. Alias: group_id."},
+        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+      }
+    },
+    {
+      "name": "tc_claim_ticket",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "companion#claimTicket",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/claim",
+      "idempotency": "natural",
+      "scope": "ticketcheck:tickets:write",
+      "label": "Claim ticket",
+      "description": "Claim a team-queued ticket for the token owner (state transition — confirm required).",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."},
+        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+      }
+    },
+    {
+      "name": "tc_watch_ticket",
+      "kind": "write",
+      "riskClass": 1,
+      "route": "companion#watch",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/watch",
+      "idempotency": "natural",
+      "scope": "ticketcheck:tickets:write",
+      "label": "Watch ticket",
+      "description": "Watch or unwatch a ticket for the token owner.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."},
+        "watching": {"type": "boolean", "required": false, "description": "Watch state (default true)."}
+      }
+    },
+    {
+      "name": "tc_download_attachment",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#downloadAttachment",
+      "method": "GET",
+      "path": "/companion/api/v1/tickets/{id}/attachments/{attachmentId}",
+      "scope": "ticketcheck:tickets:read",
+      "label": "Download attachment",
+      "description": "Download a ticket attachment.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter — ticket id."},
+        "attachmentId": {"type": "integer", "required": true, "description": "Path parameter — attachment id."},
+        "inline": {"type": "string", "required": false, "description": "Set '1' for inline display."}
+      }
+    },
+    {
+      "name": "tc_upload_attachment",
+      "kind": "write",
+      "riskClass": 1,
+      "route": "companion#uploadAttachment",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/attachments",
+      "idempotency": "clientRequestId",
+      "scope": "ticketcheck:tickets:write",
+      "label": "Upload attachment",
+      "description": "Upload an attachment onto a ticket. Pass clientRequestId so retries can be correlated in the audit log.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter — ticket id."},
+        "file": {"type": "string", "required": true, "description": "Attachment file (multipart upload)."}
+      }
+    },
+    {
+      "name": "tc_add_comment",
+      "kind": "write",
+      "riskClass": 1,
+      "route": "companion#addComment",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/comments",
+      "idempotency": "clientRequestId",
+      "scope": "ticketcheck:comments:write",
+      "label": "Add comment",
+      "description": "Add a comment to a ticket as the token owner.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."},
+        "body": {"type": "string", "required": true, "description": "Comment text."},
+        "visibility": {"type": "string", "required": false, "description": "public|internal (default public)."}
+      }
+    },
+    {
+      "name": "tc_update_comment",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "companion#updateComment",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/comments/{cid}/update",
+      "idempotency": "natural",
+      "scope": "ticketcheck:comments:write",
+      "label": "Update comment",
+      "description": "Edit a ticket comment (state transition — confirm required).",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter — ticket id."},
+        "cid": {"type": "integer", "required": true, "description": "Path parameter — comment id."},
+        "body": {"type": "string", "required": false, "description": "New comment text."},
+        "visibility": {"type": "string", "required": false, "description": "public|internal."},
+        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+      }
+    },
+    {
+      "name": "tc_delete_comment",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "companion#deleteComment",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/comments/{cid}/delete",
+      "idempotency": "natural",
+      "scope": "ticketcheck:comments:write",
+      "label": "Delete comment",
+      "description": "Soft-delete a ticket comment (state transition — confirm required).",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter — ticket id."},
+        "cid": {"type": "integer", "required": true, "description": "Path parameter — comment id."},
+        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+      }
+    },
+    {
+      "name": "tc_move_comments",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "companion#moveComments",
+      "method": "POST",
+      "path": "/companion/api/v1/tickets/{id}/comments/move",
+      "idempotency": "clientRequestId",
+      "scope": "ticketcheck:comments:write",
+      "label": "Move comments",
+      "description": "Move comments (and optionally attachments) to another ticket (state transition — confirm required). idempotencyKey is mandatory.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter — source ticket id."},
+        "targetTicketId": {"type": "integer", "required": true, "description": "Target ticket id."},
+        "commentIds": {"type": "array", "required": false, "description": "Comment ids to move."},
+        "attachmentIds": {"type": "array", "required": false, "description": "Attachment ids to move."},
+        "idempotencyKey": {"type": "string", "required": true, "description": "Dedup key — required by the server for this route."}
+      }
+    },
+    {
+      "name": "tc_search_kb",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#kbSearch",
+      "method": "GET",
+      "path": "/companion/api/v1/kb/search",
+      "scope": "ticketcheck:kb:read",
+      "label": "Search knowledge base",
+      "description": "Full-text search over knowledge-base articles.",
+      "params": {
+        "q": {"type": "string", "required": true, "description": "Search query."},
+        "category": {"type": "string", "required": false, "description": "Category filter."}
+      }
+    },
+    {
+      "name": "tc_get_kb_article",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#kbArticle",
+      "method": "GET",
+      "path": "/companion/api/v1/kb/articles/{id}",
+      "scope": "ticketcheck:kb:read",
+      "label": "KB article",
+      "description": "Read a knowledge-base article.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."}
+      }
+    },
+    {
+      "name": "tc_list_templates",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#templates",
+      "method": "GET",
+      "path": "/companion/api/v1/templates",
+      "scope": "ticketcheck:templates:read",
+      "label": "Canned replies",
+      "description": "List canned-reply templates (metadata only)."
+    },
+    {
+      "name": "tc_process_template",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "companion#processTemplate",
+      "method": "POST",
+      "path": "/companion/api/v1/templates/{id}/process",
+      "scope": "ticketcheck:templates:read",
+      "label": "Process template",
+      "description": "Render a canned reply against a ticket (server-side variable substitution; no state change).",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter — template id."},
+        "ticket_id": {"type": "integer", "required": true, "description": "Ticket to render the template against."}
+      }
+    },
+    {
+      "name": "tc_list_my_tickets",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "requesterCompanion#index",
+      "method": "GET",
+      "path": "/companion/api/v1/requester/tickets",
+      "scope": "ticketcheck:my_tickets:read",
+      "label": "My tickets",
+      "description": "List tickets created by the token owner (requester view).",
+      "params": {
+        "cursor": {"type": "string", "required": false, "description": "Pagination cursor."},
+        "limit": {"type": "integer", "required": false, "description": "Page size (default 25)."}
+      }
+    },
+    {
+      "name": "tc_get_my_ticket",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "requesterCompanion#show",
+      "method": "GET",
+      "path": "/companion/api/v1/requester/tickets/{id}",
+      "scope": "ticketcheck:my_tickets:read",
+      "label": "My ticket detail",
+      "description": "Requester-side detail for one of the token owner's tickets.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."}
+      }
+    },
+    {
+      "name": "tc_create_my_ticket",
+      "kind": "write",
+      "riskClass": 1,
+      "route": "requesterCompanion#create",
+      "method": "POST",
+      "path": "/companion/api/v1/requester/tickets",
+      "idempotency": "clientRequestId",
+      "scope": "ticketcheck:my_tickets:write",
+      "label": "File ticket",
+      "description": "File a ticket as the token owner (requester channel). Pass idempotencyKey to deduplicate retries.",
+      "params": {
+        "title": {"type": "string", "required": true, "description": "Ticket title."},
+        "description": {"type": "string", "required": false, "description": "Ticket body."},
+        "priority": {"type": "string", "required": false, "description": "Priority (default normal)."},
+        "category": {"type": "string", "required": false, "description": "Category name."},
+        "project_id": {"type": "integer", "required": false, "description": "Project id."},
+        "idempotencyKey": {"type": "string", "required": false, "description": "Dedup key for retries."}
+      }
+    },
+    {
+      "name": "tc_reply_my_ticket",
+      "kind": "write",
+      "riskClass": 1,
+      "route": "requesterCompanion#reply",
+      "method": "POST",
+      "path": "/companion/api/v1/requester/tickets/{id}/reply",
+      "idempotency": "clientRequestId",
+      "scope": "ticketcheck:my_tickets:write",
+      "label": "Reply to ticket",
+      "description": "Reply to one of the token owner's tickets (requester channel).",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter."},
+        "comment": {"type": "string", "required": true, "description": "Reply text."},
+        "idempotencyKey": {"type": "string", "required": false, "description": "Dedup key for retries."}
+      }
+    },
+    {
+      "name": "tc_download_my_attachment",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "requesterCompanion#download",
+      "method": "GET",
+      "path": "/companion/api/v1/requester/tickets/{id}/attachments/{attachmentId}",
+      "scope": "ticketcheck:my_tickets:read",
+      "label": "Download my attachment",
+      "description": "Download an attachment from one of the token owner's tickets.",
+      "params": {
+        "id": {"type": "integer", "required": true, "description": "Path parameter — ticket id."},
+        "attachmentId": {"type": "integer", "required": true, "description": "Path parameter — attachment id."}
+      }
+    }
+  ],
+  "deny": [
+    "companion#bootstrap",
+    "companion#pushRegister",
+    "companion#pushUnregister",
+    "guestDevice#pair",
+    "guestDevice#bootstrap",
+    "guestDevice#revoke"
+  ]
+}

@@ -14,6 +14,7 @@ use OCA\Ticketcheck\Service\RequesterTicketService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
@@ -34,6 +35,7 @@ class RequesterCompanionController extends Controller
     }
 
     #[NoAdminRequired]
+    #[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
     #[NoCSRFRequired]
     public function index(): Response
     {
@@ -47,6 +49,7 @@ class RequesterCompanionController extends Controller
     }
 
     #[NoAdminRequired]
+    #[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
     #[NoCSRFRequired]
     public function show(int $id): Response
     {
@@ -54,6 +57,7 @@ class RequesterCompanionController extends Controller
     }
 
     #[NoAdminRequired]
+    #[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
     #[NoCSRFRequired]
     public function create(): Response
     {
@@ -69,6 +73,7 @@ class RequesterCompanionController extends Controller
     }
 
     #[NoAdminRequired]
+    #[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
     #[NoCSRFRequired]
     public function reply(int $id): Response
     {
@@ -84,6 +89,7 @@ class RequesterCompanionController extends Controller
     }
 
     #[NoAdminRequired]
+    #[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
     #[NoCSRFRequired]
     public function download(int $id, int $attachmentId): Response
     {

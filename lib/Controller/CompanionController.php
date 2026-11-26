@@ -21,6 +21,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
 use OCP\IRequest;
@@ -47,6 +48,7 @@ class CompanionController extends Controller
 		private readonly ?\OCA\Ticketcheck\Service\CommentLifecycleService $commentLifecycle = null,
 		private readonly ?\OCA\Ticketcheck\Service\TemplateService $templates = null,
 		private readonly ?\OCP\L10N\IFactory $l10nFactory = null,
+		private readonly ?\OCA\Ticketcheck\Agent\AgentContext $agentContext = null,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -64,6 +66,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function inbox(): JSONResponse
 	{
@@ -84,6 +87,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function filterOptions(): JSONResponse
 	{
@@ -92,6 +96,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function queueCounts(): JSONResponse
 	{
@@ -100,6 +105,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function show(int $id): JSONResponse
 	{
@@ -112,6 +118,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function create(): JSONResponse
 	{
@@ -143,6 +150,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function bulkStatus(): JSONResponse
 	{
@@ -162,6 +170,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function watch(int $id): JSONResponse
 	{
@@ -181,6 +190,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function downloadAttachment(int $id, int $attachmentId): \OCP\AppFramework\Http\Response
 	{
@@ -200,6 +210,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function uploadAttachment(int $id): JSONResponse
 	{
@@ -247,6 +258,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function addComment(int $id): JSONResponse
 	{
@@ -272,6 +284,7 @@ class CompanionController extends Controller
 	 * stale offline replays fail closed (spec MH-C05).
 	 */
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function updateComment(int $id, int $cid): JSONResponse
 	{
@@ -322,6 +335,7 @@ class CompanionController extends Controller
 	 * purge route in companion v1 — staff-web only (spec §C).
 	 */
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function deleteComment(int $id, int $cid): JSONResponse
 	{
@@ -359,6 +373,7 @@ class CompanionController extends Controller
 	 * idempotency key is mandatory (offline queues can re-fire).
 	 */
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function moveComments(int $id): JSONResponse
 	{
@@ -464,6 +479,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function changeStatus(int $id): JSONResponse
 	{
@@ -488,6 +504,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function assign(int $id): JSONResponse
 	{
@@ -524,6 +541,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function assignableGroups(int $id): JSONResponse
 	{
@@ -541,6 +559,7 @@ class CompanionController extends Controller
 	 * Co-assignee management (NH-02). POST body: { userId, version }
 	 */
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function addCoAssignee(int $id): JSONResponse
 	{
@@ -568,6 +587,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function removeCoAssignee(int $id, string $userId): JSONResponse
 	{
@@ -591,6 +611,7 @@ class CompanionController extends Controller
 	 * Team assign (NH-02). POST body: { groupId, version }
 	 */
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function assignTeam(int $id): JSONResponse
 	{
@@ -621,6 +642,7 @@ class CompanionController extends Controller
 	 * Claim a team-queued ticket (NH-01). POST body: { version }
 	 */
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function claimTicket(int $id): JSONResponse
 	{
@@ -652,6 +674,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function assignableUsers(int $id): JSONResponse
 	{
@@ -672,6 +695,7 @@ class CompanionController extends Controller
 	 * No CRUD, no comments, no portal KB.
 	 */
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function kbSearch(): JSONResponse
 	{
@@ -703,6 +727,7 @@ class CompanionController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function kbArticle(int $id): JSONResponse
 	{
@@ -781,6 +806,7 @@ class CompanionController extends Controller
 	 * cheap and a deleted row cannot ship a stale body (AC-B01-1).
 	 */
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function templates(): JSONResponse
 	{
@@ -811,6 +837,7 @@ class CompanionController extends Controller
 	 * invisible ticket collapse to the SAME uniform-404 body (TH-01).
 	 */
 	#[NoAdminRequired]
+	#[PublicPage]  // agent tokens never create a session — requireUid() is the auth gate
 	#[NoCSRFRequired]
 	public function processTemplate(int $id): JSONResponse
 	{
@@ -901,6 +928,11 @@ class CompanionController extends Controller
 
 	private function requireUid(): string
 	{
+		// Scoped agent tokens carry a verified uid — AgentAuthMiddleware arms
+		// the context only after the token passes verification.
+		if ($this->agentContext !== null && $this->agentContext->isArmed()) {
+			return (string)$this->agentContext->uid();
+		}
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			throw new CompanionUnauthorizedException('NOT_AUTHENTICATED');

@@ -40,3 +40,14 @@ $saveUrl = (string)($_['saveUrl'] ?? '');
         </fieldset>
     </form>
 </div>
+
+<?php
+// "AI access (MCP)" — scoped agent tokens (self-mint when enabled).
+// The partial self-guards on $agentAccess['visible'].
+$agentAccess = $_['agentAccess'] ?? ['visible' => false];
+if (is_array($agentAccess)) {
+    \OCP\Util::addScript('ticketcheck', 'agent-access');
+    \OCP\Util::addStyle('ticketcheck', 'agent-access');
+    include __DIR__ . '/../parts/settings/agent.php';
+}
+?>

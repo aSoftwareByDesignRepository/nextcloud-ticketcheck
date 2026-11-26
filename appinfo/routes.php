@@ -163,7 +163,7 @@ return [
         // Keep the requirement literal (route files load without the app autoloader).
         // tests/Unit/Controller/SettingsPagesContractTest pins it to SettingsSectionCatalog::routeRequirement().
         ['name' => 'settings#section', 'url' => '/settings/{section}', 'verb' => 'GET',
-            'requirements' => ['section' => 'access|categories|resources|comments|email|inbound-mail|knowledge-base|kb-categories|escalation|sla|about|transfer']],
+            'requirements' => ['section' => 'access|categories|resources|comments|email|inbound-mail|knowledge-base|kb-categories|escalation|sla|about|agent|transfer']],
         ['name' => 'settings#listTicketCategories', 'url' => '/api/settings/ticket-categories', 'verb' => 'GET'],
         ['name' => 'settings#createTicketCategory', 'url' => '/api/settings/ticket-categories', 'verb' => 'POST'],
         ['name' => 'settings#updateTicketCategory', 'url' => '/api/settings/ticket-categories/{key}', 'verb' => 'PUT', 'requirements' => ['key' => '[a-z0-9-]+']],
@@ -358,6 +358,17 @@ return [
         // variable processing (read-only; web admin stays the editor).
         ['name' => 'companion#templates', 'url' => '/companion/api/v1/templates', 'verb' => 'GET'],
         ['name' => 'companion#processTemplate', 'url' => '/companion/api/v1/templates/{id}/process', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+
+        // Agent (AI/MCP) surface. The manifest is readable by any valid
+        // agent token OR a session user; token administration is session+CSRF
+        // only — AgentAuthMiddleware denies agent credentials on these paths.
+        ['name' => 'agent_manifest#show', 'url' => '/agent/v1/manifest', 'verb' => 'GET'],
+        ['name' => 'agent_token#index', 'url' => '/agent/v1/tokens', 'verb' => 'GET'],
+        ['name' => 'agent_token#mint', 'url' => '/agent/v1/tokens', 'verb' => 'POST'],
+        ['name' => 'agent_token#audit', 'url' => '/agent/v1/audit', 'verb' => 'GET'],
+        ['name' => 'agent_token#updatePolicy', 'url' => '/agent/v1/policy', 'verb' => 'POST'],
+        ['name' => 'agent_token#revoke', 'url' => '/agent/v1/tokens/{id}/revoke', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+        ['name' => 'agent_token#rotate', 'url' => '/agent/v1/tokens/{id}/rotate', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 
         // ── Config & data transfer (test → production) ──────────────────
         ['name' => 'transferApi#status', 'url' => '/api/admin/transfer/status', 'verb' => 'GET'],

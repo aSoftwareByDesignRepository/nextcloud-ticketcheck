@@ -16,9 +16,11 @@ use OCP\Files\IRootFolder;
 use OCP\App\IAppManager;
 use OCA\Ticketcheck\Service\UpgradeBackupService;
 use OCA\Ticketcheck\Repair\BackupBeforeUpdate;
+use OCA\Ticketcheck\Repair\EnsureAgentTables;
 use OCA\Ticketcheck\Repair\EnsureTicketcheckSchema;
 use OCA\Ticketcheck\Repair\CleanupDanglingMergeShells;
 use OCA\Ticketcheck\Repair\EnforceGuestMigrationGate;
+use OCA\Ticketcheck\Repair\UninstallAgentTables;
 use OCA\Ticketcheck\Repair\UninstallDropTables;
 use OCA\Ticketcheck\Repair\UnpinLegacyGuestPins;
 use OCA\Ticketcheck\Service\GuestAccessAllowlist;
@@ -81,6 +83,38 @@ class Application extends App implements IBootstrap
         });
         $context->registerMiddleware(\OCA\Ticketcheck\Middleware\SessionCsrfMiddleware::class);
 
+        // _shared/agent-auth pack — scoped AI-agent tokens (suite MCP contract)
+        $context->registerService(\OCA\Ticketcheck\Agent\AgentManifest::class, function ($c) {
+            return new \OCA\Ticketcheck\Agent\AgentManifest(
+                'ticketcheck',
+                \dirname(__DIR__, 2) . '/appinfo/agent-manifest.json'
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Agent\AgentSeatGate::class, function ($c) {
+            return new \OCA\Ticketcheck\Agent\TicketCheckAgentSeatGate(
+                $c->get(\OCA\Ticketcheck\Service\LicenseService::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Agent\AgentAccessGate::class, function ($c) {
+            return new \OCA\Ticketcheck\Agent\TicketCheckAgentAccessGate(
+                $c->get(\OCA\Ticketcheck\Service\PermissionService::class),
+                $c->get(\OCP\IGroupManager::class)
+            );
+        });
+        $context->registerService(\OCA\Ticketcheck\Middleware\AgentAuthMiddleware::class, function ($c) {
+            return new \OCA\Ticketcheck\Middleware\AgentAuthMiddleware(
+                $c->get(\OCP\IRequest::class),
+                $c->get(\OCA\Ticketcheck\Agent\AgentContext::class),
+                $c->get(\OCA\Ticketcheck\Agent\AgentTokenService::class),
+                $c->get(\OCA\Ticketcheck\Agent\AgentManifest::class),
+                $c->get(\OCA\Ticketcheck\Agent\AgentSeatGate::class),
+                $c->get(\OCA\Ticketcheck\Agent\AgentAuditMapper::class),
+                $c->get(\Psr\Log\LoggerInterface::class),
+                'ticketcheck'
+            );
+        });
+        $context->registerMiddleware(\OCA\Ticketcheck\Middleware\AgentAuthMiddleware::class);
+
         $context->registerNotifierService(\OCA\Ticketcheck\Notification\Notifier::class);
 
         $context->registerService(\OCA\Ticketcheck\Service\LocaleFormatService::class, function ($c) {
@@ -112,6 +146,16 @@ class Application extends App implements IBootstrap
             );
         });
 
+        $context->registerService(EnsureAgentTables::class, function ($c): EnsureAgentTables {
+            return new EnsureAgentTables(
+                $c->get(\OCP\IDBConnection::class),
+            );
+        });
+        $context->registerService(UninstallAgentTables::class, function ($c): UninstallAgentTables {
+            return new UninstallAgentTables(
+                $c->get(\OCP\IDBConnection::class),
+            );
+        });
         $context->registerService(UninstallDropTables::class, function ($c): UninstallDropTables {
 			return new UninstallDropTables(
 				$c->get(\OCP\IDBConnection::class),
@@ -157,6 +201,10 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(
             \OCP\User\Events\UserDeletedEvent::class,
             \OCA\Ticketcheck\Listener\UserDeletedListener::class
+        );
+        $context->registerEventListener(
+            \OCP\User\Events\UserDeletedEvent::class,
+            \OCA\Ticketcheck\Listener\AgentUserDeletedListener::class
         );
 
         $context->registerEventListener(
@@ -276,7 +324,8 @@ class Application extends App implements IBootstrap
                 $c->get(\OCP\IDBConnection::class),
                 $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
                 $c->get(\Psr\Log\LoggerInterface::class),
-                $c->get(\OCP\IUserManager::class)
+                $c->get(\OCP\IUserManager::class),
+                $c->get(\OCA\Ticketcheck\Agent\AgentContext::class)
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\PermissionService::class, function ($c) {

@@ -46,6 +46,9 @@ final class SettingsTemplateRenderTest extends TestCase
 		self::assertFileExists($file, "Partial for '{$section}' must exist");
 		$_ = $vars;
 		$l = $l10n ?? $this->l10n();
+		// The agent partial reads the extracted template var (NC extract($_)),
+		// so mirror the real render path here instead of passing it via $_ only.
+		$agentAccess = is_array($vars['agentAccess'] ?? null) ? $vars['agentAccess'] : ['visible' => false];
 		ob_start();
 		try {
 			include $file;
@@ -73,6 +76,46 @@ final class SettingsTemplateRenderTest extends TestCase
 		];
 	}
 
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function agentVars(): array
+	{
+		return [
+			'agentAccess' => [
+				'visible' => true,
+				'appId' => 'ticketcheck',
+				'agentHeader' => 'X-TicketCheck-Agent',
+				'ncUrl' => 'https://cloud.example.test',
+				'isAdmin' => true,
+				'canMint' => true,
+				'selfMintEnabled' => false,
+				'tokens' => [
+					[
+						'id' => 1,
+						'userId' => 'alice',
+						'label' => 'ci-bot',
+						'scopes' => ['ticketcheck:tickets:read'],
+						'createdAt' => 1800000000,
+						'expiresAt' => 1831536000,
+						'lastUsedAt' => null,
+						'lastTool' => null,
+						'state' => 'active',
+					],
+				],
+				'presets' => [
+					'read' => ['ticketcheck:tickets:read'],
+					'act' => ['ticketcheck:tickets:read', 'ticketcheck:tickets:write'],
+				],
+				'allScopes' => ['ticketcheck:tickets:read', 'ticketcheck:tickets:write'],
+				'scopeLabels' => [
+					'ticketcheck:tickets:read' => 'Read tickets',
+					'ticketcheck:tickets:write' => 'Create and update tickets',
+				],
+			],
+		];
+	}
+
 	public function testEverySectionPartialRendersAsAccessibleFragment(): void
 	{
 		foreach (SettingsSectionCatalog::SECTIONS as $section) {
@@ -81,6 +124,7 @@ final class SettingsTemplateRenderTest extends TestCase
 			}
 			$vars = match ($section) {
 				'license' => $this->licenseVars(),
+				'agent' => $this->agentVars(),
 				'access' => [
 					'appAccessSettings' => [
 						'access_restriction_enabled' => false,
@@ -127,7 +171,9 @@ final class SettingsTemplateRenderTest extends TestCase
 			if ($section === 'support') {
 				continue;
 			}
-			$vars = $section === 'license' ? $this->licenseVars() : match ($section) {
+			$vars = match ($section) {
+				'license' => $this->licenseVars(),
+				'agent' => $this->agentVars(),
 				'access' => [
 					'appAccessSettings' => [
 						'access_restriction_enabled' => false,

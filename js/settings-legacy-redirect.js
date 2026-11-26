@@ -35,6 +35,7 @@
 		'settings-escalation-heading': 'escalation',
 		'settings-sla-heading': 'sla',
 		'settings-about-heading': 'about',
+		'tc-agent-access': 'agent',
 		'tc-transfer-export-card': 'transfer',
 	});
 

@@ -62,7 +62,7 @@ final class SettingsSectionCatalogTest extends TestCase
 		}
 		// Routable = SECTIONS minus HIDDEN, order preserved.
 		self::assertSame(
-			['access', 'categories', 'resources', 'comments', 'email', 'inbound-mail', 'knowledge-base', 'kb-categories', 'escalation', 'sla', 'about', 'transfer'],
+			['access', 'categories', 'resources', 'comments', 'email', 'inbound-mail', 'knowledge-base', 'kb-categories', 'escalation', 'sla', 'about', 'agent', 'transfer'],
 			SettingsSectionCatalog::routableSections(),
 		);
 	}
@@ -174,6 +174,7 @@ final class SettingsSectionCatalogTest extends TestCase
 			'license' => 'T:Mobile license',
 			'support' => 'T:Support & us',
 			'about' => 'T:About this project',
+			'agent' => 'T:AI access (MCP)',
 			'transfer' => 'T:Transfer configuration',
 		];
 		self::assertSame(array_keys($expected), SettingsSectionCatalog::SECTIONS, 'Label pinning must cover the catalog in order');
@@ -199,6 +200,7 @@ final class SettingsSectionCatalogTest extends TestCase
 			'license' => 'T:License',
 			'support' => 'T:Support us',
 			'about' => 'T:About this project',
+			'agent' => 'T:AI access',
 			'transfer' => 'T:Transfer',
 		];
 		self::assertSame(array_keys($expected), SettingsSectionCatalog::SECTIONS, 'Nav-label pinning must cover the catalog in order');

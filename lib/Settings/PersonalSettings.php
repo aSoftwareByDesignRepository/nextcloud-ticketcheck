@@ -29,7 +29,8 @@ class PersonalSettings implements ISettings
         private EmailPreferencesService $emailPreferences,
         private IGroupManager $groupManager,
         private IURLGenerator $urlGenerator,
-        private IFactory $l10nFactory
+        private IFactory $l10nFactory,
+        private ?\OCA\Ticketcheck\Agent\AgentSettingsPayload $agentSettings = null
     ) {
     }
 
@@ -46,6 +47,7 @@ class PersonalSettings implements ISettings
                 'isGuest' => false,
                 'l' => $this->l10nFactory->get('ticketcheck'),
                 'saveUrl' => $this->urlGenerator->linkToRoute('ticketcheck.userPreferences.saveEmailPreferences'),
+                'agentAccess' => ['visible' => false],
             ]);
         }
 
@@ -59,6 +61,11 @@ class PersonalSettings implements ISettings
             'l' => $this->l10nFactory->get('ticketcheck'),
             'urlGenerator' => $this->urlGenerator,
             'saveUrl' => $this->urlGenerator->linkToRoute('ticketcheck.userPreferences.saveEmailPreferences'),
+            // "AI access (MCP)" — scoped agent tokens (self-mint when enabled).
+            // The payload computes visibility; guests never see the section.
+            'agentAccess' => $this->agentSettings !== null
+                ? $this->agentSettings->payload($userId)
+                : ['visible' => false],
         ];
 
         return new TemplateResponse('ticketcheck', 'settings/personal', $parameters);

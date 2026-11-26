@@ -96,6 +96,7 @@ class SettingsController extends Controller
     private ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources;
     private SlaPolicyService $slaPolicy;
     private ?\OCA\Ticketcheck\ConfigTransfer\TransferReceiptStore $transferReceipts;
+    private ?\OCA\Ticketcheck\Agent\AgentSettingsPayload $agentSettings;
 
     public function __construct(
         string $appName,
@@ -126,6 +127,7 @@ class SettingsController extends Controller
         ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
         ?SlaPolicyService $slaPolicy = null,
         ?\OCA\Ticketcheck\ConfigTransfer\TransferReceiptStore $transferReceipts = null,
+        ?\OCA\Ticketcheck\Agent\AgentSettingsPayload $agentSettings = null,
     ) {
         parent::__construct($appName, $request);
         $this->permissionService = $permissionService;
@@ -154,6 +156,7 @@ class SettingsController extends Controller
         $this->ticketResources = $ticketResources;
         $this->slaPolicy = $slaPolicy ?? new SlaPolicyService($config);
         $this->transferReceipts = $transferReceipts;
+        $this->agentSettings = $agentSettings;
     }
 
     protected function getFrontEndAssetService(): FrontEndAssetService
@@ -319,6 +322,9 @@ class SettingsController extends Controller
                 ),
             ],
             'about' => $this->aboutSettingsExtras($l),
+            // "AI access (MCP)" — scoped agent tokens. The partial self-guards
+            // on agentAccess['visible']; assets load only for this section.
+            'agent' => $this->agentSettingsExtras(),
             // Synced transfer part needs the system-admin flag (Replace is
             // sysadmin-only) and the last-receipt line for the import card.
             'transfer' => [
@@ -333,6 +339,18 @@ class SettingsController extends Controller
     {
         $uid = (string)($this->userSession->getUser()?->getUID() ?? '');
         return $uid !== '' && $this->groupManager->isAdmin($uid);
+    }
+
+    /** @return array<string, mixed> */
+    private function agentSettingsExtras(): array
+    {
+        if ($this->agentSettings === null) {
+            return ['agentAccess' => ['visible' => false]];
+        }
+        \OCP\Util::addScript(\OCA\Ticketcheck\AppInfo\Application::APP_ID, 'agent-access');
+        \OCP\Util::addStyle(\OCA\Ticketcheck\AppInfo\Application::APP_ID, 'agent-access');
+        $uid = (string)($this->permissionService->getCurrentUserId() ?? '');
+        return ['agentAccess' => $this->agentSettings->payload($uid)];
     }
 
     /** @return array<string, mixed> */

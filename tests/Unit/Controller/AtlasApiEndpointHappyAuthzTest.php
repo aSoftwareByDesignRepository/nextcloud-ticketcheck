@@ -383,7 +383,10 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 	private function assertCompanionMiddlewareDeny(string $action): void
 	{
 		$request = $this->createStub(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn('Basic ' . base64_encode('dual:x'));
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', 'Basic ' . base64_encode('dual:x')],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
 		$user = $this->createStub(IUser::class);
 		$user->method('getUID')->willReturn('dual');

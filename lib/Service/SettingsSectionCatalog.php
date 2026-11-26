@@ -44,6 +44,7 @@ final class SettingsSectionCatalog
 		'license',
 		'support',
 		'about',
+		'agent',
 		'transfer',
 	];
 
@@ -97,6 +98,10 @@ final class SettingsSectionCatalog
 		// The transfer cards are new (no legacy mega-page anchor existed);
 		// the entry keeps the every-routable-section-needs-an-anchor
 		// contract and gives deep links a stable target.
+		// The agent surface is new (no legacy mega-page anchor existed); the
+		// entry keeps the every-routable-section-needs-an-anchor contract and
+		// gives deep links a stable target — the partial owns this id.
+		'tc-agent-access' => 'agent',
 		'tc-transfer-export-card' => 'transfer',
 	];
 
@@ -157,6 +162,7 @@ final class SettingsSectionCatalog
 			'license' => $l->t('Mobile license'),
 			'support' => $l->t('Support & us'),
 			'about' => $l->t('About this project'),
+			'agent' => $l->t('AI access (MCP)'),
 			'transfer' => $l->t('Transfer configuration'),
 			default => $l->t('Settings'),
 		};
@@ -183,6 +189,7 @@ final class SettingsSectionCatalog
 			// Intentionally the same string as label(): a bare "Über" reads
 			// broken in German, and the full name still fits chips/sidebar.
 			'about' => $l->t('About this project'),
+			'agent' => $l->t('AI access'),
 			'transfer' => $l->t('Transfer'),
 			default => $l->t('Settings'),
 		};
@@ -208,6 +215,7 @@ final class SettingsSectionCatalog
 			'escalation' => $l->t('settings_escalation_lead'),
 			'sla' => $l->t('settings_sla_lead'),
 			'about' => $l->t('settings_about_lead'),
+			'agent' => $l->t('Connect an AI assistant with a scoped token. The token works only inside this app — never for your files, mail, or other apps.'),
 			'transfer' => $l->t('Copy all settings, catalogues and data between a test and a production instance — one encrypted file, dry-run before anything is written.'),
 			default => '',
 		};

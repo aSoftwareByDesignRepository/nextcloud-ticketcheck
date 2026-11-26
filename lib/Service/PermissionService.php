@@ -62,6 +62,7 @@ class PermissionService
     private ?PortalActorResolver $actorResolver;
     private ?\Psr\Log\LoggerInterface $logger;
     private ?\OCP\IUserManager $userManager;
+    private ?\OCA\Ticketcheck\Agent\AgentContext $agentContext = null;
 
     /** @var array<string, bool> Per-request group-membership cache (key: "userId:groupId") */
     private array $groupCache = [];
@@ -78,8 +79,10 @@ class PermissionService
         IDBConnection $db,
         ?PortalActorResolver $actorResolver = null,
         ?\Psr\Log\LoggerInterface $logger = null,
-        ?\OCP\IUserManager $userManager = null
+        ?\OCP\IUserManager $userManager = null,
+        ?\OCA\Ticketcheck\Agent\AgentContext $agentContext = null
     ) {
+        $this->agentContext = $agentContext;
         $this->actorResolver = $actorResolver;
         $this->userManager = $userManager;
         $this->userSession = $userSession;
@@ -159,6 +162,12 @@ class PermissionService
      */
     public function getCurrentUserId(): ?string
     {
+        // Scoped agent tokens carry a verified uid — AgentAuthMiddleware arms
+        // the context only after the token passes verification, so this is an
+        // authenticated identity, not a header claim.
+        if ($this->agentContext !== null && $this->agentContext->isArmed()) {
+            return $this->agentContext->uid();
+        }
         // Canonical actor string: 'portal:<id>' for identity sessions and for
         // migrated NC guests (alias canonicalization, spec §9.2).
         if ($this->actorResolver !== null) {

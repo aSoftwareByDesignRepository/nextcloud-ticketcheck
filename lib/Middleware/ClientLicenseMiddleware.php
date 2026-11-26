@@ -64,6 +64,14 @@ class ClientLicenseMiddleware extends Middleware
 			return;
 		}
 
+		// Scoped agent tokens (X-TicketCheck-Agent) are verified and gated by
+		// AgentAuthMiddleware — an invalid token dies there, so skipping the
+		// app-password + seat gate here cannot smuggle an unauthenticated
+		// request in.
+		if (trim((string)$this->request->getHeader('X-TicketCheck-Agent')) !== '') {
+			return;
+		}
+
 		$this->enforceExplicitBasicIdentity();
 
 		if (!$this->usesAppPasswordAuth()) {

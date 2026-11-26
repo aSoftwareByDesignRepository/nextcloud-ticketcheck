@@ -59,6 +59,12 @@ class SessionCsrfMiddleware extends Middleware
 		if (str_starts_with($auth, 'basic ')) {
 			return;
 		}
+		// Scoped agent tokens are equally non-ambient: the request carries an
+		// explicit credential verified by AgentAuthMiddleware (invalid tokens
+		// never reach the controller), so ambient session state cannot ride it.
+		if (trim((string) $this->request->getHeader('X-TicketCheck-Agent')) !== '') {
+			return;
+		}
 		// No logged-in session → a `tkc_portal` identity session is ambient
 		// authority for portal routes: it must prove the bound double-submit
 		// token (tkc_csrf cookie + X-TKC-CSRF header / hidden field, MH-T05).

@@ -69,7 +69,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testBootstrapNotLicenseGatedWithBasicAuth(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth());
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth()],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/bootstrap');
 
 		$user = $this->createMock(IUser::class);
@@ -88,11 +91,37 @@ final class ClientLicenseMiddlewareTest extends TestCase
 		$mw->beforeController(new \stdClass(), 'bootstrap');
 	}
 
+	public function testAgentHeaderSkipsBasicAndSeatGate(): void
+	{
+		// X-TicketCheck-Agent requests are authenticated + seat-gated by
+		// AgentAuthMiddleware; the device/Basic path must not claim them.
+		$request = $this->createMock(IRequest::class);
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', ''],
+			['X-TicketCheck-Agent', 'tckt_testtoken'],
+		]);
+		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
+
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->expects($this->never())->method('getUser');
+		$license = $this->createMock(LicenseService::class);
+		$license->expects($this->never())->method('isMobilePlanActive');
+		$license->expects($this->never())->method('assertMobileAccess');
+		$companionGate = $this->createMock(CompanionGateService::class);
+		$companionGate->expects($this->never())->method('canAccessCompanion');
+
+		$mw = $this->makeMw($request, $userSession, $license, $companionGate);
+		$mw->beforeController(new \stdClass(), 'inbox');
+	}
+
 	#[\PHPUnit\Framework\Attributes\DataProvider('requesterRoutes')]
 	public function testRequesterBypassRequiresAuthenticatedRequesterControllerAndScope(string $path, bool $requesterController, bool $allowed, bool $passes): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth());
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth()],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn($path);
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('alice');
@@ -125,7 +154,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testNonCompanionPathIsNoOp(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth());
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth()],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/api/tickets');
 
 		$license = $this->createMock(LicenseService::class);
@@ -146,7 +178,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testSeatMissingReturns402(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth());
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth()],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
 
 		$user = $this->createMock(IUser::class);
@@ -171,7 +206,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testBearerAuthAlsoSeatGated(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn('Bearer tok');
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', 'Bearer tok'],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
 
 		$user = $this->createMock(IUser::class);
@@ -196,7 +234,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testIndexPhpCompanionPathAlsoSeatGated(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth());
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth()],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/index.php/apps/ticketcheck/companion/api/v1/inbox');
 
 		$user = $this->createMock(IUser::class);
@@ -221,7 +262,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testCookieOnlyCompanionRejected(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn('');
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', ''],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
 
 		$user = $this->createMock(IUser::class);
@@ -244,7 +288,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testEmptyBasicHeaderRejected(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn('Basic ');
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', 'Basic '],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
 
 		$user = $this->createMock(IUser::class);
@@ -268,7 +315,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testForgedBasicEmptyPasswordWithoutAppPasswordRejected(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth('alice', ''));
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth('alice', '')],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
 
 		$user = $this->createMock(IUser::class);
@@ -296,7 +346,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testForgedBearerWithoutAppPasswordSessionRejected(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn('Bearer garbage-token');
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', 'Bearer garbage-token'],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
 
 		$user = $this->createMock(IUser::class);
@@ -324,7 +377,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testPathTraversalStillSeatGated(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth());
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth()],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/portal/../companion/api/v1/inbox');
 
 		$user = $this->createMock(IUser::class);
@@ -349,7 +405,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testExpiredMapsToExpiredWireCode(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth());
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth()],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
 
 		$user = $this->createMock(IUser::class);
@@ -374,7 +433,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testWebStaffApiNotGatedEvenWithBasicAuth(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth());
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth()],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/api/tickets/1');
 
 		$license = $this->createMock(LicenseService::class);
@@ -397,7 +459,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	{
 		$request = $this->createMock(IRequest::class);
 		// Basic identity must match the session identity (explicit credential wins).
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth('guest-1'));
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth('guest-1')],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/bootstrap');
 
 		$user = $this->createMock(IUser::class);
@@ -419,7 +484,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	{
 		$request = $this->createMock(IRequest::class);
 		// Basic identity must match the session identity (explicit credential wins).
-		$request->method('getHeader')->with('Authorization')->willReturn($this->basicAuth('guest-1'));
+		$request->method('getHeader')->willReturnMap([
+			['Authorization', $this->basicAuth('guest-1')],
+			['X-TicketCheck-Agent', ''],
+		]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
 
 		$user = $this->createMock(IUser::class);
@@ -491,8 +559,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 		$agentToken = 'e2e-agent-app-password-token';
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')
-			->willReturn($this->basicAuth('e2e_agent', $agentToken));
+		$request->method('getHeader')->willReturnMap([
+				['Authorization', $this->basicAuth('e2e_agent', $agentToken)],
+				['X-TicketCheck-Agent', ''],
+			]);
 		$request->method('getPathInfo')
 			->willReturn('/apps/ticketcheck/companion/api/v1/bootstrap');
 		$request->method('getRemoteAddress')->willReturn('172.26.0.1');
@@ -554,8 +624,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 		$agentToken = 'e2e-agent-app-password-token';
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')
-			->willReturn($this->basicAuth('e2e_agent', $agentToken));
+		$request->method('getHeader')->willReturnMap([
+				['Authorization', $this->basicAuth('e2e_agent', $agentToken)],
+				['X-TicketCheck-Agent', ''],
+			]);
 		$request->method('getPathInfo')
 			->willReturn('/apps/ticketcheck/companion/api/v1/inbox');
 		$request->method('getRemoteAddress')->willReturn('172.26.0.1');
@@ -605,8 +677,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testMatchingSessionIdentityDoesNotRelogin(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')
-			->willReturn($this->basicAuth('alice', 'secret'));
+		$request->method('getHeader')->willReturnMap([
+				['Authorization', $this->basicAuth('alice', 'secret')],
+				['X-TicketCheck-Agent', ''],
+			]);
 		$request->method('getPathInfo')
 			->willReturn('/apps/ticketcheck/companion/api/v1/bootstrap');
 
@@ -627,8 +701,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testInvalidBasicWithForeignSessionIsRejectedAndThrottled(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')
-			->willReturn($this->basicAuth('e2e_agent', 'wrong-password'));
+		$request->method('getHeader')->willReturnMap([
+				['Authorization', $this->basicAuth('e2e_agent', 'wrong-password')],
+				['X-TicketCheck-Agent', ''],
+			]);
 		$request->method('getPathInfo')
 			->willReturn('/apps/ticketcheck/companion/api/v1/bootstrap');
 		$request->method('getRemoteAddress')->willReturn('172.26.0.1');
@@ -672,8 +748,10 @@ final class ClientLicenseMiddlewareTest extends TestCase
 	public function testForeignSessionCookieOnWebPathIsUntouched(): void
 	{
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->with('Authorization')
-			->willReturn($this->basicAuth('e2e_agent', 'e2e-agent-token'));
+		$request->method('getHeader')->willReturnMap([
+				['Authorization', $this->basicAuth('e2e_agent', 'e2e-agent-token')],
+				['X-TicketCheck-Agent', ''],
+			]);
 		$request->method('getPathInfo')->willReturn('/apps/ticketcheck/api/tickets');
 
 		// Cookie user stays authoritative on non-companion routes: never re-login.

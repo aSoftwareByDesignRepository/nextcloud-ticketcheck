@@ -23,7 +23,14 @@ class RouteParityTest extends TestCase
             }
 
             [$controllerToken, $method] = explode('#', $name, 2);
-            $controllerClassName = ucfirst($controllerToken) . 'Controller';
+            // Nextcloud resolves route names via
+            // underScoreToCamelCase(ucfirst($prefix)) . 'Controller'
+            // ('agent_token#revoke' → lib/Controller/AgentTokenController.php).
+            $controllerClassName = (string) preg_replace_callback(
+                '/_[a-z]?/',
+                static fn (array $m): string => strtoupper(ltrim($m[0], '_')),
+                ucfirst($controllerToken)
+            ) . 'Controller';
             $controllerPath = __DIR__ . '/../../lib/Controller/' . $controllerClassName . '.php';
 
             if (!is_file($controllerPath)) {
