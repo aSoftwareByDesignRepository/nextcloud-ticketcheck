@@ -1,4 +1,7 @@
 {
+  "tc-agent-revoke": "JS hook (agent-access.js revoke trigger); chrome via .tc-btn--danger",
+  "tc-agent-rotate": "JS hook (agent-access.js rotate trigger); chrome via .tc-btn--ghost",
+  "tc-agent-scope": "scope-badge marker on .tc-badge--neutral; chip chrome via badge recipe",
   "tc-anchor-target": "empty scroll-target span (settings deep-link anchor)",
   "tc-app--access-denied": "page-variant marker on .tc-app root; layout owned by .tc-denied",
   "tc-app--needs-role": "page-variant marker on .tc-app root; layout owned by .tc-denied",
@@ -113,6 +116,7 @@
   "tc-resource-type-badge": "type badge marker on styled .tc-badge",
   "tc-resource-type-select": "type select hook on styled .helpdesk-form-control",
   "tc-scope-strip__badge": "role badge marker on styled .tc-badge",
+  "tc-section-intro": "intro paragraph marker inside .tc-section; spacing via section rhythm",
   "tc-select-combobox__input": "combobox input marker; styled via .tc-filter-picker__input",
   "tc-settings__requesters-fieldset": "requesters fieldset marker on styled .tc-settings__access-fieldset",
   "tc-settings__requesters-lead": "lead paragraph on styled .helpdesk-form-help",
@@ -120,6 +124,7 @@
   "tc-skip-link--nav": "nav variant marker on styled .tc-skip-link",
   "tc-sla-targets-table": "table marker on .helpdesk-table; inputs via .tc-sla-hours",
   "tc-stage": "BEM root; chrome via .tc-card, list via .tc-stage__list",
+  "tc-table--cards": "responsive card-mode variant marker on .tc-agent-table; card chrome via .tc-agent-table + td[data-cell] in agent-access.css",
   "tc-table-actions": "actions wrapper mirror of styled .tc-license-table-actions",
   "tc-tickets-empty": "empty-state marker on .tc-empty.helpdesk-empty",
   "tc-tickets-filters__form": "form wrapper; layout via .tc-tickets-filters__grid",

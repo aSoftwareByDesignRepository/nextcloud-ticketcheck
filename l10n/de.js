@@ -415,7 +415,7 @@ OC.L10N.register(
 	"Token" : "Token",
 	"Token copied." : "Token kopiert.",
 	"Token created." : "Token erstellt.",
-	"Token revoked." : "Token widerrufen.",
+	"Token revoked." : "Token wurde widerrufen.",
 	"Token rotated." : "Token rotiert.",
 	"Too many attempts — wait a minute and try again." : "Zu viele Versuche — eine Minute warten und erneut versuchen.",
 	"Too many requests. Please wait and retry." : "Zu viele Anfragen. Bitte warten und erneut versuchen.",

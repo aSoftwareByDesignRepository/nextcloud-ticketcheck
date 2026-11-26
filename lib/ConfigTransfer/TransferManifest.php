@@ -40,6 +40,10 @@ final class TransferManifest extends AbstractTransferManifest
 			// CSV gid list (not JSON) — the app's own storage format;
 			// transfers verbatim like every other plain key.
 			'app_access_extra_groups' => ['class' => 'plain', 'security' => true, 'section' => 'access'],
+			// ── agent-auth policy (Settings → AI access): who may mint
+			// scoped agent tokens. Policy transfers; issued tokens and the
+			// audit trail stay instance-bound (internal, below) ──
+			'agent_self_mint' => ['class' => 'plain', 'security' => true, 'section' => 'agent'],
 			// ── guest portal policy (Settings → access; identities/
 			// sessions stay instance-local) ──
 			'guest_provisioning' => ['class' => 'plain', 'security' => true, 'section' => 'access'],
@@ -304,6 +308,12 @@ final class TransferManifest extends AbstractTransferManifest
 			'tc_idempotency' => ['class' => 'internal'],
 			'tc_license_state' => ['class' => 'internal'],
 			'tc_mobile_seats' => ['class' => 'internal'],
+			// Agent-auth: token rows are sha256 credential material bound to
+			// this instance's users; the audit log is forensic bookkeeping.
+			// A transferred token hash would mint nothing on the target and
+			// would leak a live credential across instances — never carry.
+			'tc_agent_tokens' => ['class' => 'internal'],
+			'tc_agent_audit' => ['class' => 'internal'],
 		]);
 	}
 }

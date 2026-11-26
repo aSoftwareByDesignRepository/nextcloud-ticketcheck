@@ -51,7 +51,6 @@ class Version4222Date202611250000 extends SimpleMigrationStep
 			$table->addColumn('added_by', Types::STRING, [
 				'notnull' => true,
 				'length' => 64,
-				'default' => '',
 			]);
 			$table->addColumn('created_at', Types::DATETIME, [
 				'notnull' => true,
@@ -79,7 +78,6 @@ class Version4222Date202611250000 extends SimpleMigrationStep
 			$table->addColumn('added_by', Types::STRING, [
 				'notnull' => true,
 				'length' => 64,
-				'default' => '',
 			]);
 			$table->addColumn('created_at', Types::DATETIME, [
 				'notnull' => true,
