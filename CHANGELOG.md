@@ -15,15 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Merge/delete/uninstall hygiene:** merges transfer non-duplicate co rows and demote a displaced source primary to co-assignee (EC-10); purges, dependency analysis, upgrade backups, uninstall drops and config-transfer manifest all cover both new tables.
 - **Escalation rules (NH-04):** new action "add co-assignee" — adds the user as co-assignee when a rule fires (primary untouched; cap-respecting, per-ticket skips logged). New bulk action "Add co-assignee" applies one co-assignee to up to 100 selected tickets with per-ticket skip reporting (NH-06); kanban cards show a co-assignee avatar stack (NH-05).
 - **Companion (mobile):** inbox gained the `team` queue (staff only), ticket detail shows the assignees payload (`assignees`, `teams`, server-computed `claimable`), and a new AssigneesSection manages co-assignees, team assign and claim through the same CAS-guarded companion endpoints (NH-02).
+- **Assignee filter picker (issue #10):** the "Assigned To" filter on the ticket list and the Kanban board is now a searchable combobox — type a name to filter tickets by any assignable agent, in addition to the fixed Anyone / Unassigned / Me options. Suggestions come from the same assignable-staff roster as assignment itself (`GET /api/tickets/filter-options?type=assignee`) and scope to the selected project filter; an applied filter shows the resolved display name, including for users picked via a saved view or a direct `?assigned_to=<uid>` URL.
 
 ### Fixed
 - Co-assignee set updates validate the entire posted CSV *before* the ticket row is written — a rejected set can no longer leave field edits half-applied.
 - `IGroupManager::getUserGroupIds` is now always called with an `IUser` object (resolving the uid first, fail-closed on missing users) — a raw uid would have TypeError'd on the team queue and roster paths.
-
-## Unreleased
-
-### Added
-- **Assignee filter picker (issue #10):** the "Assigned To" filter on the ticket list and the Kanban board is now a searchable combobox — type a name to filter tickets by any assignable agent, in addition to the fixed Anyone / Unassigned / Me options. Suggestions come from the same assignable-staff roster as assignment itself (`GET /api/tickets/filter-options?type=assignee`) and scope to the selected project filter; an applied filter shows the resolved display name, including for users picked via a saved view or a direct `?assigned_to=<uid>` URL.
+- **Unreadable collected mail (issue #11):** inbound ticket/comment bodies are now normalized through `MailToText` — HTML-only mail is converted to real plain text (script/style source dropped, block boundaries become line breaks) instead of rendering as raw markup, and MIME parts decode by their declared transfer encoding *and* charset, so non-UTF-8 mail (e.g. windows-1250 quoted-printable) no longer arrives as mojibake. A `text/plain` part that actually carries a full HTML document is detected and converted the same way; when no `BODYSTRUCTURE` is available the best readable MIME leaf is extracted instead of storing boundary/base64 soup.
 
 ## 2.7.0 - 2026-11-23
 
