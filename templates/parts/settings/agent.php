@@ -118,7 +118,7 @@ $tc_tokens = is_array($tc_state['tokens']) ? $tc_state['tokens'] : [];
 	<dialog id="tc-agent-mint-dialog" class="tc-dialog tc-agent-mint-dialog" aria-labelledby="tc-agent-mint-h">
 		<div class="tc-dialog__body">
 			<h3 id="tc-agent-mint-h"><?php p($l->t('Connect your AI')); ?></h3>
-			<form id="tc-agent-mint-form" novalidate>
+			<form id="tc-agent-mint-form" class="tc-form-stack" novalidate>
 				<div class="tc-form-row">
 					<label for="tc-agent-label"><?php p($l->t('Label')); ?></label>
 					<input type="text" id="tc-agent-label" name="label" maxlength="190" required autocomplete="off" placeholder="<?php p($l->t('Claude on my laptop')); ?>">

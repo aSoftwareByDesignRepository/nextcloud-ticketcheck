@@ -164,7 +164,7 @@
 	border: 1px solid var(--color-border-dark, var(--tc-border));
 	border-radius: 999px;
 	cursor: pointer;
-	font-size: var(--tc-fs-s, 0.875rem);
+	font-size: var(--tc-fs-sm, 0.875rem);
 	min-height: 44px;
 	background: var(--color-main-background);
 }
@@ -194,8 +194,8 @@ dialog.tc-agent-revoke-dialog:not([open]) {
 }
 .tc-agent-config {
 	width: 100%;
-	font-family: var(--tc-font-mono, monospace);
-	font-size: var(--tc-fs-s, 0.8125rem);
+	font-family: var(--tc-mono, monospace);
+	font-size: var(--tc-fs-sm, 0.8125rem);
 	padding: var(--tc-space-2, 8px);
 	border: 1px solid var(--color-border-dark, var(--tc-border));
 	border-radius: var(--tc-radius-md, 8px);
@@ -204,7 +204,7 @@ dialog.tc-agent-revoke-dialog:not([open]) {
 	resize: vertical;
 }
 #tc-agent-secret {
-	font-family: var(--tc-font-mono, monospace);
+	font-family: var(--tc-mono, monospace);
 }
 
 .tc-agent-actions {
@@ -248,4 +248,38 @@ dialog.tc-agent-revoke-dialog:not([open]) {
 	.tc-badge::before {
 		background: CanvasText;
 	}
+}
+
+/* Section chrome the pack template emits (tc-section-title/intro) —
+   styled home mirrors .tc-section__header h2 / .tc-section__sub so the
+   emitted classes resolve to real rules (emitted_class_coverage). */
+.tc-agent .tc-section-title {
+	margin: 0;
+	font-size: var(--tc-fs-xl);
+	line-height: var(--tc-line-tight);
+	overflow-wrap: anywhere;
+}
+.tc-agent .tc-section-intro {
+	margin: var(--tc-space-1) 0 0;
+	color: var(--tc-muted);
+	font-size: var(--tc-fs-sm);
+	line-height: var(--tc-line-base);
+}
+
+/* Inline field error (pack mint dialog) — same recipe as the family
+   field-errors pack: danger ink, small type, next-step copy lives in the
+   text the server fields-map writes here. */
+.tc-agent .tc-field-error {
+	margin: var(--tc-space-1) 0 0;
+	color: var(--color-error-text, var(--color-element-error, #e9322d));
+	font-size: var(--tc-fs-sm);
+	line-height: var(--tc-line-base);
+}
+/* Mint dialog form stack — same shape as the donor pack's .{p}-form-stack:
+   the rows inside carry tc-form-row markup, the form owns the stack. */
+.tc-agent-mint-dialog .tc-form-stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--tc-space-3, 12px);
+	min-width: 0;
 }
