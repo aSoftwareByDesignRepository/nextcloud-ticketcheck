@@ -260,6 +260,7 @@ class Application extends App implements IBootstrap
                 null,
                 $c->get(\OCA\Ticketcheck\Db\CommentMoveMapper::class),
                 $c->get(\OCA\Ticketcheck\Service\TicketNotificationDispatcher::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketAssigneeService::class),
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\TicketService::class, function ($c) {
@@ -336,7 +337,8 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Db\TicketWatcherMapper::class),
                 $c->get(\OCP\IGroupManager::class),
                 $c->get(\OCP\IUserManager::class),
-                $c->get(\OCP\App\IAppManager::class)
+                $c->get(\OCP\App\IAppManager::class),
+                $c->get(\OCA\Ticketcheck\Db\TicketAssigneeMapper::class)
             );
         });
 
@@ -362,6 +364,7 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Db\TicketWatcherMapper::class),
                 $c->get(\OCA\Ticketcheck\Db\TicketSurveyMapper::class),
                 $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketAssigneeService::class),
             );
         });
 
@@ -413,7 +416,8 @@ class Application extends App implements IBootstrap
         // Register mappers
         $context->registerService(\OCA\Ticketcheck\Db\TicketMapper::class, function ($c) {
             return new \OCA\Ticketcheck\Db\TicketMapper(
-                $c->get(\OCP\IDBConnection::class)
+                $c->get(\OCP\IDBConnection::class),
+                $c->get(\OCA\Ticketcheck\Db\TicketAssigneeMapper::class)
             );
         });
 
@@ -680,6 +684,7 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Service\AttachmentCleanupService::class),
                 $c->get('TicketService'),
                 $c->get(\OCA\Ticketcheck\Service\KnowledgeBaseService::class),
+                $c->get(\OCA\Ticketcheck\Db\TicketAssigneeMapper::class),
             );
         });
 
@@ -721,7 +726,8 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Db\TicketMapper::class),
                 $c->get('TicketService'),
                 $c->get(\OCP\IUserManager::class),
-                $c->get(\Psr\Log\LoggerInterface::class)
+                $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketAssigneeService::class)
             );
         });
 

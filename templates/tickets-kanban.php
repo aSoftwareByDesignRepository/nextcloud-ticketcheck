@@ -180,6 +180,34 @@ $kanbanColumnClass = static function (string $columnStatus): string {
                                                             <?php p($categoryLabel($item->getCategory())); ?>
                                                         </span>
                                                     <?php endif; ?>
+                                                    <?php
+                                                    // NH-05: avatar stack — primary + co-assignees (initials, +N).
+                                                    $coRows = $_['coAssigneeMap'][(int)$item->getId()] ?? [];
+                                                    $primaryUid = trim((string)($item->getAssignedTo() ?? ''));
+                                                    $stackTotal = ($primaryUid !== '' ? 1 : 0) + count($coRows);
+                                                    if ($stackTotal > 0):
+                                                    ?>
+                                                        <span class="tc-avatar-stack" role="img"
+                                                            aria-label="<?php p($l->t('assigned_people_count', [(string)$stackTotal])); ?>"
+                                                            title="<?php p(implode(', ', array_filter(array_merge([$primaryUid], array_map(static function ($r) { return $r['display_name'] ?? $r['user_id']; }, $coRows))))); ?>">
+                                                            <?php
+                                                            $stack = [];
+                                                            if ($primaryUid !== '') {
+                                                                $stack[] = $primaryUid;
+                                                            }
+                                                            foreach ($coRows as $r) {
+                                                                $stack[] = (string)($r['display_name'] ?? $r['user_id']);
+                                                            }
+                                                            foreach (array_slice($stack, 0, 3) as $nm):
+                                                                $ini = mb_strtoupper(mb_substr(preg_replace('/[^\p{L}\p{N} ]/u', '', $nm), 0, 1));
+                                                            ?>
+                                                                <span class="tc-avatar-stack__item" aria-hidden="true"><?php p($ini); ?></span>
+                                                            <?php endforeach; ?>
+                                                            <?php if ($stackTotal > 3): ?>
+                                                                <span class="tc-avatar-stack__item tc-avatar-stack__item--more" aria-hidden="true">+<?php p($stackTotal - 3); ?></span>
+                                                            <?php endif; ?>
+                                                        </span>
+                                                    <?php endif; ?>
                                                     <?php foreach ((($_['ticketResourceMap'] ?? [])[$item->getId()] ?? []) as $tcRp): ?>
                                                         <span class="tc-resource-chip<?php if (empty($tcRp['enabled'])) p(' tc-resource-chip--disabled'); ?>">
                                                             <?php p($tcRp['label']); ?>

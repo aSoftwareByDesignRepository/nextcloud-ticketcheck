@@ -525,6 +525,134 @@ class CompanionController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	public function assignableGroups(int $id): JSONResponse
+	{
+		try {
+			$uid = $this->requireUid();
+			return new JSONResponse(['ok' => true, 'groups' => $this->tickets->assignableGroups($id, $uid)]);
+		} catch (CompanionNotFoundException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_NOT_FOUND);
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		}
+	}
+
+	/**
+	 * Co-assignee management (NH-02). POST body: { userId, version }
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function addCoAssignee(int $id): JSONResponse
+	{
+		try {
+			$uid = $this->requireUid();
+			$coUid = $this->request->getParam('userId');
+			if ($coUid === null) {
+				$coUid = $this->request->getParam('coAssignee');
+			}
+			if (!is_string($coUid) || trim($coUid) === '') {
+				return $this->error('invalid_assignee', Http::STATUS_UNPROCESSABLE_ENTITY);
+			}
+			$version = $this->requireVersion();
+			$result = $this->tickets->addCoAssignee($id, $uid, trim($coUid), $version);
+			return new JSONResponse(['ok' => true] + $result);
+		} catch (CompanionNotFoundException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_NOT_FOUND);
+		} catch (CompanionConflictException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_CONFLICT, $e->getMessage());
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		} catch (\InvalidArgumentException $e) {
+			return $this->error($this->mapCoAssigneeErrorCode($e), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		}
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function removeCoAssignee(int $id, string $userId): JSONResponse
+	{
+		try {
+			$uid = $this->requireUid();
+			$version = $this->requireVersion();
+			$result = $this->tickets->removeCoAssignee($id, $uid, $userId, $version);
+			return new JSONResponse(['ok' => true] + $result);
+		} catch (CompanionNotFoundException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_NOT_FOUND);
+		} catch (CompanionConflictException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_CONFLICT, $e->getMessage());
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		} catch (\InvalidArgumentException $e) {
+			return $this->error($this->mapCoAssigneeErrorCode($e), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		}
+	}
+
+	/**
+	 * Team assign (NH-02). POST body: { groupId, version }
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function assignTeam(int $id): JSONResponse
+	{
+		try {
+			$uid = $this->requireUid();
+			$groupId = $this->request->getParam('groupId');
+			if ($groupId === null) {
+				$groupId = $this->request->getParam('group_id');
+			}
+			if (!is_string($groupId) || trim($groupId) === '') {
+				return $this->error('invalid_team', Http::STATUS_UNPROCESSABLE_ENTITY);
+			}
+			$version = $this->requireVersion();
+			$result = $this->tickets->assignTeam($id, $uid, trim($groupId), $version);
+			return new JSONResponse(['ok' => true] + $result);
+		} catch (CompanionNotFoundException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_NOT_FOUND);
+		} catch (CompanionConflictException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_CONFLICT, $e->getMessage());
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		} catch (\InvalidArgumentException $e) {
+			return $this->error($this->mapCoAssigneeErrorCode($e), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		}
+	}
+
+	/**
+	 * Claim a team-queued ticket (NH-01). POST body: { version }
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function claimTicket(int $id): JSONResponse
+	{
+		try {
+			$uid = $this->requireUid();
+			$version = $this->requireVersion();
+			$result = $this->tickets->claimTicket($id, $uid, $version);
+			return new JSONResponse(['ok' => true] + $result);
+		} catch (CompanionNotFoundException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_NOT_FOUND);
+		} catch (CompanionConflictException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_CONFLICT, $e->getMessage());
+		} catch (CompanionValidationException $e) {
+			return $this->error($e->getErrorCode(), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		} catch (\InvalidArgumentException $e) {
+			return $this->error($this->mapCoAssigneeErrorCode($e), Http::STATUS_UNPROCESSABLE_ENTITY, $e->getMessage());
+		}
+	}
+
+	private function mapCoAssigneeErrorCode(\InvalidArgumentException $e): string
+	{
+		$msg = $e->getMessage();
+		foreach (['not_assignable', 'already_primary', 'max_coassignees', 'no_assignable_members', 'group_not_assignable', 'ticket_merged'] as $code) {
+			if (str_contains($msg, $code)) {
+				return $code;
+			}
+		}
+		return 'invalid_assignee';
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function assignableUsers(int $id): JSONResponse
 	{
 		try {

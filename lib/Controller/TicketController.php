@@ -24,6 +24,7 @@ use OCA\Ticketcheck\Service\MergeService;
 use OCA\Ticketcheck\Service\ProjectService;
 use OCA\Ticketcheck\Service\DeletionService;
 use OCA\Ticketcheck\Service\SafeFilenameService;
+use OCA\Ticketcheck\Service\TicketAssigneeService;
 use OCA\Ticketcheck\Service\TicketLinkService;
 use OCA\Ticketcheck\Service\TicketWatcherService;
 use OCA\Ticketcheck\Service\SplitService;
@@ -133,6 +134,7 @@ class TicketController extends Controller
         ?TicketNotificationDispatcher $notificationDispatcher = null,
         ?\OCA\Ticketcheck\Service\GuestIdentityService $guestIdentities = null,
         ?\OCA\Ticketcheck\Service\GuestInviteService $guestInvite = null,
+        private readonly ?TicketAssigneeService $assigneeService = null,
     ) {
         $this->guestIdentities = $guestIdentities;
         $this->guestInvite = $guestInvite;
@@ -263,6 +265,7 @@ class TicketController extends Controller
         $customerId = (string) $this->request->getParam('customer_id', '');
         $search = (string) $this->request->getParam('search', '');
         $hideDone = (string) $this->request->getParam('hide_done', '1');
+        $team = (string) $this->request->getParam('team', '');
 
         $filters = [];
         if ($status !== '') {
@@ -320,6 +323,17 @@ class TicketController extends Controller
         if ($customerId !== '') {
             $filters['customer_id'] = $customerId;
         }
+        if ($team === 'mine' && $this->assigneeService !== null) {
+            // "My team tickets": tickets queued on a group the actor belongs
+            // to. Resolves to an id set — fail-closed empty (no groups → no
+            // rows, never an unfiltered list).
+            $actorUser = $this->userSession->getUser();
+            $gids = $actorUser !== null ? $this->groupManager->getUserGroupIds($actorUser) : [];
+            $teamIds = $gids !== [] ? $this->assigneeService->getTeamTicketIdsForGroups($gids) : [];
+            $filters['ticket_ids_in'] = isset($filters['ticket_ids_in'])
+                ? array_values(array_intersect($filters['ticket_ids_in'], $teamIds))
+                : $teamIds;
+        }
 
         $doneStatusAliases = ['done', 'resolved', 'closed'];
         $isFilteringByDone = in_array($status, $doneStatusAliases, true)
@@ -351,6 +365,7 @@ class TicketController extends Controller
                 'customer_id' => $customerId,
                 'search' => $search,
                 'hide_done' => $hideDone,
+                'team' => $team,
             ],
             'status' => $status,
             'search' => $search,
@@ -387,6 +402,10 @@ class TicketController extends Controller
             'ticketResourceMap' => $this->ticketResources !== null
                 ? $this->ticketResources->pairsMapForTickets(array_values(array_map(static fn (\OCA\Ticketcheck\Db\Ticket $t) => (int)$t->getId(), $tickets)))
                 : [],
+            // +N co-assignee badges (TC-MULTI-ASSIGN): uid → display name, per ticket.
+            'coAssigneeMap' => $this->assigneeService?->getCoAssigneesWithDisplayForTickets(
+                array_values(array_map(static fn (\OCA\Ticketcheck\Db\Ticket $t) => (int)$t->getId(), $tickets))
+            ) ?? [],
             'statuses' => Ticket::getStatuses(),
             'priorities' => Ticket::getPriorities(),
             // Filters include disabled categories — historic tickets stay filterable.
@@ -398,10 +417,37 @@ class TicketController extends Controller
             'isAdmin' => $this->permissionService->canManageSettings(),
             'canBulkDelete' => $this->permissionService->canBulkDeleteTickets(),
             'currentFilters' => $resolved['currentFilters'],
+            'assignedToFilterOption' => $this->assignedToFilterOption($resolved['currentFilters']['assigned_to'] ?? ''),
             'ticketsFilterRoute' => $ticketsFilterRoute,
         ];
 
         return array_merge($params, $this->buildTicketExportUrls($resolved['currentFilters']));
+    }
+
+    /**
+     * Selected-assignee option for the list/kanban filter combobox when the
+     * applied `assigned_to` value is an arbitrary user id. The template already
+     * renders the fixed options (anyone / unassigned / current user); this
+     * resolves any other uid to its display name so the applied filter stays
+     * visible. Unknown or deleted users keep the raw id as label — the filter
+     * remains honest and removable rather than silently dropping to "anyone".
+     *
+     * @return array{value: string, label: string}|null
+     */
+    private function assignedToFilterOption(string $assignedTo): ?array
+    {
+        if ($assignedTo === '' || $assignedTo === TicketMapper::ASSIGNED_TO_UNASSIGNED) {
+            return null;
+        }
+        $currentUid = $this->userSession->getUser()?->getUID();
+        if ($currentUid !== null && $assignedTo === $currentUid) {
+            return null;
+        }
+        $user = $this->userManager->get($assignedTo);
+        return [
+            'value' => $assignedTo,
+            'label' => $user !== null ? $user->getDisplayName() : $assignedTo,
+        ];
     }
 
     /**
@@ -987,6 +1033,7 @@ class TicketController extends Controller
                 'ticket-form',
                 [
                     'ticket' => $ticket,
+                    'coAssignees' => $this->assigneeService?->getCoAssigneesWithDisplay((int)$ticket->getId()) ?? [],
                     'projects' => $projects,
                     'customers' => $customers,
                     'priorities' => Ticket::getPriorities(),
@@ -1265,6 +1312,12 @@ class TicketController extends Controller
                 'status' => $this->request->getParam('status', 'new'),
                 'created_by_guest' => $this->permissionService->isGuest(),
             ];
+            // TC-MULTI-ASSIGN: only forward when the field was posted —
+            // absent = untouched, '' = clear (replace-set semantics).
+            $coAssigneesParam = $this->request->getParam('co_assignees');
+            if ($coAssigneesParam !== null) {
+                $data['co_assignees'] = $coAssigneesParam;
+            }
 
             // If project_id is provided, get customer info from project
             if (!empty($data['project_id'])) {
@@ -1442,6 +1495,11 @@ class TicketController extends Controller
                 $data['assigned_to'] = $assignedTo === '' ? null : $assignedTo;
             }
 
+            $coAssigneesParam = $this->request->getParam('co_assignees');
+            if ($coAssigneesParam !== null) {
+                $data['co_assignees'] = $coAssigneesParam;
+            }
+
             $attachmentValidationError = $this->validatePendingAttachmentUploads();
             if ($attachmentValidationError !== null) {
                 return $attachmentValidationError;
@@ -1550,6 +1608,11 @@ class TicketController extends Controller
             // Allow empty string to unassign
             if ($assignedTo !== null) {
                 $data['assigned_to'] = $assignedTo === '' ? null : $assignedTo;
+            }
+
+            $coAssigneesParam = $this->request->getParam('co_assignees');
+            if ($coAssigneesParam !== null) {
+                $data['co_assignees'] = $coAssigneesParam;
             }
 
             $attachmentValidationError = $this->validatePendingAttachmentUploads();
@@ -2107,6 +2170,293 @@ class TicketController extends Controller
     }
 
     /**
+     * Get ticket co-assignees (staff).
+     */
+    #[NoAdminRequired]
+    public function getCoAssignees(int $id): JSONResponse
+    {
+        $resolved = $this->resolveTicketForApiRead($id);
+        if ($resolved instanceof JSONResponse) {
+            return $resolved;
+        }
+        // Staff-surface gate, same as the agent ticket list: app admins who
+        // canEditTicket (the write gate) must not 403 on the read.
+        if (!$this->permissionService->canViewHelpdeskOverview((string)($this->permissionService->getCurrentUserId() ?? ''))) {
+            $l = $this->l10nFactory->get('ticketcheck');
+            return new JSONResponse(['success' => false, 'message' => $l->t('access_denied')], 403);
+        }
+        try {
+            return new JSONResponse([
+                'co_assignees' => $this->assigneeService?->getCoAssigneesWithDisplay((int)$resolved->getId()) ?? [],
+            ]);
+        } catch (\Throwable $e) {
+            $this->logger->error('Get co-assignees failed', ['exception' => $e]);
+            return $this->ticketNotFoundJsonResponse();
+        }
+    }
+
+    /**
+     * Add a co-assignee. POST body: { user_id: string }
+     */
+    #[NoAdminRequired]
+    public function addCoAssignee(int $id): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        try {
+            $userId = trim((string)$this->request->getParam('user_id'));
+            if ($userId === '') {
+                return new JSONResponse(['success' => false, 'message' => $l->t('user_id_required')], 400);
+            }
+            $resolved = $this->resolveActiveTicketForStaffMutate($id);
+            if ($resolved instanceof JSONResponse) {
+                return $resolved;
+            }
+            if (!$this->permissionService->canEditTicket($resolved) || $this->assigneeService === null) {
+                return new JSONResponse(['success' => false, 'message' => $l->t('access_denied')], 403);
+            }
+            $actor = (string)($this->userSession->getUser()?->getUID() ?? '');
+            $this->assigneeService->addCoAssignee((int)$resolved->getId(), $userId, $actor);
+            return new JSONResponse([
+                'success' => true,
+                'co_assignees' => $this->assigneeService->getCoAssigneesWithDisplay((int)$resolved->getId()),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            $mapped = $this->mapWorkflowClientMessage($e, $l);
+            $status = ($mapped === $l->t('ticket_not_found')) ? 404 : 400;
+            return new JSONResponse(['success' => false, 'message' => $mapped], $status);
+        }
+    }
+
+    /**
+     * Remove a co-assignee (idempotent).
+     */
+    #[NoAdminRequired]
+    public function removeCoAssignee(int $id, string $userId): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        try {
+            $resolved = $this->resolveActiveTicketForStaffMutate($id);
+            if ($resolved instanceof JSONResponse) {
+                return $resolved;
+            }
+            if (!$this->permissionService->canEditTicket($resolved) || $this->assigneeService === null) {
+                return new JSONResponse(['success' => false, 'message' => $l->t('access_denied')], 403);
+            }
+            $actor = (string)($this->userSession->getUser()?->getUID() ?? '');
+            $this->assigneeService->removeCoAssignee((int)$resolved->getId(), $userId, $actor);
+            return new JSONResponse([
+                'success' => true,
+                'co_assignees' => $this->assigneeService->getCoAssigneesWithDisplay((int)$resolved->getId()),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            $mapped = $this->mapWorkflowClientMessage($e, $l);
+            $status = ($mapped === $l->t('ticket_not_found')) ? 404 : 400;
+            return new JSONResponse(['success' => false, 'message' => $mapped], $status);
+        }
+    }
+
+    /**
+     * Assign a team (group) to the ticket. POST body: { group_id: string }
+     */
+    #[NoAdminRequired]
+    public function assignTeam(int $id): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        try {
+            $groupId = trim((string)$this->request->getParam('group_id'));
+            if ($groupId === '') {
+                return new JSONResponse(['success' => false, 'message' => $l->t('invalid_parameters')], 400);
+            }
+            $resolved = $this->resolveActiveTicketForStaffMutate($id);
+            if ($resolved instanceof JSONResponse) {
+                return $resolved;
+            }
+            if (!$this->permissionService->canEditTicket($resolved) || $this->assigneeService === null) {
+                return new JSONResponse(['success' => false, 'message' => $l->t('access_denied')], 403);
+            }
+            $actor = (string)($this->userSession->getUser()?->getUID() ?? '');
+            $stats = $this->assigneeService->assignTeam((int)$resolved->getId(), $groupId, $actor);
+            return new JSONResponse([
+                'success' => true,
+                'added' => $stats['added'],
+                'skipped' => $stats['skipped'],
+                'co_assignees' => $this->assigneeService->getCoAssigneesWithDisplay((int)$resolved->getId()),
+                'teams' => $this->teamRowsForTemplate((int)$resolved->getId()),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            $mapped = $this->mapWorkflowClientMessage($e, $l);
+            $status = ($mapped === $l->t('ticket_not_found')) ? 404 : 400;
+            return new JSONResponse(['success' => false, 'message' => $mapped], $status);
+        }
+    }
+
+    /**
+     * Remove a persistent team assignment.
+     */
+    #[NoAdminRequired]
+    public function unassignTeam(int $id, string $groupId): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        try {
+            $resolved = $this->resolveActiveTicketForStaffMutate($id);
+            if ($resolved instanceof JSONResponse) {
+                return $resolved;
+            }
+            if (!$this->permissionService->canEditTicket($resolved) || $this->assigneeService === null) {
+                return new JSONResponse(['success' => false, 'message' => $l->t('access_denied')], 403);
+            }
+            $actor = (string)($this->userSession->getUser()?->getUID() ?? '');
+            $this->assigneeService->unassignTeam((int)$resolved->getId(), $groupId, $actor);
+            return new JSONResponse([
+                'success' => true,
+                'teams' => $this->teamRowsForTemplate((int)$resolved->getId()),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            $mapped = $this->mapWorkflowClientMessage($e, $l);
+            $status = ($mapped === $l->t('ticket_not_found')) ? 404 : 400;
+            return new JSONResponse(['success' => false, 'message' => $mapped], $status);
+        }
+    }
+
+    /**
+     * Claim a team-queued ticket (actor must be a live member of a queued group).
+     */
+    #[NoAdminRequired]
+    public function claimTeamTicket(int $id): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        try {
+            $resolved = $this->resolveActiveTicketForStaffMutate($id);
+            if ($resolved instanceof JSONResponse) {
+                return $resolved;
+            }
+            if ($this->assigneeService === null) {
+                return new JSONResponse(['success' => false, 'message' => $l->t('access_denied')], 403);
+            }
+            $actor = (string)($this->userSession->getUser()?->getUID() ?? '');
+            $updated = $this->assigneeService->claimTeamTicket((int)$resolved->getId(), $actor);
+            return new JSONResponse([
+                'success' => true,
+                'assigned_to' => $updated->getAssignedTo(),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            $mapped = $this->mapWorkflowClientMessage($e, $l);
+            $status = ($mapped === $l->t('ticket_not_found')) ? 404 : 400;
+            return new JSONResponse(['success' => false, 'message' => $mapped], $status);
+        }
+    }
+
+    /**
+     * Groups the actor may team-assign (NN-09: counts + fits flag only,
+     * never member uids).
+     */
+    #[NoAdminRequired]
+    public function assignableGroups(int $id): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        $resolved = $this->resolveTicketForApiRead($id);
+        if ($resolved instanceof JSONResponse) {
+            return $resolved;
+        }
+        if (!$this->permissionService->canEditTicket($resolved) || $this->assigneeService === null) {
+            return new JSONResponse(['success' => false, 'message' => $l->t('access_denied')], 403);
+        }
+        try {
+            $actor = (string)($this->userSession->getUser()?->getUID() ?? '');
+            return new JSONResponse([
+                'groups' => $this->assigneeService->getAssignableGroups((int)$resolved->getId(), $actor),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            $mapped = $this->mapWorkflowClientMessage($e, $l);
+            $status = ($mapped === $l->t('ticket_not_found')) ? 404 : 400;
+            return new JSONResponse(['success' => false, 'message' => $mapped], $status);
+        }
+    }
+
+    /**
+     * Bulk add one co-assignee to many tickets (NH-06). POST body:
+     * { ticket_ids: int[], user_id: string }. Per-ticket results, no partial
+     * rollback — same contract as bulkAction.
+     */
+    #[NoAdminRequired]
+    public function bulkAddCoAssignee(): JSONResponse
+    {
+        $l = $this->l10nFactory->get('ticketcheck');
+        // Same posture as bulkAction: guests and non-staff fail up front,
+        // never as 100% per-item skips that look like success.
+        if ($this->permissionService->isGuest()) {
+            return new JSONResponse(['error' => $l->t('access_denied_use_customer_portal')], 403);
+        }
+        if (!$this->permissionService->canViewHelpdeskOverview((string) ($this->permissionService->getCurrentUserId() ?? ''))) {
+            return new JSONResponse(['error' => $l->t('access_denied')], 403);
+        }
+        $userId = trim((string)$this->request->getParam('user_id'));
+        $rawIds = $this->request->getParam('ticket_ids', []);
+        if ($userId === '' || !is_array($rawIds) || $rawIds === [] || $this->assigneeService === null) {
+            return new JSONResponse(['success' => false, 'message' => $l->t('invalid_parameters')], 400);
+        }
+        // Same hard cap as bulkAction — never silently truncate the set.
+        if (count($rawIds) > 100) {
+            return new JSONResponse(['error' => $l->t('too_many_requests')], 400);
+        }
+        $actor = (string)($this->userSession->getUser()?->getUID() ?? '');
+        $results = [];
+        foreach ($rawIds as $rawId) {
+            $ticketId = is_numeric($rawId) ? (int)$rawId : 0;
+            if ($ticketId <= 0) {
+                $results[] = ['id' => $rawId, 'success' => false, 'error' => $l->t('invalid_parameters')];
+                continue;
+            }
+            try {
+                $resolved = $this->resolveActiveTicketForStaffMutate($ticketId);
+                if ($resolved instanceof JSONResponse) {
+                    $results[] = ['id' => $ticketId, 'success' => false, 'error' => $l->t('ticket_not_found')];
+                    continue;
+                }
+                if (!$this->permissionService->canEditTicket($resolved)) {
+                    $results[] = ['id' => $ticketId, 'success' => false, 'error' => $l->t('access_denied')];
+                    continue;
+                }
+                $this->assigneeService->addCoAssignee((int)$resolved->getId(), $userId, $actor);
+                $results[] = ['id' => $ticketId, 'success' => true];
+            } catch (\InvalidArgumentException $e) {
+                $results[] = ['id' => $ticketId, 'success' => false, 'error' => $this->mapWorkflowClientMessage($e, $l)];
+            } catch (\Throwable $e) {
+                $this->logger->error('Bulk co-assignee failed', ['ticket_id' => $ticketId, 'exception' => $e]);
+                $results[] = ['id' => $ticketId, 'success' => false, 'error' => $l->t('an_error_occurred')];
+            }
+        }
+        $added = count(array_filter($results, static fn (array $r): bool => $r['success'] === true));
+        return new JSONResponse([
+            'success' => true,
+            'results' => $results,
+            'added' => $added,
+            'skipped' => count($results) - $added,
+        ]);
+    }
+
+    /**
+     * Team rows with display names for template/JSON serialization.
+     *
+     * @return array<int, array{group_id: string, display_name: string}>
+     */
+    private function teamRowsForTemplate(int $ticketId): array
+    {
+        $out = [];
+        if ($this->assigneeService === null) {
+            return $out;
+        }
+        foreach ($this->assigneeService->getTeamGroupIds($ticketId) as $gid) {
+            $group = $this->groupManager->get($gid);
+            $out[] = [
+                'group_id' => $gid,
+                'display_name' => $group !== null ? $group->getDisplayName() : $gid,
+            ];
+        }
+        return $out;
+    }
+
+    /**
      * Assign ticket to user
      */
     #[NoAdminRequired]
@@ -2464,6 +2814,27 @@ class TicketController extends Controller
                 ]);
             }
 
+            if ($type === 'assignee') {
+                $projectIdParam = $this->normalizeOptionalPositiveInt($this->request->getParam('project_id'));
+                $users = $this->collectAssignableUsers(
+                    ($projectIdParam === false || $projectIdParam === null) ? null : $projectIdParam,
+                    $query,
+                    $limit
+                );
+                $options = array_map(static function (array $user): array {
+                    return [
+                        'value' => (string)$user['user_id'],
+                        'label' => (string)$user['user_name'],
+                    ];
+                }, $users);
+
+                return new JSONResponse([
+                    'success' => true,
+                    'type' => 'assignee',
+                    'options' => $options,
+                ]);
+            }
+
             return new JSONResponse([
                 'success' => false,
                 'message' => $l->t('invalid_parameters')
@@ -2500,6 +2871,12 @@ class TicketController extends Controller
             'customer_name' => $ticket->getCustomerName(),
             'customer_email' => $ticket->getCustomerEmail(),
             'assigned_to' => $ticket->getAssignedTo(),
+            // NN-02: co-assignee roster is staff-only — never on customer/requester serializers.
+            // canViewHelpdeskOverview matches the read gate (admins are staff
+            // even outside helpdesk_agents — isAgent() would hide the key).
+            ...($this->permissionService->canViewHelpdeskOverview((string)($this->permissionService->getCurrentUserId() ?? ''))
+                ? ['co_assignees' => $this->assigneeService?->getCoAssigneeUserIds((int)$ticket->getId()) ?? []]
+                : []),
         ]);
     }
 
@@ -3695,6 +4072,18 @@ class TicketController extends Controller
             return $l->t('already_exists');
         }
         if (str_contains($message, 'Cannot link a ticket to itself') || str_contains($message, 'Invalid link type')) {
+            return $l->t('invalid_parameters');
+        }
+        if (str_contains($message, 'already_primary')) {
+            return $l->t('already_primary_assignee');
+        }
+        if (str_contains($message, 'max_coassignees')) {
+            return $l->t('max_coassignees_reached');
+        }
+        if (str_contains($message, 'no_assignable_members') || str_contains($message, 'group_not_assignable')) {
+            return $l->t('no_assignable_team_members');
+        }
+        if (str_contains($message, 'not_assignable')) {
             return $l->t('invalid_parameters');
         }
         if (str_contains($message, 'User not found') || str_contains($message, 'not an assignable') || str_contains($message, 'Guests cannot')) {

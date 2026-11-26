@@ -216,6 +216,105 @@ class InboundMailSyncServiceTest extends TestCase
 		fclose($serverEnd);
 	}
 
+	/**
+	 * Issue #11 regression: declared part charset + RFC 2047 display name.
+	 * A text/plain part declared ISO-8859-15 must be converted by its OWN
+	 * charset (0xA4 = €), and the encoded-word From name must arrive
+	 * decoded — never raw or mis-guessed as Windows-1252.
+	 */
+	public function testPartCharsetAndFromNameAreDecoded(): void
+	{
+		$header = "From: =?UTF-8?Q?J=C3=BCrgen_M=C3=BCller?= <customer@example.com>\r\n"
+			. "To: support@example.com\r\nSubject: Rechnung\r\nMessage-ID: <m9@x>\r\n\r\n";
+		$body = "Preis: " . chr(0xA4) . " 100"; // ISO-8859-15 euro sign
+		$bodyStruct = '("TEXT" "PLAIN" ("CHARSET" "ISO-8859-15") NIL NIL "8BIT" ' . strlen($body) . ' 1)';
+
+		$pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+		self::assertIsArray($pair);
+		[$clientEnd, $serverEnd] = $pair;
+		stream_set_blocking($clientEnd, true);
+		stream_set_timeout($clientEnd, 5);
+		fwrite($serverEnd,
+			"* 6 EXISTS\r\n* OK [UIDVALIDITY 42] ok\r\n* OK [UIDNEXT 52] ok\r\nT0001 OK SELECT\r\n"
+			. "* SEARCH 51\r\nT0002 OK SEARCH\r\n"
+			. '* 1 FETCH (UID 51 INTERNALDATE "10-Oct-2026 12:00:00 +0000" FLAGS () BODY[HEADER] {' . strlen($header) . "}\r\n"
+			. $header . ")\r\nT0003 OK FETCH\r\n"
+			. '* 1 FETCH (BODYSTRUCTURE ' . $bodyStruct . ")\r\nT0004 OK FETCH\r\n"
+			. '* 1 FETCH (BODY[1] {' . strlen($body) . "}\r\n" . $body . ")\r\nT0005 OK FETCH\r\n"
+			. "T0006 OK STORE\r\n"
+		);
+		$client = ImapSyncClient::fromStream($clientEnd);
+
+		$this->processor->expects(self::once())
+			->method('processInboundMessage')
+			->with(
+				self::callback(fn (array $msg) =>
+					$msg['fromName'] === 'Jürgen Müller'
+					&& str_contains($msg['text'], '€')
+				),
+				self::anything(),
+				self::anything(),
+				self::anything(),
+				self::anything()
+			)
+			->willReturn(['action' => InboundMessage::ACTION_TICKET_CREATED, 'ticket_id' => 7]);
+
+		$r = $this->service->sync(static fn (array $connect) => ['ok' => true, 'client' => $client]);
+		self::assertSame('ok', $r['status']);
+		fclose($serverEnd);
+	}
+
+	/**
+	 * Issue #11 regression — the reported scenario: BODYSTRUCTURE yields
+	 * nothing (broken server response), so only BODY[TEXT] is available.
+	 * For multipart mail that is the WHOLE MIME payload — boundaries,
+	 * headers, base64 — which must never land in the ticket body raw.
+	 */
+	public function testMultipartMimeSoupIsReducedToReadableText(): void
+	{
+		$header = "From: customer@example.com\r\nTo: support@example.com\r\nSubject: Hilfe\r\nMessage-ID: <m7@x>\r\n\r\n";
+		$mimeBody = "Content-Type: multipart/alternative; boundary=qq\r\n\r\n"
+			. "--qq\r\nContent-Type: text/plain; charset=utf-8\r\n"
+			. "Content-Transfer-Encoding: quoted-printable\r\n\r\n"
+			. quoted_printable_encode("Hallo Team, bitte helfen.") . "\r\n"
+			. "--qq\r\nContent-Type: text/html; charset=utf-8\r\n\r\n"
+			. "<html><body><p>Hallo Team</p></body></html>\r\n--qq--\r\n";
+
+		$pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+		self::assertIsArray($pair);
+		[$clientEnd, $serverEnd] = $pair;
+		stream_set_blocking($clientEnd, true);
+		stream_set_timeout($clientEnd, 5);
+		fwrite($serverEnd,
+			"* 6 EXISTS\r\n* OK [UIDVALIDITY 42] ok\r\n* OK [UIDNEXT 52] ok\r\nT0001 OK SELECT\r\n"
+			. "* SEARCH 51\r\nT0002 OK SEARCH\r\n"
+			. '* 1 FETCH (UID 51 INTERNALDATE "10-Oct-2026 12:00:00 +0000" FLAGS () BODY[HEADER] {' . strlen($header) . "}\r\n"
+			. $header . ")\r\nT0003 OK FETCH\r\n"
+			// Broken BODYSTRUCTURE reply (empty string, no S-exp)
+			. "* 1 FETCH (BODYSTRUCTURE NIL)\r\nT0004 OK FETCH\r\n"
+			// BODY[TEXT] returns the full MIME soup
+			. '* 1 FETCH (BODY[TEXT] {' . strlen($mimeBody) . "}\r\n" . $mimeBody . ")\r\nT0005 OK FETCH\r\n"
+			. "T0006 OK STORE\r\n"
+		);
+		$client = ImapSyncClient::fromStream($clientEnd);
+
+		$this->processor->expects(self::once())
+			->method('processInboundMessage')
+			->with(
+				self::callback(fn (array $msg) =>
+					str_contains($msg['text'], 'Hallo Team, bitte helfen.')
+					&& !str_contains($msg['text'], 'boundary')
+					&& !str_contains($msg['text'], 'Content-Type')
+				),
+				self::anything(), self::anything(), self::anything(), self::anything()
+			)
+			->willReturn(['action' => InboundMessage::ACTION_TICKET_CREATED, 'ticket_id' => 7]);
+
+		$r = $this->service->sync(static fn (array $connect) => ['ok' => true, 'client' => $client]);
+		self::assertSame('ok', $r['status']);
+		fclose($serverEnd);
+	}
+
 	/** Retryable outcome: cursor must NOT advance past the blocked uid. */
 	public function testRetryableMessageHoldsCursor(): void
 	{

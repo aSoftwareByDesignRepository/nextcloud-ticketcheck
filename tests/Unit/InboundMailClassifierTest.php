@@ -306,6 +306,46 @@ class InboundMailClassifierTest extends TestCase
 		self::assertStringNotContainsString('<b>', $out);
 	}
 
+	public function testNormalizeBodyHtmlDropsScriptStyleSource(): void
+	{
+		// Regression (issue #11): bare strip_tags kept <style>/<script>
+		// SOURCE as visible "code" in the ticket body.
+		$out = InboundMailClassifier::normalizeBody(
+			'',
+			'<html><head><style>body{font-family:Arial}</style></head>'
+			. '<body><p>Hallo Team</p><script>alert(1)</script></body></html>'
+		);
+		self::assertStringContainsString('Hallo Team', $out);
+		self::assertStringNotContainsString('font-family', $out);
+		self::assertStringNotContainsString('alert', $out);
+	}
+
+	public function testNormalizeBodyHtmlKeepsLineBreaks(): void
+	{
+		// Regression (issue #11): strip_tags glued every word together.
+		$out = InboundMailClassifier::normalizeBody('', '<p>Hallo<br>Team,</p><p>ok?</p>');
+		self::assertStringContainsString("Hallo\nTeam", $out);
+		self::assertStringContainsString('ok?', $out);
+	}
+
+	public function testNormalizeBodyPlainTextContainingHtmlMarkup(): void
+	{
+		// Gateways that stuff an HTML document into the text/plain part.
+		$out = InboundMailClassifier::normalizeBody(
+			'<div><p>Hallo <b>Team</b></p></div>',
+			''
+		);
+		self::assertStringContainsString('Hallo Team', $out);
+		self::assertStringNotContainsString('<div>', $out);
+		self::assertStringNotContainsString('<b>', $out);
+	}
+
+	public function testNormalizeBodyKeepsPlainAngleBrackets(): void
+	{
+		$out = InboundMailClassifier::normalizeBody('a < b and c > d', '');
+		self::assertSame('a < b and c > d', $out);
+	}
+
 	public function testNormalizeBodyCapsLength(): void
 	{
 		$out = InboundMailClassifier::normalizeBody(str_repeat('x', 50000), '', 1000);

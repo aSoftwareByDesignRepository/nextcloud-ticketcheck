@@ -111,8 +111,14 @@ class InboundEmailService
 		}
 		$text = trim((string)($payload['text'] ?? $payload['body-plain'] ?? $payload['body_plain']
 			?? $payload['stripped-text'] ?? $payload['stripped_text'] ?? ''));
-		// Security: strip HTML from external source to prevent XSS if ever rendered without escaping
-		$text = strip_tags($text);
+		// Security: external markup must never reach a ticket body raw.
+		// Full HTML → htmlToText (drops script/style source, keeps line
+		// breaks); stray tags → strip_tags (XSS defense-in-depth).
+		if (\OCA\Ticketcheck\Support\MailToText::looksLikeHtml($text)) {
+			$text = \OCA\Ticketcheck\Support\MailToText::htmlToText($text);
+		} else {
+			$text = strip_tags($text);
+		}
 		$html = '';
 		if ($text === '' && isset($payload['html'])) {
 			$html = (string)($payload['html'] ?? $payload['body-html'] ?? $payload['body_html'] ?? '');

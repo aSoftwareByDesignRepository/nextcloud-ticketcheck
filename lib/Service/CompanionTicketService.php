@@ -35,7 +35,7 @@ class CompanionTicketService
 		Ticket::STATUS_WAITING,
 	];
 
-	private const QUEUES = ['open', 'mine', 'waiting', 'watching'];
+	private const QUEUES = ['open', 'mine', 'waiting', 'watching', 'team'];
 
 	public function __construct(
 		private readonly TicketMapper $ticketMapper,
@@ -52,6 +52,7 @@ class CompanionTicketService
 		private readonly TicketWorkflowLock $workflowLock,
 		private readonly ?TicketCategoryService $ticketCategories = null,
 		private readonly ?TicketResourceService $ticketResources = null,
+		private readonly ?TicketAssigneeService $assigneeService = null,
 	) {
 	}
 
@@ -68,7 +69,7 @@ class CompanionTicketService
 	): array {
 		$limit = max(1, min(50, $limit));
 		if (!in_array($queue, self::QUEUES, true)) {
-			throw new CompanionValidationException('invalid_queue', 'queue must be open|mine|waiting|watching');
+			throw new CompanionValidationException('invalid_queue', 'queue must be open|mine|waiting|watching|team');
 		}
 		if ($projectId !== null && $projectId < 1) {
 			throw new CompanionValidationException('invalid_project', 'projectId must be a positive integer');
@@ -83,6 +84,8 @@ class CompanionTicketService
 		};
 		$assignedTo = $queue === 'mine' ? $uid : null;
 		$watchedBy = $queue === 'watching' ? $uid : null;
+		// NH-01 "my team" queue: live group membership resolves the set.
+		$teamGroupIds = $queue === 'team' ? $this->groupManager->getUserGroupIds($uid) : null;
 		$decoded = $this->decodeCursor($cursor);
 
 		// Fetch extra rows so permission filtering still fills a page.
@@ -96,6 +99,7 @@ class CompanionTicketService
 			$projectId,
 			$priority,
 			$watchedBy,
+			$teamGroupIds,
 		);
 
 		$items = [];
@@ -153,12 +157,27 @@ class CompanionTicketService
 			'mine' => $this->ticketMapper->countCompanionQueue(self::OPEN_STATUSES, $uid, null),
 			'waiting' => $this->ticketMapper->countCompanionQueue([Ticket::STATUS_WAITING], null, null),
 			'watching' => $this->ticketMapper->countCompanionQueue(self::OPEN_STATUSES, null, $uid),
+						// IGroupManager::getUserGroupIds takes IUser, not a uid string.
+			'team' => $this->ticketMapper->countCompanionQueue(
+				self::OPEN_STATUSES, null, null, $this->userGroupIds($uid)
+			),
 			'unassigned' => $this->ticketMapper->countUnassignedOpen(self::OPEN_STATUSES),
 			'slaBreachCount' => $this->ticketMapper->countSlaBreachedOpen(self::OPEN_STATUSES, $now),
 			'slaOldestBreachMinutes' => $oldestBreachDue === null
 				? null
 				: max(0, intdiv($now->getTimestamp() - (new \DateTimeImmutable($oldestBreachDue))->getTimestamp(), 60)),
 		];
+	}
+
+	/**
+	 * uid → group ids, fail-closed on a deleted/missing user.
+	 *
+	 * @return string[]
+	 */
+	private function userGroupIds(string $uid): array
+	{
+		$user = $this->userManager->get($uid);
+		return $user !== null ? $this->groupManager->getUserGroupIds($user) : [];
 	}
 
 	/**
@@ -248,6 +267,10 @@ class CompanionTicketService
 			// Selective move entry gate (spec §9.4): the server is the only
 			// authority on canEditTicket — absent/false hides Select mode.
 			'canMoveItems' => $this->permissions->canEditTicket($ticket),
+			// NH-01: server decides whether the actor may claim (live member
+			// of a queued group) — clients never compute group membership.
+			'claimable' => $this->assigneeService !== null
+				&& $this->assigneeService->getClaimableGroupIds($id, $uid) !== [],
 			'watching' => $this->watcherMapper->isWatching($id, $uid),
 		];
 	}
@@ -897,6 +920,7 @@ class CompanionTicketService
 			'projectId' => $ticket->getProjectId(),
 			'projectName' => $this->projectName($ticket->getProjectId()),
 			'assignedTo' => $ticket->getAssignedTo(),
+			'assignees' => $this->assigneePayload((int)$ticket->getId()),
 			'updatedAt' => $updated->format(\DateTimeInterface::ATOM),
 			'updatedAtRaw' => $updated->format('Y-m-d H:i:s'),
 			// Unread is client-local (seen markers + resume poll). Do not advertise a lying server flag.
@@ -925,6 +949,8 @@ class CompanionTicketService
 			'projectId' => $ticket->getProjectId(),
 			'projectName' => $this->projectName($ticket->getProjectId()),
 			'assignedTo' => $ticket->getAssignedTo(),
+			'assignees' => $this->assigneePayload((int)$ticket->getId()),
+			'teams' => $this->assigneeService?->getTeamGroupIds((int)$ticket->getId()) ?? [],
 			'customerDisplay' => $ticket->getCustomerName() !== '' ? $ticket->getCustomerName() : $ticket->getCustomerEmail(),
 			'createdAt' => $ticket->getCreatedAt()->format(\DateTimeInterface::ATOM),
 			'updatedAt' => $ticket->getUpdatedAt()->format(\DateTimeInterface::ATOM),
@@ -932,6 +958,158 @@ class CompanionTicketService
 			'slaResolutionDue' => $ticket->getSlaResolutionDue()?->format(\DateTimeInterface::ATOM),
 			'overdue' => $this->isOverdue($ticket),
 			'version' => $this->ticketVersion($ticket),
+		];
+	}
+
+	/**
+	 * Staff-only roster payload (companion surfaces are agent-gated).
+	 *
+	 * @return list<array{userId: string, displayName: string}>
+	 */
+	private function assigneePayload(int $ticketId): array
+	{
+		if ($this->assigneeService === null) {
+			return [];
+		}
+		return array_map(
+			static fn (array $row): array => [
+				'userId' => $row['user_id'],
+				'displayName' => $row['display_name'],
+			],
+			$this->assigneeService->getCoAssigneesWithDisplay($ticketId)
+		);
+	}
+
+	/**
+	 * Companion co-assignee add (NH-02): CAS-guarded, deduped roster response.
+	 *
+	 * @return array{ticket: array<string, mixed>, assignees: list<array{userId: string, displayName: string}>}
+	 */
+	public function addCoAssignee(int $id, string $actorUid, string $coUid, int $version): array
+	{
+		$this->requireEditableTicket($id);
+		if ($this->assigneeService === null) {
+			throw new CompanionValidationException('unsupported', 'co-assignees not available');
+		}
+		$this->guardTicketWorkflow(fn () => $this->assigneeService->addCoAssignee(
+			$id,
+			$coUid,
+			$actorUid,
+			function (Ticket $t) use ($version): void {
+				$this->assertCanEdit($t);
+				$this->assertVersion($t, $version);
+			},
+		));
+		$ticket = $this->requireTicketForRead($id);
+		return [
+			'ticket' => $this->serializeTicket($ticket),
+			'assignees' => $this->assigneePayload($id),
+		];
+	}
+
+	/**
+	 * Companion co-assignee remove (idempotent).
+	 *
+	 * @return array{ticket: array<string, mixed>, assignees: list<array{userId: string, displayName: string}>}
+	 */
+	public function removeCoAssignee(int $id, string $actorUid, string $coUid, int $version): array
+	{
+		$this->requireEditableTicket($id);
+		if ($this->assigneeService === null) {
+			throw new CompanionValidationException('unsupported', 'co-assignees not available');
+		}
+		$this->guardTicketWorkflow(fn () => $this->assigneeService->removeCoAssignee(
+			$id,
+			$coUid,
+			$actorUid,
+			function (Ticket $t) use ($version): void {
+				$this->assertCanEdit($t);
+				$this->assertVersion($t, $version);
+			},
+		));
+		$ticket = $this->requireTicketForRead($id);
+		return [
+			'ticket' => $this->serializeTicket($ticket),
+			'assignees' => $this->assigneePayload($id),
+		];
+	}
+
+	/**
+	 * Companion team claim (NH-01): member of a queued group takes primary.
+	 *
+	 * @return array{ticket: array<string, mixed>}
+	 */
+	public function claimTicket(int $id, string $actorUid, int $version): array
+	{
+		$this->requireEditableTicket($id);
+		if ($this->assigneeService === null) {
+			throw new CompanionValidationException('unsupported', 'team queues not available');
+		}
+		try {
+			$updated = $this->guardTicketWorkflow(fn () => $this->assigneeService->claimTeamTicket(
+				$id,
+				$actorUid,
+				function (Ticket $t) use ($version): void {
+					$this->assertCanEdit($t);
+					$this->assertVersion($t, $version);
+				},
+			));
+		} catch (\InvalidArgumentException $e) {
+			throw new CompanionValidationException(
+				str_contains($e->getMessage(), 'not_assignable') ? 'not_claimable' : 'invalid_claim',
+				$e->getMessage()
+			);
+		}
+		return ['ticket' => $this->serializeTicket($updated)];
+	}
+
+	/**
+	 * Groups the companion actor may team-assign (NN-09: no member uids).
+	 *
+	 * @return list<array{group_id: string, display_name: string, member_count: int, fits: bool, assigned: bool}>
+	 */
+	public function assignableGroups(int $id, string $actorUid): array
+	{
+		$this->requireEditableTicket($id);
+		if ($this->assigneeService === null) {
+			return [];
+		}
+		try {
+			return $this->assigneeService->getAssignableGroups($id, $actorUid);
+		} catch (\InvalidArgumentException $e) {
+			throw new CompanionValidationException('invalid_ticket', $e->getMessage());
+		}
+	}
+
+	/**
+	 * Companion team assign (NH-02): CAS-guarded persistent team + co fan-out.
+	 *
+	 * @return array{ticket: array<string, mixed>, assignees: list<array{userId: string, displayName: string}>, teams: list<string>}
+	 */
+	public function assignTeam(int $id, string $actorUid, string $groupId, int $version): array
+	{
+		$this->requireEditableTicket($id);
+		if ($this->assigneeService === null) {
+			throw new CompanionValidationException('unsupported', 'team queues not available');
+		}
+		try {
+			$this->guardTicketWorkflow(fn () => $this->assigneeService->assignTeam(
+				$id,
+				$groupId,
+				$actorUid,
+				function (Ticket $t) use ($version): void {
+					$this->assertCanEdit($t);
+					$this->assertVersion($t, $version);
+				},
+			));
+		} catch (\InvalidArgumentException $e) {
+			throw new CompanionValidationException('invalid_team', $e->getMessage());
+		}
+		$ticket = $this->requireTicketForRead($id);
+		return [
+			'ticket' => $this->serializeTicket($ticket),
+			'assignees' => $this->assigneePayload($id),
+			'teams' => $this->assigneeService->getTeamGroupIds($id),
 		];
 	}
 

@@ -14,6 +14,7 @@
 		project_search_results_count: '{count} projects found.',
 		project_filter_search_help: 'Type to filter by project.',
 		customer_filter_search_help: 'Type to filter by customer.',
+		assignee_filter_search_help: 'Type to filter by assignee.',
 		clear_selection: 'Clear selection',
 		an_error_occurred: 'An error occurred',
 	};

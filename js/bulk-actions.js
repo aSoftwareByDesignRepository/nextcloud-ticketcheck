@@ -499,6 +499,7 @@
     function setupBulkActions() {
         const actions = {
             'bulk-assign': handleBulkAssign,
+            'bulk-coassign': handleBulkCoAssign,
             'bulk-priority': handleBulkPriority,
             'bulk-status': handleBulkStatus,
             'bulk-close': handleBulkClose,
@@ -526,6 +527,54 @@
         if (!userId) return;
 
         bulkUpdateTickets('assign', { assigned_to: userId });
+    }
+
+    /**
+     * NH-06: add one co-assignee to every selected ticket (primary
+     * untouched; per-ticket skips are reported by the server).
+     */
+    async function handleBulkCoAssign() {
+        if (selectedTickets.size === 0) return;
+
+        const userId = await openAssigneePickerModal(
+            t('ticketcheck', 'modal_bulk_coassign_title')
+        );
+        if (!userId) return;
+
+        if (bulkUpdateInFlight) return;
+        bulkUpdateInFlight = true;
+        setBulkBarBusy(true);
+        tcApiPost('/apps/ticketcheck/api/tickets/co-assignees/bulk', {
+            ticket_ids: Array.from(selectedTickets),
+            user_id: userId,
+        })
+            .then(function (response) {
+                if (response.success) {
+                    const added = typeof response.added === 'number' ? response.added : 0;
+                    const skipped = typeof response.skipped === 'number' ? response.skipped : 0;
+                    const msg = skipped > 0
+                        ? tSafe('bulk_coassign_partial',
+                            'Co-assignee added to {added} tickets; {skipped} skipped',
+                            { added: String(added), skipped: String(skipped) })
+                        : tSafe('bulk_coassign_done', 'Co-assignee added to {count} tickets')
+                            .replace('{count}', String(added));
+                    if (window.TicketCheckMessaging && typeof TicketCheckMessaging.announce === 'function') {
+                        TicketCheckMessaging.announce(msg, skipped > 0 ? 'warning' : 'success');
+                        window.setTimeout(() => location.reload(), skipped > 0 ? 2600 : 450);
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    bulkUpdateInFlight = false;
+                    setBulkBarBusy(false);
+                    tcAlert(t('ticketcheck', 'error_with_recovery', { message: response.error || t('ticketcheck', 'an_error_occurred') }));
+                }
+            })
+            .catch(function (error) {
+                bulkUpdateInFlight = false;
+                setBulkBarBusy(false);
+                tcAlert(t('ticketcheck', 'error_with_recovery', { message: error.message || t('ticketcheck', 'an_error_occurred') }));
+            });
     }
 
     /**

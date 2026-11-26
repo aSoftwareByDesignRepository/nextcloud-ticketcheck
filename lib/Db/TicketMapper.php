@@ -101,8 +101,10 @@ class TicketMapper extends QBMapper
         ];
     }
 
-    public function __construct(IDBConnection $db)
-    {
+    public function __construct(
+        IDBConnection $db,
+        private ?TicketAssigneeMapper $assigneeMapper = null,
+    ) {
         parent::__construct($db, 'helpdesk_tickets', Ticket::class);
     }
 
@@ -143,6 +145,7 @@ class TicketMapper extends QBMapper
         ?int $projectId = null,
         ?string $priority = null,
         ?string $watchedBy = null,
+        ?array $teamGroupIds = null,
     ): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('t.*')
@@ -165,7 +168,10 @@ class TicketMapper extends QBMapper
             $qb->andWhere($qb->expr()->in('t.status', $qb->createNamedParameter($statuses, IQueryBuilder::PARAM_STR_ARRAY)));
         }
         if ($assignedTo !== null && $assignedTo !== '') {
-            $qb->andWhere($qb->expr()->eq('t.assigned_to', $qb->createNamedParameter($assignedTo)));
+            $qb->andWhere($this->assignedAnyRolePredicate($qb, 't.assigned_to', $assignedTo));
+        }
+        if ($teamGroupIds !== null) {
+            $qb->andWhere($this->teamGroupPredicate($qb, $teamGroupIds));
         }
         if ($projectId !== null && $projectId > 0) {
             $qb->andWhere($qb->expr()->eq('t.project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
@@ -197,7 +203,7 @@ class TicketMapper extends QBMapper
      *
      * @param list<string>|null $statuses
      */
-    public function countCompanionQueue(?array $statuses, ?string $assignedTo, ?string $watchedBy): int
+    public function countCompanionQueue(?array $statuses, ?string $assignedTo, ?string $watchedBy, ?array $teamGroupIds = null): int
     {
         $qb = $this->db->getQueryBuilder();
         $qb->select($qb->func()->count('*', 'cnt'))
@@ -219,7 +225,10 @@ class TicketMapper extends QBMapper
             $qb->andWhere($qb->expr()->in('t.status', $qb->createNamedParameter($statuses, IQueryBuilder::PARAM_STR_ARRAY)));
         }
         if ($assignedTo !== null && $assignedTo !== '') {
-            $qb->andWhere($qb->expr()->eq('t.assigned_to', $qb->createNamedParameter($assignedTo)));
+            $qb->andWhere($this->assignedAnyRolePredicate($qb, 't.assigned_to', $assignedTo));
+        }
+        if ($teamGroupIds !== null) {
+            $qb->andWhere($this->teamGroupPredicate($qb, $teamGroupIds));
         }
 
         $result = $qb->executeQuery();
@@ -241,10 +250,7 @@ class TicketMapper extends QBMapper
         $qb->select($qb->func()->count('*', 'cnt'))
             ->from($this->getTableName(), 't')
             ->where($qb->expr()->isNull('t.merged_into_id'))
-            ->andWhere($qb->expr()->orX(
-                $qb->expr()->isNull('t.assigned_to'),
-                $qb->expr()->eq('t.assigned_to', $qb->createNamedParameter('')),
-            ));
+            ->andWhere($this->noAssigneePredicate($qb, 't.assigned_to'));
 
         if ($statuses !== []) {
             $qb->andWhere($qb->expr()->in('t.status', $qb->createNamedParameter($statuses, IQueryBuilder::PARAM_STR_ARRAY)));
@@ -960,7 +966,7 @@ class TicketMapper extends QBMapper
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
             ->from($this->getTableName())
-            ->where($qb->expr()->eq('assigned_to', $qb->createNamedParameter($userId)));
+            ->where($this->assignedAnyRolePredicate($qb, 'assigned_to', $userId));
         if ($excludeDone) {
             $qb->andWhere($qb->expr()->notIn('status', $qb->createNamedParameter(self::DONE_STATUSES, IQueryBuilder::PARAM_STR_ARRAY)));
         }
@@ -1285,13 +1291,69 @@ class TicketMapper extends QBMapper
     private function applyAssignedToFilter(IQueryBuilder $qb, string $assignedTo): void
     {
         if ($assignedTo === self::ASSIGNED_TO_UNASSIGNED) {
-            $qb->andWhere($qb->expr()->orX(
-                $qb->expr()->isNull('assigned_to'),
-                $qb->expr()->eq('assigned_to', $qb->createNamedParameter('')),
-            ));
+            $qb->andWhere($this->noAssigneePredicate($qb, 'assigned_to'));
             return;
         }
-        $qb->andWhere($qb->expr()->eq('assigned_to', $qb->createNamedParameter($assignedTo)));
+        $qb->andWhere($this->assignedAnyRolePredicate($qb, 'assigned_to', $assignedTo));
+    }
+
+    /**
+     * "Assigned to $uid" widened (TC-MULTI-ASSIGN): primary on the tickets
+     * row OR a co-assignee row on helpdesk_ticket_assignees. $column carries
+     * the optional alias prefix ('assigned_to' or 't.assigned_to').
+     */
+    private function assignedAnyRolePredicate(IQueryBuilder $qb, string $column, string $uid): \OCP\DB\QueryBuilder\ICompositeExpression|\OCP\DB\QueryBuilder\IQueryFunction
+    {
+        $prefix = str_contains($column, '.') ? substr($column, 0, strpos($column, '.') + 1) : '';
+        $coExists = sprintf(
+            'EXISTS (SELECT 1 FROM `*PREFIX*helpdesk_ticket_assignees` ca WHERE ca.ticket_id = %sid AND ca.user_id = %s)',
+            $prefix,
+            $qb->createNamedParameter($uid)
+        );
+        return $qb->expr()->orX(
+            $qb->expr()->eq($column, $qb->createNamedParameter($uid)),
+            $qb->createFunction($coExists)
+        );
+    }
+
+    /**
+     * "Unassigned" widened: no primary AND zero co-assignee rows (spec:
+     * `unassigned` = no primary AND zero co).
+     */
+    private function noAssigneePredicate(IQueryBuilder $qb, string $column): \OCP\DB\QueryBuilder\ICompositeExpression|\OCP\DB\QueryBuilder\IQueryFunction
+    {
+        $prefix = str_contains($column, '.') ? substr($column, 0, strpos($column, '.') + 1) : '';
+        $noCo = sprintf(
+            'NOT EXISTS (SELECT 1 FROM `*PREFIX*helpdesk_ticket_assignees` ca WHERE ca.ticket_id = %sid)',
+            $prefix
+        );
+        return $qb->expr()->andX(
+            $qb->expr()->orX(
+                $qb->expr()->isNull($column),
+                $qb->expr()->eq($column, $qb->createNamedParameter('')),
+            ),
+            $qb->createFunction($noCo)
+        );
+    }
+
+    /**
+     * "My team" queue (NH-01): ticket has a team row for one of the given
+     * groups. Empty list → impossible predicate (never leak all tickets).
+     *
+     * @param list<string> $groupIds
+     */
+    private function teamGroupPredicate(IQueryBuilder $qb, array $groupIds, string $prefix = 't.'): \OCP\DB\QueryBuilder\ICompositeExpression|\OCP\DB\QueryBuilder\IQueryFunction
+    {
+        $gids = array_values(array_filter(array_map('strval', $groupIds), fn (string $g) => $g !== ''));
+        if ($gids === []) {
+            return $qb->expr()->eq($prefix . 'id', $qb->createNamedParameter(-1, IQueryBuilder::PARAM_INT));
+        }
+        $sub = sprintf(
+            'EXISTS (SELECT 1 FROM `*PREFIX*helpdesk_ticket_teams` tt WHERE tt.ticket_id = %sid AND tt.group_id IN (%s))',
+            $prefix,
+            implode(',', array_map(fn (string $g) => $qb->createNamedParameter($g), $gids))
+        );
+        return $qb->createFunction($sub);
     }
 
     /**
@@ -1303,10 +1365,7 @@ class TicketMapper extends QBMapper
             $qb = $this->db->getQueryBuilder();
             $qb->selectAlias($qb->createFunction('COUNT(*)'), 'cnt')
                 ->from($this->getTableName())
-                ->where($qb->expr()->orX(
-                    $qb->expr()->isNull('assigned_to'),
-                    $qb->expr()->eq('assigned_to', $qb->createNamedParameter('')),
-                ))
+                ->where($this->noAssigneePredicate($qb, 'assigned_to'))
                 ->andWhere($qb->expr()->notIn(
                     'status',
                     $qb->createNamedParameter(self::DONE_STATUSES, IQueryBuilder::PARAM_STR_ARRAY),
@@ -1332,10 +1391,7 @@ class TicketMapper extends QBMapper
             $qb = $this->db->getQueryBuilder();
             $qb->selectAlias($qb->createFunction('COUNT(*)'), 'cnt')
                 ->from($this->getTableName())
-                ->where($qb->expr()->orX(
-                    $qb->expr()->isNull('assigned_to'),
-                    $qb->expr()->eq('assigned_to', $qb->createNamedParameter('')),
-                ))
+                ->where($this->noAssigneePredicate($qb, 'assigned_to'))
                 ->andWhere($qb->expr()->notIn(
                     'status',
                     $qb->createNamedParameter(
@@ -1365,10 +1421,7 @@ class TicketMapper extends QBMapper
             $qb->selectAlias($qb->createFunction('COUNT(*)'), 'cnt')
                 ->from($this->getTableName())
                 ->where($qb->expr()->eq('status', $qb->createNamedParameter(Ticket::STATUS_NEW)))
-                ->andWhere($qb->expr()->orX(
-                    $qb->expr()->isNull('assigned_to'),
-                    $qb->expr()->eq('assigned_to', $qb->createNamedParameter('')),
-                ));
+                ->andWhere($this->noAssigneePredicate($qb, 'assigned_to'));
             $result = $qb->executeQuery();
             $count = (int)$result->fetchOne();
             $result->closeCursor();
@@ -1556,6 +1609,21 @@ class TicketMapper extends QBMapper
             }
         }
 
+        if ($this->assigneeMapper !== null && $tickets !== []) {
+            $coByTicket = $this->assigneeMapper->getUserIdsForTickets(
+                array_map(static fn (Ticket $t): int => (int)$t->getId(), $tickets),
+            );
+            foreach ($tickets as $ticket) {
+                $primary = $ticket->getAssignedTo();
+                if ($primary !== null && $primary !== '') {
+                    $analytics['by_any_assignee'][$primary] = ($analytics['by_any_assignee'][$primary] ?? 0) + 1;
+                }
+                foreach ($coByTicket[(int)$ticket->getId()] ?? [] as $coUid) {
+                    $analytics['by_any_assignee'][$coUid] = ($analytics['by_any_assignee'][$coUid] ?? 0) + 1;
+                }
+            }
+        }
+
         $analytics = array_merge($analytics, self::summarizeResolutionTimes($resolutionTimes));
 
         return $analytics;
@@ -1594,6 +1662,10 @@ class TicketMapper extends QBMapper
             'by_status' => [],
             'by_category' => [],
             'by_assignee' => [],
+            // NH-07: workload metric — every uid touched by any assignee
+            // role (primary ∪ co). `by_assignee` stays primary-only as the
+            // accountability metric (spec AS-06); this is the second number.
+            'by_any_assignee' => [],
             'recent_activity' => [],
             'sla_metrics' => []
         ];

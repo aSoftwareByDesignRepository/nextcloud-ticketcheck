@@ -956,6 +956,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         const setPriority = (rule.action || {}).set_priority || '';
                         const assignTo = (rule.action || {}).assign_to || '';
                         const assignToLabel = assignTo ? (assignableUsersById[String(assignTo)] || assignTo) : '';
+                        const addCoAssignee = (rule.action || {}).add_co_assignee || '';
+                        const addCoAssigneeLabel = addCoAssignee ? (assignableUsersById[String(addCoAssignee)] || addCoAssignee) : '';
                         const statusSummary = statusesArr.length > 0
                             ? statusesArr.map(translateToken).join(', ')
                             : t('ticketcheck', 'all');
@@ -975,6 +977,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         if (assignTo) {
                             summary.appendChild(document.createTextNode(' -> ' + assignToLabel));
+                        }
+                        if (addCoAssignee) {
+                            summary.appendChild(document.createTextNode(' -> +' + addCoAssigneeLabel));
                         }
 
                         const editBtn = document.createElement('button');
@@ -1016,7 +1021,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const minPriorityEl = document.getElementById('escalation-rule-min-priority');
         const setPriorityEl = document.getElementById('escalation-rule-set-priority');
         const assignToEl = document.getElementById('escalation-rule-assign-to');
-        if (!idEl || !nameEl || !ageEl || !minPriorityEl || !setPriorityEl || !assignToEl) {
+        const addCoEl = document.getElementById('escalation-rule-add-coassignee');
+        if (!idEl || !nameEl || !ageEl || !minPriorityEl || !setPriorityEl || !assignToEl || !addCoEl) {
             return;
         }
         idEl.value = rule ? rule.id : '';
@@ -1025,6 +1031,7 @@ document.addEventListener('DOMContentLoaded', function () {
         minPriorityEl.value = rule ? ((rule.conditions || {}).min_priority || '') : '';
         setPriorityEl.value = rule ? ((rule.action || {}).set_priority || '') : '';
         assignToEl.value = rule ? ((rule.action || {}).assign_to || '') : '';
+        addCoEl.value = rule ? ((rule.action || {}).add_co_assignee || '') : '';
 
         const statusCbs = escalationRuleForm.querySelectorAll('.escalation-status-cb');
         const statuses = rule ? ((rule.conditions || {}).statuses || []) : [];
@@ -1098,7 +1105,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const minPriorityEl = document.getElementById('escalation-rule-min-priority');
             const setPriorityEl = document.getElementById('escalation-rule-set-priority');
             const assignToEl = document.getElementById('escalation-rule-assign-to');
-            if (!idEl || !nameEl || !ageEl || !minPriorityEl || !setPriorityEl || !assignToEl) {
+            const addCoEl = document.getElementById('escalation-rule-add-coassignee');
+            if (!idEl || !nameEl || !ageEl || !minPriorityEl || !setPriorityEl || !assignToEl || !addCoEl) {
                 return;
             }
             const id = idEl.value;
@@ -1109,11 +1117,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const statuses = Array.from(statusCbs).map(function (cb) { return cb.value; });
             const setPriority = setPriorityEl.value || null;
             const assignTo = assignToEl.value.trim() || null;
+            const addCoAssignee = addCoEl.value.trim() || null;
 
             const payload = {
                 name: name,
                 conditions: { age_hours: ageHours, min_priority: minPriority, statuses: statuses },
-                action: { set_priority: setPriority, assign_to: assignTo },
+                action: { set_priority: setPriority, assign_to: assignTo, add_co_assignee: addCoAssignee },
                 is_active: true
             };
 

@@ -28,19 +28,22 @@ class EscalationService
     private TicketService $ticketService;
     private IUserManager $userManager;
     private LoggerInterface $logger;
+    private ?TicketAssigneeService $assigneeService;
 
     public function __construct(
         EscalationRuleMapper $escalationRuleMapper,
         TicketMapper $ticketMapper,
         TicketService $ticketService,
         IUserManager $userManager,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ?TicketAssigneeService $assigneeService = null
     ) {
         $this->escalationRuleMapper = $escalationRuleMapper;
         $this->ticketMapper = $ticketMapper;
         $this->ticketService = $ticketService;
         $this->userManager = $userManager;
         $this->logger = $logger;
+        $this->assigneeService = $assigneeService;
     }
 
     /**
@@ -76,8 +79,10 @@ class EscalationService
 
         $setPriority = $action['set_priority'] ?? null;
         $assignTo = $action['assign_to'] ?? null;
+        // NH-04: escalate by adding a co-assignee (primary untouched).
+        $addCoAssignee = $action['add_co_assignee'] ?? null;
 
-        if ($setPriority === null && $assignTo === null) {
+        if ($setPriority === null && $assignTo === null && $addCoAssignee === null) {
             return;
         }
 
@@ -100,6 +105,34 @@ class EscalationService
 
         foreach ($tickets as $ticket) {
             $this->applyActionToTicket($ticket, $setPriority, $assignTo, $rule->getName());
+            if ($addCoAssignee !== null && $addCoAssignee !== '') {
+                $this->applyCoAssigneeAction($ticket, (string)$addCoAssignee, $rule->getName());
+            }
+        }
+    }
+
+    /**
+     * NH-04 escalation co-add: cap applies — a maxed roster logs a skip
+     * rather than erroring the whole escalation run.
+     */
+    private function applyCoAssigneeAction(Ticket $ticket, string $coUid, string $ruleName): void
+    {
+        if ($this->assigneeService === null || $coUid === '') {
+            return;
+        }
+        try {
+            $this->assigneeService->addCoAssignee((int)$ticket->getId(), $coUid, 'escalation');
+        } catch (\InvalidArgumentException $e) {
+            $this->logger->info('Escalation rule "{rule}": co-assignee add skipped ({code})', [
+                'rule' => $ruleName,
+                'code' => $e->getMessage(),
+                'ticket_id' => $ticket->getId(),
+            ]);
+        } catch (\Throwable $e) {
+            $this->logger->warning('Escalation rule "{rule}": co-assignee add failed', [
+                'rule' => $ruleName,
+                'exception' => $e,
+            ]);
         }
     }
 

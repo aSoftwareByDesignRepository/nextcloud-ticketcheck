@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+- **Multi-assignee tickets (co-assignees + named teams):** a ticket can now carry up to 10 co-assignees alongside the accountable primary assignee. Co-assignees are added/removed per-ticket from a chips+combobox control on the detail page (incremental, CAS-guarded) or staged on the create/edit form via a hidden `co_assignees` CSV field applied as a replace-set inside the mutation's CAS (EC-19: a CSV carrying the chosen primary uid is silently deduped). New schema `helpdesk_ticket_assignees` (unique ticket+user) and `helpdesk_ticket_teams` (persistent named teams, NH-01).
+- **Assignment semantics widened:** the `assigned_to=<uid>` list filter, the companion `mine`/`unassigned` queues and the "unassigned" counters now match *any* assignee role (primary OR co) — "tickets person X works on" is complete. `by_assignee` analytics stays primary-only (accountability, spec AS-06); a new `by_any_assignee` counter reports the any-role workload metric (NH-07). CSV export gained a `co_assignees` column (NH-03).
+- **Ticket teams:** staff can assign a Nextcloud group as a persistent team (`assignable-groups` roster is members-or-admin gated, counts+fits only — no member-uid enumeration); members are fanned out as co-assignees under the cap. A member of a queued team can **claim** the ticket, becoming primary (queued team rows clear, status `new`→`in_progress`). "My team tickets" quick filter on the list.
+- **Notifications & activity:** co-assignees join the recipient union for ticket events (capped, guests excluded); new activity subjects for co-assignee add/remove and team assign/claim; companion push `notifyCoAssigned` fans out to added co-assignees; SLA breach alerts bucket by primary ∪ co so co-only tickets no longer fall into the admins/unassigned path.
+- **Merge/delete/uninstall hygiene:** merges transfer non-duplicate co rows and demote a displaced source primary to co-assignee (EC-10); purges, dependency analysis, upgrade backups, uninstall drops and config-transfer manifest all cover both new tables.
+- **Escalation rules (NH-04):** new action "add co-assignee" — adds the user as co-assignee when a rule fires (primary untouched; cap-respecting, per-ticket skips logged). New bulk action "Add co-assignee" applies one co-assignee to up to 100 selected tickets with per-ticket skip reporting (NH-06); kanban cards show a co-assignee avatar stack (NH-05).
+- **Companion (mobile):** inbox gained the `team` queue (staff only), ticket detail shows the assignees payload (`assignees`, `teams`, server-computed `claimable`), and a new AssigneesSection manages co-assignees, team assign and claim through the same CAS-guarded companion endpoints (NH-02).
+
+### Fixed
+- Co-assignee set updates validate the entire posted CSV *before* the ticket row is written — a rejected set can no longer leave field edits half-applied.
+- `IGroupManager::getUserGroupIds` is now always called with an `IUser` object (resolving the uid first, fail-closed on missing users) — a raw uid would have TypeError'd on the team queue and roster paths.
+
+## Unreleased
+
+### Added
+- **Assignee filter picker (issue #10):** the "Assigned To" filter on the ticket list and the Kanban board is now a searchable combobox — type a name to filter tickets by any assignable agent, in addition to the fixed Anyone / Unassigned / Me options. Suggestions come from the same assignable-staff roster as assignment itself (`GET /api/tickets/filter-options?type=assignee`) and scope to the selected project filter; an applied filter shows the resolved display name, including for users picked via a saved view or a direct `?assigned_to=<uid>` URL.
+
 ## 2.7.0 - 2026-11-23
 
 ### Added

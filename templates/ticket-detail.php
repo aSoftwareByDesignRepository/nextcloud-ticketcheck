@@ -213,6 +213,71 @@ $localeFormat = $_['localeFormat'] ?? null;
             </div>
             <?php endif; ?>
 
+            <!-- Co-assignees (TC-MULTI-ASSIGN) -->
+            <?php if ($_['canEdit'] ?? false): ?>
+            <div class="helpdesk-card ticket-detail-section" id="coassignees-section">
+                <div class="helpdesk-card__header ticket-detail-card-header-row">
+                    <h2 class="helpdesk-card__title"><?php p($l->t('co_assignees')); ?></h2>
+                    <button type="button" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm" id="add-coassignee-btn" data-ticket-id="<?php p($_['ticket']->getId()); ?>" aria-label="<?php p($l->t('add_co_assignee')); ?>">
+                        <?php p($l->t('add_co_assignee')); ?>
+                    </button>
+                </div>
+                <div class="helpdesk-card__body">
+                    <div id="coassignees-list" data-initial-coassignees="<?php p(htmlspecialchars(json_encode($_['coAssignees'] ?? []), ENT_QUOTES, 'UTF-8')); ?>">
+                        <?php if (empty($_['coAssignees'])): ?>
+                            <p class="helpdesk-text-muted helpdesk-text-sm"><?php p($l->t('no_co_assignees')); ?></p>
+                        <?php else: ?>
+                            <ul class="helpdesk-list ticket-detail-reset-list">
+                                <?php foreach ($_['coAssignees'] ?? [] as $ca): ?>
+                                    <li class="helpdesk-watcher-item ticket-detail-watcher-item-row">
+                                        <span><?php p($ca['display_name'] ?? $ca['user_id']); ?></span>
+                                        <button type="button" class="helpdesk-btn helpdesk-btn--icon helpdesk-btn--sm remove-coassignee-btn" data-ticket-id="<?php p($_['ticket']->getId()); ?>" data-user-id="<?php p($ca['user_id']); ?>" aria-label="<?php p($l->t('remove_co_assignee')); ?>">
+                                            <?php print_unescaped(IconCatalog::render('x', 'helpdesk-btn__icon')); ?>
+                                        </button>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </div>
+                    <p class="helpdesk-text-muted helpdesk-text-sm ticket-detail-coassignee-hint"><?php p($l->t('co_assignees_hint')); ?></p>
+                </div>
+            </div>
+
+            <!-- Teams (NH-01 persistent team queue) -->
+            <div class="helpdesk-card ticket-detail-section" id="teams-section">
+                <div class="helpdesk-card__header ticket-detail-card-header-row">
+                    <h2 class="helpdesk-card__title"><?php p($l->t('teams')); ?></h2>
+                    <button type="button" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm" id="add-team-btn" data-ticket-id="<?php p($_['ticket']->getId()); ?>" aria-label="<?php p($l->t('assign_team')); ?>">
+                        <?php p($l->t('assign_team')); ?>
+                    </button>
+                </div>
+                <div class="helpdesk-card__body">
+                    <div id="teams-list">
+                        <?php if (empty($_['teamRows'])): ?>
+                            <p class="helpdesk-text-muted helpdesk-text-sm"><?php p($l->t('no_teams')); ?></p>
+                        <?php else: ?>
+                            <ul class="helpdesk-list ticket-detail-reset-list">
+                                <?php foreach ($_['teamRows'] ?? [] as $tm): ?>
+                                    <li class="helpdesk-watcher-item ticket-detail-watcher-item-row">
+                                        <span><?php print_unescaped(IconCatalog::render('users', 'helpdesk-btn__icon')); ?> <?php p($tm['display_name'] ?? $tm['group_id']); ?></span>
+                                        <button type="button" class="helpdesk-btn helpdesk-btn--icon helpdesk-btn--sm remove-team-btn" data-ticket-id="<?php p($_['ticket']->getId()); ?>" data-group-id="<?php p($tm['group_id']); ?>" aria-label="<?php p($l->t('remove_team')); ?>">
+                                            <?php print_unescaped(IconCatalog::render('x', 'helpdesk-btn__icon')); ?>
+                                        </button>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </div>
+                    <?php if (!empty($_['claimableTeams'])): ?>
+                        <button type="button" class="helpdesk-btn helpdesk-btn--primary helpdesk-btn--sm" id="claim-team-btn" data-ticket-id="<?php p($_['ticket']->getId()); ?>">
+                            <?php p($l->t('claim_ticket')); ?>
+                        </button>
+                        <p class="helpdesk-text-muted helpdesk-text-sm"><?php p($l->t('claim_ticket_hint')); ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Comments thread + reply (single conversation card) -->
             <div class="helpdesk-card ticket-detail-section ticket-detail-comments-card" data-ticket-id="<?php p($_['ticket']->getId()); ?>" data-can-move="<?php p(!empty($_['canMoveItems']) ? '1' : '0'); ?>">
                 <div class="helpdesk-card__header">
@@ -779,6 +844,61 @@ $localeFormat = $_['localeFormat'] ?? null;
         <div class="helpdesk-form-actions ticket-detail-dialog-actions">
             <button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="add-watcher-cancel"><?php p($l->t('cancel_button')); ?></button>
             <button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="add-watcher-submit" disabled><?php p($l->t('add_watcher')); ?></button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Add co-assignee dialog -->
+<dialog id="add-coassignee-dialog" class="helpdesk-dialog ticket-detail-dialog" aria-labelledby="add-coassignee-title" aria-describedby="add-coassignee-dialog-desc">
+    <h2 id="add-coassignee-title" class="helpdesk-dialog__title ticket-detail-dialog-title"><?php p($l->t('add_co_assignee')); ?></h2>
+    <p id="add-coassignee-dialog-desc" class="helpdesk-text-muted ticket-detail-dialog-desc"><?php p($l->t('add_coassignee_dialog_description')); ?></p>
+    <form id="add-coassignee-form" method="dialog" novalidate>
+        <div class="helpdesk-form-group tc-select-combobox ticket-detail-dialog-picker">
+            <label for="add-coassignee-search-input" class="helpdesk-form-label"><?php p($l->t('coassignee_search_label')); ?></label>
+            <input type="search"
+                id="add-coassignee-search-input"
+                class="helpdesk-form-control"
+                placeholder="<?php p($l->t('assignee_search_placeholder')); ?>"
+                autocomplete="off"
+                aria-controls="add-coassignee-search-results"
+                aria-expanded="false"
+                aria-autocomplete="list"
+                aria-describedby="add-coassignee-search-help add-coassignee-search-status"
+                aria-required="true">
+            <p id="add-coassignee-search-help" class="helpdesk-form-help"><?php p($l->t('user_search_help')); ?></p>
+            <p id="add-coassignee-search-status" class="tc-select-combobox__status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+            <select id="add-coassignee-user-id" class="tc-select-combobox__native" tabindex="-1" aria-hidden="true">
+                <option value=""><?php p($l->t('select_user_placeholder')); ?></option>
+                <?php if (!empty($_['availableAgents'])): ?>
+                    <?php foreach ($_['availableAgents'] as $agent): ?>
+                        <option value="<?php p($agent['user_id']); ?>"><?php p($agent['user_name']); ?></option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </select>
+            <div id="add-coassignee-search-results" class="tc-select-combobox__results" role="listbox" aria-label="<?php p($l->t('add_co_assignee')); ?>" hidden></div>
+        </div>
+        <div class="helpdesk-form-actions ticket-detail-dialog-actions">
+            <button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="add-coassignee-cancel"><?php p($l->t('cancel_button')); ?></button>
+            <button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="add-coassignee-submit" disabled><?php p($l->t('add_co_assignee')); ?></button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Assign team dialog -->
+<dialog id="add-team-dialog" class="helpdesk-dialog ticket-detail-dialog" aria-labelledby="add-team-title" aria-describedby="add-team-dialog-desc">
+    <h2 id="add-team-title" class="helpdesk-dialog__title ticket-detail-dialog-title"><?php p($l->t('assign_team')); ?></h2>
+    <p id="add-team-dialog-desc" class="helpdesk-text-muted ticket-detail-dialog-desc"><?php p($l->t('assign_team_dialog_description')); ?></p>
+    <form id="add-team-form" method="dialog" novalidate>
+        <div class="helpdesk-form-group ticket-detail-dialog-picker">
+            <label for="add-team-group-id" class="helpdesk-form-label"><?php p($l->t('team_select_label')); ?></label>
+            <select id="add-team-group-id" class="helpdesk-form-control" aria-required="true">
+                <option value=""><?php p($l->t('team_loading')); ?></option>
+            </select>
+            <p id="add-team-status" class="tc-select-combobox__status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+        </div>
+        <div class="helpdesk-form-actions ticket-detail-dialog-actions">
+            <button type="button" class="helpdesk-btn helpdesk-btn--secondary" id="add-team-cancel"><?php p($l->t('cancel_button')); ?></button>
+            <button type="submit" class="helpdesk-btn helpdesk-btn--primary" id="add-team-submit" disabled><?php p($l->t('assign_team')); ?></button>
         </div>
     </form>
 </dialog>

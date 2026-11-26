@@ -328,6 +328,32 @@ foreach ($categoryOptions as $opt) {
                                     <?php endif; ?>
                                 </select>
                             </div>
+
+                            <!-- Co-assignees (TC-MULTI-ASSIGN): chips stage uids into the hidden CSV -->
+                            <div class="helpdesk-form-group tc-field" id="coassignees-field">
+                                <label for="coassignee-pick" class="helpdesk-form-label"><?php p($l->t('co_assignees')); ?></label>
+                                <input type="hidden" id="co_assignees" name="co_assignees" value="<?php
+                                    $ca = $_['coAssignees'] ?? [];
+                                    p(implode(',', array_map(static function ($r) { return (string)($r['user_id'] ?? ''); }, is_array($ca) ? $ca : [])));
+                                ?>">
+                                <select id="coassignee-pick" class="helpdesk-form-control" aria-describedby="coassignees-help">
+                                    <option value=""><?php p($l->t('coassignee_pick_placeholder')); ?></option>
+                                    <?php if (!empty($_['availableAgents'])): ?>
+                                        <?php foreach ($_['availableAgents'] as $agent): ?>
+                                            <option value="<?php p($agent['user_id']); ?>"><?php p($agent['user_name']); ?></option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <p id="coassignees-help" class="helpdesk-form-help"><?php p($l->t('co_assignees_form_help')); ?></p>
+                                <ul id="coassignee-chips" class="tc-chips ticket-detail-reset-list" aria-label="<?php p($l->t('co_assignees')); ?>">
+                                    <?php foreach ((array)($_['coAssignees'] ?? []) as $ca): ?>
+                                        <li class="tc-chip" data-uid="<?php p($ca['user_id']); ?>">
+                                            <span class="tc-chip__label"><?php p($ca['display_name'] ?? $ca['user_id']); ?></span>
+                                            <button type="button" class="tc-chip__remove" data-uid="<?php p($ca['user_id']); ?>" aria-label="<?php p($l->t('remove_co_assignee')); ?>">×</button>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1343,6 +1343,275 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     });
 
+    safeInit('co-assignees', function () {
+    // TC-MULTI-ASSIGN: co-assignee + team management (mirrors watcher flow).
+    const addCoBtn = document.getElementById('add-coassignee-btn');
+    const addCoDialog = document.getElementById('add-coassignee-dialog');
+    const addCoForm = document.getElementById('add-coassignee-form');
+    const addCoSearchInput = document.getElementById('add-coassignee-search-input');
+    const addCoSearchStatus = document.getElementById('add-coassignee-search-status');
+    const addCoSearchResults = document.getElementById('add-coassignee-search-results');
+    const addCoUserSelect = document.getElementById('add-coassignee-user-id');
+    const addCoSubmitBtn = document.getElementById('add-coassignee-submit');
+    if (addCoBtn && addCoDialog && addCoForm) {
+        prepareNativeDialog(addCoDialog);
+        const coTicketId = parseTicketId(addCoBtn.dataset.ticketId);
+        if (!coTicketId) {
+            console.error('[ticketcheck] add-coassignee dialog: invalid ticket id');
+            return;
+        }
+        let coCombobox = null;
+        let coSubmitting = false;
+
+        function updateCoSubmitState() {
+            if (!addCoSubmitBtn || !addCoUserSelect) return;
+            const userId = addCoUserSelect.value ? addCoUserSelect.value.trim() : '';
+            addCoSubmitBtn.disabled = !userId;
+        }
+
+        if (addCoSearchInput && addCoUserSelect && addCoSearchResults && window.TicketCheckSelectCombobox) {
+            coCombobox = window.TicketCheckSelectCombobox.attach({
+                root: addCoSearchInput.closest('.tc-select-combobox'),
+                input: addCoSearchInput,
+                select: addCoUserSelect,
+                results: addCoSearchResults,
+                status: addCoSearchStatus,
+                externalHelp: true,
+                minQueryLength: 1,
+                debounceMs: 250,
+                helpKey: 'user_search_help',
+                loadingKey: 'user_search_loading',
+                noResultsKey: 'user_search_no_results',
+                countKey: 'user_search_results_count',
+                optionIdPrefix: 'coassignee-user-opt-',
+                getOptions: function (query, signal) {
+                    return fetchAssignableUsers(coTicketId, query, 25, signal).then(function (users) {
+                        return users.map(function (user) {
+                            return { value: user.user_id, label: user.user_name };
+                        });
+                    });
+                },
+                onSelect: function () { updateCoSubmitState(); },
+            });
+        } else if (addCoSubmitBtn) {
+            addCoSubmitBtn.disabled = true;
+        }
+
+        function resetCoDialog() {
+            addCoForm.reset();
+            if (addCoSearchInput) addCoSearchInput.value = '';
+            if (coCombobox && typeof coCombobox.close === 'function') coCombobox.close();
+            if (addCoUserSelect) addCoUserSelect.value = '';
+            if (coCombobox && typeof coCombobox.syncFromSelect === 'function') coCombobox.syncFromSelect();
+            updateCoSubmitState();
+        }
+
+        addCoBtn.addEventListener('click', function () {
+            resetCoDialog();
+            addCoDialog.showModal();
+            if (addCoSearchInput) addCoSearchInput.focus();
+        });
+        const addCoCancel = document.getElementById('add-coassignee-cancel');
+        if (addCoCancel) {
+            addCoCancel.addEventListener('click', function () { addCoDialog.close(); });
+        }
+        addCoDialog.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && addCoSearchResults && addCoSearchResults.hidden) addCoDialog.close();
+        });
+        addCoDialog.addEventListener('close', function () { resetCoDialog(); });
+
+        addCoForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (coSubmitting) return;
+            const userId = addCoUserSelect && addCoUserSelect.value ? addCoUserSelect.value.trim() : '';
+            if (!userId) {
+                setInlineStatus(addCoSearchStatus, tSafe('user_id_required', 'Please choose a person from the search results.'), true);
+                if (addCoSearchInput) addCoSearchInput.focus();
+                return;
+            }
+            coSubmitting = true;
+            if (addCoSubmitBtn) addCoSubmitBtn.disabled = true;
+            tcApiPost('/apps/ticketcheck/api/tickets/' + coTicketId + '/co-assignees', { user_id: userId }).then(function (data) {
+                if (data.success) {
+                    addCoDialog.close();
+                    showQuickActionSuccess(tSafe('add_co_assignee', 'Co-assignee added'));
+                    setTimeout(function () { location.reload(); }, QUICK_ACTION_RELOAD_MS);
+                    return;
+                }
+                setInlineStatus(addCoSearchStatus, data.message || tSafe('user_search_failed', 'Could not add. Try again.'), true);
+            }).catch(function (err) {
+                setInlineStatus(addCoSearchStatus, (err && err.message) || tSafe('user_search_failed', 'Could not add. Try again.'), true);
+            }).finally(function () {
+                coSubmitting = false;
+                updateCoSubmitState();
+            });
+        });
+    }
+
+    // Remove co-assignee — confirm before unassigning.
+    document.querySelectorAll('.remove-coassignee-btn').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+            const ticketId = this.dataset.ticketId;
+            const userId = this.dataset.userId;
+            if (!ticketId || !userId) return;
+            const C = window.TicketCheckComponents;
+            if (C && typeof C.confirmDialog === 'function') {
+                const ok = await C.confirmDialog({
+                    title: t('ticketcheck', 'remove_co_assignee'),
+                    body: tSafe('remove_coassignee_confirm', 'Remove this co-assignee?'),
+                    confirmLabel: t('ticketcheck', 'Remove'),
+                    danger: true,
+                });
+                if (!ok) return;
+            }
+            this.disabled = true;
+            const self = this;
+            tcApiDel('/apps/ticketcheck/api/tickets/' + ticketId + '/co-assignees/' + encodeURIComponent(userId)).then(function (data) {
+                if (data.success) { showSuccess(t('ticketcheck', 'remove_co_assignee')); setTimeout(function () { location.reload(); }, 500); }
+                else { showAlert(data.message || tSafe('operation_failed', 'Something went wrong')); self.disabled = false; }
+            }).catch(function (err) { showAlert(err.message || tSafe('operation_failed', 'Something went wrong')); self.disabled = false; });
+        });
+    });
+
+    // Team dialog — group select fed by assignable-groups (NN-09).
+    const addTeamBtn = document.getElementById('add-team-btn');
+    const addTeamDialog = document.getElementById('add-team-dialog');
+    const addTeamForm = document.getElementById('add-team-form');
+    const addTeamGroupSelect = document.getElementById('add-team-group-id');
+    const addTeamStatus = document.getElementById('add-team-status');
+    const addTeamSubmitBtn = document.getElementById('add-team-submit');
+    if (addTeamBtn && addTeamDialog && addTeamForm && addTeamGroupSelect) {
+        prepareNativeDialog(addTeamDialog);
+        const teamTicketId = parseTicketId(addTeamBtn.dataset.ticketId);
+        let teamSubmitting = false;
+        let teamGroupsLoaded = false;
+
+        function updateTeamSubmitState() {
+            if (addTeamSubmitBtn) {
+                addTeamSubmitBtn.disabled = !(addTeamGroupSelect.value && addTeamGroupSelect.value.trim());
+            }
+        }
+
+        function loadTeamGroups() {
+            if (teamGroupsLoaded) return;
+            setInlineStatus(addTeamStatus, tSafe('team_loading', 'Loading teams…'), false);
+            tcApiGet('/apps/ticketcheck/api/tickets/' + teamTicketId + '/assignable-groups').then(function (data) {
+                teamGroupsLoaded = true;
+                addTeamGroupSelect.innerHTML = '';
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = tSafe('team_select_placeholder', 'Select a team…');
+                addTeamGroupSelect.appendChild(placeholder);
+                const groups = (data && data.groups) || [];
+                groups.forEach(function (g) {
+                    const opt = document.createElement('option');
+                    opt.value = g.group_id;
+                    const fits = g.fits && !g.assigned;
+                    opt.disabled = !fits;
+                    opt.textContent = g.display_name + ' (' + g.member_count + ')' +
+                        (g.assigned ? ' — ' + tSafe('team_already_assigned', 'assigned') : (g.fits ? '' : ' — ' + tSafe('team_too_large', 'over capacity')));
+                    addTeamGroupSelect.appendChild(opt);
+                });
+                setInlineStatus(addTeamStatus, '', false);
+                updateTeamSubmitState();
+            }).catch(function () {
+                setInlineStatus(addTeamStatus, tSafe('team_load_failed', 'Could not load teams.'), true);
+            });
+        }
+
+        addTeamGroupSelect.addEventListener('change', updateTeamSubmitState);
+        addTeamBtn.addEventListener('click', function () {
+            addTeamForm.reset();
+            updateTeamSubmitState();
+            loadTeamGroups();
+            addTeamDialog.showModal();
+            addTeamGroupSelect.focus();
+        });
+        const addTeamCancel = document.getElementById('add-team-cancel');
+        if (addTeamCancel) {
+            addTeamCancel.addEventListener('click', function () { addTeamDialog.close(); });
+        }
+        addTeamDialog.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') addTeamDialog.close();
+        });
+
+        addTeamForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            if (teamSubmitting) return;
+            const groupId = addTeamGroupSelect.value ? addTeamGroupSelect.value.trim() : '';
+            if (!groupId) {
+                setInlineStatus(addTeamStatus, tSafe('team_select_required', 'Select a team first.'), true);
+                return;
+            }
+            const C = window.TicketCheckComponents;
+            if (C && typeof C.confirmDialog === 'function') {
+                const ok = await C.confirmDialog({
+                    title: t('ticketcheck', 'assign_team'),
+                    body: tSafe('assign_team_confirm', 'Assign this team? Members will be added as co-assignees.'),
+                    confirmLabel: t('ticketcheck', 'assign_team'),
+                });
+                if (!ok) return;
+            }
+            teamSubmitting = true;
+            if (addTeamSubmitBtn) addTeamSubmitBtn.disabled = true;
+            tcApiPost('/apps/ticketcheck/api/tickets/' + teamTicketId + '/teams', { group_id: groupId }).then(function (data) {
+                if (data.success) {
+                    addTeamDialog.close();
+                    showQuickActionSuccess(tSafe('assign_team', 'Team assigned'));
+                    setTimeout(function () { location.reload(); }, QUICK_ACTION_RELOAD_MS);
+                    return;
+                }
+                setInlineStatus(addTeamStatus, data.message || tSafe('operation_failed', 'Something went wrong'), true);
+            }).catch(function (err) {
+                setInlineStatus(addTeamStatus, (err && err.message) || tSafe('operation_failed', 'Something went wrong'), true);
+            }).finally(function () {
+                teamSubmitting = false;
+                updateTeamSubmitState();
+            });
+        });
+    }
+
+    // Remove team.
+    document.querySelectorAll('.remove-team-btn').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+            const ticketId = this.dataset.ticketId;
+            const groupId = this.dataset.groupId;
+            if (!ticketId || !groupId) return;
+            const C = window.TicketCheckComponents;
+            if (C && typeof C.confirmDialog === 'function') {
+                const ok = await C.confirmDialog({
+                    title: t('ticketcheck', 'remove_team'),
+                    body: tSafe('remove_team_confirm', 'Remove this team from the queue?'),
+                    confirmLabel: t('ticketcheck', 'Remove'),
+                    danger: true,
+                });
+                if (!ok) return;
+            }
+            this.disabled = true;
+            const self = this;
+            tcApiDel('/apps/ticketcheck/api/tickets/' + ticketId + '/teams/' + encodeURIComponent(groupId)).then(function (data) {
+                if (data.success) { showSuccess(t('ticketcheck', 'remove_team')); setTimeout(function () { location.reload(); }, 500); }
+                else { showAlert(data.message || tSafe('operation_failed', 'Something went wrong')); self.disabled = false; }
+            }).catch(function (err) { showAlert(err.message || tSafe('operation_failed', 'Something went wrong')); self.disabled = false; });
+        });
+    });
+
+    // Claim team ticket.
+    const claimBtn = document.getElementById('claim-team-btn');
+    if (claimBtn) {
+        claimBtn.addEventListener('click', function () {
+            const ticketId = parseTicketId(this.dataset.ticketId);
+            if (!ticketId) return;
+            this.disabled = true;
+            const self = this;
+            tcApiPost('/apps/ticketcheck/api/tickets/' + ticketId + '/claim', {}).then(function (data) {
+                if (data.success) { showQuickActionSuccess(tSafe('claim_ticket', 'Ticket claimed')); setTimeout(function () { location.reload(); }, 500); }
+                else { showAlert(data.message || tSafe('operation_failed', 'Something went wrong')); self.disabled = false; }
+            }).catch(function (err) { showAlert(err.message || tSafe('operation_failed', 'Something went wrong')); self.disabled = false; });
+        });
+    }
+    });
+
     safeInit('ticket-relations', function () {
     async function confirmRemoval(title, body) {
         const C = window.TicketCheckComponents;

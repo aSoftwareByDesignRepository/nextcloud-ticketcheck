@@ -50,6 +50,8 @@ final class SchemaTableCatalog
 		'helpdesk_ticket_resources',
 		'helpdesk_ticket_surveys',
 		'helpdesk_ticket_templates',
+		'helpdesk_ticket_assignees',
+		'helpdesk_ticket_teams',
 		'helpdesk_ticket_watchers',
 		'helpdesk_tickets',
 		'helpdesk_whitelist',

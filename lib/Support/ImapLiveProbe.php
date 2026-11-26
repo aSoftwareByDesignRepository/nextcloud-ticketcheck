@@ -6,7 +6,7 @@ namespace OCA\Ticketcheck\Support;
 
 /**
  * Live IMAP TLS probe that does NOT require php-imap.
- * Uses MailPreviewText for safe plain-text body previews.
+ * Uses MailToText for safe plain-text body previews.
  *
  * Speaks enough of the wire protocol to prove: TCP+TLS reachability, server
  * greeting, and LOGIN rejection/acceptance. Used by integration tests and as a
@@ -21,11 +21,12 @@ final class ImapLiveProbe
 	/**
 	 * Parse RFC822 header block into CRM ingest fields (pure — unit tested).
 	 *
-	 * @return array{from: string, to: list<string>, cc: list<string>, replyTo: ?string, resentFrom: ?string, xOriginalFrom: ?string, subject: string, sentAt: ?string, messageId: ?string}
+	 * @return array{from: string, fromName: string, to: list<string>, cc: list<string>, replyTo: ?string, resentFrom: ?string, xOriginalFrom: ?string, subject: string, sentAt: ?string, messageId: ?string}
 	 */
 	public static function parseRfc822Headers(string $raw): array
 	{
 		$from = '';
+		$fromName = '';
 		$to = [];
 		$cc = [];
 		$replyTo = null;
@@ -43,6 +44,7 @@ final class ImapLiveProbe
 			}
 			if (preg_match('/^From:\s*(.+)$/i', $line, $m) === 1) {
 				$from = self::extractEmailAddress($m[1]);
+				$fromName = self::extractDisplayName($m[1]);
 			} elseif (preg_match('/^To:\s*(.+)$/i', $line, $m) === 1) {
 				$to = self::extractEmailAddresses($m[1]);
 			} elseif (preg_match('/^Cc:\s*(.+)$/i', $line, $m) === 1) {
@@ -71,6 +73,7 @@ final class ImapLiveProbe
 
 		return [
 			'from' => $from,
+			'fromName' => $fromName,
 			'to' => $to,
 			'cc' => $cc,
 			'replyTo' => ($replyTo !== null && $replyTo !== '' && str_contains($replyTo, '@')) ? $replyTo : null,
@@ -96,6 +99,26 @@ final class ImapLiveProbe
 		}
 
 		return strtolower($raw);
+	}
+
+	/**
+	 * Extract the display-name part of a From header value
+	 * ("Jürgen <j@x>" / "=?UTF-8?Q?J=C3=BCrgen?= <j@x>" → "Jürgen").
+	 * Bare address-only headers return ''.
+	 */
+	public static function extractDisplayName(string $raw): string
+	{
+		$raw = trim($raw);
+		if (preg_match('/<[^>]*>/', $raw) !== 1) {
+			return '';
+		}
+		$name = trim(preg_replace('/<[^>]*>/', '', $raw) ?? '');
+		$name = trim($name, " \t\"'");
+		if ($name === '') {
+			return '';
+		}
+
+		return MimeHeader::decode($name);
 	}
 
 	/**
@@ -191,6 +214,7 @@ final class ImapLiveProbe
 			$out[] = [
 				'uid' => $uid !== '0' ? $uid : (string)(count($out) + 1),
 				'from' => $parsed['from'],
+				'fromName' => $parsed['fromName'],
 				'to' => $parsed['to'],
 				'cc' => $parsed['cc'],
 				'replyTo' => $parsed['replyTo'],

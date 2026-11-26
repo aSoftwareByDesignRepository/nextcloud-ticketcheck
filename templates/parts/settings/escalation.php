@@ -77,6 +77,16 @@ $assignableUsers = is_array($_['assignableUsers'] ?? null) ? $_['assignableUsers
 							<?php endforeach; ?>
 						</select>
 					</div>
+					<div class="helpdesk-form-group tc-field">
+						<label for="escalation-rule-add-coassignee" class="helpdesk-form-label"><?php p($l->t('action_add_coassignee')); ?></label>
+						<select id="escalation-rule-add-coassignee" name="add_co_assignee" class="helpdesk-form-control">
+							<option value=""><?php p($l->t('no_change')); ?></option>
+							<?php foreach ($assignableUsers as $user): ?>
+								<option value="<?php p($user['user_id']); ?>"><?php p($user['user_name']); ?> (<?php p($user['user_id']); ?>)</option>
+							<?php endforeach; ?>
+						</select>
+						<span class="helpdesk-form-help"><?php p($l->t('action_add_coassignee_help')); ?></span>
+					</div>
 					<div class="helpdesk-form-actions tc-field--full-width">
 						<button type="submit" class="helpdesk-btn helpdesk-btn--primary"><?php p($l->t('save')); ?></button>
 						<button type="button" id="escalation-rule-cancel-btn" class="helpdesk-btn helpdesk-btn--ghost"><?php p($l->t('cancel_button')); ?></button>

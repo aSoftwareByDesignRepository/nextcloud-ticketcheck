@@ -53,6 +53,17 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) {}
     }
 
+    function filterOptionsByQuery(items, query) {
+        const q = String(query || '').trim().toLowerCase();
+        if (q === '') {
+            return items;
+        }
+        return items.filter(function (item) {
+            return item.label.toLowerCase().indexOf(q) !== -1
+                || item.value.toLowerCase().indexOf(q) !== -1;
+        });
+    }
+
     function wireFilterCombobox(config) {
         const comboboxApi = window.TicketCheckSelectCombobox;
         if (!comboboxApi || typeof comboboxApi.attach !== 'function') {
@@ -110,16 +121,39 @@ document.addEventListener('DOMContentLoaded', function () {
                 noResultsKey: config.noResultsKey,
                 countKey: config.countKey,
                 getOptions: function (query, signal) {
+                    const staticMatches = config.mergeStaticOptions === true
+                        ? filterOptionsByQuery(initialOptions, query)
+                        : [];
                     const api = window.TicketCheckApi;
                     if (!api || typeof api.get !== 'function') {
-                        return Promise.resolve([]);
+                        return Promise.resolve(staticMatches);
                     }
-                    return api.get('/apps/ticketcheck/api/tickets/filter-options', {
+                    const params = {
                         type: config.type,
                         query: query,
                         limit: String(config.limit || 25),
-                    }, { signal: signal }).then(function (data) {
-                        return Array.isArray(data.options) ? data.options : [];
+                    };
+                    if (typeof config.getExtraParams === 'function') {
+                        const extra = config.getExtraParams() || {};
+                        Object.keys(extra).forEach(function (key) {
+                            const value = extra[key];
+                            if (value !== undefined && value !== null && String(value) !== '') {
+                                params[key] = String(value);
+                            }
+                        });
+                    }
+                    return api.get('/apps/ticketcheck/api/tickets/filter-options', params, { signal: signal }).then(function (data) {
+                        const remote = Array.isArray(data.options) ? data.options : [];
+                        if (staticMatches.length === 0) {
+                            return remote;
+                        }
+                        const seen = {};
+                        staticMatches.forEach(function (item) {
+                            seen[String(item.value)] = true;
+                        });
+                        return staticMatches.concat(remote.filter(function (item) {
+                            return !seen[String(item.value)];
+                        }));
                     });
                 },
                 onSelect: function (item) {
@@ -187,6 +221,28 @@ document.addEventListener('DOMContentLoaded', function () {
         loadingKey: 'filter_search_loading',
         noResultsKey: 'customer_filter_search_no_results',
         countKey: 'customer_filter_search_results_count',
+    });
+
+    // Assignee: fixed options (anyone / unassigned / me [+ applied uid]) merge
+    // with the remote assignable-agent roster — same UX as the export picker.
+    wireFilterCombobox({
+        searchInputId: 'filter-assigned-search',
+        selectId: 'filter-assigned',
+        resultsId: 'filter-assigned-results',
+        statusId: 'filter-assigned-search-status',
+        optionIdPrefix: 'filter-assigned-opt-',
+        type: 'assignee',
+        limit: 25,
+        mergeStaticOptions: true,
+        getExtraParams: function () {
+            const projectSelect = document.getElementById('filter-project');
+            const projectValue = projectSelect ? String(projectSelect.value || '') : '';
+            return projectValue !== '' ? { project_id: projectValue } : {};
+        },
+        helpKey: 'assignee_filter_search_help',
+        loadingKey: 'filter_search_loading',
+        noResultsKey: 'assignee_filter_search_no_results',
+        countKey: 'assignee_filter_search_results_count',
     });
 
     restoreFocusIfNeeded();

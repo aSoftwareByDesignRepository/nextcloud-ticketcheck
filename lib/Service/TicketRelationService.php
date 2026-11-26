@@ -29,6 +29,7 @@ class TicketRelationService
 		private readonly TicketWatcherMapper $watcherMapper,
 		private readonly TicketSurveyMapper $surveyMapper,
 		private readonly LoggerInterface $logger,
+		private readonly ?TicketAssigneeService $assigneeService = null,
 	) {
 	}
 
@@ -40,19 +41,22 @@ class TicketRelationService
 	public function purgeForTicket(int $ticketId): array
 	{
 		if ($ticketId <= 0) {
-			return ['links' => 0, 'watchers' => 0, 'surveys' => 0];
+			return ['links' => 0, 'watchers' => 0, 'surveys' => 0, 'assignees' => 0, 'teams' => 0];
 		}
 
 		$links = $this->linkMapper->deleteByTicketIdEitherSide($ticketId);
 		$watchers = $this->watcherMapper->deleteByTicketId($ticketId);
 		$surveys = $this->surveyMapper->deleteByTicketId($ticketId);
+		$assigneeStats = $this->assigneeService?->purgeForTicket($ticketId) ?? ['assignees' => 0, 'teams' => 0];
 
-		if ($links > 0 || $watchers > 0 || $surveys > 0) {
+		if ($links > 0 || $watchers > 0 || $surveys > 0 || $assigneeStats['assignees'] > 0 || $assigneeStats['teams'] > 0) {
 			$this->logger->info('Purged ticket relations', [
 				'ticket_id' => $ticketId,
 				'links' => $links,
 				'watchers' => $watchers,
 				'surveys' => $surveys,
+				'assignees' => $assigneeStats['assignees'],
+				'teams' => $assigneeStats['teams'],
 			]);
 		}
 
@@ -60,6 +64,8 @@ class TicketRelationService
 			'links' => $links,
 			'watchers' => $watchers,
 			'surveys' => $surveys,
+			'assignees' => $assigneeStats['assignees'],
+			'teams' => $assigneeStats['teams'],
 		];
 	}
 
@@ -88,6 +94,9 @@ class TicketRelationService
 		$linkStats = $this->linkMapper->repointTicketOnMerge($sourceId, $targetId);
 		$watcherStats = $this->watcherMapper->moveToTicket($sourceId, $targetId);
 		$surveyStats = $this->surveyMapper->moveOrDropOnMerge($sourceId, $targetId);
+		// Co-assignees union + source-primary demotion + team rows (EC-10).
+		$assigneeStats = $this->assigneeService?->transferOnMerge($sourceId, $targetId)
+			?? ['moved' => 0, 'dropped' => 0, 'primary_demoted' => false];
 
 		$this->logger->info('Transferred ticket relations on merge', [
 			'source_id' => $sourceId,
@@ -98,6 +107,9 @@ class TicketRelationService
 			'watchers_dropped' => $watcherStats['dropped'],
 			'surveys_moved' => $surveyStats['moved'],
 			'surveys_dropped' => $surveyStats['dropped'],
+			'assignees_moved' => $assigneeStats['moved'],
+			'assignees_dropped' => $assigneeStats['dropped'],
+			'primary_demoted' => $assigneeStats['primary_demoted'],
 		]);
 
 		return [
@@ -107,6 +119,9 @@ class TicketRelationService
 			'watchers_dropped' => $watcherStats['dropped'],
 			'surveys_moved' => $surveyStats['moved'],
 			'surveys_dropped' => $surveyStats['dropped'],
+			'assignees_moved' => $assigneeStats['moved'],
+			'assignees_dropped' => $assigneeStats['dropped'],
+			'primary_demoted' => $assigneeStats['primary_demoted'],
 		];
 	}
 
@@ -118,13 +133,16 @@ class TicketRelationService
 	public function countForTicket(int $ticketId): array
 	{
 		if ($ticketId <= 0) {
-			return ['links' => 0, 'watchers' => 0, 'surveys' => 0];
+			return ['links' => 0, 'watchers' => 0, 'surveys' => 0, 'assignees' => 0, 'teams' => 0];
 		}
 
+		$assigneeCounts = $this->assigneeService?->countForTicket($ticketId) ?? ['assignees' => 0, 'teams' => 0];
 		return [
 			'links' => $this->linkMapper->countByTicketIdEitherSide($ticketId),
 			'watchers' => $this->watcherMapper->countByTicketId($ticketId),
 			'surveys' => $this->surveyMapper->countByTicketId($ticketId),
+			'assignees' => $assigneeCounts['assignees'],
+			'teams' => $assigneeCounts['teams'],
 		];
 	}
 }

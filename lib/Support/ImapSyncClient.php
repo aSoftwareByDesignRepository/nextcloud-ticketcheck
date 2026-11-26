@@ -288,9 +288,54 @@ final class ImapSyncClient
 		foreach ($resp['lines'] as $line) {
 			$raw .= (string)$line . "\n";
 		}
-		// Extract the BODYSTRUCTURE (...) payload from the FETCH line.
-		if (preg_match('/BODYSTRUCTURE\s+(.+?)\)\s*$/is', $raw, $m) === 1) {
-			return trim((string)$m[1]);
+
+		return self::extractBodyStructureSexp($raw);
+	}
+
+	/**
+	 * Extract the balanced (…) S-expression after the BODYSTRUCTURE atom.
+	 * A regex anchored at end-of-string cannot work — the tagged
+	 * "T000x OK FETCH" completion line trails the FETCH response — so the
+	 * payload is found by balanced-paren scanning (parens inside quoted
+	 * strings do not count).
+	 */
+	public static function extractBodyStructureSexp(string $raw): ?string
+	{
+		$pos = stripos($raw, 'BODYSTRUCTURE');
+		if ($pos === false) {
+			return null;
+		}
+		$i = $pos + strlen('BODYSTRUCTURE');
+		$len = strlen($raw);
+		while ($i < $len && ($raw[$i] === ' ' || $raw[$i] === "\t")) {
+			$i++;
+		}
+		if ($i >= $len || $raw[$i] !== '(') {
+			return null;
+		}
+		$start = $i;
+		$depth = 0;
+		$inString = false;
+		for (; $i < $len; $i++) {
+			$c = $raw[$i];
+			if ($inString) {
+				if ($c === '\\') {
+					$i++;
+				} elseif ($c === '"') {
+					$inString = false;
+				}
+				continue;
+			}
+			if ($c === '"') {
+				$inString = true;
+			} elseif ($c === '(') {
+				$depth++;
+			} elseif ($c === ')') {
+				$depth--;
+				if ($depth === 0) {
+					return substr($raw, $start, $i - $start + 1);
+				}
+			}
 		}
 
 		return null;

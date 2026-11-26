@@ -345,7 +345,7 @@ class DeletionService
         }
 
         $relations = $this->ticketRelationService->countForTicket($ticketId);
-        foreach (['links', 'watchers', 'surveys'] as $key) {
+        foreach (['links', 'watchers', 'surveys', 'assignees', 'teams'] as $key) {
             $count = $relations[$key] ?? 0;
             if ($count > 0) {
                 $dependencies['dependencies'][$key] = $count;

@@ -312,12 +312,20 @@ final class InboundMailClassifier
 	/**
 	 * Body normalization shared by both channels: prefer text, decode the
 	 * HTML fallback, cap length on a multibyte boundary.
+	 *
+	 * HTML→text goes through MailToText: bare strip_tags() leaves
+	 * <style>/<script> source as visible "code" and glues every word
+	 * together — both made collected mail unreadable (issue #11).
 	 */
 	public static function normalizeBody(string $text, string $html, int $maxBytes = 40960): string
 	{
 		$body = trim($text);
 		if ($body === '') {
-			$body = trim(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+			$body = \OCA\Ticketcheck\Support\MailToText::htmlToText($html);
+		} elseif (\OCA\Ticketcheck\Support\MailToText::looksLikeHtml($body)) {
+			// Some senders/gateways put a full HTML document into the
+			// text/plain part — showing it raw is the same "code" bug.
+			$body = \OCA\Ticketcheck\Support\MailToText::htmlToText($body);
 		}
 		$marker = '';
 		if (strlen($body) > $maxBytes) {

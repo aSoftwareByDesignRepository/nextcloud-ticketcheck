@@ -78,6 +78,7 @@ class SLAMonitorJob extends TimedJob
         AttachmentCleanupService $attachmentCleanupService,
         TicketService $ticketService,
         KnowledgeBaseService $knowledgeBaseService,
+        ?\OCA\Ticketcheck\Db\TicketAssigneeMapper $assigneeMapper = null,
     ) {
         parent::__construct($time);
         $this->ticketMapper = $ticketMapper;
@@ -93,6 +94,7 @@ class SLAMonitorJob extends TimedJob
         $this->attachmentCleanupService = $attachmentCleanupService;
         $this->ticketService = $ticketService;
         $this->knowledgeBaseService = $knowledgeBaseService;
+        $this->assigneeMapper = $assigneeMapper;
 
         // Run every hour
         $this->setInterval(3600);
@@ -422,8 +424,30 @@ class SLAMonitorJob extends TimedJob
         $ticketsByUser = [];
         foreach ($tickets as $ticket) {
             $assignedTo = trim((string) ($ticket->getAssignedTo() ?? ''));
-            $bucket = $assignedTo !== '' ? $assignedTo : '__unassigned__';
-            $ticketsByUser[$bucket][] = $ticket;
+            // TC-MULTI-ASSIGN: alert every accountable assignee — primary ∪ co.
+            // A ticket with co-assignees but no primary must NOT fall into
+            // the admins-only `__unassigned__` path (US-MA-06 AC-2).
+            $recipients = [];
+            if ($assignedTo !== '') {
+                $recipients[] = $assignedTo;
+            }
+            if ($this->assigneeMapper !== null) {
+                try {
+                    foreach ($this->assigneeMapper->getUserIdsByTicketId((int)$ticket->getId()) as $coUid) {
+                        if ($coUid !== '' && !in_array($coUid, $recipients, true)) {
+                            $recipients[] = $coUid;
+                        }
+                    }
+                } catch (\Throwable) {
+                    // co table absent (pre-migration): primary-only fallback
+                }
+            }
+            if ($recipients === []) {
+                $recipients[] = '__unassigned__';
+            }
+            foreach ($recipients as $bucket) {
+                $ticketsByUser[$bucket][] = $ticket;
+            }
         }
 
         $deliveredIds = [];

@@ -84,6 +84,10 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 		'TicketController::inviteCustomer' => 422, // happy-path ticket has no valid customer_email → designed validation
 		'CompanionController::processTemplate' => 404, // stubbed TemplateService finds no row → designed uniform 404 (TH-01)
 		'TicketController::exportPdf' => 410,
+		// Dummy groupId 'x' is not a real group — the service rejects with
+		// designed validation (group_not_assignable → 400 / invalid_team → 422).
+		'TicketController::assignTeam' => 400,
+		'CompanionController::assignTeam' => 422,
 	];
 
 	/**

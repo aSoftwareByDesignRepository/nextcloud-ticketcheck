@@ -63,6 +63,12 @@ $allActive = empty($cfTickets['assigned_to'])
 					<?php if ($myTicketsActive) : ?>aria-current="page"<?php endif; ?>>
 					<?php p($l->t('my_tickets')); ?>
 				</a>
+				<?php $myTeamActive = ($cfTickets['team'] ?? '') === 'mine'; ?>
+				<a href="<?php p($ticketFilterLink(['team' => 'mine'])); ?>"
+					class="tc-filter-chip<?php echo $myTeamActive ? ' tc-filter-chip--active' : ''; ?>"
+					<?php if ($myTeamActive) : ?>aria-current="page"<?php endif; ?>>
+					<?php p($l->t('my_team_tickets')); ?>
+				</a>
 			<?php endif; ?>
 			<?php $newStatusActive = ($cfTickets['status'] ?? '') === 'new'; ?>
 			<a href="<?php p($ticketFilterLink(['status' => 'new'])); ?>"
@@ -148,9 +154,30 @@ $allActive = empty($cfTickets['assigned_to'])
 						</select>
 					</div>
 
-					<div class="tc-filter-field">
-						<label for="filter-assigned" class="tc-filter-field__label"><?php p($l->t('assigned_to')); ?></label>
-						<select name="assigned_to" id="filter-assigned" class="tc-filter-field__control">
+					<div class="tc-filter-field tc-filter-picker tc-select-combobox">
+						<label for="filter-assigned-search" class="tc-filter-field__label"><?php p($l->t('assigned_to')); ?></label>
+						<div class="tc-filter-picker__shell">
+							<span class="tc-filter-picker__leading" aria-hidden="true">
+								<?php print_unescaped(IconCatalog::render('search', 'tc-filter-picker__icon')); ?>
+							</span>
+							<input type="search"
+								id="filter-assigned-search"
+								class="tc-filter-picker__input tc-select-combobox__input"
+								placeholder="<?php p($l->t('assignee_search_placeholder')); ?>"
+								autocomplete="off"
+								aria-controls="filter-assigned-results"
+								aria-expanded="false"
+								aria-autocomplete="list"
+								aria-describedby="filter-assigned-search-status">
+							<button type="button"
+								class="tc-filter-picker__clear"
+								data-tc-combobox-clear
+								hidden
+								aria-label="<?php p($l->t('reset_filter')); ?>">
+								<?php print_unescaped(IconCatalog::render('x', 'tc-filter-picker__icon')); ?>
+							</button>
+						</div>
+						<select name="assigned_to" id="filter-assigned" class="tc-filter-picker__native tc-select-combobox__native" tabindex="-1" aria-hidden="true">
 							<option value=""><?php p($l->t('anyone')); ?></option>
 							<option value="unassigned" <?php if (($cfTickets['assigned_to'] ?? '') === 'unassigned') {
 								p('selected');
@@ -160,7 +187,13 @@ $allActive = empty($cfTickets['assigned_to'])
 									p('selected');
 								} ?>><?php p($l->t('me')); ?></option>
 							<?php endif; ?>
+							<?php $assignedToOption = $_['assignedToFilterOption'] ?? null; ?>
+							<?php if (is_array($assignedToOption) && ($assignedToOption['value'] ?? '') !== ''): ?>
+								<option value="<?php p($assignedToOption['value']); ?>" selected><?php p($assignedToOption['label']); ?></option>
+							<?php endif; ?>
 						</select>
+						<div id="filter-assigned-results" class="tc-filter-picker__results tc-select-combobox__results" role="listbox" aria-label="<?php p($l->t('assigned_to')); ?>" hidden></div>
+						<p id="filter-assigned-search-status" class="tc-filter-picker__hint tc-select-combobox__status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
 					</div>
 
 					<div class="tc-filter-field">

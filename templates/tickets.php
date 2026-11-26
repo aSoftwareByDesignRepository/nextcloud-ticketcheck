@@ -83,6 +83,9 @@ $categoryLabel = static function (?string $key) use ($categoryLabelMap): string 
                         <button type="button" id="bulk-assign" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm">
                             <?php p($l->t('assign')); ?>
                         </button>
+                        <button type="button" id="bulk-coassign" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm">
+                            <?php p($l->t('add_co_assignee')); ?>
+                        </button>
                         <button type="button" id="bulk-priority" class="helpdesk-btn helpdesk-btn--secondary helpdesk-btn--sm">
                             <?php p($l->t('priority')); ?>
                         </button>
@@ -241,8 +244,18 @@ $categoryLabel = static function (?string $key) use ($categoryLabelMap): string 
                                                     <?php print_unescaped(IconCatalog::render('user', 'helpdesk-ticket-card__assignee-icon')); ?>
                                                     <?php p($ticket->getAssignedTo()); ?>
                                                 </span>
+                                                <?php $coList = $_['coAssigneeMap'][(int)$ticket->getId()] ?? []; if (!empty($coList)): $totalAssigned = 1 + count($coList); ?>
+                                                    <span class="helpdesk-badge tc-coassignee-badge" role="img"
+                                                        aria-label="<?php p($l->t('assigned_people_count', [(string)$totalAssigned])); ?>"
+                                                        title="<?php p(implode(', ', array_map(static function ($r) { return $r['display_name'] ?? $r['user_id']; }, $coList))); ?>">+<?php p(count($coList)); ?></span>
+                                                <?php endif; ?>
                                             <?php else: ?>
                                                 <span class="helpdesk-text-muted"><?php p($l->t('unassigned')); ?></span>
+                                                <?php $coList = $_['coAssigneeMap'][(int)$ticket->getId()] ?? []; if (!empty($coList)): $totalAssigned = count($coList); ?>
+                                                    <span class="helpdesk-badge tc-coassignee-badge" role="img"
+                                                        aria-label="<?php p($l->t('assigned_people_count', [(string)$totalAssigned])); ?>"
+                                                        title="<?php p(implode(', ', array_map(static function ($r) { return $r['display_name'] ?? $r['user_id']; }, $coList))); ?>">+<?php p(count($coList)); ?></span>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </td>
                                         <td class="tc-tickets-table__actions tc-list-row__no-nav">
@@ -340,6 +353,11 @@ $categoryLabel = static function (?string $key) use ($categoryLabelMap): string 
                                                 <div class="helpdesk-text-muted helpdesk-ticket-card__assignee">
                                                     <?php print_unescaped(IconCatalog::render('user', 'helpdesk-ticket-card__assignee-icon')); ?>
                                                     <?php p($ticket->getAssignedTo()); ?>
+                                                    <?php $coList = $_['coAssigneeMap'][(int)$ticket->getId()] ?? []; if (!empty($coList)): $totalAssigned = 1 + count($coList); ?>
+                                                        <span class="helpdesk-badge tc-coassignee-badge" role="img"
+                                                            aria-label="<?php p($l->t('assigned_people_count', [(string)$totalAssigned])); ?>"
+                                                            title="<?php p(implode(', ', array_map(static function ($r) { return $r['display_name'] ?? $r['user_id']; }, $coList))); ?>">+<?php p(count($coList)); ?></span>
+                                                    <?php endif; ?>
                                                 </div>
                                             <?php else: ?>
                                                 <div class="helpdesk-text-muted helpdesk-ticket-card__unassigned">

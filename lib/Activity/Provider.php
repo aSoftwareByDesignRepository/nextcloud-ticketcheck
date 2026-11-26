@@ -53,6 +53,22 @@ class Provider implements IProvider
                     $this->formatUserDisplay((string)$params['assigned_to']),
                 ])
                 : $this->l10n->t('Unassigned ticket %s', [$ticketLabel]),
+            'ticket_co_assignee_added' => $this->l10n->t('Added co-assignee %2$s to ticket %1$s', [
+                $ticketLabel,
+                $this->formatUserDisplay((string)($params['co_assignee'] ?? '')),
+            ]),
+            'ticket_co_assignee_removed' => $this->l10n->t('Removed co-assignee %2$s from ticket %1$s', [
+                $ticketLabel,
+                $this->formatUserDisplay((string)($params['co_assignee'] ?? '')),
+            ]),
+            'ticket_team_assigned' => $this->l10n->t('Assigned ticket %1$s to team %2$s', [
+                $ticketLabel,
+                (string)($params['team_group'] ?? ''),
+            ]),
+            'ticket_team_claimed' => $this->l10n->t('%1$s claimed ticket %2$s', [
+                $this->formatUserDisplay((string)$event->getAuthor()),
+                $ticketLabel,
+            ]),
             'ticket_comment_added' => ((string)($params['is_internal'] ?? '0')) === '1'
                 ? $this->l10n->t('Added internal note to ticket %s', [$ticketLabel])
                 : $this->l10n->t('Added comment to ticket %s', [$ticketLabel]),

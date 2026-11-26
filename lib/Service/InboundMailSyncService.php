@@ -7,6 +7,7 @@ namespace OCA\Ticketcheck\Service;
 use OCA\Ticketcheck\Db\InboundMessage;
 use OCA\Ticketcheck\Support\ImapConnection;
 use OCA\Ticketcheck\Support\ImapSyncClient;
+use OCA\Ticketcheck\Support\MailToText;
 use OCP\Lock\ILockingProvider;
 use OCP\Lock\LockedException;
 use Psr\Log\LoggerInterface;
@@ -275,22 +276,31 @@ final class InboundMailSyncService
 			);
 
 			// Body text: fetch the best text leaf, falling back to TEXT.
-			// Decode by the part's declared Content-Transfer-Encoding —
-			// never by guessing at the payload shape.
+			// Decode by the part's declared Content-Transfer-Encoding AND
+			// Content-Type charset — never by guessing at the payload shape.
+			// Attachment leaves (e.g. an attached .html file) are not body.
 			$text = '';
 			$html = '';
 			foreach ($parts as $part) {
+				if (!empty($part['attachment'])) {
+					continue;
+				}
 				$enc = strtolower((string)($part['encoding'] ?? ''));
+				$charset = (string)($part['params']['charset'] ?? '');
 				if (($part['type'] ?? '') === 'text' && ($part['subtype'] ?? '') === 'plain' && $text === '') {
 					$raw = (string)($client->fetchSection($uid, (string)$part['partId'], self::BODY_TEXT_MAX_BYTES) ?? '');
-					$text = $this->decodeTransfer($raw, $enc);
+					$text = MailToText::decodeTransfer($raw, $enc, $charset);
 				} elseif (($part['type'] ?? '') === 'text' && ($part['subtype'] ?? '') === 'html' && $html === '') {
 					$raw = (string)($client->fetchSection($uid, (string)$part['partId'], self::BODY_TEXT_MAX_BYTES) ?? '');
-					$html = $this->decodeTransfer($raw, $enc);
+					$html = MailToText::decodeTransfer($raw, $enc, $charset);
 				}
 			}
 			if ($text === '' && $html === '') {
-				$text = (string)($client->fetchSection($uid, 'TEXT', self::BODY_TEXT_MAX_BYTES) ?? '');
+				// No usable BODYSTRUCTURE — BODY[TEXT] on multipart mail is
+				// the whole MIME payload, not a body. Extract the readable
+				// part instead of storing boundary/base64 soup (issue #11).
+				$raw = (string)($client->fetchSection($uid, 'TEXT', self::BODY_TEXT_MAX_BYTES) ?? '');
+				$text = MailToText::extractBestMimeText($raw);
 			}
 
 			$attachmentCtx = null;
@@ -314,7 +324,7 @@ final class InboundMailSyncService
 
 			$msg = [
 				'from' => (string)($headers['from'] ?? ''),
-				'fromName' => '',
+				'fromName' => (string)($headers['fromName'] ?? ''),
 				'to' => $headers['to'] ?? [],
 				'cc' => $headers['cc'] ?? [],
 				'subject' => (string)($headers['subject'] ?? ''),
@@ -348,28 +358,4 @@ final class InboundMailSyncService
 		}
 	}
 
-	/**
-	 * Decode a text part by its declared Content-Transfer-Encoding.
-	 * Non-UTF-8 charsets are converted best-effort to UTF-8.
-	 */
-	private function decodeTransfer(string $raw, string $encoding): string
-	{
-		if ($raw === '') {
-			return '';
-		}
-		$enc = strtolower(trim($encoding));
-		if ($enc === 'base64') {
-			$decoded = base64_decode(preg_replace('/\s+/', '', $raw) ?? '', true);
-			$raw = $decoded !== false ? $decoded : '';
-		} elseif ($enc === 'quoted-printable') {
-			$raw = quoted_printable_decode($raw);
-		}
-		if ($raw !== '' && !mb_check_encoding($raw, 'UTF-8')) {
-			$converted = @mb_convert_encoding($raw, 'UTF-8', 'Windows-1252, ISO-8859-1');
-			if (is_string($converted)) {
-				$raw = $converted;
-			}
-		}
-		return $raw;
-	}
 }

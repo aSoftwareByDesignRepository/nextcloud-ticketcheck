@@ -6,6 +6,7 @@ namespace OCA\Ticketcheck\Service;
 
 use OCA\Ticketcheck\AppInfo\Application;
 use OCA\Ticketcheck\Db\Ticket;
+use OCA\Ticketcheck\Db\TicketAssigneeMapper;
 use OCA\Ticketcheck\Db\TicketWatcherMapper;
 use OCP\Activity\IManager;
 use OCP\App\IAppManager;
@@ -27,6 +28,7 @@ class ActivityEventService
         private IGroupManager $groupManager,
         private IUserManager $userManager,
         private IAppManager $appManager,
+        private ?TicketAssigneeMapper $assigneeMapper = null,
     ) {
     }
 
@@ -118,6 +120,32 @@ class ActivityEventService
             'added' => $added,
             'removed' => $removed,
         ], true);
+    }
+
+    public function logCoAssigneeAdded(string $actorUserId, Ticket $ticket, string $userId): void
+    {
+        $this->publish($actorUserId, $ticket, 'ticket_co_assignee_added', [
+            'co_assignee' => $userId,
+        ], false);
+    }
+
+    public function logCoAssigneeRemoved(string $actorUserId, Ticket $ticket, string $userId): void
+    {
+        $this->publish($actorUserId, $ticket, 'ticket_co_assignee_removed', [
+            'co_assignee' => $userId,
+        ], false);
+    }
+
+    public function logTeamAssigned(string $actorUserId, Ticket $ticket, string $groupId): void
+    {
+        $this->publish($actorUserId, $ticket, 'ticket_team_assigned', [
+            'team_group' => $groupId,
+        ], false);
+    }
+
+    public function logTeamClaimed(string $actorUserId, Ticket $ticket): void
+    {
+        $this->publish($actorUserId, $ticket, 'ticket_team_claimed', [], false);
     }
 
     /**
@@ -235,6 +263,21 @@ class ActivityEventService
         if (is_string($assigned) && $assigned !== '') {
             $append($assigned);
         }
+
+        // Co-assignees (EC-21): after primary, before watchers — they are
+        // accountable too, so they rank ahead of passive CC recipients.
+        if ($this->assigneeMapper !== null) {
+            try {
+                $coAssignees = $this->assigneeMapper->getUserIdsByTicketId($ticket->getId());
+            } catch (\Throwable) {
+                $coAssignees = [];
+            }
+            sort($coAssignees, SORT_STRING);
+            foreach ($coAssignees as $coAssigneeId) {
+                $append($coAssigneeId);
+            }
+        }
+
         $append($actorUserId);
 
         $createdBy = $ticket->getCreatedBy();

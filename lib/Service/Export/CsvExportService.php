@@ -41,6 +41,7 @@ class CsvExportService
         'project_name',
         'assigned_to',
         'assigned_to_name',
+        'co_assignees',
         'created_at',
         'updated_at',
         'closed_at',
@@ -108,6 +109,7 @@ class CsvExportService
         private ExportFilterParser $filterParser,
         private LoggerInterface $logger,
         private ?\OCA\Ticketcheck\Service\TicketCategoryService $ticketCategories = null,
+        private ?\OCA\Ticketcheck\Service\TicketAssigneeService $assigneeService = null,
         private ?\OCA\Ticketcheck\Service\TicketResourceService $ticketResources = null,
         private ?\OCA\Ticketcheck\Db\TicketResourceMapMapper $resourceMapMapper = null,
     ) {
@@ -218,6 +220,11 @@ class CsvExportService
         $resourceLabels = $this->needsTicketColumn($columns, 'resources')
             ? $this->bulkResourceLabels(array_map(static fn (Ticket $t) => $t->getId(), $tickets))
             : [];
+        // NH-03: batched co-assignee display names (one edge read + one
+        // user-manager batch, same pattern as the other bulk columns).
+        $coAssigneeNames = $this->needsTicketColumn($columns, 'co_assignees')
+            ? $this->bulkCoAssigneeNames(array_map(static fn (Ticket $t) => $t->getId(), $tickets))
+            : [];
 
         $headers = array_map(fn (string $column) => $this->ticketColumnLabel($column, $l), $columns);
         $rows = [];
@@ -230,6 +237,7 @@ class CsvExportService
                 $commentCounts,
                 $attachmentCounts,
                 $resourceLabels,
+                $coAssigneeNames,
                 $l
             );
         }
@@ -436,6 +444,7 @@ class CsvExportService
         array $commentCounts,
         array $attachmentCounts,
         array $resourceLabels,
+        array $coAssigneeNames,
         IL10N $l,
     ): array {
         $projectId = $ticket->getProjectId();
@@ -458,6 +467,7 @@ class CsvExportService
             'project_name' => $projectId !== null ? ($projectNames[$projectId] ?? '') : '',
             'assigned_to' => $assignedTo,
             'assigned_to_name' => $assignedTo !== '' ? ($assignedNames[$assignedTo] ?? $assignedTo) : $l->t('unassigned'),
+            'co_assignees' => implode('; ', $coAssigneeNames[$ticket->getId()] ?? []),
             'created_at' => $this->formatDateTime($ticket->getCreatedAt()),
             'updated_at' => $this->formatDateTime($ticket->getUpdatedAt()),
             'closed_at' => $ticket->getClosedAt() !== null ? $this->formatDateTime($ticket->getClosedAt()) : '',
@@ -609,6 +619,25 @@ class CsvExportService
         $out = [];
         foreach ($this->resourceMapMapper->keysForTickets($ticketIds) as $tid => $keys) {
             $out[$tid] = array_map(static fn (string $k): string => $labels[$k] ?? $k, $keys);
+        }
+        return $out;
+    }
+
+    /**
+     * ticketId => co-assignee display names — the service batches the edge
+     * read and the display-name resolution internally.
+     *
+     * @param list<int> $ticketIds
+     * @return array<int, list<string>>
+     */
+    private function bulkCoAssigneeNames(array $ticketIds): array
+    {
+        if ($ticketIds === [] || $this->assigneeService === null) {
+            return [];
+        }
+        $out = [];
+        foreach ($this->assigneeService->getCoAssigneesWithDisplayForTickets($ticketIds) as $tid => $rows) {
+            $out[$tid] = array_map(static fn (array $r): string => (string)$r['displayName'], $rows);
         }
         return $out;
     }

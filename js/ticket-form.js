@@ -929,3 +929,83 @@ document.addEventListener('DOMContentLoaded', function () {
     }, true);
 });
 
+    // TC-MULTI-ASSIGN: staged co-assignee chips -> hidden co_assignees CSV.
+    // Replace-set semantics: the CSV posted is the whole desired set.
+    document.addEventListener('DOMContentLoaded', function initCoAssigneeChips() {
+        const tSafeLocal = function (k, fb) {
+            try { if (typeof t === 'function') { const v = t('ticketcheck', k); if (v && v !== k) return v; } } catch (e) {}
+            return fb;
+        };
+        const pick = document.getElementById('coassignee-pick');
+        const hidden = document.getElementById('co_assignees');
+        const chips = document.getElementById('coassignee-chips');
+        const primarySelect = document.getElementById('assigned_to');
+        if (!pick || !hidden || !chips) return;
+        const MAX_CO = 10;
+
+        function syncHidden() {
+            hidden.value = Array.from(chips.querySelectorAll('li[data-uid]'))
+                .map((li) => li.dataset.uid)
+                .filter(Boolean)
+                .join(',');
+        }
+
+        function addChip(uid, label) {
+            uid = (uid || '').trim();
+            if (!uid) return;
+            if (chips.querySelector('li[data-uid="' + CSS.escape(uid) + '"]')) return;
+            if (primarySelect && primarySelect.value === uid) {
+                pick.value = '';
+                return; // cannot be primary and co at once (server rejects anyway)
+            }
+            if (chips.querySelectorAll('li[data-uid]').length >= MAX_CO) {
+                pick.value = '';
+                return;
+            }
+            const li = document.createElement('li');
+            li.className = 'tc-chip';
+            li.dataset.uid = uid;
+            const span = document.createElement('span');
+            span.className = 'tc-chip__label';
+            span.textContent = label || uid;
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'tc-chip__remove';
+            rm.dataset.uid = uid;
+            rm.setAttribute('aria-label', tSafeLocal('remove_co_assignee', 'Remove co-assignee'));
+            rm.textContent = '×';
+            rm.addEventListener('click', function () { li.remove(); syncHidden(); });
+            li.appendChild(span);
+            li.appendChild(rm);
+            chips.appendChild(li);
+            syncHidden();
+        }
+
+        pick.addEventListener('change', function () {
+            const opt = this.options[this.selectedIndex];
+            if (this.value) {
+                addChip(this.value, opt ? opt.textContent.trim() : this.value);
+            }
+            this.value = '';
+        });
+
+        chips.addEventListener('click', function (e) {
+            const rm = e.target.closest('.tc-chip__remove');
+            if (rm) {
+                const li = rm.closest('li[data-uid]');
+                if (li) { li.remove(); syncHidden(); }
+            }
+        });
+
+        // Primary change invalidates a staged chip with the same uid.
+        if (primarySelect) {
+            primarySelect.addEventListener('change', function () {
+                const v = primarySelect.value;
+                if (!v) return;
+                const dup = chips.querySelector('li[data-uid="' + CSS.escape(v) + '"]');
+                if (dup) { dup.remove(); syncHidden(); }
+            });
+        }
+
+        syncHidden();
+    })();

@@ -46,6 +46,22 @@ class CompanionNotificationService
 		]);
 	}
 
+	/**
+	 * Co-assignee push (TC-MULTI-ASSIGN): same intent as primary assignment
+	 * so the app deep-links into the ticket; actor-suppressed.
+	 */
+	public function notifyCoAssigned(Ticket $ticket, string $coAssigneeUid, string $actorUid): void
+	{
+		if ($coAssigneeUid === '' || $coAssigneeUid === $actorUid) {
+			return;
+		}
+		$this->notifyUsers([$coAssigneeUid], $ticket, 'ticket_assigned', [
+			'actor' => $actorUid,
+			'title' => $ticket->getTitle(),
+			'number' => $ticket->getTicketNumber(),
+		]);
+	}
+
 	public function notifyPublicComment(Ticket $ticket, string $actorUid): void
 	{
 		// Spec §6.4: fan-out only for guest/customer public comments — not agent replies.

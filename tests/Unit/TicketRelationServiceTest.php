@@ -41,7 +41,7 @@ class TicketRelationServiceTest extends TestCase
 		);
 
 		self::assertSame(
-			['links' => 3, 'watchers' => 2, 'surveys' => 1],
+			['links' => 3, 'watchers' => 2, 'surveys' => 1, 'assignees' => 0, 'teams' => 0],
 			$service->purgeForTicket(42)
 		);
 	}
@@ -80,6 +80,9 @@ class TicketRelationServiceTest extends TestCase
 			'watchers_dropped' => 1,
 			'surveys_moved' => 1,
 			'surveys_dropped' => 0,
+			'assignees_moved' => 0,
+			'assignees_dropped' => 0,
+			'primary_demoted' => false,
 		], $service->transferOnMerge(10, 20));
 	}
 
@@ -96,7 +99,7 @@ class TicketRelationServiceTest extends TestCase
 		);
 
 		self::assertSame(
-			['links' => 0, 'watchers' => 0, 'surveys' => 0],
+			['links' => 0, 'watchers' => 0, 'surveys' => 0, 'assignees' => 0, 'teams' => 0],
 			$service->purgeForTicket(0)
 		);
 	}

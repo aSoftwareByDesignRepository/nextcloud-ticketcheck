@@ -67,6 +67,7 @@ class TicketService
         ?SlaPolicyService $slaPolicy = null,
         private readonly ?\OCA\Ticketcheck\Db\CommentMoveMapper $commentMoveMapper = null,
         private readonly ?TicketNotificationDispatcher $notifier = null,
+        private readonly ?TicketAssigneeService $assigneeService = null,
     ) {
         $this->actorResolver = $actorResolver;
         $this->ticketMapper = $ticketMapper;
@@ -230,6 +231,32 @@ class TicketService
             throw new \Exception('Validation failed: ' . implode(', ', $errors));
         }
 
+        // Co-assignees (TC-MULTI-ASSIGN): validate-all-then-write — the whole
+        // CSV set is checked (and the cap enforced) before the ticket row is
+        // inserted; rows are written right after a successful insert.
+        $coAssignees = $this->parseCoAssigneesCsv($data);
+        if ($coAssignees !== null && $this->assigneeService !== null) {
+            $primary = $assignedTo !== '' ? $assignedTo : null;
+            // EC-19: silently dedupe the chosen primary — never reject the
+            // whole submit for a duplicated chip.
+            $coAssignees = array_values(array_filter(
+                $coAssignees,
+                static fn (string $u): bool => $u !== $primary
+            ));
+            foreach ($coAssignees as $coUid) {
+                $v = $this->userValidationService->validateUserForAssignment(
+                    $coUid,
+                    isset($data['project_id']) ? (int) $data['project_id'] : null
+                );
+                if (!$v['valid']) {
+                    throw new \Exception('Invalid co-assignee: ' . $v['reason']);
+                }
+            }
+            if (count($coAssignees) > TicketAssigneeService::MAX_CO_ASSIGNEES) {
+                throw new \Exception('Invalid co-assignee: max_coassignees');
+            }
+        }
+
         // Unique ticket_number has a DB unique index. Two concurrent creates can still
         // collide after the pre-check; retry with a fresh number instead of failing closed.
         // When an outer TX is open (e.g. split), wrap each attempt in a nested TX/savepoint
@@ -244,6 +271,13 @@ class TicketService
                 $saved = $this->ticketMapper->insert($ticket);
                 if ($useSavepoints) {
                     $this->db->commit();
+                }
+                if ($coAssignees !== null && $coAssignees !== [] && $this->assigneeService !== null) {
+                    $this->assigneeService->replaceCoAssignees(
+                        (int)$saved->getId(),
+                        $coAssignees,
+                        $actorUid
+                    );
                 }
                 return $saved;
             } catch (\OCP\DB\Exception $e) {
@@ -445,6 +479,35 @@ class TicketService
                 }
             }
             $ticket->setAssignedTo($assignedTo !== '' ? $assignedTo : null);
+            if ($assignedTo !== '') {
+                // A user cannot be primary and co-assignee at once.
+                $this->assigneeService?->dropCoRowForPrimary($id, $assignedTo);
+            }
+        }
+
+        // Co-assignees (TC-MULTI-ASSIGN): replace-set semantics — the posted
+        // CSV is the whole desired set; diffed under this lock.
+        $coAssigneesUpdate = $this->parseCoAssigneesCsv($data);
+        if ($coAssigneesUpdate !== null && $this->assigneeService !== null) {
+            $primaryNow = (string)($ticket->getAssignedTo() ?? '');
+            // EC-19 dedupe + full-set validation BEFORE the ticket row is
+            // written — a rejected CSV must not leave field edits persisted.
+            $coAssigneesUpdate = array_values(array_filter(
+                $coAssigneesUpdate,
+                static fn (string $u): bool => $u !== $primaryNow
+            ));
+            foreach ($coAssigneesUpdate as $coUid) {
+                $v = $this->userValidationService->validateUserForAssignment(
+                    $coUid,
+                    $ticket->getProjectId() !== null ? (int)$ticket->getProjectId() : null
+                );
+                if (!$v['valid']) {
+                    throw new \Exception('Invalid co-assignee: ' . $v['reason']);
+                }
+            }
+            if (count($coAssigneesUpdate) > TicketAssigneeService::MAX_CO_ASSIGNEES) {
+                throw new \Exception('Invalid co-assignee: max_coassignees');
+            }
         }
 
         $ticket->setUpdatedAt(Ticket::nextUpdatedAt($ticket->getUpdatedAt()));
@@ -456,7 +519,7 @@ class TicketService
         }
 
         try {
-            return $this->persistUnmergedOrFail($ticket, 'Failed to update ticket');
+            $saved = $this->persistUnmergedOrFail($ticket, 'Failed to update ticket');
         } catch (\Exception $e) {
             if ($e->getMessage() === 'Cannot modify a ticket that has been merged into another ticket') {
                 throw $e;
@@ -464,6 +527,14 @@ class TicketService
             $this->logger->error('Failed to update ticket: ' . $e->getMessage(), ['exception' => $e]);
             throw new \Exception('Failed to update ticket');
         }
+        if ($coAssigneesUpdate !== null && $this->assigneeService !== null) {
+            try {
+                $this->assigneeService->replaceCoAssignees($id, $coAssigneesUpdate, $this->actorTriple()[0] ?? '');
+            } catch (\InvalidArgumentException $e) {
+                throw new \Exception($e->getMessage(), 0, $e);
+            }
+        }
+        return $saved;
     }
 
     /**
@@ -590,6 +661,10 @@ class TicketService
 
         // Set assigned user (null for unassigned)
         $ticket->setAssignedTo($userId !== null && $userId !== '' ? $userId : null);
+        if ($userId !== null && $userId !== '') {
+            // A user cannot be primary and co-assignee at once.
+            $this->assigneeService?->dropCoRowForPrimary($id, $userId);
+        }
         $ticket->setUpdatedAt(Ticket::nextUpdatedAt($ticket->getUpdatedAt()));
 
         // Auto-change status from NEW to IN_PROGRESS when assigning to someone
@@ -743,12 +818,8 @@ class TicketService
             return;
         }
 
-        $this->commentMapper->deleteByTicketId($id);
-        // Move audit rows reference the ticket on either side — dropping
-        // them with the ticket avoids orphans (audit survives comment
-        // purge, not ticket deletion).
-        $this->commentMoveMapper?->deleteByTicketId($id);
-
+        // File cleanup first — filesystem can't roll back, so it runs
+        // outside the row-delete transaction (same copy-first law as merge).
         $cleanupResult = $this->attachmentCleanupService->cleanupTicketAttachments($id);
         $this->logger->info('Ticket attachment cleanup completed', [
             'ticket_id' => $id,
@@ -757,9 +828,25 @@ class TicketService
             'directories_cleaned' => $cleanupResult['directories_cleaned'],
         ]);
 
-        $this->attachmentMapper->deleteByTicketId($id);
-        $this->ticketRelationService->purgeForTicket($id);
-        $this->ticketMapper->delete($ticket);
+        // Row deletes (comments, move-audit, attachments, relations, ticket)
+        // are one unit — a partial delete leaves orphans or a bare ticket.
+        $this->db->beginTransaction();
+        try {
+            $this->commentMapper->deleteByTicketId($id);
+            // Move audit rows reference the ticket on either side — dropping
+            // them with the ticket avoids orphans (audit survives comment
+            // purge, not ticket deletion).
+            $this->commentMoveMapper?->deleteByTicketId($id);
+            $this->attachmentMapper->deleteByTicketId($id);
+            $this->ticketRelationService->purgeForTicket($id);
+            $this->ticketMapper->delete($ticket);
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -1741,6 +1828,34 @@ class TicketService
      *
      * @throws \Exception
      */
+    /**
+     * `co_assignees` form field: CSV of uids, or null when absent (absent =
+     * leave the set untouched; present-but-empty = clear the set).
+     *
+     * @param array<string, mixed> $data
+     * @return list<string>|null
+     */
+    private function parseCoAssigneesCsv(array $data): ?array
+    {
+        if (!array_key_exists('co_assignees', $data)) {
+            return null;
+        }
+        $raw = $data['co_assignees'];
+        if (is_array($raw)) {
+            $parts = $raw;
+        } else {
+            $parts = explode(',', (string)$raw);
+        }
+        $out = [];
+        foreach ($parts as $part) {
+            $uid = trim((string)$part);
+            if ($uid !== '' && !in_array($uid, $out, true)) {
+                $out[] = $uid;
+            }
+        }
+        return $out;
+    }
+
     private function persistUnmergedOrFail(Ticket $ticket, string $genericFailureMessage): Ticket
     {
         try {

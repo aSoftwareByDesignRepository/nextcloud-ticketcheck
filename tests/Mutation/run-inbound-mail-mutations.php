@@ -21,7 +21,7 @@ declare(strict_types=1);
 $appRoot = dirname(__DIR__, 2);
 $phpFilter = 'ReplyTokenServiceTest|InboundMailClassifierTest|HelpdeskSmtpClientTest'
 	. '|InboundMailSyncServiceTest|InboundEmailServicePipelineTest|InboundMailConfigServiceTest'
-	. '|ImapSupportTest|InboundAttachmentIngest';
+	. '|ImapSupportTest|InboundAttachmentIngest|MailToTextTest';
 
 function run_php_tests(string $appRoot, string $filter): int {
 	$nextcloudRoot = dirname($appRoot, 2);
@@ -157,6 +157,43 @@ $mutations = [
 		'file' => 'lib/Service/InboundMailConfigService.php',
 		'from' => "return \$v === '1' || \$v === 'yes' || \$v === 'true' || \$v === 'on';",
 		'to' => "return \$v !== '';",
+	],
+
+	// --- Issue #11: readable mail body -----------------------------------------
+	'bodystructure_always_null' => [
+		// If the S-expression is never extracted, multipart mail falls into
+		// the BODY[TEXT] fallback and lands in tickets as raw MIME soup.
+		'file' => 'lib/Support/ImapSyncClient.php',
+		'from' => 'return self::extractBodyStructureSexp($raw);',
+		'to' => 'return null;',
+	],
+	'sync_charset_ignored' => [
+		// Dropping the declared charset re-opens the mojibake path
+		// (ISO-8859-15 euro, windows-1250, KOI8-R, …).
+		'file' => 'lib/Service/InboundMailSyncService.php',
+		'from' => "\$charset = (string)(\$part['params']['charset'] ?? '');",
+		'to' => "\$charset = '';",
+	],
+	'classifier_html_source_kept' => [
+		// Bare strip_tags leaves <style>/<script> source as visible "code"
+		// in the ticket body (the reported symptom).
+		'file' => 'lib/Service/InboundMailClassifier.php',
+		'from' => "\$body = \\OCA\\Ticketcheck\\Support\\MailToText::htmlToText(\$html);",
+		'to' => "\$body = trim(html_entity_decode(strip_tags(\$html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));",
+	],
+	'mailtotext_scriptstyle_source_leaks' => [
+		// Not dropping non-rendered subtrees leaks CSS/JS source into the
+		// readable body — the exact "showing code" report.
+		'file' => 'lib/Support/MailToText.php',
+		'from' => "#<(script|style|head|title|template|noscript|svg)\\b[^>]*>.*?</\\1>#is",
+		'to' => "#<(__nonexistent__)\\b[^>]*>.*?</\\1>#is",
+	],
+	'imap_fromname_dropped' => [
+		// Without the decoded display name, customers get addressed/stored
+		// as bare email addresses and encoded-word names reach UI raw.
+		'file' => 'lib/Support/ImapLiveProbe.php',
+		'from' => "\$fromName = self::extractDisplayName(\$m[1]);",
+		'to' => "\$fromName = '';",
 	],
 
 	// --- ImapConnection ----------------------------------------------------------
