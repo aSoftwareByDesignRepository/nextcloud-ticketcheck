@@ -85,7 +85,7 @@ class CompanionTicketService
 		$assignedTo = $queue === 'mine' ? $uid : null;
 		$watchedBy = $queue === 'watching' ? $uid : null;
 		// NH-01 "my team" queue: live group membership resolves the set.
-		$teamGroupIds = $queue === 'team' ? $this->groupManager->getUserGroupIds($uid) : null;
+		$teamGroupIds = $queue === 'team' ? $this->userGroupIds($uid) : null;
 		$decoded = $this->decodeCursor($cursor);
 
 		// Fetch extra rows so permission filtering still fills a page.
