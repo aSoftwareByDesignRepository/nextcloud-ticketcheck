@@ -36,7 +36,7 @@ class TicketRelationService
 	/**
 	 * Delete all link / watcher / survey rows that reference a ticket.
 	 *
-	 * @return array{links: int, watchers: int, surveys: int}
+	 * @return array{links: int, watchers: int, surveys: int, assignees: int, teams: int}
 	 */
 	public function purgeForTicket(int $ticketId): array
 	{
@@ -76,7 +76,7 @@ class TicketRelationService
 	 * Links: re-point both sides; drop self-loops and unique-constraint collisions.
 	 * Surveys: keep target survey if present; otherwise move source survey.
 	 *
-	 * @return array{links_moved: int, links_dropped: int, watchers_moved: int, watchers_dropped: int, surveys_moved: int, surveys_dropped: int}
+	 * @return array{links_moved: int, links_dropped: int, watchers_moved: int, watchers_dropped: int, surveys_moved: int, surveys_dropped: int, assignees_moved: int, assignees_dropped: int, primary_demoted: bool}
 	 */
 	public function transferOnMerge(int $sourceId, int $targetId): array
 	{
@@ -88,6 +88,9 @@ class TicketRelationService
 				'watchers_dropped' => 0,
 				'surveys_moved' => 0,
 				'surveys_dropped' => 0,
+				'assignees_moved' => 0,
+				'assignees_dropped' => 0,
+				'primary_demoted' => false,
 			];
 		}
 
@@ -128,7 +131,7 @@ class TicketRelationService
 	/**
 	 * Counts used by deletion impact analysis.
 	 *
-	 * @return array{links: int, watchers: int, surveys: int}
+	 * @return array{links: int, watchers: int, surveys: int, assignees: int, teams: int}
 	 */
 	public function countForTicket(int $ticketId): array
 	{

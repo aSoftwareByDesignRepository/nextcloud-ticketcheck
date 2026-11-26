@@ -791,6 +791,15 @@ class TicketController extends Controller
                     'availableAgents' => $availableAgents,
                     'links' => $links,
                     'watchers' => $watchers,
+                    // TC-MULTI-ASSIGN: server-rendered roster state (mirrors
+                    // watchers) — without these the template falls back to a
+                    // permanent "none yet" empty state on every paint.
+                    'coAssignees' => $this->assigneeService?->getCoAssigneesWithDisplay((int)$ticket->getId()) ?? [],
+                    'teamRows' => $this->teamRowsForTemplate((int)$ticket->getId()),
+                    'claimableTeams' => $this->assigneeService?->getClaimableGroupIds(
+                        (int)$ticket->getId(),
+                        (string)($this->userSession->getUser()?->getUID() ?? '')
+                    ) ?? [],
                     'canEdit' => $this->permissionService->canEditTicket($ticket),
                     'canDelete' => $this->permissionService->canDeleteTicket($ticket),
                     'canComment' => $this->permissionService->canCommentOnTicket($ticket),

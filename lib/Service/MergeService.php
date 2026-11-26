@@ -189,7 +189,8 @@ class MergeService
 			'attachments_moved' => $attachmentsMoved,
 			'relations_dropped' => $relationStats['links_dropped']
 				+ $relationStats['watchers_dropped']
-				+ $relationStats['surveys_dropped'],
+				+ $relationStats['surveys_dropped']
+				+ $relationStats['assignees_dropped'],
 		]);
 
 		return [
@@ -198,10 +199,12 @@ class MergeService
 			'attachments_moved' => $attachmentsMoved,
 			'relations_moved' => $relationStats['links_moved']
 				+ $relationStats['watchers_moved']
-				+ $relationStats['surveys_moved'],
+				+ $relationStats['surveys_moved']
+				+ $relationStats['assignees_moved'],
 			'relations_dropped' => $relationStats['links_dropped']
 				+ $relationStats['watchers_dropped']
-				+ $relationStats['surveys_dropped'],
+				+ $relationStats['surveys_dropped']
+				+ $relationStats['assignees_dropped'],
 		];
 	}
 

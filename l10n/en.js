@@ -2774,6 +2774,11 @@ OC.L10N.register(
 	"action_add_coassignee_help" : "Adds the user as a co-assignee when the rule fires (primary assignee unchanged).",
 	"modal_bulk_coassign_title" : "Add co-assignee to selected tickets",
 	"bulk_coassign_partial" : "Co-assignee added to {added} tickets; {skipped} skipped",
-	"bulk_coassign_done" : "Co-assignee added to {count} tickets"
+	"bulk_coassign_done" : "Co-assignee added to {count} tickets",
+	"Added co-assignee %2$s to ticket %1$s" : "Added co-assignee %2$s to ticket %1$s",
+	"Removed co-assignee %2$s from ticket %1$s" : "Removed co-assignee %2$s from ticket %1$s",
+	"Assigned ticket %1$s to team %2$s" : "Assigned ticket %1$s to team %2$s",
+	"%1$s claimed ticket %2$s" : "%1$s claimed ticket %2$s",
+	"remove_coassignee_confirm" : "Remove this co-assignee?"
 	}
 );

@@ -827,6 +827,11 @@ class TicketAssigneeService
 	private function bumpUpdatedAt(Ticket $ticket): void
 	{
 		$ticket->setUpdatedAt(Ticket::nextUpdatedAt($ticket->getUpdatedAt()));
+		// unique-conflict:ok — the two ticketMapper->update() sites in this
+		// file (claimTeamTicket's atomic claim block and this stamp) write
+		// back loaded entities that never re-SET ticket_number, so
+		// hd_ticket_num_idx cannot fire; the assignee/team INSERTs carry
+		// their own REASON_UNIQUE catches at each call site.
 		$this->ticketMapper->update($ticket);
 	}
 }

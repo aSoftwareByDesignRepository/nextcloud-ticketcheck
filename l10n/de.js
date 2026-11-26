@@ -2774,6 +2774,11 @@ OC.L10N.register(
 	"action_add_coassignee_help" : "Fügt den Benutzer beim Auslösen der Regel als Co-Assignee hinzu (primärer Bearbeiter bleibt unverändert).",
 	"modal_bulk_coassign_title" : "Co-Assignee zu ausgewählten Tickets hinzufügen",
 	"bulk_coassign_partial" : "Co-Assignee zu {added} Tickets hinzugefügt; {skipped} übersprungen",
-	"bulk_coassign_done" : "Co-assignee zu {count} Tickets hinzugefügt"
+	"bulk_coassign_done" : "Co-assignee zu {count} Tickets hinzugefügt",
+	"Added co-assignee %2$s to ticket %1$s" : "Co-Assignee %2$s zu Ticket %1$s hinzugefügt",
+	"Removed co-assignee %2$s from ticket %1$s" : "Co-Assignee %2$s von Ticket %1$s entfernt",
+	"Assigned ticket %1$s to team %2$s" : "Ticket %1$s dem Team %2$s zugewiesen",
+	"%1$s claimed ticket %2$s" : "%1$s hat Ticket %2$s übernommen",
+	"remove_coassignee_confirm" : "Diesen Co-Assignee entfernen?"
 	}
 );
