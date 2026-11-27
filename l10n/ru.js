@@ -2849,6 +2849,22 @@ OC.L10N.register(
 	"your_tickets" : "Ваши заявки",
 	"{count} bookings fall into this date range. Pick a calendar month to focus one month." : "{count} бронирований попадают в этот диапазон дат. Выберите календарный месяц, чтобы сфокусироваться на нём.",
 	"{count} bookings in the ledger for {monthLabel}." : "Бронирований в журнале за {monthLabel}: {count}.",
-	"{used} of {total} seats used" : "Использовано мест: {used} из {total}"
+	"{used} of {total} seats used" : "Использовано мест: {used} из {total}",
+	"Endpoint" : "Эндпоинт",
+	"Events" : "События",
+	"Last delivery" : "Последняя доставка",
+	"State" : "Состояние",
+	"Webhook endpoints" : "Эндпоинты вебхуков",
+	"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time." : "Ваш ИИ-ассистент может регистрировать эндпоинты, которые получают подписанное уведомление каждый раз, когда он что-то здесь меняет. Они принадлежат вам — тестируйте или отзывайте их в любое время.",
+	"All events" : "Все события",
+	"Could not queue the test." : "Не удалось поставить тест в очередь.",
+	"Disabled" : "Отключён",
+	"Endpoint revoked." : "Эндпоинт отозван.",
+	"Endpoints could not be loaded." : "Не удалось загрузить эндпоинты.",
+	"No webhook endpoints yet." : "Эндпоинтов вебхуков пока нет.",
+	"Pending events are dropped — your AI can register a new endpoint any time." : "Ожидающие события удаляются — ваш ИИ может зарегистрировать новый эндпоинт в любое время.",
+	"Stop notifications to" : "Остановить уведомления для",
+	"Test" : "Тест",
+	"Test notification queued — check your endpoint." : "Тестовое уведомление поставлено в очередь — проверьте свой эндпоинт."
 	}
 );

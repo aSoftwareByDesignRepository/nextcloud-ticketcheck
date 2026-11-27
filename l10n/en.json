@@ -2923,6 +2923,16 @@
         "Last delivery": "Last delivery",
         "State": "State",
         "Webhook endpoints": "Webhook endpoints",
-        "Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.": "Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time."
+        "Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.": "Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.",
+        "All events": "All events",
+        "Could not queue the test.": "Could not queue the test.",
+        "Disabled": "Disabled",
+        "Endpoint revoked.": "Endpoint revoked.",
+        "Endpoints could not be loaded.": "Endpoints could not be loaded.",
+        "No webhook endpoints yet.": "No webhook endpoints yet.",
+        "Pending events are dropped — your AI can register a new endpoint any time.": "Pending events are dropped — your AI can register a new endpoint any time.",
+        "Stop notifications to": "Stop notifications to",
+        "Test": "Test",
+        "Test notification queued — check your endpoint.": "Test notification queued — check your endpoint."
     }
 }

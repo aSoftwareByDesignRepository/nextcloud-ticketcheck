@@ -2849,6 +2849,22 @@ OC.L10N.register(
 	"your_tickets" : "您的工單",
 	"{count} bookings fall into this date range. Pick a calendar month to focus one month." : "該日期範圍內有 {count} 筆記帳。選擇一個行事曆月份以聚焦某個月。",
 	"{count} bookings in the ledger for {monthLabel}." : "臺帳中有 {count} 筆記帳（{monthLabel}）。",
-	"{used} of {total} seats used" : "已用 {used}\/{total} 席位"
+	"{used} of {total} seats used" : "已用 {used}\/{total} 席位",
+	"Endpoint" : "端點",
+	"Events" : "事件",
+	"Last delivery" : "最近傳遞",
+	"State" : "狀態",
+	"Webhook endpoints" : "Webhook 端點",
+	"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time." : "您的 AI 助理可以註冊端點，每當它在此處做出變更時，端點就會收到簽章通知。這些端點歸您所有 — 可隨時測試或撤銷。",
+	"All events" : "全部事件",
+	"Could not queue the test." : "無法將測試加入佇列。",
+	"Disabled" : "已停用",
+	"Endpoint revoked." : "端點已撤銷。",
+	"Endpoints could not be loaded." : "無法載入端點。",
+	"No webhook endpoints yet." : "尚無 Webhook 端點。",
+	"Pending events are dropped — your AI can register a new endpoint any time." : "待處理事件將被捨棄 — 您的 AI 可隨時註冊新端點。",
+	"Stop notifications to" : "停止通知至",
+	"Test" : "測試",
+	"Test notification queued — check your endpoint." : "測試通知已加入佇列 — 請檢查您的端點。"
 	}
 );

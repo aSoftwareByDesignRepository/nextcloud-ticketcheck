@@ -2849,6 +2849,22 @@ OC.L10N.register(
 	"your_tickets" : "Ticket",
 	"{count} bookings fall into this date range. Pick a calendar month to focus one month." : "{count} registrazioni rientrano in questo intervallo di date. Scelga un mese di calendario per concentrarsi su un mese.",
 	"{count} bookings in the ledger for {monthLabel}." : "{count} registrazioni nel registro per {monthLabel}.",
-	"{used} of {total} seats used" : "{used} di {total} posti utilizzati"
+	"{used} of {total} seats used" : "{used} di {total} posti utilizzati",
+	"Endpoint" : "Endpoint",
+	"Events" : "Eventi",
+	"Last delivery" : "Ultima consegna",
+	"State" : "Stato",
+	"Webhook endpoints" : "Endpoint webhook",
+	"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time." : "Il tuo assistente AI può registrare endpoint che ricevono una notifica firmata ogni volta che modifica qualcosa qui. Ti appartengono — testali o revocali in qualsiasi momento.",
+	"All events" : "Tutti gli eventi",
+	"Could not queue the test." : "Impossibile mettere il test in coda.",
+	"Disabled" : "Disattivato",
+	"Endpoint revoked." : "Endpoint revocato.",
+	"Endpoints could not be loaded." : "Impossibile caricare gli endpoint.",
+	"No webhook endpoints yet." : "Nessun endpoint webhook per ora.",
+	"Pending events are dropped — your AI can register a new endpoint any time." : "Gli eventi in sospeso vengono eliminati — la tua AI può registrare un nuovo endpoint in qualsiasi momento.",
+	"Stop notifications to" : "Interrompere le notifiche a",
+	"Test" : "Testa",
+	"Test notification queued — check your endpoint." : "Notifica di test in coda — controlla il tuo endpoint."
 	}
 );

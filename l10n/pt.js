@@ -2849,6 +2849,22 @@ OC.L10N.register(
 	"your_tickets" : "Os seus tickets",
 	"{count} bookings fall into this date range. Pick a calendar month to focus one month." : "{count} movimentos caem neste intervalo de datas. Escolha um mês de calendário para focar um mês.",
 	"{count} bookings in the ledger for {monthLabel}." : "{count} movimentos no livro para {monthLabel}.",
-	"{used} of {total} seats used" : "{used} de {total} lugares usados"
+	"{used} of {total} seats used" : "{used} de {total} lugares usados",
+	"Endpoint" : "Endpoint",
+	"Events" : "Eventos",
+	"Last delivery" : "Última entrega",
+	"State" : "Estado",
+	"Webhook endpoints" : "Endpoints de webhook",
+	"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time." : "O seu assistente de IA pode registar endpoints que recebem uma notificação assinada sempre que altera algo aqui. Pertencem-lhe — teste-os ou revogue-os a qualquer momento.",
+	"All events" : "Todos os eventos",
+	"Could not queue the test." : "Não foi possível colocar o teste em fila.",
+	"Disabled" : "Desativado",
+	"Endpoint revoked." : "Endpoint revogado.",
+	"Endpoints could not be loaded." : "Não foi possível carregar os endpoints.",
+	"No webhook endpoints yet." : "Ainda sem endpoints de webhook.",
+	"Pending events are dropped — your AI can register a new endpoint any time." : "Os eventos pendentes são descartados — a sua IA pode registar um novo endpoint a qualquer momento.",
+	"Stop notifications to" : "Parar notificações para",
+	"Test" : "Testar",
+	"Test notification queued — check your endpoint." : "Notificação de teste em fila — verifique o seu endpoint."
 	}
 );

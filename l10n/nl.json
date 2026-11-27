@@ -2917,6 +2917,22 @@
 		"your_tickets": "Uw tickets",
 		"{count} bookings fall into this date range. Pick a calendar month to focus one month.": "{count} boekingen vallen in dit datumbereik. Kies een kalendermaand waar u zich op één maand wilt concentreren.",
 		"{count} bookings in the ledger for {monthLabel}.": "{count} boekingen in het grootboek voor {monthLabel}.",
-		"{used} of {total} seats used": "{used} van {total} stoelen gebruikt"
+		"{used} of {total} seats used": "{used} van {total} stoelen gebruikt",
+		"Endpoint": "Eindpunt",
+		"Events": "Gebeurtenissen",
+		"Last delivery": "Laatste levering",
+		"State": "Status",
+		"Webhook endpoints": "Webhook-eindpunten",
+		"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.": "Je AI-assistent kan eindpunten registreren die een ondertekende melding ontvangen wanneer hij hier iets wijzigt. Ze zijn van jou — test of herroep ze op elk moment.",
+		"All events": "Alle gebeurtenissen",
+		"Could not queue the test.": "De test kon niet in de wachtrij worden geplaatst.",
+		"Disabled": "Uitgeschakeld",
+		"Endpoint revoked.": "Eindpunt herroepen.",
+		"Endpoints could not be loaded.": "Eindpunten konden niet worden geladen.",
+		"No webhook endpoints yet.": "Nog geen webhook-eindpunten.",
+		"Pending events are dropped — your AI can register a new endpoint any time.": "Gebeurtenissen in de wachtrij worden verwijderd — je AI kan op elk moment een nieuw eindpunt registreren.",
+		"Stop notifications to": "Meldingen stoppen naar",
+		"Test": "Testen",
+		"Test notification queued — check your endpoint.": "Testmelding in de wachtrij geplaatst — controleer je eindpunt."
 	}
 }

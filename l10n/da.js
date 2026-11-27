@@ -2849,6 +2849,22 @@ OC.L10N.register(
 	"your_tickets" : "Dine sager",
 	"{count} bookings fall into this date range. Pick a calendar month to focus one month." : "{count} posteringer falder i dette datointerval. Vælg en kalendermåned for at fokusere på én måned.",
 	"{count} bookings in the ledger for {monthLabel}." : "{count} posteringer i hovedbogen for {monthLabel}.",
-	"{used} of {total} seats used" : "{used} af {total} brugte sæder"
+	"{used} of {total} seats used" : "{used} af {total} brugte sæder",
+	"Endpoint" : "Slutpunkt",
+	"Events" : "Hændelser",
+	"Last delivery" : "Seneste levering",
+	"State" : "Tilstand",
+	"Webhook endpoints" : "Webhook-slutpunkter",
+	"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time." : "Din AI-assistent kan registrere slutpunkter, der modtager en signeret notifikation, hver gang den ændrer noget her. De tilhører dig — test eller tilbagekald dem når som helst.",
+	"All events" : "Alle hændelser",
+	"Could not queue the test." : "Testen kunne ikke sættes i kø.",
+	"Disabled" : "Deaktiveret",
+	"Endpoint revoked." : "Slutpunkt tilbagekaldt.",
+	"Endpoints could not be loaded." : "Slutpunkter kunne ikke indlæses.",
+	"No webhook endpoints yet." : "Endnu ingen webhook-slutpunkter.",
+	"Pending events are dropped — your AI can register a new endpoint any time." : "Ventende hændelser kasseres — din AI kan registrere et nyt slutpunkt når som helst.",
+	"Stop notifications to" : "Stop notifikationer til",
+	"Test" : "Test",
+	"Test notification queued — check your endpoint." : "Testnotifikation sat i kø — kontrollér dit slutpunkt."
 	}
 );

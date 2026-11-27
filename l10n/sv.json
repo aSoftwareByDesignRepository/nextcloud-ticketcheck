@@ -2917,6 +2917,22 @@
 		"your_tickets": "Dina ärenden",
 		"{count} bookings fall into this date range. Pick a calendar month to focus one month.": "{count} transaktioner faller inom det här datumintervallet. Välj en kalendermånad för att fokusera på en månad.",
 		"{count} bookings in the ledger for {monthLabel}.": "{count} poster i huvudboken för {monthLabel}.",
-		"{used} of {total} seats used": "{used} av {total} säten används"
+		"{used} of {total} seats used": "{used} av {total} säten används",
+		"Endpoint": "Slutpunkt",
+		"Events": "Händelser",
+		"Last delivery": "Senaste leverans",
+		"State": "Tillstånd",
+		"Webhook endpoints": "Webhook-slutpunkter",
+		"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.": "Din AI-assistent kan registrera slutpunkter som tar emot ett signerat meddelande varje gång den ändrar något här. De tillhör dig — testa eller återkalla dem när som helst.",
+		"All events": "Alla händelser",
+		"Could not queue the test.": "Testet kunde inte köas.",
+		"Disabled": "Inaktiverad",
+		"Endpoint revoked.": "Slutpunkt återkallad.",
+		"Endpoints could not be loaded.": "Slutpunkter kunde inte läsas in.",
+		"No webhook endpoints yet.": "Inga webhook-slutpunkter ännu.",
+		"Pending events are dropped — your AI can register a new endpoint any time.": "Väntande händelser kasseras — din AI kan registrera en ny slutpunkt när som helst.",
+		"Stop notifications to": "Stoppa notiser till",
+		"Test": "Testa",
+		"Test notification queued — check your endpoint.": "Testnotis köad — kontrollera din slutpunkt."
 	}
 }

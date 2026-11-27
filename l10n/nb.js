@@ -2849,6 +2849,22 @@ OC.L10N.register(
 	"your_tickets" : "Dine saker",
 	"{count} bookings fall into this date range. Pick a calendar month to focus one month." : "{count} posteringer faller innenfor dette datointervallet. Velg en kalendermåned for å fokusere på én måned.",
 	"{count} bookings in the ledger for {monthLabel}." : "{count} posteringer i hovedboken for {monthLabel}.",
-	"{used} of {total} seats used" : "{used} av {total} seter brukt"
+	"{used} of {total} seats used" : "{used} av {total} seter brukt",
+	"Endpoint" : "Endepunkt",
+	"Events" : "Hendelser",
+	"Last delivery" : "Siste levering",
+	"State" : "Tilstand",
+	"Webhook endpoints" : "Webhook-endepunkter",
+	"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time." : "AI-assistenten din kan registrere endepunkter som mottar et signert varsel hver gang den endrer noe her. De tilhører deg — test eller tilbakekall dem når som helst.",
+	"All events" : "Alle hendelser",
+	"Could not queue the test." : "Kunne ikke sette testen i kø.",
+	"Disabled" : "Deaktivert",
+	"Endpoint revoked." : "Endepunkt tilbakekalt.",
+	"Endpoints could not be loaded." : "Endepunkter kunne ikke lastes.",
+	"No webhook endpoints yet." : "Ingen webhook-endepunkter ennå.",
+	"Pending events are dropped — your AI can register a new endpoint any time." : "Ventende hendelser kastes — AI-en din kan registrere et nytt endepunkt når som helst.",
+	"Stop notifications to" : "Stopp varsler til",
+	"Test" : "Test",
+	"Test notification queued — check your endpoint." : "Testvarsel satt i kø — sjekk endepunktet ditt."
 	}
 );

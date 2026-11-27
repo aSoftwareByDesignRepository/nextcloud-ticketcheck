@@ -2940,6 +2940,22 @@
 		"your_tickets": "Zgłoszenia",
 		"{count} bookings fall into this date range. Pick a calendar month to focus one month.": "{count} księgowań w tym zakresie dat. Wybierz miesiąc kalendarzowy, aby skupić się na jednym miesiącu.",
 		"{count} bookings in the ledger for {monthLabel}.": "{count} księgowań w księdze dla {monthLabel}.",
-		"{used} of {total} seats used": "Zastosowano gniazda {used} z {total}"
+		"{used} of {total} seats used": "Zastosowano gniazda {used} z {total}",
+		"Endpoint": "Punkt końcowy",
+		"Events": "Zdarzenia",
+		"Last delivery": "Ostatnia dostawa",
+		"State": "Stan",
+		"Webhook endpoints": "Punkty końcowe webhook",
+		"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.": "Twój asystent AI może rejestrować punkty końcowe, które otrzymują podpisane powiadomienie za każdym razem, gdy coś tutaj zmieni. Należą do Ciebie — testuj je lub unieważniaj w dowolnym momencie.",
+		"All events": "Wszystkie zdarzenia",
+		"Could not queue the test.": "Nie udało się dodać testu do kolejki.",
+		"Disabled": "Wyłączony",
+		"Endpoint revoked.": "Punkt końcowy unieważniony.",
+		"Endpoints could not be loaded.": "Nie udało się załadować punktów końcowych.",
+		"No webhook endpoints yet.": "Brak punktów końcowych webhook.",
+		"Pending events are dropped — your AI can register a new endpoint any time.": "Oczekujące zdarzenia są odrzucane — Twoje AI może zarejestrować nowy punkt końcowy w dowolnym momencie.",
+		"Stop notifications to": "Zatrzymać powiadomienia do",
+		"Test": "Testuj",
+		"Test notification queued — check your endpoint.": "Powiadomienie testowe dodano do kolejki — sprawdź swój punkt końcowy."
 	}
 }

@@ -2894,6 +2894,22 @@
 		"your_tickets": "您的工单",
 		"{count} bookings fall into this date range. Pick a calendar month to focus one month.": "该日期范围内有 {count} 笔记账。选择一个日历月份以聚焦某个月。",
 		"{count} bookings in the ledger for {monthLabel}.": "台账中有 {count} 笔记账（{monthLabel}）。",
-		"{used} of {total} seats used": "已用 {used}/{total} 席位"
+		"{used} of {total} seats used": "已用 {used}/{total} 席位",
+		"Endpoint": "端点",
+		"Events": "事件",
+		"Last delivery": "最近投递",
+		"State": "状态",
+		"Webhook endpoints": "Webhook 端点",
+		"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.": "您的 AI 助手可以注册端点，每当它在此处做出更改时，端点就会收到签名通知。这些端点归您所有 — 可随时测试或撤销。",
+		"All events": "全部事件",
+		"Could not queue the test.": "无法将测试加入队列。",
+		"Disabled": "已停用",
+		"Endpoint revoked.": "端点已撤销。",
+		"Endpoints could not be loaded.": "无法加载端点。",
+		"No webhook endpoints yet.": "尚无 Webhook 端点。",
+		"Pending events are dropped — your AI can register a new endpoint any time.": "待处理事件将被丢弃 — 您的 AI 可随时注册新端点。",
+		"Stop notifications to": "停止通知至",
+		"Test": "测试",
+		"Test notification queued — check your endpoint.": "测试通知已加入队列 — 请检查您的端点。"
 	}
 }
