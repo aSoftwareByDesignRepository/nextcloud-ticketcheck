@@ -120,7 +120,9 @@ async function assertLabelCellMetaFits(page, context) {
 
 /** The whole row — label, pills, Rotate/Revoke — fits inside the wrap. */
 async function assertActionsInFrame(page, context) {
-	const wrap = page.locator('.tc-agent-tablewrap');
+	// Scope to the tokens table wrap — the webhook endpoints section carries
+	// a second .tc-agent-tablewrap since the webhook UI landed.
+	const wrap = page.locator('.tc-agent-tablewrap', { has: page.locator('#tc-agent-table') });
 	const fit = await wrap.evaluate((el) => ({
 		scrollWidth: el.scrollWidth,
 		clientWidth: el.clientWidth,
@@ -301,7 +303,7 @@ test.describe('/settings/agent tokens table — post-heal render proof', () => {
 	test('craft captures: desktop/tablet/mobile-card/dark', async ({ page }) => {
 		await page.goto(AGENT_URL, { waitUntil: 'domcontentloaded' });
 		await ensureAuthenticated(page);
-		await expect(page.locator('.tc-agent-tablewrap')).toBeVisible();
+		await expect(page.locator('.tc-agent-tablewrap', { has: page.locator('#tc-agent-table') })).toBeVisible();
 		await expect(page.locator('#tc-agent-tbody tr', { hasText: LABEL_LONG })).toHaveCount(1);
 
 		// desktop ≥1280: Actions column fully in-frame, capped cells wrap.
@@ -334,7 +336,7 @@ test.describe('/settings/agent tokens table — post-heal render proof', () => {
 		expect(cardDisplay, '@320 token rows are card grids').toBe('grid');
 		const labelledCells = await firstRow.locator('td[data-cell]').count();
 		expect(labelledCells, '@320 cells carry data-cell card labels').toBeGreaterThanOrEqual(4);
-		const mobileWrap = page.locator('.tc-agent-tablewrap');
+		const mobileWrap = page.locator('.tc-agent-tablewrap', { has: page.locator('#tc-agent-table') });
 		const mobileWrapVisible = await mobileWrap.isVisible();
 		expect(mobileWrapVisible, '@320 agent tablewrap stays painted').toBe(true);
 		const actionsBox320 = await firstRow.locator('td.tc-row-actions').boundingBox();
@@ -343,7 +345,7 @@ test.describe('/settings/agent tokens table — post-heal render proof', () => {
 		expect(actionsBox320.x + actionsBox320.width,
 			'@320 card-mode actions stay inside the wrap')
 			.toBeLessThanOrEqual(wrapBox320.x + wrapBox320.width + 1);
-		await page.locator('.tc-agent-tablewrap').scrollIntoViewIfNeeded();
+		await page.locator('.tc-agent-tablewrap', { has: page.locator('#tc-agent-table') }).scrollIntoViewIfNeeded();
 		await craftShot(page, 'tc-settings-agent-current-mobile.png');
 
 		// desktop dark: refresh the dark cell on the populated healed table.
