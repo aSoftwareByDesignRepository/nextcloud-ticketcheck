@@ -118,8 +118,6 @@
 	// keydown, suppressing the native <dialog> cancel event — a dialog
 	// opened via showModal() would then ignore Escape entirely. Bind a
 	// dialog-level close ourselves (host_app_escape_preventdefault).
-	// ponytail: heals are app-side (armEscape + pendingReload); port both
-	// to the _shared/agent-auth tpl on next pack sync
 	function armEscape(dlg) {
 		if (dlg) {
 			dlg.addEventListener('keydown', function (e) {

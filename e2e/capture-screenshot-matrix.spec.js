@@ -78,6 +78,90 @@ const READY = {
 	'requester-create': { current: '.portal-create' },
 	'my-requests-empty': { empty: '.helpdesk-empty' },
 	'my-requests-populated': { populated: '.tc-tickets-list, .tc-table-wrap, .tc-list-cards' },
+	'settings-agent': {
+		current: '#tc-agent-access',
+		'mint-dialog': '#tc-agent-access',
+		'secret-dialog': '#tc-agent-access',
+		'revoke-dialog': '#tc-agent-access',
+	},
+};
+
+/** native_dialog_margin_reset_uncentered (mc-r28 precedent): NC core's
+ * html,body,…,dialog reset zeroes the UA 'margin:auto' that centers a
+ * top-layer <dialog> — a pack dialog without a margin re-declaration
+ * anchors to the viewport top-left. mode 'centered' proves the pack
+ * margin:auto restored both-axis centering over the dimmed backdrop;
+ * mode 'fullbleed' proves the ≤480px media query margin:0 sheet wins. */
+async function assertAgentDialogGeometry(page, selector, where) {
+	const m = await page.locator(selector).evaluate((d) => {
+		const r = d.getBoundingClientRect();
+		const bd = getComputedStyle(d, '::backdrop');
+		return {
+			l: r.left, t: r.top, w: r.width, h: r.height,
+			vpW: window.innerWidth, vpH: window.innerHeight,
+			backdropBg: bd.backgroundColor,
+		};
+	});
+	const vpW = m.vpW;
+	const mode = vpW <= 480 ? 'fullbleed' : 'centered';
+	if (mode === 'centered') {
+		const expL = Math.max(0, (m.vpW - m.w) / 2);
+		const expT = Math.max(0, (m.vpH - m.h) / 2);
+		expect(Math.abs(m.l - expL),
+			`${where} @${vpW}px: dialog left ${Math.round(m.l)} ≠ centered ${Math.round(expL)} — margin:auto did not survive the NC reset`)
+			.toBeLessThanOrEqual(2);
+		expect(Math.abs(m.t - expT),
+			`${where} @${vpW}px: dialog top ${Math.round(m.t)} ≠ centered ${Math.round(expT)}`)
+			.toBeLessThanOrEqual(2);
+		expect(m.l, `${where} @${vpW}px: flush-left top-left anchor regression`).toBeGreaterThan(1);
+	} else {
+		expect(Math.abs(m.l), `${where} @${vpW}px: ≤480 full-bleed sheet must pin to the left edge`).toBeLessThanOrEqual(1);
+		expect(m.w, `${where} @${vpW}px: ≤480 full-bleed sheet must span viewport width`).toBeGreaterThanOrEqual(vpW - 1);
+		expect(m.t, `${where} @${vpW}px: ≤480 full-bleed sheet must pin to the top edge`).toBeLessThanOrEqual(1);
+	}
+	const alpha = parseFloat((m.backdropBg.match(/[\d.]+\)?$/) || ['0'])[0]);
+	expect(alpha > 0 || m.backdropBg.startsWith('rgb('),
+		`${where} @${vpW}px: ::backdrop must dim (${m.backdropBg})`).toBeTruthy();
+}
+
+/** Dialog state drivers — read-only on the shared instance: the mint
+ * dialog opens through the real click path, secret/revoke via the same
+ * showModal() code path the pack uses (a real mint/revoke would mutate
+ * fixture tokens; the chrome being proven is identical markup). */
+const DIALOG_DRIVERS = {
+	'settings-agent': {
+		'mint-dialog': async (page) => {
+			await page.locator('#tc-agent-connect').click();
+			await expect(page.locator('#tc-agent-mint-dialog[open]')).toBeVisible({ timeout: 10_000 });
+			await assertAgentDialogGeometry(page, '#tc-agent-mint-dialog[open]', 'mint');
+		},
+		'secret-dialog': async (page) => {
+			await page.evaluate(() => {
+				const secret = document.getElementById('tc-agent-secret');
+				if (secret) secret.value = 'tkc_matrix_readonly_probe';
+				const cfg = document.getElementById('tc-agent-config');
+				if (cfg) cfg.value = '{\n  "mcpServers": {\n    "ticketcheck": {\n      "url": "<instance>",\n      "headers": { "Authorization": "Bearer <token>" }\n    }\n  }\n}';
+				document.getElementById('tc-agent-secret-dialog').showModal();
+			});
+			await expect(page.locator('#tc-agent-secret-dialog[open]')).toBeVisible({ timeout: 10_000 });
+			await assertAgentDialogGeometry(page, '#tc-agent-secret-dialog[open]', 'secret');
+		},
+		'revoke-dialog': async (page) => {
+			// Prefer the real affordance when token rows exist; never confirm.
+			const btn = page.locator('.tc-agent-revoke').first();
+			if (await btn.count()) {
+				await btn.click();
+			} else {
+				await page.evaluate(() => {
+					const t = document.getElementById('tc-agent-revoke-text');
+					if (t) t.textContent = 'Revoke "matrix probe"? AI clients using it stop working within a minute.';
+					document.getElementById('tc-agent-revoke-dialog').showModal();
+				});
+			}
+			await expect(page.locator('#tc-agent-revoke-dialog[open]')).toBeVisible({ timeout: 10_000 });
+			await assertAgentDialogGeometry(page, '#tc-agent-revoke-dialog[open]', 'revoke');
+		},
+	},
 };
 
 const capturedFiles = [];
@@ -289,6 +373,10 @@ test.describe('TicketCheck screenshot matrix (ATLAS §VISUAL)', () => {
 					// .tc-list-cards and CSS picks one per width — a comma selector
 					// would pin the wait on a hidden sibling.
 					await page.waitForSelector(ready, { state: 'attached', timeout: 30_000 });
+					const dialogDriver = DIALOG_DRIVERS[surface.id]?.[state];
+					if (dialogDriver) {
+						await dialogDriver(page);
+					}
 					await shot(
 						page,
 						`${MANIFEST.prefix}-${surface.id}-${state}-${vp.name}.png`,

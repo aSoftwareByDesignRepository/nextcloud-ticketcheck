@@ -224,6 +224,17 @@
         "populated"
       ],
       "dark": true
+    },
+    {
+      "id": "settings-agent",
+      "path": "/settings/agent",
+      "states": [
+        "current",
+        "mint-dialog",
+        "secret-dialog",
+        "revoke-dialog"
+      ],
+      "dark": true
     }
   ]
 }
