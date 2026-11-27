@@ -157,4 +157,95 @@ final class PortalActorResolverTest extends TestCase
         self::assertSame('anonymous', $resolver->kind());
         self::assertNull($resolver->currentActor());
     }
+
+    /**
+     * TC-3 seam: withGuestActor binds a persisted identity as the actor for
+     * exactly one operation and restores the prior resolution afterwards —
+     * the session-less equivalent of the escalation facade's impersonation.
+     */
+    public function testWithGuestActorBindsAndRestores(): void
+    {
+        $request = $this->createMock(IRequest::class);
+        $request->method('getCookie')->willReturn('');
+        $userSession = $this->createMock(IUserSession::class);
+        $userSession->method('getUser')->willReturn(null);
+        $resolver = new PortalActorResolver(
+            $request, $userSession, $this->createMock(IGroupManager::class),
+            $this->createMock(IUserManager::class),
+            $this->createMock(PortalSessionService::class),
+            $this->createMock(GuestIdentityMapper::class),
+            $this->createMock(GuestAliasMapper::class),
+            $this->createMock(GuestAuthConfig::class));
+
+        $identity = new GuestIdentity();
+        $identity->setId(9);
+        $identity->setStatus('active');
+        $identity->setEmail('r@example.org');
+
+        $inside = $resolver->withGuestActor($identity, function () use ($resolver): array {
+            return [$resolver->kind(), $resolver->currentActor(), $resolver->currentIdentity(), $resolver->isGuest()];
+        });
+        self::assertSame(['identity', 'portal:9', $identity, true], $inside);
+
+        // Outside the bind the anonymous resolution applies again.
+        self::assertSame('anonymous', $resolver->kind());
+        self::assertNull($resolver->currentActor());
+    }
+
+    public function testWithGuestActorRestoresOnThrow(): void
+    {
+        $request = $this->createMock(IRequest::class);
+        $request->method('getCookie')->willReturn('');
+        $userSession = $this->createMock(IUserSession::class);
+        $userSession->method('getUser')->willReturn(null);
+        $resolver = new PortalActorResolver(
+            $request, $userSession, $this->createMock(IGroupManager::class),
+            $this->createMock(IUserManager::class),
+            $this->createMock(PortalSessionService::class),
+            $this->createMock(GuestIdentityMapper::class),
+            $this->createMock(GuestAliasMapper::class),
+            $this->createMock(GuestAuthConfig::class));
+
+        $identity = new GuestIdentity();
+        $identity->setId(9);
+        $identity->setStatus('active');
+
+        try {
+            $resolver->withGuestActor($identity, static function (): void {
+                throw new \RuntimeException('boom');
+            });
+            self::fail('expected propagation');
+        } catch (\RuntimeException) {
+        }
+        self::assertSame('anonymous', $resolver->kind());
+    }
+
+    public function testWithGuestActorRejectsUnpersistedOrInactive(): void
+    {
+        $resolver = new PortalActorResolver(
+            $this->createMock(IRequest::class),
+            $this->createMock(IUserSession::class),
+            $this->createMock(IGroupManager::class),
+            $this->createMock(IUserManager::class),
+            $this->createMock(PortalSessionService::class),
+            $this->createMock(GuestIdentityMapper::class),
+            $this->createMock(GuestAliasMapper::class),
+            $this->createMock(GuestAuthConfig::class));
+
+        $ghost = new GuestIdentity();
+        $ghost->setStatus('active');
+        $this->expectException(\InvalidArgumentException::class);
+        try {
+            $resolver->withGuestActor($ghost, static fn (): null => null);
+        } finally {
+            $inactive = new GuestIdentity();
+            $inactive->setId(3);
+            $inactive->setStatus('disabled');
+            try {
+                $resolver->withGuestActor($inactive, static fn (): null => null);
+                self::fail('inactive identity must not bind');
+            } catch (\InvalidArgumentException) {
+            }
+        }
+    }
 }
