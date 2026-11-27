@@ -2784,7 +2784,7 @@
 		"title_sort": "Titre",
 		"toggle_category": "Basculer la catégorie %s",
 		"toggle_navigation_menu": "Afficher/masquer le menu de navigation",
-		"token_expired_reload": "Token a expiré. Veuillez recharger la page.",
+		"token_expired_reload": "Le jeton a expiré. Veuillez recharger la page.",
 		"too_many_failed_attempts": "Trop de tentatives ratées. Veuillez réessayer dans 15 minutes.",
 		"too_many_requests": "Vous avez fait trop de demandes. Attendez un moment avant de recommencer.",
 		"total": "Total général",
