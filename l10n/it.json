@@ -2932,7 +2932,7 @@
 		"No webhook endpoints yet.": "Nessun endpoint webhook per ora.",
 		"Pending events are dropped — your AI can register a new endpoint any time.": "Gli eventi in sospeso vengono eliminati — la tua AI può registrare un nuovo endpoint in qualsiasi momento.",
 		"Stop notifications to": "Interrompere le notifiche a",
-		"Test": "Testa",
+		"Test": "Test",
 		"Test notification queued — check your endpoint.": "Notifica di test in coda — controlla il tuo endpoint."
 	}
 }

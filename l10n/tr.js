@@ -2864,7 +2864,7 @@ OC.L10N.register(
 	"No webhook endpoints yet." : "Henüz webhook uç noktası yok.",
 	"Pending events are dropped — your AI can register a new endpoint any time." : "Bekleyen olaylar düşürülür — AI’niz istediğiniz zaman yeni bir uç nokta kaydedebilir.",
 	"Stop notifications to" : "Bildirimleri durdur:",
-	"Test" : "Test et",
+	"Test" : "Test",
 	"Test notification queued — check your endpoint." : "Test bildirimi kuyruğa alındı — uç noktanızı kontrol edin."
 	}
 );

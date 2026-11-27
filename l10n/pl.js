@@ -2864,7 +2864,7 @@ OC.L10N.register(
 	"No webhook endpoints yet." : "Brak punktów końcowych webhook.",
 	"Pending events are dropped — your AI can register a new endpoint any time." : "Oczekujące zdarzenia są odrzucane — Twoje AI może zarejestrować nowy punkt końcowy w dowolnym momencie.",
 	"Stop notifications to" : "Zatrzymać powiadomienia do",
-	"Test" : "Testuj",
+	"Test" : "Test",
 	"Test notification queued — check your endpoint." : "Powiadomienie testowe dodano do kolejki — sprawdź swój punkt końcowy."
 	}
 );

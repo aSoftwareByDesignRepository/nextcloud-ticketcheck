@@ -2864,7 +2864,7 @@ OC.L10N.register(
 	"No webhook endpoints yet." : "Inga webhook-slutpunkter ännu.",
 	"Pending events are dropped — your AI can register a new endpoint any time." : "Väntande händelser kasseras — din AI kan registrera en ny slutpunkt när som helst.",
 	"Stop notifications to" : "Stoppa notiser till",
-	"Test" : "Testa",
+	"Test" : "Test",
 	"Test notification queued — check your endpoint." : "Testnotis köad — kontrollera din slutpunkt."
 	}
 );
