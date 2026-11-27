@@ -124,6 +124,19 @@
 	flex-wrap: wrap;
 	gap: var(--tc-space-1, 4px);
 }
+/* Scope pills must wrap BETWEEN whole badges, never fragment inside one —
+ * the family .tc-badge recipe carries white-space:normal +
+ * overflow-wrap:anywhere, which inside a squeezed flex cell collapses to
+ * one-character-per-line columns (clipped_chips class). Pinning nowrap on
+ * the dedicated scope class keeps each badge's min-content at the full
+ * label, so auto table layout widens the Scopes cell to the widest pill
+ * and flex-wrap breaks lines between intact pills. The two-class selector
+ * is load-order-proof: a bare .tc-agent-scope ties .tc-badge's (0,1,0)
+ * and loses whenever the app sheet is served after this pack. */
+.tc-agent-scopes .tc-agent-scope {
+	white-space: nowrap;
+	overflow-wrap: normal;
+}
 .tc-agent-never {
 	color: var(--color-text-maxcontrast, var(--tc-muted));
 	font-style: italic;
