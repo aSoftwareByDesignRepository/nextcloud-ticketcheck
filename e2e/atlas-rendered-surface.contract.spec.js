@@ -23,6 +23,7 @@ const STAFF_SURFACES = [
 	['/apps/ticketcheck/guests/create', 'guest create form'],
 	['/apps/ticketcheck/settings', 'settings'],
 	['/apps/ticketcheck/settings/sla', 'settings sla'],
+	['/apps/ticketcheck/settings/agent', 'settings agent'],
 	['/apps/ticketcheck/guests/migration', 'guests migration wizard'],
 ];
 
