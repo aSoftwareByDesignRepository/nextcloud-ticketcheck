@@ -266,4 +266,44 @@ class PortalActorResolver
         $alias = $this->aliases->findByUid($uid);
         return $alias !== null ? self::actorForIdentity((int)$alias->getIdentityId()) : $uid;
     }
+
+    /**
+     * Programmatic guest-actor binding for session-less callers (FC-DFC-REPORT,
+     * background flows). resolve() is cookie/session-based — a request without
+     * a portal cookie resolves to 'anonymous'. This seam binds a verified,
+     * persisted identity as the actor for exactly one operation and restores
+     * the previous resolution state in a finally block, the same shape as the
+     * escalation facade's setUser()/setUser(null) impersonation.
+     *
+     * NOT for HTTP paths — portal requests resolve via the session cookie.
+     * The bound identity must be active; a disabled/erased identity can never
+     * mint tickets through a facade.
+     *
+     * @template T
+     * @param callable():T $operation
+     * @return T
+     */
+    public function withGuestActor(GuestIdentity $identity, callable $operation): mixed
+    {
+        $id = $identity->getId();
+        if ($id === null || (int)$id <= 0) {
+            throw new \InvalidArgumentException('identity_not_persisted');
+        }
+        if ($identity->getStatus() !== 'active') {
+            throw new \InvalidArgumentException('identity_not_active');
+        }
+        $previous = $this->resolved;
+        $this->resolved = [
+            'kind' => 'identity',
+            'actor' => self::actorForIdentity((int)$id),
+            'identity' => $identity,
+            'session' => null,
+            'uid' => null,
+        ];
+        try {
+            return $operation();
+        } finally {
+            $this->resolved = $previous;
+        }
+    }
 }

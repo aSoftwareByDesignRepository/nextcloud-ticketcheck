@@ -388,6 +388,154 @@ class TicketService
     }
 
     /**
+     * Create a ticket for an anonymous external defect report (FC-DFC-REPORT —
+     * no session, no guest identity). Mirrors the inbound-mail writer:
+     * created_by carries the machine provenance label 'defect-report' and the
+     * placeholder customer e-mail on the RFC 2606 .invalid TLD keeps the row
+     * valid and audit-traceable (escalation-facade placeholder doctrine).
+     *
+     * Confirmation mail is dispatched only when the ticket carries a real
+     * (non-.invalid) address — nothing could ever receive mail at the
+     * placeholder.
+     *
+     * @param array{title: string, description: string, customer_email?: string,
+     *   customer_name?: string, customer_id?: int|null, project_id?: int|null,
+     *   category?: string, priority?: string, reference_code?: string} $data
+     * @throws \Exception
+     */
+    public function createTicketFromDefectReport(array $data): Ticket
+    {
+        $ticket = $this->ticketCategories !== null
+            ? $this->ticketCategories->withCategoryWriteGuard(
+                fn (): Ticket => $this->doCreateTicketFromDefectReport($data)
+            )
+            : $this->doCreateTicketFromDefectReport($data);
+        $customerEmail = strtolower((string) $ticket->getCustomerEmail());
+        if ($customerEmail !== '' && !str_ends_with($customerEmail, '.invalid')) {
+            $this->notifier?->ticketCreated($ticket, null);
+        }
+        return $ticket;
+    }
+
+    /**
+     * @param array{title: string, description: string, customer_email?: string,
+     *   customer_name?: string, customer_id?: int|null, project_id?: int|null,
+     *   category?: string, priority?: string, reference_code?: string} $data
+     */
+    private function doCreateTicketFromDefectReport(array $data): Ticket
+    {
+        $ticket = new Ticket();
+        $ticket->setTicketNumber($this->generateUniqueTicketNumber());
+        $ticket->setTitle($data['title'] ?? '');
+        $ticket->setDescription($data['description'] ?? '');
+        $ticket->setCustomerId($data['customer_id'] ?? null);
+        $email = trim((string) ($data['customer_email'] ?? ''));
+        if ($email === '') {
+            $ref = strtolower(preg_replace('/[^A-Za-z0-9]/', '', (string) ($data['reference_code'] ?? '')) ?? '');
+            $email = 'anonymous' . ($ref !== '' ? '+' . $ref : '') . '@defect-report.invalid';
+        }
+        $ticket->setCustomerEmail($email);
+        $customerName = trim((string) ($data['customer_name'] ?? ''));
+        $ticket->setCustomerName($customerName !== '' ? $customerName : 'Anonymous reporter');
+        $ticket->setProjectId($data['project_id'] ?? null);
+        $ticket->setCategory($this->resolveWriteCategoryOrDefault($data['category'] ?? null));
+        $ticket->setPriority(in_array($data['priority'] ?? null, Ticket::getPriorities(), true)
+            ? (string) $data['priority']
+            : Ticket::PRIORITY_NORMAL);
+        $ticket->setStatus(Ticket::STATUS_NEW);
+        $ticket->setAssignedTo(null);
+        $ticket->setCreatedAt(new \DateTime());
+        $ticket->setUpdatedAt(Ticket::nextUpdatedAt($ticket->getUpdatedAt()));
+        $ticket->setCreatedBy('defect-report');
+        $ticket->setCreatedByGuest(true);
+
+        $this->calculateSLADates($ticket);
+
+        $errors = $ticket->validate();
+        if (!empty($errors)) {
+            throw new \Exception('Validation failed: ' . implode(', ', $errors));
+        }
+
+        $maxInsertAttempts = 5;
+        for ($insertAttempt = 1; $insertAttempt <= $maxInsertAttempts; $insertAttempt++) {
+            try {
+                return $this->ticketMapper->insert($ticket);
+            } catch (\OCP\DB\Exception $e) {
+                $isUniqueViolation = $e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION;
+                if (!$isUniqueViolation || $insertAttempt === $maxInsertAttempts) {
+                    $this->logger->error('Failed to create ticket from defect report: ' . $e->getMessage(), ['exception' => $e]);
+                    throw new \Exception('Failed to create ticket', 0, $e);
+                }
+                $ticket->setTicketNumber($this->generateUniqueTicketNumber());
+            }
+        }
+
+        throw new \Exception('Failed to create ticket');
+    }
+
+    /**
+     * Internal system note for machine-origin flows (FC-DFC-REPORT provenance).
+     * No session required, never notifies customers (internal notes are
+     * agent-only). Follows merge chains like the inbound-comment writer so a
+     * note can never land on a merged-away ticket.
+     *
+     * @throws \Exception
+     */
+    public function addInternalSystemNote(
+        int $ticketId,
+        string $content,
+        string $authorName,
+        string $actor = 'defect-report'
+    ): Comment {
+        try {
+            return $this->workflowLock->withTicketLocks(
+                [$ticketId],
+                function () use ($ticketId, $content, $authorName, $actor): Comment {
+                    try {
+                        $ticket = $this->ticketMapper->find($ticketId);
+                    } catch (\Exception $e) {
+                        throw new \Exception('Ticket not found');
+                    }
+                    $this->assertTicketNotMerged($ticket);
+
+                    $comment = new Comment();
+                    $comment->setTicketId($ticketId);
+                    $comment->setUserId($actor);
+                    $comment->setAuthorName(trim($authorName) !== '' ? trim($authorName) : $actor);
+                    $comment->setAuthorEmail(null);
+                    $comment->setContent($content);
+                    $comment->setIsInternal(true);
+                    $comment->setCreatedAt(new \DateTime());
+
+                    $errors = $comment->validate();
+                    if (!empty($errors)) {
+                        throw new \Exception('Validation failed: ' . implode(', ', $errors));
+                    }
+
+                    $savedComment = $this->commentMapper->insert($comment);
+                    if (!$this->ticketMapper->touchUpdatedAtIfUnmerged($ticketId)) {
+                        try {
+                            $this->commentMapper->deleteIfOnTicket((int) $savedComment->getId(), $ticketId);
+                        } catch (\Throwable $cleanup) {
+                            $this->logger->error('Failed to clean orphan system note after merge race', [
+                                'ticket_id' => $ticketId,
+                                'comment_id' => $savedComment->getId(),
+                                'exception' => $cleanup,
+                            ]);
+                        }
+                        throw new \Exception('Cannot modify a ticket that has been merged into another ticket');
+                    }
+                    /** @var Comment $savedComment */
+                    return $savedComment;
+                },
+                'TicketCheck system note'
+            );
+        } catch (\InvalidArgumentException $e) {
+            throw new \Exception($e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
      * Update a ticket
      *
      * @param int $id
@@ -1391,9 +1539,10 @@ class TicketService
     }
 
     /**
-     * Persist an inbound-mail attachment (server-side temp file, no session).
-     * Same lock + merge-safety + orphan cleanup as addAttachmentFromUploadedFile;
-     * uploaded_by is the literal 'inbound-email' provenance marker.
+     * Persist a server-side staged attachment (inbound mail, defect-report
+     * facade — no session). Same lock + merge-safety + orphan cleanup as
+     * addAttachmentFromUploadedFile; uploaded_by carries the caller's
+     * provenance marker (default 'inbound-email').
      */
     public function addAttachmentFromEmail(
         int $ticketId,
@@ -1401,12 +1550,13 @@ class TicketService
         string $originalName,
         int $fileSize,
         string $mimeType,
-        ?int $commentId = null
+        ?int $commentId = null,
+        string $uploadedBy = 'inbound-email'
     ): Attachment {
         try {
             return $this->workflowLock->withTicketLocks(
                 [$ticketId],
-                function () use ($ticketId, $tmpPath, $originalName, $fileSize, $mimeType, $commentId): Attachment {
+                function () use ($ticketId, $tmpPath, $originalName, $fileSize, $mimeType, $commentId, $uploadedBy): Attachment {
                     try {
                         $ticket = $this->ticketMapper->find($ticketId);
                     } catch (\Exception $e) {
@@ -1436,7 +1586,7 @@ class TicketService
                             $fileSize,
                             $mimeType,
                             $boundCommentId,
-                            'inbound-email'
+                            $uploadedBy
                         );
                     } catch (\Throwable $e) {
                         $this->attachmentUploadService->deletePersistedFile($ticketId, $storedName);
