@@ -1144,6 +1144,11 @@ class PermissionService
      */
     public function getCurrentUserEmail(): ?string
     {
+        if ($this->agentContext !== null && $this->agentContext->isArmed()) {
+            $agentUser = $this->userManager !== null ? $this->userManager->get((string)$this->agentContext->uid()) : null;
+            $email = $agentUser !== null ? (string)$agentUser->getEMailAddress() : '';
+            return $email !== '' ? $email : null;
+        }
         if ($this->actorResolver !== null) {
             $identity = $this->actorResolver->currentIdentity();
             if ($identity !== null) {
@@ -1165,6 +1170,10 @@ class PermissionService
      */
     public function getCurrentUserDisplayName(): ?string
     {
+        if ($this->agentContext !== null && $this->agentContext->isArmed()) {
+            $agentUser = $this->userManager !== null ? $this->userManager->get((string)$this->agentContext->uid()) : null;
+            return $agentUser !== null ? (string)$agentUser->getDisplayName() : null;
+        }
         if ($this->actorResolver !== null) {
             $identity = $this->actorResolver->currentIdentity();
             if ($identity !== null) {

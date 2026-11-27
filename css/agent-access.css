@@ -100,7 +100,30 @@
 		text-align: left;
 	}
 	.tc-agent-table td[data-cell]::before { content: none; }
-	.tc-agent-table .tc-row-actions { justify-content: flex-end; padding-top: var(--tc-space-2, 8px); }
+	/* clipped_control_text_at_screen_edge: a real-width actions column plus
+	   unbounded elastic cells pushed the table ~107px past the wrap at
+	   1280px — actions clipped at rest, labels clipped when scrolled (DS:
+	   row actions never force sideways scrolling). Bound the two elastic
+	   cells so summed min-contents fit: the label ellipsizes with a title
+	   fallback, scope pills wrap between whole badges inside the capped
+	   cell, and the actions cell returns to a real table-cell (the card
+	   layout's flex rule would otherwise anonymous-wrap it) with nowrap
+	   buttons so the column sizes to Rotate+Revoke and no more. */
+	.tc-agent-table td.tc-row-actions {
+		display: table-cell;
+		white-space: nowrap;
+		text-align: end;
+	}
+	.tc-agent-table td.tc-agent-label-cell { max-width: 14rem; }
+	.tc-agent-table .tc-agent-label {
+		display: inline-block;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		vertical-align: bottom;
+	}
+	.tc-agent-table td.tc-agent-scopes-cell { max-width: 12rem; }
 }
 
 /* Family app sheets blanket-hide .tc-table-wrap at ≤640px expecting a
@@ -114,6 +137,20 @@
 }
 
 .tc-agent-label { font-weight: 600; margin-right: var(--tc-space-2, 8px); }
+/* meta_pill_overlap: max-width on the td caps the painted box, but Blink
+   still lays the cell's inline content out at max-content width — under
+   the 14rem cap label+badge+owner ran ~390px and the scopes cell's opaque
+   pills painted over badge + owner chip. A flex-wrap inner wrapper
+   resolves against the clamped cell width and breaks lines BETWEEN items
+   (same idiom as .tc-agent-scopes), so badge/owner wrap below the label
+   instead of overflowing under the pills. Whitespace-only text inside a
+   flex container is not rendered (no anonymous items) — the label's
+   margin-right and owner's margin-left carry the real spacing. */
+.tc-agent-labelcell {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+}
 .tc-agent-owner {
 	margin-left: var(--tc-space-2, 8px);
 	font-size: var(--tc-fs-xs, 0.75rem);

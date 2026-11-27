@@ -310,6 +310,8 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Db\CommentMoveMapper::class),
                 $c->get(\OCA\Ticketcheck\Service\TicketNotificationDispatcher::class),
                 $c->get(\OCA\Ticketcheck\Service\TicketAssigneeService::class),
+                $c->get(\OCA\Ticketcheck\Agent\AgentContext::class),
+                $c->get(\OCP\IUserManager::class),
             );
         });
         $context->registerService(\OCA\Ticketcheck\Service\TicketService::class, function ($c) {

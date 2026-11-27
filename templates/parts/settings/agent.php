@@ -63,8 +63,7 @@ $tc_tokens = is_array($tc_state['tokens']) ? $tc_state['tokens'] : [];
 			<tbody id="tc-agent-tbody">
 				<?php foreach ($tc_tokens as $tc_tok): ?>
 				<tr data-token-id="<?php p((string)($tc_tok['id'] ?? '')); ?>" data-token-label="<?php p((string)($tc_tok['label'] ?? '')); ?>"<?php if (($tc_tok['state'] ?? '') !== 'active'): ?> class="tc-agent-row--inactive"<?php endif; ?>>
-					<td data-cell="<?php p($l->t('Label')); ?>">
-						<span class="tc-agent-label"><?php p((string)($tc_tok['label'] ?? '')); ?></span>
+					<td data-cell="<?php p($l->t('Label')); ?>" class="tc-agent-label-cell"><span class="tc-agent-labelcell"><span class="tc-agent-label" title="<?php p((string)($tc_tok['label'] ?? '')); ?>"><?php p((string)($tc_tok['label'] ?? '')); ?></span>
 						<?php if (($tc_tok['state'] ?? '') === 'revoked'): ?>
 							<span class="tc-badge tc-badge--neutral"><?php p($l->t('Revoked')); ?></span>
 						<?php elseif (($tc_tok['state'] ?? '') === 'expired'): ?>
@@ -74,9 +73,8 @@ $tc_tokens = is_array($tc_state['tokens']) ? $tc_state['tokens'] : [];
 						<?php endif; ?>
 						<?php if ($tc_state['isAdmin'] && ($tc_tok['userId'] ?? '') !== ''): ?>
 							<span class="tc-agent-owner"><?php p((string)$tc_tok['userId']); ?></span>
-						<?php endif; ?>
-					</td>
-					<td data-cell="<?php p($l->t('Scopes')); ?>">
+						<?php endif; ?></span></td>
+					<td data-cell="<?php p($l->t('Scopes')); ?>" class="tc-agent-scopes-cell">
 						<span class="tc-agent-scopes">
 						<?php foreach (($tc_tok['scopes'] ?? []) as $tc_scope): ?>
 							<span class="tc-badge tc-badge--neutral tc-agent-scope" title="<?php p((string)$tc_scope); ?>"><?php p((string)($tc_state['scopeLabels'][$tc_scope] ?? $tc_scope)); ?></span>

@@ -50,6 +50,7 @@ final class NavigationGetRoutesCsrfContractTest extends TestCase
 	private const FETCH_ONLY_NON_API_URLS = [
 		'/agent/v1/tokens',                  // agent-access.js fetch only (requesttoken header)
 		'/agent/v1/audit',                   // agent-access.js fetch only (requesttoken header)
+		'/agent/v1/webhooks',                // agent-access.js fetch only (requesttoken header)
 		'/portal/rate-limit/status',         // TicketCheckApi fetch only
 		'/portal/api/tickets/{id}/links',    // TicketCheckApi fetch only
 		'/kb/articles/{id}/comments',        // TicketCheckApi fetch only

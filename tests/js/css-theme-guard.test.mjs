@@ -258,10 +258,11 @@ test('interactive size variants never drop below 44px touch target', () => {
 test('modals and lightboxes avoid raw 100vw width (scrollbar overflow)', () => {
 	const offenders = []
 	for (const file of files) {
-		// Synced pack file (apps/_shared/config-transfer) — regenerated
-		// centrally, never restyled app-side; its mobile full-bleed dialog
-		// rule is the pack's own layout decision.
-		if (relative(appRoot, file) === 'css/common/transfer.css') {
+		// Synced pack files (apps/_shared/config-transfer + agent-auth) —
+		// regenerated centrally, never restyled app-side; their mobile
+		// full-bleed dialog rules are the packs' own layout decisions.
+		const rel = relative(appRoot, file)
+		if (rel === 'css/common/transfer.css' || rel === 'css/agent-access.css') {
 			continue
 		}
 		const source = stripComments(readFileSync(file, 'utf8'))

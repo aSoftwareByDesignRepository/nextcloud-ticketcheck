@@ -68,6 +68,8 @@ class TicketService
         private readonly ?\OCA\Ticketcheck\Db\CommentMoveMapper $commentMoveMapper = null,
         private readonly ?TicketNotificationDispatcher $notifier = null,
         private readonly ?TicketAssigneeService $assigneeService = null,
+        private readonly ?\OCA\Ticketcheck\Agent\AgentContext $agentContext = null,
+        private readonly ?\OCP\IUserManager $userManager = null,
     ) {
         $this->actorResolver = $actorResolver;
         $this->ticketMapper = $ticketMapper;
@@ -96,6 +98,18 @@ class TicketService
      */
     private function actorTriple(): ?array
     {
+        // Scoped agent tokens never create a session — the middleware-armed
+        // context carries the verified uid; resolve name/email off IUser so
+        // agent writes record the owning identity, not a null actor.
+        if ($this->agentContext !== null && $this->agentContext->isArmed()) {
+            $uid = (string)$this->agentContext->uid();
+            $agentUser = $this->userManager !== null ? $this->userManager->get($uid) : null;
+            return [
+                $uid,
+                $agentUser !== null ? (string)$agentUser->getDisplayName() : $uid,
+                $agentUser !== null ? $agentUser->getEMailAddress() : null,
+            ];
+        }
         $user = $this->userSession->getUser();
         if ($user !== null) {
             return [$user->getUID(), (string)$user->getDisplayName(), $user->getEMailAddress()];

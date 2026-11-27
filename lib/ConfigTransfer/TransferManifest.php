@@ -120,6 +120,10 @@ final class TransferManifest extends AbstractTransferManifest
 			// Routing map embeds helpdesk_projects ids — unresolvable
 			// across instances even though projects transfer.
 			'inbound_imap_routing_json' => ['class' => 'env', 'section' => 'inbound-mail'],
+			// SSRF dev escape hatch (local test stacks only) — opening
+			// http:// webhook targets on a real instance via a transferred
+			// config would be a security regression → never transferable.
+			'agent_webhook_dev_http' => 'internal',
 			// ── internal bookkeeping — never transferred ──
 			'enabled' => 'internal',
 			'installed_version' => 'internal',
@@ -314,6 +318,10 @@ final class TransferManifest extends AbstractTransferManifest
 			// would leak a live credential across instances — never carry.
 			'tc_agent_tokens' => ['class' => 'internal'],
 			'tc_agent_audit' => ['class' => 'internal'],
+			// Webhook subscriptions carry an HMAC signing secret per row —
+			// transferring them would both break deliveries on the target
+			// and leak live credential material across instances.
+			'tc_agent_webhooks' => ['class' => 'internal', 'secret_columns' => ['secret']],
 		]);
 	}
 }
