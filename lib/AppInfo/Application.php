@@ -464,6 +464,22 @@ class Application extends App implements IBootstrap
                 $c->get(\OCA\Ticketcheck\Service\TicketResourceService::class),
             );
         });
+        // FC-DFC-REPORT — defectcheck anonymous-report intake. Explicit
+        // registration keeps Server::get(FQCN) deterministic for the
+        // cross-app call from OCA\DefectCheck\Service\TicketcheckClient.
+        $context->registerService(\OCA\Ticketcheck\Public\DefectReportWriteFacade::class, function ($c) {
+            return new \OCA\Ticketcheck\Public\DefectReportWriteFacade(
+                $c->get(\OCA\Ticketcheck\Service\TicketService::class),
+                $c->get(\OCA\Ticketcheck\Service\GuestIdentityService::class),
+                $c->get(\OCA\Ticketcheck\Service\GuestInviteService::class),
+                $c->get(\OCA\Ticketcheck\Service\PortalActorResolver::class),
+                $c->get(\OCA\Ticketcheck\Service\IdempotencyService::class),
+                $c->get(\OCA\Ticketcheck\Service\HtmlSanitizerService::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketNotificationDispatcher::class),
+                $c->get(\Psr\Log\LoggerInterface::class),
+                $c->get(\OCA\Ticketcheck\Service\TicketCategoryService::class),
+            );
+        });
 
         // Register mappers
         $context->registerService(\OCA\Ticketcheck\Db\TicketMapper::class, function ($c) {
