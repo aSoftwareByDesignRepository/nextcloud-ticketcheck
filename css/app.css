@@ -19391,7 +19391,7 @@ body.guest-user footer.guest-box , body#body-login:has([data-tc-nav-mode="guest"
 	border: 0;
 }
 
-@media (max-width: 768.98px) {
+@media (max-width: 767.98px) {
 	.tc-support-us__options {
 		grid-template-columns: 1fr;
 	}
