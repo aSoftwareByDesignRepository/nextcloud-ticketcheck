@@ -211,7 +211,7 @@
 		"Knowledge base": "Base de conocimientos",
 		"Knowledge base categories": "Categorías de base de conocimientos",
 		"Knowledge base settings": "Ajustes de base de conocimientos",
-		"Label": "Etiquete",
+		"Label": "Etiqueta",
 		"Last Updated": "Última actualización",
 		"Last transfer": "Última transferencia",
 		"Last used": "Último uso",
@@ -2917,6 +2917,22 @@
 		"your_tickets": "Tickets",
 		"{count} bookings fall into this date range. Pick a calendar month to focus one month.": "{count} asientos se encuentran en este rango de fechas. Elija un mes calendario para concentrarse en un mes.",
 		"{count} bookings in the ledger for {monthLabel}.": "{count} asientos en el libro mayor para {monthLabel}.",
-		"{used} of {total} seats used": "{used} de {total} asientos utilizados"
+		"{used} of {total} seats used": "{used} de {total} asientos utilizados",
+		"Endpoint": "Endpoint",
+		"Events": "Eventos",
+		"Last delivery": "Última entrega",
+		"State": "Estado",
+		"Webhook endpoints": "Endpoints de webhook",
+		"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.": "Su asistente de IA puede registrar endpoints que reciben una notificación firmada cada vez que cambia algo aquí. Le pertenecen — pruébelos o revóquelos en cualquier momento.",
+		"All events": "Todos los eventos",
+		"Could not queue the test.": "No se pudo poner la prueba en cola.",
+		"Disabled": "Desactivado",
+		"Endpoint revoked.": "Endpoint revocado.",
+		"Endpoints could not be loaded.": "No se pudieron cargar los endpoints.",
+		"No webhook endpoints yet.": "Aún no hay endpoints de webhook.",
+		"Pending events are dropped — your AI can register a new endpoint any time.": "Los eventos pendientes se descartan — su IA puede registrar un nuevo endpoint en cualquier momento.",
+		"Stop notifications to": "Detener notificaciones a",
+		"Test": "Probar",
+		"Test notification queued — check your endpoint.": "Notificación de prueba en cola — compruebe su endpoint."
 	}
 }
