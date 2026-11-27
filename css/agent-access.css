@@ -477,6 +477,14 @@ dialog.tc-agent-revoke-dialog:not([open]) {
 	font-size: var(--tc-fs-sm);
 	line-height: var(--tc-line-base);
 }
+.tc-agent-sub-h {
+	margin: var(--tc-space-6, 32px) 0 var(--tc-space-1, 4px);
+	font-size: var(--tc-fs-lg, 1.125rem);
+	line-height: var(--tc-line-tight, 1.25);
+}
+.tc-agent-webhooks > .tc-form-row__hint {
+	margin-bottom: var(--tc-space-3, 12px);
+}
 
 /* Inline field error (mint dialog) — family field-errors recipe: danger
    ink, small type; next-step copy lives in the text the server fields-map

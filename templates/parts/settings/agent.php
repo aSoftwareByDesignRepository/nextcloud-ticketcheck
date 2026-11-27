@@ -102,6 +102,25 @@ $tc_tokens = is_array($tc_state['tokens']) ? $tc_state['tokens'] : [];
 	</div>
 	<?php endif; ?>
 
+	<div class="tc-agent-webhooks" id="tc-agent-webhooks">
+		<h3 class="tc-agent-sub-h" id="tc-agent-webhooks-h"><?php p($l->t('Webhook endpoints')); ?></h3>
+		<p class="tc-form-row__hint"><?php p($l->t('Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.')); ?></p>
+		<div class="tc-table-wrap tc-agent-tablewrap" tabindex="0" role="region" aria-labelledby="tc-agent-webhooks-h">
+			<table class="tc-table tc-table--cards tc-agent-table" id="tc-agent-webhook-table">
+				<thead>
+					<tr>
+						<th scope="col"><?php p($l->t('Endpoint')); ?></th>
+						<th scope="col"><?php p($l->t('Events')); ?></th>
+						<th scope="col"><?php p($l->t('State')); ?></th>
+						<th scope="col"><?php p($l->t('Last delivery')); ?></th>
+						<th scope="col"><span class="tc-visually-hidden"><?php p($l->t('Actions')); ?></span></th>
+					</tr>
+				</thead>
+				<tbody id="tc-agent-webhook-tbody"></tbody>
+			</table>
+		</div>
+	</div>
+
 	<?php if ($tc_state['isAdmin']): ?>
 	<div class="tc-form-row tc-agent-selfmint">
 		<input type="hidden" name="agent_self_mint" value="0">
