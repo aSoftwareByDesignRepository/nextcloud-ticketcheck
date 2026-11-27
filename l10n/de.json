@@ -2917,6 +2917,12 @@
         "your_tickets": "Ihre Tickets",
         "{count} bookings fall into this date range. Pick a calendar month to focus one month.": "{count} Buchungen in diesem Zeitraum. Wählen Sie einen Kalendermonat, um einen einzelnen Monat zu fokussieren.",
         "{count} bookings in the ledger for {monthLabel}.": "{count} Buchungen im Hauptbuch für {monthLabel}.",
-        "{used} of {total} seats used": "{used} von {total} Sitzen belegt"
+        "{used} of {total} seats used": "{used} von {total} Sitzen belegt",
+        "Endpoint": "Endpunkt",
+        "Events": "Ereignisse",
+        "Last delivery": "Letzte Zustellung",
+        "State": "Status",
+        "Webhook endpoints": "Webhook-Endpunkte",
+        "Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.": "Ihr KI-Assistent kann Endpunkte registrieren, die eine signierte Benachrichtigung erhalten, wenn er hier etwas ändert. Sie gehören Ihnen — testen oder widerrufen Sie sie jederzeit."
     }
 }

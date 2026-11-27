@@ -2849,6 +2849,12 @@ OC.L10N.register(
 	"your_tickets" : "Your Tickets",
 	"{count} bookings fall into this date range. Pick a calendar month to focus one month." : "{count} bookings fall into this date range. Pick a calendar month to focus one month.",
 	"{count} bookings in the ledger for {monthLabel}." : "{count} bookings in the ledger for {monthLabel}.",
-	"{used} of {total} seats used" : "{used} of {total} seats used"
+	"{used} of {total} seats used" : "{used} of {total} seats used",
+	"Endpoint" : "Endpoint",
+	"Events" : "Events",
+	"Last delivery" : "Last delivery",
+	"State" : "State",
+	"Webhook endpoints" : "Webhook endpoints",
+	"Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time." : "Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time."
 	}
 );
