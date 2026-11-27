@@ -14,11 +14,31 @@
       "label": "Ticket inbox",
       "description": "List the staff ticket inbox for the token owner, with cursor pagination.",
       "params": {
-        "queue": {"type": "string", "required": false, "description": "Queue name (default 'open')."},
-        "cursor": {"type": "string", "required": false, "description": "Pagination cursor from a previous page."},
-        "limit": {"type": "integer", "required": false, "description": "Page size (default 25)."},
-        "projectId": {"type": "integer", "required": false, "description": "Restrict to one project."},
-        "priority": {"type": "string", "required": false, "description": "Priority filter."}
+        "queue": {
+          "type": "string",
+          "required": false,
+          "description": "Queue name (default 'open')."
+        },
+        "cursor": {
+          "type": "string",
+          "required": false,
+          "description": "Pagination cursor from a previous page."
+        },
+        "limit": {
+          "type": "integer",
+          "required": false,
+          "description": "Page size (default 25)."
+        },
+        "projectId": {
+          "type": "integer",
+          "required": false,
+          "description": "Restrict to one project."
+        },
+        "priority": {
+          "type": "string",
+          "required": false,
+          "description": "Priority filter."
+        }
       }
     },
     {
@@ -54,7 +74,11 @@
       "label": "Ticket detail",
       "description": "Full staff-side ticket detail including comments and metadata.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        }
       }
     },
     {
@@ -69,13 +93,41 @@
       "label": "Create ticket",
       "description": "Create a ticket as the token owner. Pass idempotencyKey (or the X-TC-Idempotency-Key header) to deduplicate retries.",
       "params": {
-        "title": {"type": "string", "required": true, "description": "Ticket title."},
-        "description": {"type": "string", "required": false, "description": "Ticket body."},
-        "priority": {"type": "string", "required": false, "description": "Priority enum (default normal)."},
-        "category": {"type": "string", "required": false, "description": "Category name."},
-        "projectId": {"type": "integer", "required": false, "description": "Project id."},
-        "resources": {"type": "array", "required": false, "description": "Resource names to link."},
-        "idempotencyKey": {"type": "string", "required": false, "description": "Dedup key — a retry with the same key returns the original ticket."}
+        "title": {
+          "type": "string",
+          "required": true,
+          "description": "Ticket title."
+        },
+        "description": {
+          "type": "string",
+          "required": false,
+          "description": "Ticket body."
+        },
+        "priority": {
+          "type": "string",
+          "required": false,
+          "description": "Priority enum (default normal)."
+        },
+        "category": {
+          "type": "string",
+          "required": false,
+          "description": "Category name."
+        },
+        "projectId": {
+          "type": "integer",
+          "required": false,
+          "description": "Project id."
+        },
+        "resources": {
+          "type": "array",
+          "required": false,
+          "description": "Resource names to link."
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "required": false,
+          "description": "Dedup key — a retry with the same key returns the original ticket."
+        }
       }
     },
     {
@@ -91,9 +143,21 @@
       "label": "Change status",
       "description": "Change a ticket's workflow status (state transition — confirm required).",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."},
-        "status": {"type": "string", "required": true, "description": "Target status."},
-        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard against stale-state transitions."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "status": {
+          "type": "string",
+          "required": true,
+          "description": "Target status."
+        },
+        "version": {
+          "type": "integer",
+          "required": true,
+          "description": "Expected ticket version — CAS guard against stale-state transitions."
+        }
       }
     },
     {
@@ -109,9 +173,21 @@
       "label": "Bulk status change",
       "description": "Change status on many tickets at once (state transition — confirm required).",
       "params": {
-        "ticketIds": {"type": "array", "required": true, "description": "Ticket ids to transition."},
-        "status": {"type": "string", "required": true, "description": "Target status."},
-        "versions": {"type": "array", "required": false, "description": "Map of ticket id to expected version — CAS guard per ticket."}
+        "ticketIds": {
+          "type": "array",
+          "required": true,
+          "description": "Ticket ids to transition."
+        },
+        "status": {
+          "type": "string",
+          "required": true,
+          "description": "Target status."
+        },
+        "versions": {
+          "type": "array",
+          "required": false,
+          "description": "Map of ticket id to expected version — CAS guard per ticket."
+        }
       }
     },
     {
@@ -127,9 +203,21 @@
       "label": "Set assignee",
       "description": "Assign a ticket to a staff user, or clear the assignee (state transition — confirm required).",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."},
-        "assignedTo": {"type": "string", "required": false, "description": "Assignee uid; omit/empty to unassign. Aliases: assignee, userId."},
-        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "assignedTo": {
+          "type": "string",
+          "required": false,
+          "description": "Assignee uid; omit/empty to unassign. Aliases: assignee, userId."
+        },
+        "version": {
+          "type": "integer",
+          "required": true,
+          "description": "Expected ticket version — CAS guard."
+        }
       }
     },
     {
@@ -143,9 +231,21 @@
       "label": "Assignable users",
       "description": "List staff users who may take this ticket.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."},
-        "query": {"type": "string", "required": false, "description": "Name search."},
-        "limit": {"type": "integer", "required": false, "description": "Result cap (default 25)."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "query": {
+          "type": "string",
+          "required": false,
+          "description": "Name search."
+        },
+        "limit": {
+          "type": "integer",
+          "required": false,
+          "description": "Result cap (default 25)."
+        }
       }
     },
     {
@@ -159,7 +259,11 @@
       "label": "Assignable groups",
       "description": "List groups a ticket may be team-assigned to.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        }
       }
     },
     {
@@ -175,9 +279,21 @@
       "label": "Add co-assignee",
       "description": "Add a co-assignee to a ticket (state transition — confirm required).",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."},
-        "userId": {"type": "string", "required": true, "description": "Co-assignee uid. Alias: coAssignee."},
-        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "userId": {
+          "type": "string",
+          "required": true,
+          "description": "Co-assignee uid. Alias: coAssignee."
+        },
+        "version": {
+          "type": "integer",
+          "required": true,
+          "description": "Expected ticket version — CAS guard."
+        }
       }
     },
     {
@@ -193,9 +309,21 @@
       "label": "Remove co-assignee",
       "description": "Remove a co-assignee from a ticket (state transition — confirm required).",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."},
-        "userId": {"type": "string", "required": true, "description": "Path parameter — co-assignee uid."},
-        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "userId": {
+          "type": "string",
+          "required": true,
+          "description": "Path parameter — co-assignee uid."
+        },
+        "version": {
+          "type": "integer",
+          "required": true,
+          "description": "Expected ticket version — CAS guard."
+        }
       }
     },
     {
@@ -211,9 +339,21 @@
       "label": "Assign team",
       "description": "Team-assign a ticket to a group (state transition — confirm required).",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."},
-        "groupId": {"type": "string", "required": true, "description": "Group id. Alias: group_id."},
-        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "groupId": {
+          "type": "string",
+          "required": true,
+          "description": "Group id. Alias: group_id."
+        },
+        "version": {
+          "type": "integer",
+          "required": true,
+          "description": "Expected ticket version — CAS guard."
+        }
       }
     },
     {
@@ -229,8 +369,16 @@
       "label": "Claim ticket",
       "description": "Claim a team-queued ticket for the token owner (state transition — confirm required).",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."},
-        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "version": {
+          "type": "integer",
+          "required": true,
+          "description": "Expected ticket version — CAS guard."
+        }
       }
     },
     {
@@ -245,8 +393,16 @@
       "label": "Watch ticket",
       "description": "Watch or unwatch a ticket for the token owner.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."},
-        "watching": {"type": "boolean", "required": false, "description": "Watch state (default true)."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "watching": {
+          "type": "boolean",
+          "required": false,
+          "description": "Watch state (default true)."
+        }
       }
     },
     {
@@ -260,9 +416,21 @@
       "label": "Download attachment",
       "description": "Download a ticket attachment.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter — ticket id."},
-        "attachmentId": {"type": "integer", "required": true, "description": "Path parameter — attachment id."},
-        "inline": {"type": "string", "required": false, "description": "Set '1' for inline display."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — ticket id."
+        },
+        "attachmentId": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — attachment id."
+        },
+        "inline": {
+          "type": "string",
+          "required": false,
+          "description": "Set '1' for inline display."
+        }
       }
     },
     {
@@ -277,8 +445,16 @@
       "label": "Upload attachment",
       "description": "Upload an attachment onto a ticket. Pass clientRequestId so retries can be correlated in the audit log.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter — ticket id."},
-        "file": {"type": "string", "required": true, "description": "Attachment file (multipart upload)."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — ticket id."
+        },
+        "file": {
+          "type": "string",
+          "required": true,
+          "description": "Attachment file (multipart upload)."
+        }
       }
     },
     {
@@ -293,9 +469,21 @@
       "label": "Add comment",
       "description": "Add a comment to a ticket as the token owner.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."},
-        "body": {"type": "string", "required": true, "description": "Comment text."},
-        "visibility": {"type": "string", "required": false, "description": "public|internal (default public)."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "body": {
+          "type": "string",
+          "required": true,
+          "description": "Comment text."
+        },
+        "visibility": {
+          "type": "string",
+          "required": false,
+          "description": "public|internal (default public)."
+        }
       }
     },
     {
@@ -311,11 +499,31 @@
       "label": "Update comment",
       "description": "Edit a ticket comment (state transition — confirm required).",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter — ticket id."},
-        "cid": {"type": "integer", "required": true, "description": "Path parameter — comment id."},
-        "body": {"type": "string", "required": false, "description": "New comment text."},
-        "visibility": {"type": "string", "required": false, "description": "public|internal."},
-        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — ticket id."
+        },
+        "cid": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — comment id."
+        },
+        "body": {
+          "type": "string",
+          "required": false,
+          "description": "New comment text."
+        },
+        "visibility": {
+          "type": "string",
+          "required": false,
+          "description": "public|internal."
+        },
+        "version": {
+          "type": "integer",
+          "required": true,
+          "description": "Expected ticket version — CAS guard."
+        }
       }
     },
     {
@@ -331,9 +539,21 @@
       "label": "Delete comment",
       "description": "Soft-delete a ticket comment (state transition — confirm required).",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter — ticket id."},
-        "cid": {"type": "integer", "required": true, "description": "Path parameter — comment id."},
-        "version": {"type": "integer", "required": true, "description": "Expected ticket version — CAS guard."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — ticket id."
+        },
+        "cid": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — comment id."
+        },
+        "version": {
+          "type": "integer",
+          "required": true,
+          "description": "Expected ticket version — CAS guard."
+        }
       }
     },
     {
@@ -349,11 +569,31 @@
       "label": "Move comments",
       "description": "Move comments (and optionally attachments) to another ticket (state transition — confirm required). idempotencyKey is mandatory.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter — source ticket id."},
-        "targetTicketId": {"type": "integer", "required": true, "description": "Target ticket id."},
-        "commentIds": {"type": "array", "required": false, "description": "Comment ids to move."},
-        "attachmentIds": {"type": "array", "required": false, "description": "Attachment ids to move."},
-        "idempotencyKey": {"type": "string", "required": true, "description": "Dedup key — required by the server for this route."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — source ticket id."
+        },
+        "targetTicketId": {
+          "type": "integer",
+          "required": true,
+          "description": "Target ticket id."
+        },
+        "commentIds": {
+          "type": "array",
+          "required": false,
+          "description": "Comment ids to move."
+        },
+        "attachmentIds": {
+          "type": "array",
+          "required": false,
+          "description": "Attachment ids to move."
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "required": true,
+          "description": "Dedup key — required by the server for this route."
+        }
       }
     },
     {
@@ -367,8 +607,16 @@
       "label": "Search knowledge base",
       "description": "Full-text search over knowledge-base articles.",
       "params": {
-        "q": {"type": "string", "required": true, "description": "Search query."},
-        "category": {"type": "string", "required": false, "description": "Category filter."}
+        "q": {
+          "type": "string",
+          "required": true,
+          "description": "Search query."
+        },
+        "category": {
+          "type": "string",
+          "required": false,
+          "description": "Category filter."
+        }
       }
     },
     {
@@ -382,7 +630,11 @@
       "label": "KB article",
       "description": "Read a knowledge-base article.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        }
       }
     },
     {
@@ -407,8 +659,16 @@
       "label": "Process template",
       "description": "Render a canned reply against a ticket (server-side variable substitution; no state change).",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter — template id."},
-        "ticket_id": {"type": "integer", "required": true, "description": "Ticket to render the template against."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — template id."
+        },
+        "ticket_id": {
+          "type": "integer",
+          "required": true,
+          "description": "Ticket to render the template against."
+        }
       }
     },
     {
@@ -422,8 +682,16 @@
       "label": "My tickets",
       "description": "List tickets created by the token owner (requester view).",
       "params": {
-        "cursor": {"type": "string", "required": false, "description": "Pagination cursor."},
-        "limit": {"type": "integer", "required": false, "description": "Page size (default 25)."}
+        "cursor": {
+          "type": "string",
+          "required": false,
+          "description": "Pagination cursor."
+        },
+        "limit": {
+          "type": "integer",
+          "required": false,
+          "description": "Page size (default 25)."
+        }
       }
     },
     {
@@ -437,7 +705,11 @@
       "label": "My ticket detail",
       "description": "Requester-side detail for one of the token owner's tickets.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        }
       }
     },
     {
@@ -452,12 +724,36 @@
       "label": "File ticket",
       "description": "File a ticket as the token owner (requester channel). Pass idempotencyKey to deduplicate retries.",
       "params": {
-        "title": {"type": "string", "required": true, "description": "Ticket title."},
-        "description": {"type": "string", "required": false, "description": "Ticket body."},
-        "priority": {"type": "string", "required": false, "description": "Priority (default normal)."},
-        "category": {"type": "string", "required": false, "description": "Category name."},
-        "project_id": {"type": "integer", "required": false, "description": "Project id."},
-        "idempotencyKey": {"type": "string", "required": false, "description": "Dedup key for retries."}
+        "title": {
+          "type": "string",
+          "required": true,
+          "description": "Ticket title."
+        },
+        "description": {
+          "type": "string",
+          "required": false,
+          "description": "Ticket body."
+        },
+        "priority": {
+          "type": "string",
+          "required": false,
+          "description": "Priority (default normal)."
+        },
+        "category": {
+          "type": "string",
+          "required": false,
+          "description": "Category name."
+        },
+        "project_id": {
+          "type": "integer",
+          "required": false,
+          "description": "Project id."
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "required": false,
+          "description": "Dedup key for retries."
+        }
       }
     },
     {
@@ -472,9 +768,21 @@
       "label": "Reply to ticket",
       "description": "Reply to one of the token owner's tickets (requester channel).",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter."},
-        "comment": {"type": "string", "required": true, "description": "Reply text."},
-        "idempotencyKey": {"type": "string", "required": false, "description": "Dedup key for retries."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "comment": {
+          "type": "string",
+          "required": true,
+          "description": "Reply text."
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "required": false,
+          "description": "Dedup key for retries."
+        }
       }
     },
     {
@@ -488,8 +796,91 @@
       "label": "Download my attachment",
       "description": "Download an attachment from one of the token owner's tickets.",
       "params": {
-        "id": {"type": "integer", "required": true, "description": "Path parameter — ticket id."},
-        "attachmentId": {"type": "integer", "required": true, "description": "Path parameter — attachment id."}
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — ticket id."
+        },
+        "attachmentId": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter — attachment id."
+        }
+      }
+    },
+    {
+      "name": "tc_webhooks_list",
+      "kind": "read",
+      "riskClass": 0,
+      "method": "GET",
+      "path": "/agent/v1/webhooks",
+      "scope": "ticketcheck:webhooks:read",
+      "route": "agent_webhook#index",
+      "label": "List webhooks",
+      "description": "List outbound webhook subscriptions for the token owner."
+    },
+    {
+      "name": "tc_webhooks_create",
+      "kind": "write",
+      "riskClass": 2,
+      "method": "POST",
+      "path": "/agent/v1/webhooks",
+      "scope": "ticketcheck:webhooks:write",
+      "route": "agent_webhook#create",
+      "confirm": "required",
+      "batch": "forbidden",
+      "idempotency": "clientRequestId",
+      "label": "Create webhook",
+      "description": "Subscribe to app events — creates an HTTPS endpoint subscription.",
+      "params": {
+        "url": {
+          "type": "string",
+          "required": true,
+          "description": "Public https endpoint."
+        },
+        "events": {
+          "type": "array",
+          "required": true,
+          "description": "Event names or ['*']."
+        }
+      }
+    },
+    {
+      "name": "tc_webhooks_delete",
+      "kind": "write",
+      "riskClass": 2,
+      "method": "DELETE",
+      "path": "/agent/v1/webhooks/{id}",
+      "scope": "ticketcheck:webhooks:write",
+      "route": "agent_webhook#delete",
+      "confirm": "required",
+      "batch": "forbidden",
+      "idempotency": "natural",
+      "label": "Delete webhook",
+      "description": "Remove a webhook subscription.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "tc_webhooks_test",
+      "kind": "write",
+      "riskClass": 1,
+      "method": "POST",
+      "path": "/agent/v1/webhooks/{id}/test",
+      "scope": "ticketcheck:webhooks:write",
+      "route": "agent_webhook#test",
+      "idempotency": "natural",
+      "label": "Test webhook",
+      "description": "Queue a signed test delivery to a subscription.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
       }
     }
   ],
@@ -500,5 +891,9 @@
     "guestDevice#pair",
     "guestDevice#bootstrap",
     "guestDevice#revoke"
+  ],
+  "events": [
+    "agent.write.completed",
+    "webhook.test"
   ]
 }
